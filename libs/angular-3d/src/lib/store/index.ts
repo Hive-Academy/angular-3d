@@ -1,5 +1,5 @@
 // @hive-academy/angular-3d - Store module
-// Scene service and context store for scene/camera/renderer access
+// Centralized state management and component registry
 
-// Placeholder - components will be added in TASK_2025_003
-export const STORE_MODULE_PLACEHOLDER = true;
+export * from './angular-3d-state.store';
+export * from './component-registry.service';

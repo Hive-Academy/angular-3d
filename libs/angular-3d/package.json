@@ -4,7 +4,8 @@
   "peerDependencies": {
     "@angular/core": "~20.3.0",
     "three": "^0.182.0",
-    "gsap": "^3.14.2"
+    "gsap": "^3.14.2",
+    "rxjs": "~7.8.0"
   },
   "sideEffects": false
 }

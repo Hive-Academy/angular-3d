@@ -4,7 +4,6 @@
 
 | Task ID       | Title                           | Status  | Created    |
 | ------------- | ------------------------------- | ------- | ---------- |
-| TASK_2025_003 | State Store & Context Service   | PENDING | 2025-12-16 |
 | TASK_2025_004 | Loader Utilities                | PENDING | 2025-12-16 |
 | TASK_2025_005 | OrbitControls Wrapper           | PENDING | 2025-12-16 |
 | TASK_2025_006 | Postprocessing Pipeline         | PENDING | 2025-12-16 |
@@ -34,3 +33,4 @@
 | ------------- | ------------------------------------------ | -------- | ---------- |
 | TASK_2025_001 | Workspace Setup & Library Scaffolding      | COMPLETE | 2025-12-16 |
 | TASK_2025_002 | Core Infrastructure - Canvas & Render Loop | COMPLETE | 2025-12-16 |
+| TASK_2025_003 | State Store & Context Service              | COMPLETE | 2025-12-16 |
