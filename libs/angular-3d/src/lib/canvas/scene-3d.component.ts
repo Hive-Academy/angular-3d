@@ -8,15 +8,14 @@
 import {
   Component,
   ElementRef,
-  AfterViewInit,
   OnDestroy,
   NgZone,
   DestroyRef,
   ChangeDetectionStrategy,
   input,
   inject,
-  effect,
   viewChild,
+  afterNextRender,
 } from '@angular/core';
 import * as THREE from 'three';
 import { SceneService } from './scene.service';
@@ -112,7 +111,7 @@ export interface RendererConfig {
     `,
   ],
 })
-export class Scene3dComponent implements AfterViewInit, OnDestroy {
+export class Scene3dComponent implements OnDestroy {
   // Use signal-based viewChild instead of decorator
   private readonly canvasRef =
     viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
@@ -152,57 +151,32 @@ export class Scene3dComponent implements AfterViewInit, OnDestroy {
   >();
 
   public constructor() {
-    // React to camera position changes
-    effect(() => {
-      const [x, y, z] = this.cameraPosition();
-      if (this.camera) {
-        this.camera.position.set(x, y, z);
-      }
+    // Setup initialization after first render (browser-only)
+    afterNextRender(() => {
+      this.initRenderer();
+      this.initScene();
+      this.initCamera();
+
+      // Expose to child components via service
+      this.sceneService.setScene(this.scene);
+      this.sceneService.setRenderer(this.renderer);
+      this.sceneService.setCamera(this.camera);
+
+      // Start render loop
+      this.startRenderLoop();
+
+      // Setup resize handler
+      this.setupResizeHandler();
+
+      // Setup visibility change handler
+      this.setupVisibilityHandler();
     });
-
-    // React to camera FOV changes
-    effect(() => {
-      const fov = this.cameraFov();
-      if (this.camera) {
-        this.camera.fov = fov;
-        this.camera.updateProjectionMatrix();
-      }
-    });
-
-    // React to background color changes
-    effect(() => {
-      const color = this.backgroundColor();
-      if (this.scene) {
-        this.scene.background = color !== null ? new THREE.Color(color) : null;
-      }
-    });
-  }
-
-  public ngAfterViewInit(): void {
-    this.initRenderer();
-    this.initScene();
-    this.initCamera();
-
-    // Expose to child components via service
-    this.sceneService.setScene(this.scene);
-    this.sceneService.setRenderer(this.renderer);
-    this.sceneService.setCamera(this.camera);
-
-    // Start render loop
-    this.startRenderLoop();
-
-    // Setup resize handler
-    this.setupResizeHandler();
-
-    // Setup visibility change handler
-    this.setupVisibilityHandler();
 
     // Register cleanup on destroy
     this.destroyRef.onDestroy(() => {
       this.dispose();
     });
   }
-
   public ngOnDestroy(): void {
     this.dispose();
   }

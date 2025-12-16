@@ -1,27 +1,7 @@
 import { AnimationService } from './animation.service';
 import * as THREE from 'three';
 
-// Mock GSAP
-jest.mock('gsap', () => {
-  const mockTween = {
-    kill: jest.fn(),
-    pause: jest.fn(),
-    resume: jest.fn(),
-  };
-
-  const mockTimeline = {
-    kill: jest.fn(),
-    pause: jest.fn(),
-    resume: jest.fn(),
-    to: jest.fn().mockReturnThis(),
-    call: jest.fn().mockReturnThis(),
-  };
-
-  return {
-    to: jest.fn(() => mockTween),
-    timeline: jest.fn(() => mockTimeline),
-  };
-});
+// GSAP is mocked globally in test-setup.ts
 
 describe('AnimationService', () => {
   let service: AnimationService;
