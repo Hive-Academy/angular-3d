@@ -62,6 +62,7 @@
     "jest-environment-jsdom": "^29.7.0",
     "jest-preset-angular": "~14.6.1",
     "jest-util": "^29.7.0",
+    "jest-webgl-canvas-mock": "^2.5.3",
     "jsonc-eslint-parser": "^2.1.0",
     "lint-staged": "^16.2.7",
     "ng-packagr": "~20.3.0",

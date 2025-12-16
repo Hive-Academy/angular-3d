@@ -4,18 +4,20 @@
 **Total Tasks**: 7
 **Total Batches**: 2
 **Batching Strategy**: Layer-based (services first, then tests)
-**Status**: 0/2 batches complete (0%)
+**Status**: 1/2 batches complete (50%)
 
 ---
 
-## Batch 1: Loader Services & Inject Functions 🔄 IN PROGRESS
+## Batch 1: Loader Services & Inject Functions ✅ COMPLETE
+
+**Git Commit**: `2310701` - feat(angular-3d): add loader utilities - batch 1
 
 **Assigned To**: backend-developer
 **Tasks in Batch**: 4
 **Dependencies**: None
 **Estimated Commits**: 1
 
-### Task 1.1: Create TextureLoaderService 🔄 IN PROGRESS
+### Task 1.1: Create TextureLoaderService ✅ COMPLETE
 
 **File(s)**: `libs/angular-3d/src/lib/loaders/texture-loader.service.ts`
 **Specification Reference**: implementation-plan.md:17-70
@@ -38,7 +40,7 @@
 
 ---
 
-### Task 1.2: Create injectTextureLoader 🔄 IN PROGRESS
+### Task 1.2: Create injectTextureLoader ✅ COMPLETE
 
 **File(s)**: `libs/angular-3d/src/lib/loaders/inject-texture-loader.ts`
 **Dependencies**: Task 1.1 (TextureLoaderService)
@@ -61,7 +63,7 @@
 
 ---
 
-### Task 1.3: Create GltfLoaderService 🔄 IN PROGRESS
+### Task 1.3: Create GltfLoaderService ✅ COMPLETE
 
 **File(s)**: `libs/angular-3d/src/lib/loaders/gltf-loader.service.ts`
 **Dependencies**: None (parallel with Task 1.1)
@@ -85,7 +87,7 @@
 
 ---
 
-### Task 1.4: Create injectGltfLoader 🔄 IN PROGRESS
+### Task 1.4: Create injectGltfLoader ✅ COMPLETE
 
 **File(s)**: `libs/angular-3d/src/lib/loaders/inject-gltf-loader.ts`
 **Dependencies**: Task 1.3 (GltfLoaderService)
@@ -112,14 +114,14 @@
 
 ---
 
-## Batch 2: Unit Tests & Exports ⏸️ PENDING
+## Batch 2: Unit Tests & Exports 🔄 IN PROGRESS
 
 **Assigned To**: backend-developer
 **Tasks in Batch**: 3
 **Dependencies**: Batch 1 complete
 **Estimated Commits**: 1
 
-### Task 2.1: Create TextureLoaderService Tests ⏸️ PENDING
+### Task 2.1: Create TextureLoaderService Tests 🔄 IN PROGRESS
 
 **File(s)**: `libs/angular-3d/src/lib/loaders/texture-loader.service.spec.ts`
 **Dependencies**: Task 1.1 (TextureLoaderService)
@@ -138,7 +140,7 @@
 
 ---
 
-### Task 2.2: Create GltfLoaderService Tests ⏸️ PENDING
+### Task 2.2: Create GltfLoaderService Tests 🔄 IN PROGRESS
 
 **File(s)**: `libs/angular-3d/src/lib/loaders/gltf-loader.service.spec.ts`
 **Dependencies**: Task 1.3 (GltfLoaderService)
@@ -157,7 +159,7 @@
 
 ---
 
-### Task 2.3: Update Module Exports ⏸️ PENDING
+### Task 2.3: Update Module Exports ✅ COMPLETE (done in Batch 1)
 
 **File(s)**: `libs/angular-3d/src/lib/loaders/index.ts`
 **Dependencies**: All previous tasks
