@@ -19,6 +19,7 @@ import {
 import * as THREE from 'three';
 import { SceneService } from './scene.service';
 import { RenderLoopService } from '../render-loop/render-loop.service';
+import { NG_3D_PARENT } from '../types/tokens';
 
 /**
  * Camera configuration input interface
@@ -67,7 +68,14 @@ export interface RendererConfig {
 @Component({
   selector: 'a3d-scene-3d',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [SceneService],
+  providers: [
+    SceneService,
+    {
+      provide: NG_3D_PARENT,
+      useFactory: (sceneService: SceneService) => () => sceneService.scene(),
+      deps: [SceneService],
+    },
+  ],
   template: `
     <div class="scene-container">
       <canvas #canvas></canvas>
@@ -140,18 +148,20 @@ export class Scene3dComponent implements OnDestroy {
 
   // Three.js objects
   private renderer!: THREE.WebGLRenderer;
-  private scene!: THREE.Scene;
+  private readonly scene = new THREE.Scene();
   private camera!: THREE.PerspectiveCamera;
 
   public constructor() {
+    // Expose scene immediately so children can access it in ngOnInit
+    this.sceneService.setScene(this.scene);
+
     // Setup initialization after first render (browser-only)
     afterNextRender(() => {
       this.initRenderer();
-      this.initScene();
+      this.initScene(); // Sets background color
       this.initCamera();
 
-      // Expose to child components via service
-      this.sceneService.setScene(this.scene);
+      // Expose renderer and camera (available after init)
       this.sceneService.setRenderer(this.renderer);
       this.sceneService.setCamera(this.camera);
 
@@ -229,8 +239,7 @@ export class Scene3dComponent implements OnDestroy {
   }
 
   private initScene(): void {
-    this.scene = new THREE.Scene();
-
+    // Scene is already initialized in property
     const bgColor = this.backgroundColor();
     if (bgColor !== null) {
       this.scene.background = new THREE.Color(bgColor);

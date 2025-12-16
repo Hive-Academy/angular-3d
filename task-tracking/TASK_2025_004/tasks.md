@@ -4,7 +4,7 @@
 **Total Tasks**: 7
 **Total Batches**: 2
 **Batching Strategy**: Layer-based (services first, then tests)
-**Status**: 1/2 batches complete (50%)
+**Status**: 2/2 batches complete (100%) ✅
 
 ---
 
@@ -114,14 +114,16 @@
 
 ---
 
-## Batch 2: Unit Tests & Exports 🔄 IN PROGRESS
+## Batch 2: Unit Tests & Exports ✅ COMPLETE
+
+**Git Commit**: `b934847` - test(angular-3d): add loader service unit tests - batch 2
 
 **Assigned To**: backend-developer
 **Tasks in Batch**: 3
 **Dependencies**: Batch 1 complete
 **Estimated Commits**: 1
 
-### Task 2.1: Create TextureLoaderService Tests 🔄 IN PROGRESS
+### Task 2.1: Create TextureLoaderService Tests ✅ COMPLETE
 
 **File(s)**: `libs/angular-3d/src/lib/loaders/texture-loader.service.spec.ts`
 **Dependencies**: Task 1.1 (TextureLoaderService)
@@ -140,7 +142,7 @@
 
 ---
 
-### Task 2.2: Create GltfLoaderService Tests 🔄 IN PROGRESS
+### Task 2.2: Create GltfLoaderService Tests ✅ COMPLETE
 
 **File(s)**: `libs/angular-3d/src/lib/loaders/gltf-loader.service.spec.ts`
 **Dependencies**: Task 1.3 (GltfLoaderService)
