@@ -1,0 +1,10 @@
+echo "🔍 Running pre-commit checks..."
+
+# Run lint-staged (format and lint staged files)
+npx lint-staged --no-stash
+
+# Run typecheck on affected projects
+echo "📝 Running typecheck on affected projects..."
+npm run typecheck:affected
+
+echo "✅ Pre-commit checks passed!"
