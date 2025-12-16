@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Scene3dComponent } from './scene-3d.component';
 import { SceneService } from './scene.service';
+import { RenderLoopService } from '../render-loop/render-loop.service';
 
 // Mock component for testing content projection
 @Component({
@@ -12,10 +13,22 @@ import { SceneService } from './scene.service';
 })
 class TestChildComponent {}
 
+// Mock RenderLoopService
+class MockRenderLoopService {
+  start = jest.fn();
+  stop = jest.fn();
+  registerUpdateCallback = jest.fn(() => jest.fn());
+}
+
 describe('Scene3dComponent', () => {
+  let mockRenderLoop: MockRenderLoopService;
+
   beforeEach(async () => {
+    mockRenderLoop = new MockRenderLoopService();
+
     await TestBed.configureTestingModule({
       imports: [Scene3dComponent],
+      providers: [{ provide: RenderLoopService, useValue: mockRenderLoop }],
     }).compileComponents();
   });
 
@@ -72,6 +85,13 @@ describe('Scene3dComponent', () => {
       const camera = fixture.componentInstance.getCamera();
       expect(camera.fov).toBe(90);
     });
+
+    it('should start render loop on init', () => {
+      const fixture = TestBed.createComponent(Scene3dComponent);
+      fixture.detectChanges();
+
+      expect(mockRenderLoop.start).toHaveBeenCalled();
+    });
   });
 
   describe('SceneService integration', () => {
@@ -95,17 +115,17 @@ describe('Scene3dComponent', () => {
   });
 
   describe('render loop', () => {
-    it('should register update callbacks', () => {
+    it('should delegate registerUpdateCallback to RenderLoopService', () => {
       const fixture = TestBed.createComponent(Scene3dComponent);
       fixture.detectChanges();
 
       const component = fixture.componentInstance;
       const callback = jest.fn();
 
-      const cleanup = component.registerUpdateCallback(callback);
-      expect(typeof cleanup).toBe('function');
-
-      cleanup();
+      component.registerUpdateCallback(callback);
+      expect(mockRenderLoop.registerUpdateCallback).toHaveBeenCalledWith(
+        callback
+      );
     });
   });
 
@@ -121,6 +141,14 @@ describe('Scene3dComponent', () => {
       fixture.destroy();
 
       expect(disposeSpy).toHaveBeenCalled();
+    });
+
+    it('should stop render loop on destroy', () => {
+      const fixture = TestBed.createComponent(Scene3dComponent);
+      fixture.detectChanges();
+      fixture.destroy();
+
+      expect(mockRenderLoop.stop).toHaveBeenCalled();
     });
 
     it('should clear SceneService on destroy', () => {

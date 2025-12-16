@@ -9,7 +9,6 @@ import {
   Component,
   ElementRef,
   OnDestroy,
-  NgZone,
   DestroyRef,
   ChangeDetectionStrategy,
   input,
@@ -19,6 +18,7 @@ import {
 } from '@angular/core';
 import * as THREE from 'three';
 import { SceneService } from './scene.service';
+import { RenderLoopService } from '../render-loop/render-loop.service';
 
 /**
  * Camera configuration input interface
@@ -47,8 +47,8 @@ export interface RendererConfig {
  * - Scene
  * - PerspectiveCamera
  *
- * Child components can inject `SceneService` to access these objects
- * and add their own Three.js objects to the scene.
+ * It delegates the render loop to `RenderLoopService`, allowing
+ * postprocessing effects to override the render function.
  *
  * @example
  * ```html
@@ -117,9 +117,9 @@ export class Scene3dComponent implements OnDestroy {
     viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
 
   // Dependency injection
-  private readonly ngZone = inject(NgZone);
   private readonly destroyRef = inject(DestroyRef);
   private readonly sceneService = inject(SceneService);
+  private readonly renderLoop = inject(RenderLoopService);
 
   // Camera inputs
   public readonly cameraPosition = input<[number, number, number]>([0, 0, 20]);
@@ -142,13 +142,6 @@ export class Scene3dComponent implements OnDestroy {
   private renderer!: THREE.WebGLRenderer;
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
-  private animationFrameId: number | null = null;
-  private clock = new THREE.Clock();
-
-  // Update callbacks registered by child components
-  private readonly updateCallbacks = new Set<
-    (delta: number, elapsed: number) => void
-  >();
 
   public constructor() {
     // Setup initialization after first render (browser-only)
@@ -162,14 +155,13 @@ export class Scene3dComponent implements OnDestroy {
       this.sceneService.setRenderer(this.renderer);
       this.sceneService.setCamera(this.camera);
 
-      // Start render loop
-      this.startRenderLoop();
+      // Start render loop delegating to RenderLoopService
+      this.renderLoop.start(() => {
+        this.renderer.render(this.scene, this.camera);
+      });
 
       // Setup resize handler
       this.setupResizeHandler();
-
-      // Setup visibility change handler
-      this.setupVisibilityHandler();
     });
 
     // Register cleanup on destroy
@@ -188,10 +180,7 @@ export class Scene3dComponent implements OnDestroy {
   public registerUpdateCallback(
     callback: (delta: number, elapsed: number) => void
   ): () => void {
-    this.updateCallbacks.add(callback);
-    return () => {
-      this.updateCallbacks.delete(callback);
-    };
+    return this.renderLoop.registerUpdateCallback(callback);
   }
 
   /**
@@ -265,38 +254,6 @@ export class Scene3dComponent implements OnDestroy {
     this.camera.position.set(x, y, z);
   }
 
-  private startRenderLoop(): void {
-    this.clock.start();
-
-    // Run outside Angular zone to prevent change detection on every frame
-    this.ngZone.runOutsideAngular(() => {
-      const render = (): void => {
-        this.animationFrameId = requestAnimationFrame(render);
-
-        const delta = this.clock.getDelta();
-        const elapsed = this.clock.getElapsedTime();
-
-        // Call all registered update callbacks
-        this.updateCallbacks.forEach((callback) => {
-          callback(delta, elapsed);
-        });
-
-        // Render the scene
-        this.renderer.render(this.scene, this.camera);
-      };
-
-      render();
-    });
-  }
-
-  private stopRenderLoop(): void {
-    if (this.animationFrameId !== null) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = null;
-    }
-    this.clock.stop();
-  }
-
   private setupResizeHandler(): void {
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
@@ -319,27 +276,8 @@ export class Scene3dComponent implements OnDestroy {
     });
   }
 
-  private setupVisibilityHandler(): void {
-    const handleVisibilityChange = (): void => {
-      if (document.hidden) {
-        this.clock.stop();
-      } else {
-        this.clock.start();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    this.destroyRef.onDestroy(() => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    });
-  }
-
   private dispose(): void {
-    this.stopRenderLoop();
-
-    // Clear update callbacks
-    this.updateCallbacks.clear();
+    this.renderLoop.stop();
 
     // Dispose Three.js resources
     this.renderer?.dispose();
