@@ -1,0 +1,9 @@
+echo "🚀 Running pre-push checks..."
+
+# Get the current branch
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+echo "🏗️  Building affected projects..."
+npx nx affected:build --base=$current_branch
+
+echo "✅ Pre-push checks passed!"

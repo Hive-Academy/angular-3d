@@ -85,6 +85,12 @@
         "staticFilePath": "dist/apps/angular-3d-demo/browser",
         "spa": true
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p apps/angular-3d-demo/tsconfig.app.json --noEmit"
+      }
     }
   }
 }
