@@ -3,6 +3,10 @@ import baseConfig from '../../eslint.config.mjs';
 
 export default [
   ...baseConfig,
+  // Exclude test files from strict linting
+  {
+    ignores: ['**/*.spec.ts', '**/*.test.ts', '**/test-setup.ts'],
+  },
   {
     files: ['**/*.json'],
     rules: {
