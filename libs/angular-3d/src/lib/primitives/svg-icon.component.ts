@@ -8,7 +8,7 @@ import {
   effect,
 } from '@angular/core';
 import * as THREE from 'three';
-import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
+import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import { NG_3D_PARENT } from '../types/tokens';
 
 @Component({
@@ -67,8 +67,9 @@ export class SvgIconComponent implements OnInit, OnDestroy {
     effect(() => {
       if (this.group) {
         const s = this.scale();
-        const scale = typeof s === 'number' ? [s, s, s] : s;
-        this.group.scale.set(...scale);
+        const scale: [number, number, number] =
+          typeof s === 'number' ? [s, s, s] : s;
+        this.group.scale.set(scale[0], scale[1], scale[2]);
       }
     });
     // Material update effect

@@ -73,8 +73,9 @@ export class Text3DComponent implements OnInit, OnDestroy {
     effect(() => {
       if (this.mesh) {
         const s = this.scale();
-        const scale = typeof s === 'number' ? [s, s, s] : s;
-        this.mesh.scale.set(...scale);
+        const scale: [number, number, number] =
+          typeof s === 'number' ? [s, s, s] : s;
+        this.mesh.scale.set(scale[0], scale[1], scale[2]);
       }
     });
     effect(() => {
@@ -121,8 +122,9 @@ export class Text3DComponent implements OnInit, OnDestroy {
         this.mesh.position.set(...this.position());
         this.mesh.rotation.set(...this.rotation());
         const s = this.scale();
-        const scale = typeof s === 'number' ? [s, s, s] : s;
-        this.mesh.scale.set(...scale);
+        const scale: [number, number, number] =
+          typeof s === 'number' ? [s, s, s] : s;
+        this.mesh.scale.set(scale[0], scale[1], scale[2]);
 
         // Add to parent
         if (this.parentFn) {
