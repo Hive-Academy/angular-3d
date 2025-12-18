@@ -1,11 +1,11 @@
 import {
   Component,
   ChangeDetectionStrategy,
-  OnInit,
   OnDestroy,
   inject,
   input,
   effect,
+  afterNextRender,
 } from '@angular/core';
 import * as THREE from 'three';
 import { NG_3D_PARENT } from '../../types/tokens';
@@ -16,7 +16,7 @@ import { NG_3D_PARENT } from '../../types/tokens';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
 })
-export class PointLightComponent implements OnInit, OnDestroy {
+export class PointLightComponent implements OnDestroy {
   public readonly position = input<[number, number, number]>([0, 0, 0]);
   public readonly color = input<string | number>('white');
   public readonly intensity = input<number>(1);
@@ -42,22 +42,22 @@ export class PointLightComponent implements OnInit, OnDestroy {
         this.light.castShadow = this.castShadow();
       }
     });
-  }
 
-  public ngOnInit(): void {
-    this.light = new THREE.PointLight(
-      this.color(),
-      this.intensity(),
-      this.distance(),
-      this.decay()
-    );
-    this.light.position.set(...this.position());
-    this.light.castShadow = this.castShadow();
+    afterNextRender(() => {
+      this.light = new THREE.PointLight(
+        this.color(),
+        this.intensity(),
+        this.distance(),
+        this.decay()
+      );
+      this.light.position.set(...this.position());
+      this.light.castShadow = this.castShadow();
 
-    if (this.parentFn) {
-      const parent = this.parentFn();
-      parent?.add(this.light);
-    }
+      if (this.parentFn) {
+        const parent = this.parentFn();
+        parent?.add(this.light);
+      }
+    });
   }
 
   public ngOnDestroy(): void {

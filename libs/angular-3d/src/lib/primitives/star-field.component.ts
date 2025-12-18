@@ -1,11 +1,10 @@
 import {
   Component,
   ChangeDetectionStrategy,
-  OnInit,
   OnDestroy,
   inject,
   input,
-  computed,
+  effect,
 } from '@angular/core';
 import * as THREE from 'three';
 import { NG_3D_PARENT } from '../types/tokens';
@@ -34,7 +33,7 @@ function generateStarPositions(count: number, radius: number): Float32Array {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
 })
-export class StarFieldComponent implements OnInit, OnDestroy {
+export class StarFieldComponent implements OnDestroy {
   // Pattern: temp/star-field.component.ts:62-66
   public readonly starCount = input<number>(3000);
   public readonly radius = input<number>(40);
@@ -43,30 +42,63 @@ export class StarFieldComponent implements OnInit, OnDestroy {
   public readonly opacity = input<number>(0.8);
 
   private readonly parentFn = inject(NG_3D_PARENT, { optional: true });
-  private points!: THREE.Points;
-  private geometry!: THREE.BufferGeometry;
-  private material!: THREE.PointsMaterial;
+  private points: THREE.Points | null = null;
+  private geometry: THREE.BufferGeometry | null = null;
+  private material: THREE.PointsMaterial | null = null;
 
-  // Pattern: temp/star-field.component.ts:71-77 (computed positions)
-  private readonly positions = computed(() => {
-    return generateStarPositions(this.starCount(), this.radius());
-  });
+  public constructor() {
+    // Effect for rebuilding stars when config changes
+    effect((onCleanup) => {
+      // Track dependencies
+      const count = this.starCount();
+      const radius = this.radius();
+      const color = this.color();
+      const size = this.size();
+      const opacity = this.opacity();
 
-  public ngOnInit(): void {
-    // Create geometry with positions (pattern: temp/star-field.component.ts:41-44)
+      this.rebuildStars(count, radius, color, size, opacity);
+
+      onCleanup(() => {
+        this.disposeResources();
+      });
+    });
+  }
+
+  private rebuildStars(
+    count: number,
+    radius: number,
+    color: string | number,
+    size: number,
+    opacity: number
+  ): void {
+    // Dispose old resources
+    this.disposeResources();
+
+    // Remove old points from parent if exists
+    if (this.points && this.parentFn) {
+      const parent = this.parentFn();
+      parent?.remove(this.points);
+    }
+
+    // Create geometry with positions
+    // Note: We don't rely on 'this.positions()' computed anymore to avoid circular dependency or timing issues,
+    // just call the generator directly. Or we can keep using it if we track 'count' and 'radius'.
+    // Let's call generator directly for simplicity as we have the values.
+    const positions = generateStarPositions(count, radius);
+
     this.geometry = new THREE.BufferGeometry();
     this.geometry.setAttribute(
       'position',
-      new THREE.BufferAttribute(this.positions(), 3)
+      new THREE.BufferAttribute(positions, 3)
     );
 
-    // Create material (pattern: temp/star-field.component.ts:46-54)
+    // Create material
     this.material = new THREE.PointsMaterial({
-      color: this.color(),
-      size: this.size(),
+      color: color,
+      size: size,
       sizeAttenuation: true,
       transparent: true,
-      opacity: this.opacity(),
+      opacity: opacity,
       depthWrite: false,
     });
 
@@ -74,26 +106,27 @@ export class StarFieldComponent implements OnInit, OnDestroy {
     this.points = new THREE.Points(this.geometry, this.material);
     this.points.frustumCulled = false; // Stars span entire scene
 
-    // Add to parent (pattern: box.component.ts:94-103)
+    // Add to parent
     if (this.parentFn) {
       const parent = this.parentFn();
       if (parent) {
         parent.add(this.points);
-      } else {
-        console.warn('StarFieldComponent: Parent not ready');
       }
-    } else {
-      console.warn('StarFieldComponent: No parent found');
     }
   }
 
+  private disposeResources(): void {
+    this.geometry?.dispose();
+    this.geometry = null;
+    this.material?.dispose();
+    this.material = null;
+  }
+
   public ngOnDestroy(): void {
-    // Pattern: box.component.ts:106-113
-    if (this.parentFn) {
+    if (this.parentFn && this.points) {
       const parent = this.parentFn();
       parent?.remove(this.points);
     }
-    this.geometry?.dispose();
-    this.material?.dispose();
+    this.disposeResources();
   }
 }

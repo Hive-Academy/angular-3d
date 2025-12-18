@@ -1,7 +1,6 @@
 import {
   Component,
   ChangeDetectionStrategy,
-  OnInit,
   OnDestroy,
   inject,
   input,
@@ -38,7 +37,7 @@ import { NG_3D_PARENT } from '../types/tokens';
   ],
   template: `<ng-content />`,
 })
-export class GroupComponent implements OnInit, OnDestroy {
+export class GroupComponent implements OnDestroy {
   // Inputs
   public readonly position = input<[number, number, number]>([0, 0, 0]);
   public readonly rotation = input<[number, number, number]>([0, 0, 0]);
@@ -61,21 +60,24 @@ export class GroupComponent implements OnInit, OnDestroy {
     effect(() => {
       this.group.scale.set(...this.scale());
     });
-  }
 
-  public ngOnInit(): void {
-    if (this.parentFn) {
-      const parent = this.parentFn();
-      if (parent) {
-        parent.add(this.group);
+    // Parent registration effect
+    effect((onCleanup) => {
+      if (this.parentFn) {
+        const parent = this.parentFn();
+        if (parent) {
+          parent.add(this.group);
+        } else {
+          console.warn('GroupComponent: Parent not ready');
+        }
+
+        onCleanup(() => {
+          parent?.remove(this.group);
+        });
       } else {
-        console.warn('GroupComponent: Parent not ready during init');
+        console.warn('GroupComponent: No parent found');
       }
-    } else {
-      console.warn(
-        'GroupComponent: No parent found (NG_3D_PARENT not provided)'
-      );
-    }
+    });
   }
 
   public ngOnDestroy(): void {

@@ -1,11 +1,11 @@
 import {
   Component,
   ChangeDetectionStrategy,
-  OnInit,
   OnDestroy,
   inject,
   input,
   effect,
+  afterNextRender,
 } from '@angular/core';
 import * as THREE from 'three';
 import { NG_3D_PARENT } from '../types/tokens';
@@ -17,7 +17,7 @@ import { GltfLoaderService } from '../loaders/gltf-loader.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
 })
-export class GltfModelComponent implements OnInit, OnDestroy {
+export class GltfModelComponent implements OnDestroy {
   // Transform inputs (pattern: box.component.ts:21-30)
   public readonly position = input<[number, number, number]>([0, 0, 0]);
   public readonly rotation = input<[number, number, number]>([0, 0, 0]);
@@ -37,7 +37,73 @@ export class GltfModelComponent implements OnInit, OnDestroy {
   private group: THREE.Group | null = null;
 
   public constructor() {
-    // Pattern: box.component.ts:41-62 (reactive effects for transforms)
+    // Model Loading Effect
+    afterNextRender(() => {
+      effect((onCleanup) => {
+        const path = this.modelPath();
+        const useDraco = this.useDraco();
+
+        // Initiate load
+        const result = this.gltfLoader.load(path, {
+          useDraco: useDraco,
+        });
+
+        // Handle loading completion
+        // Since result.data is a signal, we can just watch it!
+        // But we are inside an effect already.
+        // Ideally we would trigger side effect when data becomes available.
+        // We can create a computed or just poll inside an effect? No, polling is bad.
+        // If result.data is a signal, we can read it here.
+        // If it's undefined, we do nothing. When it updates, this effect re-runs.
+        const data = result.data();
+
+        // Clean up previous model if specific to this run?
+        // Actually onCleanup handles the "previous effect run" cleanup.
+        // So if 'path' changes, onCleanup runs, extracting old model.
+        // If 'data' changes (loaded), onCleanup runs, extracting old model (if any), then we add new.
+
+        if (data) {
+          // Clone to allow multiple instances
+          this.group = data.scene.clone();
+
+          // Apply transforms immediately
+          this.group.position.set(...this.position());
+          this.group.rotation.set(...this.rotation());
+          const s = this.scale();
+          const scale: [number, number, number] =
+            typeof s === 'number' ? [s, s, s] : s;
+          this.group.scale.set(...scale);
+
+          // Apply material overrides
+          this.applyMaterialOverrides(this.group);
+
+          // Add to parent
+          if (this.parentFn) {
+            const parent = this.parentFn();
+            if (parent) {
+              parent.add(this.group);
+            } else {
+              console.warn('GltfModelComponent: Parent not ready');
+            }
+          } else {
+            console.warn('GltfModelComponent: No parent found');
+          }
+        }
+
+        onCleanup(() => {
+          if (this.group && this.parentFn) {
+            const parent = this.parentFn();
+            parent?.remove(this.group);
+          }
+          // Dispose clone if needed? The original is cached in service.
+          // We might want to dispose locally cloned materials if we modified them?
+          // But we only modified properties, not replaced materials.
+          this.group = null;
+        });
+      });
+    });
+
+    // Transform Effects
     effect(() => {
       if (this.group) {
         this.group.position.set(...this.position());
@@ -56,50 +122,17 @@ export class GltfModelComponent implements OnInit, OnDestroy {
         this.group.scale.set(...scale);
       }
     });
-    // Pattern: temp/gltf-model.component.ts:196-208 (material update effect)
+    // Material Override Effect
     effect(() => {
       if (this.group) {
         // Trigger material update when any material input changes
-        const _color = this.colorOverride();
-        const _metal = this.metalness();
-        const _rough = this.roughness();
+        // Read signals to register dependency
+        this.colorOverride();
+        this.metalness();
+        this.roughness();
         this.applyMaterialOverrides(this.group);
       }
     });
-  }
-
-  public ngOnInit(): void {
-    // Pattern: gltf-loader.service.ts:109 (load API)
-    const result = this.gltfLoader.load(this.modelPath(), {
-      useDraco: this.useDraco(),
-    });
-
-    // Poll for completion (pattern: inject-texture-loader.ts:105-125)
-    const checkLoad = (): void => {
-      const data = result.data();
-      if (data && !this.group) {
-        this.group = data.scene.clone(); // Clone to allow multiple instances
-        this.group.position.set(...this.position());
-        this.group.rotation.set(...this.rotation());
-        const s = this.scale();
-        const scale: [number, number, number] =
-          typeof s === 'number' ? [s, s, s] : s;
-        this.group.scale.set(...scale);
-
-        // Add to parent (pattern: box.component.ts:94-103)
-        if (this.parentFn) {
-          const parent = this.parentFn();
-          parent?.add(this.group);
-        } else {
-          console.warn('GltfModelComponent: No parent found');
-        }
-
-        this.applyMaterialOverrides(this.group);
-      } else if (result.loading()) {
-        requestAnimationFrame(checkLoad);
-      }
-    };
-    checkLoad();
   }
 
   // Pattern: temp/gltf-model.component.ts:247-292 (material override traversal)
@@ -128,11 +161,9 @@ export class GltfModelComponent implements OnInit, OnDestroy {
   }
 
   public ngOnDestroy(): void {
-    // Pattern: box.component.ts:106-113 (disposal)
     if (this.parentFn && this.group) {
       const parent = this.parentFn();
       parent?.remove(this.group);
     }
-    // Note: Don't dispose loader cache, just remove from scene
   }
 }

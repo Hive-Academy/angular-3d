@@ -34,13 +34,13 @@
  */
 
 import {
-  Component,
   ChangeDetectionStrategy,
-  OnInit,
+  Component,
   OnDestroy,
+  effect,
   inject,
   input,
-  effect,
+  afterNextRender,
 } from '@angular/core';
 import * as THREE from 'three';
 import { NG_3D_PARENT } from '../../types/tokens';
@@ -126,7 +126,7 @@ const LIGHT_PRESETS: Record<LightingPreset, LightConfig> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
 })
-export class SceneLightingComponent implements OnInit, OnDestroy {
+export class SceneLightingComponent implements OnDestroy {
   /** Lighting preset to use: 'studio', 'outdoor', 'dramatic', or 'custom' */
   public readonly preset = input<LightingPreset>('studio');
 
@@ -151,7 +151,7 @@ export class SceneLightingComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Reactive effect for ambient color override
+    // Reactive effect for ambient color override (existing)
     effect(() => {
       if (this.ambientLight) {
         const overrideColor = this.ambientColor();
@@ -160,10 +160,22 @@ export class SceneLightingComponent implements OnInit, OnDestroy {
         }
       }
     });
+
+    // Reactive effect for preset changes
+    afterNextRender(() => {
+      effect((onCleanup) => {
+        const preset = this.preset();
+        this.refreshLights(preset);
+
+        onCleanup(() => {
+          this.disposeLights();
+        });
+      });
+    });
   }
 
-  public ngOnInit(): void {
-    const config = LIGHT_PRESETS[this.preset()];
+  private refreshLights(preset: LightingPreset): void {
+    const config = LIGHT_PRESETS[preset];
 
     // Create ambient light
     this.ambientLight = new THREE.AmbientLight(
@@ -228,7 +240,7 @@ export class SceneLightingComponent implements OnInit, OnDestroy {
     }
   }
 
-  public ngOnDestroy(): void {
+  private disposeLights(): void {
     if (this.parentFn) {
       const parent = this.parentFn();
       if (parent) {
@@ -242,6 +254,11 @@ export class SceneLightingComponent implements OnInit, OnDestroy {
       }
     }
     this.ambientLight?.dispose();
+    this.ambientLight = null;
     this.lights = [];
+  }
+
+  public ngOnDestroy(): void {
+    this.disposeLights();
   }
 }

@@ -1,11 +1,11 @@
 import {
   Component,
   ChangeDetectionStrategy,
-  OnInit,
   OnDestroy,
   inject,
   input,
   effect,
+  afterNextRender,
 } from '@angular/core';
 import * as THREE from 'three';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
@@ -17,7 +17,7 @@ import { NG_3D_PARENT } from '../types/tokens';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
 })
-export class SvgIconComponent implements OnInit, OnDestroy {
+export class SvgIconComponent implements OnDestroy {
   // Transformation inputs
   public readonly position = input<[number, number, number]>([0, 0, 0]);
   public readonly rotation = input<[number, number, number]>([0, 0, 0]);
@@ -66,10 +66,7 @@ export class SvgIconComponent implements OnInit, OnDestroy {
     });
     effect(() => {
       if (this.group) {
-        const s = this.scale();
-        const scale: [number, number, number] =
-          typeof s === 'number' ? [s, s, s] : s;
-        this.group.scale.set(scale[0], scale[1], scale[2]);
+        this.updateGroupScale();
       }
     });
     // Material update effect
@@ -91,22 +88,74 @@ export class SvgIconComponent implements OnInit, OnDestroy {
         });
       }
     });
+
+    // Initialize group after first render
+    afterNextRender(() => {
+      this.group = new THREE.Group();
+      this.group.position.set(...this.position());
+      this.group.rotation.set(...this.rotation());
+      const s = this.scale();
+      const scale: [number, number, number] =
+        typeof s === 'number' ? [s, s, s] : s;
+      this.group.scale.set(scale[0], scale[1], scale[2]);
+
+      // Add to parent
+      if (this.parentFn) {
+        const parent = this.parentFn();
+        if (parent) {
+          parent.add(this.group);
+        } else {
+          console.warn('SvgIconComponent: Parent not ready');
+        }
+      } else {
+        console.warn('SvgIconComponent: No parent found');
+      }
+    });
+
+    // Reactive effect for SVG loading and processor
+    effect((onCleanup) => {
+      const svgPath = this.svgPath();
+      const options = {
+        depth: this.depth(),
+        center: this.center(),
+        flipY: this.flipY(),
+        bevelEnabled: this.bevelEnabled(),
+        bevelThickness: this.bevelThickness(),
+        bevelSize: this.bevelSize(),
+      };
+
+      this.loadAndProcessSvg(svgPath, options);
+
+      onCleanup(() => {
+        this.disposeGroupResources();
+      });
+    });
   }
 
-  public ngOnInit(): void {
-    // Create group
-    this.group = new THREE.Group();
-
-    // Load SVG
+  private loadAndProcessSvg(
+    svgPath: string,
+    options: {
+      depth: number;
+      center: boolean;
+      flipY: boolean;
+      bevelEnabled: boolean;
+      bevelThickness: number;
+      bevelSize: number;
+    }
+  ): void {
     this.svgLoader.load(
-      this.svgPath(),
+      svgPath,
       (data) => {
+        // Clear previous children and resources first (though onCleanup handles disposal, we need to clear children)
+        this.disposeGroupResources(); // Ensure clean slate
+        this.group?.clear(); // Remove children from group
+
         // Create extrude settings
         const extrudeSettings: THREE.ExtrudeGeometryOptions = {
-          depth: this.depth(),
-          bevelEnabled: this.bevelEnabled(),
-          bevelThickness: this.bevelThickness(),
-          bevelSize: this.bevelSize(),
+          depth: options.depth,
+          bevelEnabled: options.bevelEnabled,
+          bevelThickness: options.bevelThickness,
+          bevelSize: options.bevelSize,
         };
 
         // Process SVG paths
@@ -116,7 +165,7 @@ export class SvgIconComponent implements OnInit, OnDestroy {
           shapes.forEach((shape) => {
             let geometry: THREE.BufferGeometry;
 
-            if (this.depth() > 0) {
+            if (options.depth > 0) {
               geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
             } else {
               geometry = new THREE.ShapeGeometry(shape);
@@ -131,7 +180,9 @@ export class SvgIconComponent implements OnInit, OnDestroy {
             });
 
             const mesh = new THREE.Mesh(geometry, material);
-            this.group!.add(mesh);
+            if (this.group) {
+              this.group.add(mesh);
+            }
 
             // Store for disposal
             this.geometries.push(geometry);
@@ -140,43 +191,40 @@ export class SvgIconComponent implements OnInit, OnDestroy {
         });
 
         // Center the group if requested
-        if (this.center()) {
+        if (options.center) {
           this.centerGroup();
         }
 
         // Flip Y-axis (SVG coordinate system is inverted)
-        if (this.flipY()) {
-          this.group!.scale.y = -1;
-        }
-
-        // Apply transforms
-        this.group!.position.set(...this.position());
-        this.group!.rotation.set(...this.rotation());
-        const s = this.scale();
-        const scale = typeof s === 'number' ? [s, s, s] : s;
-        this.group!.scale.set(
-          scale[0],
-          scale[1] * (this.flipY() ? -1 : 1),
-          scale[2]
-        );
-
-        // Add to parent
-        if (this.parentFn) {
-          const parent = this.parentFn();
-          if (parent) {
-            parent.add(this.group!);
-          } else {
-            console.warn('SvgIconComponent: Parent not ready');
-          }
-        } else {
-          console.warn('SvgIconComponent: No parent found');
-        }
+        // Note: We apply this to the group scale which is already managed by transform effect.
+        // To avoid conflict, we should probably apply this inside the geometry or a wrapper.
+        // However, sticking to current logic: we modify the local Y scale multiplier.
+        // BUT, since we have a transform effect watching this.scale(), modifying group.scale here will be overwritten.
+        // FIX: The transform effect sets the base scale. We need to multiply Y by -1 if flipY is true.
+        // Let's rely on the transform effect to handle the flip logic if we can, OR simply update it here
+        // and acknowledge it might glitch if scale changes rapidly.
+        // BETTER: Update the transform effect to include flipY logic. Let's do that in a separate fix.
+        // For now, since effects run after this, let's keep the existing logic but knowing 'flipY' is watched by effect in refactor?
+        // Actually, the transform effect in constructor watches 'flipY' via 'this.scale()' logic? No, it watches this.scale().
+        // We should update the scale effect to account for flipY.
+        this.updateGroupScale();
       },
       undefined,
       (error) => {
         console.error('SvgIconComponent: SVG loading error:', error);
       }
     );
+  }
+
+  // Update scale effect logic helper
+  private updateGroupScale(): void {
+    if (this.group) {
+      const s = this.scale();
+      const scale: [number, number, number] =
+        typeof s === 'number' ? [s, s, s] : s;
+      const flipMult = this.flipY() ? -1 : 1;
+      this.group.scale.set(scale[0], scale[1] * flipMult, scale[2]);
+    }
   }
 
   private centerGroup(): void {
@@ -191,12 +239,7 @@ export class SvgIconComponent implements OnInit, OnDestroy {
     });
   }
 
-  public ngOnDestroy(): void {
-    if (this.parentFn && this.group) {
-      const parent = this.parentFn();
-      parent?.remove(this.group);
-    }
-
+  private disposeGroupResources(): void {
     // Dispose geometries and materials
     this.geometries.forEach((geometry) => geometry.dispose());
     this.materials.forEach((material) => material.dispose());
@@ -204,5 +247,13 @@ export class SvgIconComponent implements OnInit, OnDestroy {
     // Clear arrays
     this.geometries = [];
     this.materials = [];
+  }
+
+  public ngOnDestroy(): void {
+    if (this.parentFn && this.group) {
+      const parent = this.parentFn();
+      parent?.remove(this.group);
+    }
+    this.disposeGroupResources();
   }
 }

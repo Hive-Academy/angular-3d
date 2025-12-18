@@ -1,10 +1,11 @@
 import {
   Component,
   ChangeDetectionStrategy,
-  OnInit,
   OnDestroy,
   inject,
   input,
+  effect,
+  afterNextRender,
 } from '@angular/core';
 import * as THREE from 'three';
 import { NG_3D_PARENT } from '../types/tokens';
@@ -89,7 +90,7 @@ function generateSpritePositions(
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
 })
-export class NebulaComponent implements OnInit, OnDestroy {
+export class NebulaComponent implements OnDestroy {
   // Transform input
   public readonly position = input<[number, number, number]>([0, 0, 0]);
 
@@ -102,28 +103,78 @@ export class NebulaComponent implements OnInit, OnDestroy {
   public readonly maxSize = input<number>(5);
 
   private readonly parentFn = inject(NG_3D_PARENT, { optional: true });
-  private group!: THREE.Group;
+  private group: THREE.Group;
   private sprites: THREE.Sprite[] = [];
-  private texture!: THREE.CanvasTexture;
+  private texture: THREE.CanvasTexture | null = null;
 
-  public ngOnInit(): void {
-    // Create group for all sprites
+  public constructor() {
     this.group = new THREE.Group();
-    this.group.position.set(...this.position());
+
+    // Add to parent after first render
+    afterNextRender(() => {
+      if (this.parentFn) {
+        const parent = this.parentFn();
+        if (parent) {
+          parent.add(this.group);
+        } else {
+          console.warn('NebulaComponent: Parent not ready');
+        }
+      } else {
+        console.warn('NebulaComponent: No parent found');
+      }
+    });
+
+    // Effect for rebuilding clouds when config changes
+    effect((onCleanup) => {
+      // Track dependencies
+      const count = this.cloudCount();
+      const radius = this.radius();
+      const color = this.color();
+      const opacity = this.opacity();
+      const minSize = this.minSize();
+      const maxSize = this.maxSize();
+
+      this.rebuildNebula(count, radius, color, opacity, minSize, maxSize);
+
+      onCleanup(() => {
+        this.disposeResources();
+      });
+    });
+
+    // Transform effects
+    effect(() => {
+      this.group.position.set(...this.position());
+    });
+  }
+
+  private rebuildNebula(
+    count: number,
+    radius: number,
+    color: string | number,
+    opacity: number,
+    minSize: number,
+    maxSize: number
+  ): void {
+    // Clear previous sprites from group (resources disposed in onCleanup/disposeResources)
+    this.group.clear();
+    this.sprites = [];
 
     // Generate cloud texture
-    const cloudColor = new THREE.Color(this.color());
+    const cloudColor = new THREE.Color(color);
+    // Reuse texture if color hasn't changed? For simplicity, regenerate.
+    // Optimization: In a real app, memoize texture based on color alone.
+    if (this.texture) this.texture.dispose();
     this.texture = generateCloudTexture(128, cloudColor);
 
     // Generate sprite positions
-    const positions = generateSpritePositions(this.cloudCount(), this.radius());
+    const positions = generateSpritePositions(count, radius);
 
     // Create sprites
     for (let i = 0; i < positions.length; i++) {
       const material = new THREE.SpriteMaterial({
         map: this.texture,
         transparent: true,
-        opacity: this.opacity() * (0.7 + Math.random() * 0.3), // Vary opacity
+        opacity: opacity * (0.7 + Math.random() * 0.3), // Vary opacity
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
@@ -132,25 +183,26 @@ export class NebulaComponent implements OnInit, OnDestroy {
       sprite.position.copy(positions[i]);
 
       // Vary size between min and max
-      const size =
-        this.minSize() + Math.random() * (this.maxSize() - this.minSize());
+      const size = minSize + Math.random() * (maxSize - minSize);
       sprite.scale.set(size, size, 1);
 
       this.sprites.push(sprite);
       this.group.add(sprite);
     }
+  }
 
-    // Add to parent
-    if (this.parentFn) {
-      const parent = this.parentFn();
-      if (parent) {
-        parent.add(this.group);
-      } else {
-        console.warn('NebulaComponent: Parent not ready');
+  private disposeResources(): void {
+    // Dispose sprites and materials
+    for (const sprite of this.sprites) {
+      if (sprite.material instanceof THREE.SpriteMaterial) {
+        sprite.material.dispose();
       }
-    } else {
-      console.warn('NebulaComponent: No parent found');
     }
+    this.sprites = []; // Clear array
+
+    // Dispose texture
+    this.texture?.dispose();
+    this.texture = null;
   }
 
   public ngOnDestroy(): void {
@@ -158,15 +210,6 @@ export class NebulaComponent implements OnInit, OnDestroy {
       const parent = this.parentFn();
       parent?.remove(this.group);
     }
-
-    // Dispose sprites and materials
-    for (const sprite of this.sprites) {
-      if (sprite.material instanceof THREE.SpriteMaterial) {
-        sprite.material.dispose();
-      }
-    }
-
-    // Dispose texture
-    this.texture?.dispose();
+    this.disposeResources();
   }
 }

@@ -1,7 +1,6 @@
 import {
   Component,
   ChangeDetectionStrategy,
-  OnInit,
   OnDestroy,
   inject,
   input,
@@ -17,7 +16,7 @@ import { injectTextureLoader } from '../loaders/inject-texture-loader';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
 })
-export class PlanetComponent implements OnInit, OnDestroy {
+export class PlanetComponent implements OnDestroy {
   // Transform inputs
   public readonly position = input<[number, number, number]>([0, 0, 0]);
   public readonly radius = input<number>(6.5);
@@ -38,18 +37,56 @@ export class PlanetComponent implements OnInit, OnDestroy {
   private readonly parentFn = inject(NG_3D_PARENT, { optional: true });
 
   // Pattern: inject-texture-loader.ts:62-64 (reactive texture loading)
-  private readonly textureLoader = (() => {
-    const url = this.textureUrl();
-    return url ? injectTextureLoader(() => url) : null;
-  })();
+  // Note: We need a reactive way to get the loader signal based on the input signal
+  // But inject functions must be in injection context.
+  // We can't use injectTextureLoader inside an effect.
+  // However, we can use a computed signal if the URL allows it, or just use the loader service directly?
+  // Use specific texture loader service if available, or raw THREE.TextureLoader.
+  // Given 'injectTextureLoader' is likely designed for component initialization:
+  // If we want dynamic textures, we might need a different pattern or accept that the texture loader
+  // signal is created once.
+  // Actually, 'injectTextureLoader' takes a signal function. So it IS reactive.
+  // It returns a signal 'Resource<Texture>'.
+  private readonly textureResource = injectTextureLoader(this.textureUrl);
 
-  private mesh!: THREE.Mesh;
-  private geometry!: THREE.SphereGeometry;
-  private material!: THREE.MeshStandardMaterial;
-  private light?: THREE.PointLight;
+  private mesh: THREE.Mesh | null = null;
+  private geometry: THREE.SphereGeometry | null = null;
+  private material: THREE.MeshStandardMaterial | null = null;
+  private light: THREE.PointLight | null = null;
 
   public constructor() {
-    // Reactive position updates
+    // Top-level effect for rebuilding the planet structure (geometry/material/light)
+    effect((onCleanup) => {
+      // Dependencies
+      const radius = this.radius();
+      const segments = this.segments();
+      const color = this.color();
+      const metalness = this.metalness();
+      const roughness = this.roughness();
+      const glowIntensity = this.glowIntensity();
+      const glowColor = this.glowColor();
+
+      // Texture dependency
+      // Access  data signal directly from the resource object
+      const textureData = this.textureResource.data();
+
+      this.rebuildPlanet(
+        radius,
+        segments,
+        color,
+        metalness,
+        roughness,
+        glowIntensity,
+        glowColor,
+        textureData
+      );
+
+      onCleanup(() => {
+        this.disposeResources();
+      });
+    });
+
+    // Transform effect
     effect(() => {
       if (this.mesh) {
         this.mesh.position.set(...this.position());
@@ -61,36 +98,49 @@ export class PlanetComponent implements OnInit, OnDestroy {
     });
   }
 
-  public ngOnInit(): void {
-    // Pattern: box.component.ts:77-91
-    this.geometry = new THREE.SphereGeometry(
-      this.radius(),
-      this.segments(),
-      this.segments()
-    );
+  private rebuildPlanet(
+    radius: number,
+    segments: number,
+    color: string | number,
+    metalness: number,
+    roughness: number,
+    glowIntensity: number,
+    glowColor: string | number,
+    texture: THREE.Texture | null
+  ): void {
+    // Dispose old
+    this.disposeResources();
 
-    const texture = this.textureLoader?.data() ?? null;
+    // Remove from parent
+    if (this.parentFn) {
+      const parent = this.parentFn();
+      if (this.mesh) parent?.remove(this.mesh);
+      if (this.light) parent?.remove(this.light);
+    }
+
+    // Geometry
+    this.geometry = new THREE.SphereGeometry(radius, segments, segments);
+
+    // Material
     this.material = new THREE.MeshStandardMaterial({
-      color: this.color(),
+      color: color,
       map: texture,
-      metalness: this.metalness(),
-      roughness: this.roughness(),
+      metalness: metalness,
+      roughness: roughness,
     });
 
+    // Mesh
     this.mesh = new THREE.Mesh(this.geometry, this.material);
     this.mesh.position.set(...this.position());
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
 
-    // Glow light (pattern: temp/planet.component.ts:67-74)
-    if (this.glowIntensity() > 0) {
-      this.light = new THREE.PointLight(
-        this.glowColor(),
-        this.glowIntensity(),
-        15,
-        2
-      );
+    // Glow Light
+    if (glowIntensity > 0) {
+      this.light = new THREE.PointLight(glowColor, glowIntensity, 15, 2);
       this.light.position.set(...this.position());
+    } else {
+      this.light = null;
     }
 
     // Add to parent
@@ -109,16 +159,21 @@ export class PlanetComponent implements OnInit, OnDestroy {
     }
   }
 
+  private disposeResources(): void {
+    this.geometry?.dispose();
+    this.geometry = null;
+    this.material?.dispose();
+    this.material = null;
+    this.light?.dispose();
+    this.light = null;
+  }
+
   public ngOnDestroy(): void {
     if (this.parentFn) {
       const parent = this.parentFn();
-      parent?.remove(this.mesh);
-      if (this.light) {
-        parent?.remove(this.light);
-      }
+      if (this.mesh) parent?.remove(this.mesh);
+      if (this.light) parent?.remove(this.light);
     }
-    this.geometry?.dispose();
-    this.material?.dispose();
-    this.light?.dispose();
+    this.disposeResources();
   }
 }

@@ -37,13 +37,14 @@
  */
 
 import {
-  Component,
   ChangeDetectionStrategy,
-  OnInit,
+  Component,
   OnDestroy,
+  computed,
+  effect,
   inject,
   input,
-  computed,
+  afterNextRender,
 } from '@angular/core';
 import * as THREE from 'three';
 import { NG_3D_PARENT } from '../types/tokens';
@@ -106,7 +107,7 @@ function generateConePositions(count: number, spread: number): Float32Array {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
 })
-export class ParticleSystemComponent implements OnInit, OnDestroy {
+export class ParticleSystemComponent implements OnDestroy {
   // Particle configuration
   public readonly count = input<number>(1000);
   public readonly size = input<number>(0.05);
@@ -140,38 +141,83 @@ export class ParticleSystemComponent implements OnInit, OnDestroy {
     }
   });
 
-  public ngOnInit(): void {
-    // Create geometry with positions
+  public constructor() {
+    // Reactive effect for geometry and material generation
+    afterNextRender(() => {
+      effect((onCleanup) => {
+        // Dependencies to track
+        const positions = this.positions();
+        const color = this.color();
+        const size = this.size();
+        const opacity = this.opacity();
+
+        this.rebuildParticles(positions, { color, size, opacity });
+
+        onCleanup(() => {
+          // No explicit cleanup needed here as rebuildParticles handles geometry disposal
+          // and reuse of material variable. But for completeness, we could dispose.
+          // The main cleanup happens in ngOnDestroy.
+        });
+      });
+    });
+
+    // Transform effect
+    effect(() => {
+      if (this.points) {
+        this.points.position.set(...this.position());
+      }
+    });
+  }
+
+  private rebuildParticles(
+    positions: Float32Array,
+    options: { color: string | number; size: number; opacity: number }
+  ): void {
+    // Dispose old geometry
+    if (this.geometry) {
+      this.geometry.dispose();
+    }
+    // Dispose old material if needed (though we could reuse it, let's recreate for simplicity of updates)
+    if (this.material) {
+      this.material.dispose();
+    }
+
+    // Create new geometry
     this.geometry = new THREE.BufferGeometry();
     this.geometry.setAttribute(
       'position',
-      new THREE.BufferAttribute(this.positions(), 3)
+      new THREE.BufferAttribute(positions, 3)
     );
 
-    // Create material
+    // Create new material
     this.material = new THREE.PointsMaterial({
-      color: this.color(),
-      size: this.size(),
+      color: options.color,
+      size: options.size,
       sizeAttenuation: true,
       transparent: true,
-      opacity: this.opacity(),
+      opacity: options.opacity,
       depthWrite: false,
     });
 
-    // Create points
-    this.points = new THREE.Points(this.geometry, this.material);
-    this.points.position.set(...this.position());
+    // If points object exists, update it; otherwise create it
+    if (!this.points) {
+      this.points = new THREE.Points(this.geometry, this.material);
+      this.points.position.set(...this.position());
 
-    // Add to parent
-    if (this.parentFn) {
-      const parent = this.parentFn();
-      if (parent) {
-        parent.add(this.points);
+      // Add to parent
+      if (this.parentFn) {
+        const parent = this.parentFn();
+        if (parent) {
+          parent.add(this.points);
+        } else {
+          console.warn('ParticleSystemComponent: Parent not ready');
+        }
       } else {
-        console.warn('ParticleSystemComponent: Parent not ready');
+        console.warn('ParticleSystemComponent: No parent found');
       }
     } else {
-      console.warn('ParticleSystemComponent: No parent found');
+      this.points.geometry = this.geometry;
+      this.points.material = this.material;
     }
   }
 

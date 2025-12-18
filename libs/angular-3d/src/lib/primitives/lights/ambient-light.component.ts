@@ -1,11 +1,11 @@
 import {
   Component,
   ChangeDetectionStrategy,
-  OnInit,
   OnDestroy,
   inject,
   input,
   effect,
+  afterNextRender,
 } from '@angular/core';
 import * as THREE from 'three';
 import { NG_3D_PARENT } from '../../types/tokens';
@@ -16,7 +16,7 @@ import { NG_3D_PARENT } from '../../types/tokens';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
 })
-export class AmbientLightComponent implements OnInit, OnDestroy {
+export class AmbientLightComponent implements OnDestroy {
   public readonly color = input<string | number>('white');
   public readonly intensity = input<number>(1);
 
@@ -30,17 +30,17 @@ export class AmbientLightComponent implements OnInit, OnDestroy {
         this.light.intensity = this.intensity();
       }
     });
-  }
 
-  public ngOnInit(): void {
-    this.light = new THREE.AmbientLight(this.color(), this.intensity());
+    afterNextRender(() => {
+      this.light = new THREE.AmbientLight(this.color(), this.intensity());
 
-    if (this.parentFn) {
-      const parent = this.parentFn();
-      parent?.add(this.light);
-    } else {
-      console.warn('AmbientLight: No parent found');
-    }
+      if (this.parentFn) {
+        const parent = this.parentFn();
+        parent?.add(this.light);
+      } else {
+        console.warn('AmbientLight: No parent found');
+      }
+    });
   }
 
   public ngOnDestroy(): void {

@@ -1,7 +1,6 @@
 import {
   Component,
   ChangeDetectionStrategy,
-  OnInit,
   OnDestroy,
   inject,
   input,
@@ -16,7 +15,7 @@ import { NG_3D_PARENT } from '../types/tokens';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
 })
-export class CylinderComponent implements OnInit, OnDestroy {
+export class CylinderComponent implements OnDestroy {
   public readonly position = input<[number, number, number]>([0, 0, 0]);
   public readonly rotation = input<[number, number, number]>([0, 0, 0]);
   public readonly scale = input<[number, number, number]>([1, 1, 1]);
@@ -26,13 +25,14 @@ export class CylinderComponent implements OnInit, OnDestroy {
   public readonly color = input<string | number>('green');
   public readonly wireframe = input<boolean>(false);
 
-  private mesh!: THREE.Mesh;
-  private geometry!: THREE.CylinderGeometry;
-  private material!: THREE.MeshStandardMaterial;
+  private mesh: THREE.Mesh | null = null;
+  private geometry: THREE.CylinderGeometry | null = null;
+  private material: THREE.MeshStandardMaterial | null = null;
 
   private readonly parentFn = inject(NG_3D_PARENT, { optional: true });
 
   public constructor() {
+    // Transform effects
     effect(() => {
       if (this.mesh) {
         this.mesh.position.set(...this.position());
@@ -41,51 +41,69 @@ export class CylinderComponent implements OnInit, OnDestroy {
       }
     });
 
+    // Material effect
     effect(() => {
+      const color = this.color();
+      const wireframe = this.wireframe();
+
       if (this.material) {
-        this.material.color.set(this.color());
-        this.material.wireframe = this.wireframe();
+        this.material.color.set(color);
+        this.material.wireframe = wireframe;
+        this.material.needsUpdate = true;
+      } else {
+        this.material = new THREE.MeshStandardMaterial({ color, wireframe });
+        if (this.mesh) {
+          this.mesh.material = this.material;
+        } else {
+          this.rebuildMesh();
+        }
       }
     });
 
+    // Geometry effect
     effect(() => {
       const [radiusTop, radiusBottom, height, radialSegments] = this.args();
-      if (this.geometry) this.geometry.dispose();
-      this.geometry = new THREE.CylinderGeometry(
+
+      const newGeometry = new THREE.CylinderGeometry(
         radiusTop,
         radiusBottom,
         height,
         radialSegments
       );
-      if (this.mesh) this.mesh.geometry = this.geometry;
+
+      if (this.geometry) this.geometry.dispose();
+      this.geometry = newGeometry;
+
+      if (this.mesh) {
+        this.mesh.geometry = this.geometry;
+      } else {
+        this.rebuildMesh();
+      }
     });
   }
 
-  public ngOnInit(): void {
-    const [radiusTop, radiusBottom, height, radialSegments] = this.args();
-    this.geometry = new THREE.CylinderGeometry(
-      radiusTop,
-      radiusBottom,
-      height,
-      radialSegments
-    );
-    this.material = new THREE.MeshStandardMaterial({
-      color: this.color(),
-      wireframe: this.wireframe(),
-    });
-    this.mesh = new THREE.Mesh(this.geometry, this.material);
-    this.mesh.position.set(...this.position());
-    this.mesh.rotation.set(...this.rotation());
-    this.mesh.scale.set(...this.scale());
+  private rebuildMesh(): void {
+    if (this.geometry && this.material && !this.mesh) {
+      this.mesh = new THREE.Mesh(this.geometry, this.material);
+      this.mesh.position.set(...this.position());
+      this.mesh.rotation.set(...this.rotation());
+      this.mesh.scale.set(...this.scale());
+      this.addToParent();
+    }
+  }
 
-    if (this.parentFn) {
+  private addToParent(): void {
+    if (this.parentFn && this.mesh) {
       const parent = this.parentFn();
-      parent?.add(this.mesh);
+      if (parent) parent.add(this.mesh);
     }
   }
 
   public ngOnDestroy(): void {
-    if (this.parentFn) this.parentFn()?.remove(this.mesh);
+    if (this.parentFn && this.mesh) {
+      const parent = this.parentFn();
+      parent?.remove(this.mesh);
+    }
     this.geometry?.dispose();
     this.material?.dispose();
   }

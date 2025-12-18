@@ -1,7 +1,6 @@
 import {
   Component,
   ChangeDetectionStrategy,
-  OnInit,
   OnDestroy,
   inject,
   input,
@@ -16,7 +15,7 @@ import { NG_3D_PARENT } from '../types/tokens';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
 })
-export class TorusComponent implements OnInit, OnDestroy {
+export class TorusComponent implements OnDestroy {
   public readonly position = input<[number, number, number]>([0, 0, 0]);
   public readonly rotation = input<[number, number, number]>([0, 0, 0]);
   public readonly scale = input<[number, number, number]>([1, 1, 1]);
@@ -51,38 +50,58 @@ export class TorusComponent implements OnInit, OnDestroy {
     });
 
     effect(() => {
+      // Re-create geometry if args change
       const [radius, tube, radialSegments, tubularSegments] = this.args();
-      if (this.geometry) this.geometry.dispose();
-      this.geometry = new THREE.TorusGeometry(
+      const newGeometry = new THREE.TorusGeometry(
         radius,
         tube,
         radialSegments,
         tubularSegments
       );
-      if (this.mesh) this.mesh.geometry = this.geometry;
+
+      if (this.geometry) this.geometry.dispose();
+      this.geometry = newGeometry;
+
+      // Update mesh geometry
+      if (this.mesh) {
+        this.mesh.geometry = this.geometry;
+      } else {
+        // Init mesh if not exists
+        this.rebuildMesh();
+      }
+    });
+
+    effect(() => {
+      // Material updates
+      const color = this.color();
+      const wireframe = this.wireframe();
+
+      if (this.material) {
+        this.material.color.set(color);
+        this.material.wireframe = wireframe;
+        this.material.needsUpdate = true;
+      } else {
+        this.material = new THREE.MeshStandardMaterial({ color, wireframe });
+        if (this.mesh) this.mesh.material = this.material;
+        else this.rebuildMesh(); // Should be handled by geometry effect usually, but safe guard
+      }
     });
   }
 
-  public ngOnInit(): void {
-    const [radius, tube, radialSegments, tubularSegments] = this.args();
-    this.geometry = new THREE.TorusGeometry(
-      radius,
-      tube,
-      radialSegments,
-      tubularSegments
-    );
-    this.material = new THREE.MeshStandardMaterial({
-      color: this.color(),
-      wireframe: this.wireframe(),
-    });
-    this.mesh = new THREE.Mesh(this.geometry, this.material);
-    this.mesh.position.set(...this.position());
-    this.mesh.rotation.set(...this.rotation());
-    this.mesh.scale.set(...this.scale());
+  private rebuildMesh(): void {
+    if (this.geometry && this.material && !this.mesh) {
+      this.mesh = new THREE.Mesh(this.geometry, this.material);
+      this.mesh.position.set(...this.position());
+      this.mesh.rotation.set(...this.rotation());
+      this.mesh.scale.set(...this.scale());
+      this.addToParent();
+    }
+  }
 
-    if (this.parentFn) {
+  private addToParent(): void {
+    if (this.parentFn && this.mesh) {
       const parent = this.parentFn();
-      parent?.add(this.mesh);
+      if (parent) parent.add(this.mesh);
     }
   }
 

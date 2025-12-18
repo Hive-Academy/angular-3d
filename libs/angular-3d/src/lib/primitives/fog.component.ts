@@ -1,7 +1,6 @@
 import {
   Component,
   ChangeDetectionStrategy,
-  OnInit,
   OnDestroy,
   inject,
   input,
@@ -24,7 +23,7 @@ import { SceneService } from '../canvas/scene.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
 })
-export class FogComponent implements OnInit, OnDestroy {
+export class FogComponent implements OnDestroy {
   public readonly color = input<string | number>('white');
   public readonly near = input<number | undefined>(undefined);
   public readonly far = input<number>(1000);
@@ -33,33 +32,46 @@ export class FogComponent implements OnInit, OnDestroy {
   private readonly sceneService = inject(SceneService);
 
   public constructor() {
-    effect(() => {
+    effect((onCleanup) => {
       const scene = this.sceneService.scene();
-      if (scene && scene.fog) {
-        // Update existing fog if possible
-        if (scene.fog instanceof THREE.Fog) {
-          scene.fog.color.set(this.color());
-          const near = this.near();
-          if (near !== undefined) scene.fog.near = near;
-          scene.fog.far = this.far();
-        } else if (scene.fog instanceof THREE.FogExp2) {
-          scene.fog.color.set(this.color());
-          const density = this.density();
-          if (density !== undefined) scene.fog.density = density;
+      if (!scene) return;
+
+      const color = this.color();
+      const density = this.density();
+      const near = this.near();
+      const far = this.far();
+
+      // Determine fog type based on density presence
+      if (density !== undefined) {
+        // FogExp2
+        if (!(scene.fog instanceof THREE.FogExp2)) {
+          scene.fog = new THREE.FogExp2(color, density);
+        } else {
+          // Update existing
+          scene.fog.color.set(color);
+          scene.fog.density = density;
+        }
+      } else {
+        // Fog (Linear)
+        if (!(scene.fog instanceof THREE.Fog)) {
+          scene.fog = new THREE.Fog(color, near ?? 1, far);
+        } else {
+          // Update existing
+          scene.fog.color.set(color);
+          scene.fog.near = near ?? 1;
+          scene.fog.far = far;
         }
       }
-    });
-  }
 
-  public ngOnInit(): void {
-    const scene = this.sceneService.scene();
-    if (scene) {
-      if (this.density() !== undefined) {
-        scene.fog = new THREE.FogExp2(this.color(), this.density());
-      } else {
-        scene.fog = new THREE.Fog(this.color(), this.near() ?? 1, this.far());
-      }
-    }
+      onCleanup(() => {
+        const currentScene = this.sceneService.scene();
+        if (currentScene && currentScene.fog === scene.fog) {
+          // Only clear if it's still our fog?
+          // Actually, if we destroy the component, we typically want to remove the fog.
+          currentScene.fog = null;
+        }
+      });
+    });
   }
 
   public ngOnDestroy(): void {

@@ -1,7 +1,6 @@
 import {
   Component,
   ChangeDetectionStrategy,
-  OnInit,
   OnDestroy,
   inject,
   input,
@@ -16,7 +15,7 @@ import { NG_3D_PARENT } from '../types/tokens';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
 })
-export class PolyhedronComponent implements OnInit, OnDestroy {
+export class PolyhedronComponent implements OnDestroy {
   public readonly position = input<[number, number, number]>([0, 0, 0]);
   public readonly rotation = input<[number, number, number]>([0, 0, 0]);
   public readonly scale = input<[number, number, number]>([1, 1, 1]);
@@ -29,13 +28,14 @@ export class PolyhedronComponent implements OnInit, OnDestroy {
   public readonly color = input<string | number>('purple');
   public readonly wireframe = input<boolean>(false);
 
-  private mesh!: THREE.Mesh;
-  private geometry!: THREE.PolyhedronGeometry;
-  private material!: THREE.MeshStandardMaterial;
+  private mesh: THREE.Mesh | null = null;
+  private geometry: THREE.PolyhedronGeometry | null = null;
+  private material: THREE.MeshStandardMaterial | null = null;
 
   private readonly parentFn = inject(NG_3D_PARENT, { optional: true });
 
   public constructor() {
+    // Transform effects
     effect(() => {
       if (this.mesh) {
         this.mesh.position.set(...this.position());
@@ -44,63 +44,81 @@ export class PolyhedronComponent implements OnInit, OnDestroy {
       }
     });
 
+    // Material effect
     effect(() => {
+      const color = this.color();
+      const wireframe = this.wireframe();
+
       if (this.material) {
-        this.material.color.set(this.color());
-        this.material.wireframe = this.wireframe();
+        this.material.color.set(color);
+        this.material.wireframe = wireframe;
+        this.material.needsUpdate = true;
+      } else {
+        this.material = new THREE.MeshStandardMaterial({ color, wireframe });
+        if (this.mesh) {
+          this.mesh.material = this.material;
+        } else {
+          this.rebuildMesh();
+        }
       }
     });
 
+    // Geometry effect
     effect(() => {
-      this.updateGeometry();
+      const [radius, detail] = this.args();
+      let newGeometry: THREE.BufferGeometry;
+
+      // Handle different polyhedron types
+      switch (this.type()) {
+        case 'icosahedron':
+          newGeometry = new THREE.IcosahedronGeometry(radius, detail);
+          break;
+        case 'dodecahedron':
+          newGeometry = new THREE.DodecahedronGeometry(radius, detail);
+          break;
+        case 'octahedron':
+          newGeometry = new THREE.OctahedronGeometry(radius, detail);
+          break;
+        case 'tetrahedron':
+          newGeometry = new THREE.TetrahedronGeometry(radius, detail);
+          break;
+        default:
+          newGeometry = new THREE.IcosahedronGeometry(radius, detail);
+      }
+
+      if (this.geometry) this.geometry.dispose();
+      this.geometry = newGeometry as THREE.PolyhedronGeometry;
+
+      if (this.mesh) {
+        this.mesh.geometry = this.geometry;
+      } else {
+        this.rebuildMesh();
+      }
     });
   }
 
-  private updateGeometry(): void {
-    const [radius, detail] = this.args();
-    const type = this.type();
-
-    if (this.geometry) this.geometry.dispose();
-
-    switch (type) {
-      case 'icosahedron':
-        this.geometry = new THREE.IcosahedronGeometry(radius, detail);
-        break;
-      case 'dodecahedron':
-        this.geometry = new THREE.DodecahedronGeometry(radius, detail);
-        break;
-      case 'tetrahedron':
-        this.geometry = new THREE.TetrahedronGeometry(radius, detail);
-        break;
-      case 'octahedron':
-        this.geometry = new THREE.OctahedronGeometry(radius, detail);
-        break;
-      default:
-        this.geometry = new THREE.IcosahedronGeometry(radius, detail);
+  private rebuildMesh(): void {
+    if (this.geometry && this.material && !this.mesh) {
+      this.mesh = new THREE.Mesh(this.geometry, this.material);
+      this.mesh.position.set(...this.position());
+      this.mesh.rotation.set(...this.rotation());
+      this.mesh.scale.set(...this.scale());
+      this.addToParent();
     }
-
-    if (this.mesh) this.mesh.geometry = this.geometry;
   }
 
-  public ngOnInit(): void {
-    this.updateGeometry();
-    this.material = new THREE.MeshStandardMaterial({
-      color: this.color(),
-      wireframe: this.wireframe(),
-    });
-    this.mesh = new THREE.Mesh(this.geometry, this.material);
-    this.mesh.position.set(...this.position());
-    this.mesh.rotation.set(...this.rotation());
-    this.mesh.scale.set(...this.scale());
-
-    if (this.parentFn) {
+  private addToParent(): void {
+    if (this.parentFn && this.mesh) {
       const parent = this.parentFn();
-      parent?.add(this.mesh);
+      if (parent) parent.add(this.mesh);
     }
   }
 
   public ngOnDestroy(): void {
-    if (this.parentFn) this.parentFn()?.remove(this.mesh);
+    if (this.parentFn && this.mesh) {
+      const parent = this.parentFn();
+      parent?.remove(this.mesh);
+    }
     this.geometry?.dispose();
     this.material?.dispose();
   }

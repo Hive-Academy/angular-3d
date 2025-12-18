@@ -1,0 +1,11 @@
+{
+  "name": "@hive-academy/angular-gsap",
+  "version": "0.0.1",
+  "peerDependencies": {
+    "@angular/common": "^20.3.0",
+    "@angular/core": "^20.3.0",
+    "gsap": "^3.12.0",
+    "rxjs": "~7.8.0"
+  },
+  "sideEffects": false
+}

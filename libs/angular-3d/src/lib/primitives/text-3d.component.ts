@@ -1,15 +1,15 @@
 import {
   Component,
   ChangeDetectionStrategy,
-  OnInit,
   OnDestroy,
   inject,
   input,
   effect,
+  afterNextRender,
 } from '@angular/core';
 import * as THREE from 'three';
-import { FontLoader } from 'three/addons/loaders/FontLoader.js';
-import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+import { Font, FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { NG_3D_PARENT } from '../types/tokens';
 
 @Component({
@@ -18,7 +18,7 @@ import { NG_3D_PARENT } from '../types/tokens';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
 })
-export class Text3DComponent implements OnInit, OnDestroy {
+export class Text3DComponent implements OnDestroy {
   // Transformation inputs
   public readonly position = input<[number, number, number]>([0, 0, 0]);
   public readonly rotation = input<[number, number, number]>([0, 0, 0]);
@@ -78,6 +78,19 @@ export class Text3DComponent implements OnInit, OnDestroy {
         this.mesh.scale.set(scale[0], scale[1], scale[2]);
       }
     });
+
+    // Initialize material after first render
+    afterNextRender(() => {
+      this.material = new THREE.MeshStandardMaterial({
+        color: this.color(),
+        metalness: this.metalness(),
+        roughness: this.roughness(),
+        emissive: this.emissive(),
+        emissiveIntensity: this.emissiveIntensity(),
+      });
+    });
+
+    // Reactive effect for material properties
     effect(() => {
       if (this.material) {
         this.material.color.set(this.color());
@@ -88,61 +101,89 @@ export class Text3DComponent implements OnInit, OnDestroy {
         this.material.needsUpdate = true;
       }
     });
+
+    // Reactive effect for font loading and geometry generation
+    effect((onCleanup) => {
+      const text = this.text();
+      const fontUrl = this.font();
+      const options = {
+        size: this.fontSize(),
+        height: this.height(),
+        curveSegments: this.curveSegments(),
+        bevelEnabled: this.bevelEnabled(),
+        bevelThickness: this.bevelThickness(),
+        bevelSize: this.bevelSize(),
+        bevelOffset: this.bevelOffset(),
+        bevelSegments: this.bevelSegments(),
+      };
+
+      // Load font and create/update geometry
+      this.loadFontAndCreateText(text, fontUrl, options);
+
+      onCleanup(() => {
+        this.disposeGeometry();
+      });
+    });
   }
 
-  public ngOnInit(): void {
-    // Initialize material
-    this.material = new THREE.MeshStandardMaterial({
-      color: this.color(),
-      metalness: this.metalness(),
-      roughness: this.roughness(),
-      emissive: this.emissive(),
-      emissiveIntensity: this.emissiveIntensity(),
-    });
-
-    // Load font and create text geometry
+  private loadFontAndCreateText(
+    text: string,
+    fontUrl: string,
+    options: {
+      size: number;
+      height: number;
+      curveSegments: number;
+      bevelEnabled: boolean;
+      bevelThickness: number;
+      bevelSize: number;
+      bevelOffset: number;
+      bevelSegments: number;
+    }
+  ): void {
     this.fontLoader.load(
-      this.font(),
-      (font) => {
+      fontUrl,
+      (font: Font) => {
         // Create text geometry
-        this.geometry = new TextGeometry(this.text(), {
+        const geometry = new TextGeometry(text, {
           font,
-          size: this.fontSize(),
-          height: this.height(),
-          curveSegments: this.curveSegments(),
-          bevelEnabled: this.bevelEnabled(),
-          bevelThickness: this.bevelThickness(),
-          bevelSize: this.bevelSize(),
-          bevelOffset: this.bevelOffset(),
-          bevelSegments: this.bevelSegments(),
-        } as any); // Type assertion for TextGeometry options
+          ...options,
+        });
 
-        // Create mesh
-        this.mesh = new THREE.Mesh(this.geometry, this.material);
-        this.mesh.position.set(...this.position());
-        this.mesh.rotation.set(...this.rotation());
-        const s = this.scale();
-        const scale: [number, number, number] =
-          typeof s === 'number' ? [s, s, s] : s;
-        this.mesh.scale.set(scale[0], scale[1], scale[2]);
+        // Dispose old geometry if exists
+        this.disposeGeometry();
+        this.geometry = geometry;
 
-        // Add to parent
-        if (this.parentFn) {
-          const parent = this.parentFn();
-          if (parent) {
-            parent.add(this.mesh);
-          } else {
-            console.warn('Text3DComponent: Parent not ready');
+        // If mesh doesn't exist, create it; otherwise just update geometry
+        if (!this.mesh) {
+          this.mesh = new THREE.Mesh(this.geometry, this.material);
+          this.mesh.position.set(...this.position());
+          this.mesh.rotation.set(...this.rotation());
+          const s = this.scale();
+          const scale: [number, number, number] =
+            typeof s === 'number' ? [s, s, s] : s;
+          this.mesh.scale.set(scale[0], scale[1], scale[2]);
+
+          // Add to parent
+          if (this.parentFn) {
+            const parent = this.parentFn();
+            parent?.add(this.mesh);
           }
         } else {
-          console.warn('Text3DComponent: No parent found');
+          this.mesh.geometry = this.geometry;
         }
       },
       undefined,
-      (error) => {
+      (error: unknown) => {
         console.error('Text3DComponent: Font loading error:', error);
       }
     );
+  }
+
+  private disposeGeometry(): void {
+    if (this.geometry) {
+      this.geometry.dispose();
+      this.geometry = null;
+    }
   }
 
   public ngOnDestroy(): void {
@@ -150,7 +191,7 @@ export class Text3DComponent implements OnInit, OnDestroy {
       const parent = this.parentFn();
       parent?.remove(this.mesh);
     }
-    this.geometry?.dispose();
+    this.disposeGeometry();
     this.material?.dispose();
   }
 }
