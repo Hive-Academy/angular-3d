@@ -7,9 +7,4 @@ export type { UpdateCallback, FrameContext } from './render-loop.service';
 
 export { AnimationService } from './animation.service';
 
-export type {
-  FloatConfig,
-  RotateConfig,
-  FlightWaypoint,
-  PulseConfig,
-} from './animation.service';
+export type { FlightWaypoint, PulseConfig } from './animation.service';

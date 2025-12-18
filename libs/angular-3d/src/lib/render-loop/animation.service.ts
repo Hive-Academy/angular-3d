@@ -66,8 +66,16 @@ export interface PulseConfig {
  *
  * Animations are tracked by object UUID for proper cleanup.
  *
+ * **Declarative Alternative**: For common animations, consider using directives instead:
+ * - `Float3dDirective` for floating/bobbing animations
+ * - `Rotate3dDirective` for continuous rotation
+ *
+ * Directives provide a more declarative, template-based approach,
+ * while this service offers programmatic control for complex animations.
+ *
  * @example
  * ```typescript
+ * // Programmatic approach using this service
  * @Component({...})
  * export class FloatingPlanetComponent implements AfterViewInit, OnDestroy {
  *   private animationService = inject(AnimationService);
@@ -84,6 +92,20 @@ export interface PulseConfig {
  *     }
  *   }
  * }
+ * ```
+ *
+ * @example
+ * ```html
+ * <!-- Declarative alternative using directives -->
+ * <app-sphere
+ *   float3d
+ *   [floatConfig]="{ height: 0.5, speed: 2000 }"
+ * />
+ *
+ * <app-planet
+ *   rotate3d
+ *   [rotateConfig]="{ axis: 'y', speed: 60 }"
+ * />
  * ```
  */
 @Injectable({ providedIn: 'root' })

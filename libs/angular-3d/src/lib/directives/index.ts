@@ -1,5 +1,5 @@
 // @hive-academy/angular-3d - Directives module
-// Float3d, Rotate3d, SpaceFlight3d animation directives
+// Float3d, Rotate3d animation directives for Three.js objects
 
-// Placeholder - directives will be added in TASK_2025_009
-export const DIRECTIVES_MODULE_PLACEHOLDER = true;
+export * from './float-3d.directive';
+export * from './rotate-3d.directive';
