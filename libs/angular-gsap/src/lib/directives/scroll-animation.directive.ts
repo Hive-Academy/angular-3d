@@ -346,7 +346,21 @@ export class ScrollAnimationDirective implements OnDestroy {
 
   /**
    * Public API: Manually refresh ScrollTrigger
-   * Useful when content changes dynamically
+   *
+   * Useful when content changes dynamically or container size changes.
+   * Call this method to recalculate ScrollTrigger start/end points.
+   *
+   * @example
+   * ```typescript
+   * // In component after data loads
+   * @ViewChild(ScrollAnimationDirective) animation!: Scroll AnimationDirective;
+   *
+   * ngAfterViewInit(): void {
+   *   this.dataService.load().subscribe(() => {
+   *     this.animation.refresh(); // Recalculate triggers
+   *   });
+   * }
+   * ```
    */
   public refresh(): void {
     this.scrollTrigger?.refresh();
@@ -354,6 +368,23 @@ export class ScrollAnimationDirective implements OnDestroy {
 
   /**
    * Public API: Get current scroll progress (0-1)
+   *
+   * Returns the current scroll progress as a number between 0 and 1.
+   * Useful for creating custom progress indicators or syncing other animations.
+   *
+   * @returns Current scroll progress (0 = start, 1 = end)
+   *
+   * @example
+   * ```typescript
+   * @ViewChild(ScrollAnimationDirective) animation!: ScrollAnimationDirective;
+   *
+   * ngAfterViewInit(): void {
+   *   setInterval(() => {
+   *     const progress = this.animation.getProgress();
+   *     console.log(`Animation is ${(progress * 100).toFixed(0)}% complete`);
+   *   }, 1000);
+   * }
+   * ```
    */
   public getProgress(): number {
     return this.scrollTrigger?.progress ?? 0;
@@ -361,6 +392,20 @@ export class ScrollAnimationDirective implements OnDestroy {
 
   /**
    * Public API: Enable/disable the scroll trigger
+   *
+   * Allows you to dynamically enable or disable the animation based on
+   * application state, user preferences, or other conditions.
+   *
+   * @param enabled - True to enable the animation, false to disable
+   *
+   * @example
+   * ```typescript
+   * @ViewChild(ScrollAnimationDirective) animation!: ScrollAnimationDirective;
+   *
+   * toggleAnimations(enabled: boolean): void {
+   *   this.animation.setEnabled(enabled);
+   * }
+   * ```
    */
   public setEnabled(enabled: boolean): void {
     if (enabled) {

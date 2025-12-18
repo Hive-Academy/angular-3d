@@ -328,7 +328,20 @@ export class HijackedScrollDirective implements OnDestroy {
 
   /**
    * Public API: Manually refresh ScrollTrigger
-   * Useful when container size changes
+   *
+   * Recalculates ScrollTrigger measurements when container size changes.
+   * Useful after window resize or dynamic content loading.
+   *
+   * @example
+   * ```typescript
+   * @ViewChild(HijackedScrollDirective) timeline!: HijackedScrollDirective;
+   *
+   * ngAfterViewInit(): void {
+   *   window.addEventListener('resize', () => {
+   *     this.timeline.refresh();
+   *   });
+   * }
+   * ```
    */
   public refresh(): void {
     this.scrollTrigger?.refresh();
@@ -336,6 +349,19 @@ export class HijackedScrollDirective implements OnDestroy {
 
   /**
    * Public API: Get current scroll progress (0-1)
+   *
+   * Returns the overall progress through the entire hijacked scroll sequence.
+   *
+   * @returns Current progress (0 = start, 1 = end)
+   *
+   * @example
+   * ```typescript
+   * @ViewChild(HijackedScrollDirective) timeline!: HijackedScrollDirective;
+   *
+   * getPercentComplete(): number {
+   *   return Math.round(this.timeline.getProgress() * 100);
+   * }
+   * ```
    */
   public getProgress(): number {
     return this.scrollTrigger?.progress ?? 0;
@@ -343,6 +369,24 @@ export class HijackedScrollDirective implements OnDestroy {
 
   /**
    * Public API: Jump to specific step
+   *
+   * Programmatically navigate to a specific step in the timeline.
+   * Useful for skip buttons, progress nav, or keyboard shortcuts.
+   *
+   * @param stepIndex - Zero-based step index to jump to
+   *
+   * @example
+   * ```typescript
+   * @ViewChild(HijackedScrollDirective) timeline!: HijackedScrollDirective;
+   *
+   * skipToStep(index: number): void {
+   *   this.timeline.jumpToStep(index);
+   * }
+   *
+   * nextStep(): void {
+   *   this.timeline.jumpToStep(this.currentStep + 1);
+   * }
+   * ```
    */
   public jumpToStep(stepIndex: number): void {
     const items = this.items(); // Get signal value

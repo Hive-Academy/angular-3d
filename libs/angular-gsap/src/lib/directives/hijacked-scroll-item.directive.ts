@@ -53,6 +53,20 @@ export class HijackedScrollItemDirective {
 
   /**
    * Get the native HTML element
+   *
+   * Returns the native DOM element for this step item.
+   * Used internally by the parent directive for animation setup.
+   *
+   * @returns The native HTMLElement
+   *
+   * @example
+   * ```typescript
+   * // Internal use by HijackedScrollDirective
+   * items.forEach((item) => {
+   *   const element = item.getElement();
+   *   // Apply styles and animations
+   * });
+   * ```
    */
   getElement(): HTMLElement {
     return this.elementRef.nativeElement;
@@ -60,6 +74,19 @@ export class HijackedScrollItemDirective {
 
   /**
    * Get animation configuration
+   *
+   * Returns the current configuration for this step including
+   * slide direction, fade settings, and custom properties.
+   *
+   * @returns Configuration object for this step
+   *
+   * @example
+   * ```typescript
+   * // Internal use by HijackedScrollDirective
+   * const config = item.getConfig();
+   * console.log('Slide direction:', config.slideDirection);
+   * console.log('Fade enabled:', config.fadeIn);
+   * ```
    */
   getConfig(): HijackedScrollItemConfig {
     return {
@@ -73,6 +100,22 @@ export class HijackedScrollItemDirective {
 
   /**
    * Calculate slide offset based on direction
+   *
+   * Calculates the x/y pixel offset for slide animations based on
+   * the configured slide direction.
+   *
+   * @returns Object with x and y pixel offsets
+   *
+   * @example
+   * ```typescript
+   * // Internal use by HijackedScrollDirective
+   * const offset = item.getSlideOffset();
+   * // For 'left': { x: -60, y: 0 }
+   * // For 'right': { x: 60, y: 0 }
+   * // For 'up': { x: 0, y: -60 }
+   * // For 'down': { x: 0, y: 60 }
+   * // For 'none': { x: 0, y: 0 }
+   * ```
    */
   getSlideOffset(): { x: number; y: number } {
     const direction = this.slideDirection();
