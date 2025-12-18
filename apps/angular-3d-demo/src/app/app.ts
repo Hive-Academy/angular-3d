@@ -1,20 +1,10 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import {
-  Scene3dComponent,
-  EffectComposerComponent,
-  BloomEffectComponent,
-  OrbitControlsComponent,
-} from '@hive-academy/angular-3d';
+import { RouterOutlet } from '@angular/router';
+import { NavigationComponent } from './shared/navigation.component';
+import { FooterComponent } from './shared/footer.component';
 
 @Component({
-  imports: [
-    RouterModule,
-    Scene3dComponent,
-    OrbitControlsComponent,
-    EffectComposerComponent,
-    BloomEffectComponent,
-  ],
+  imports: [RouterOutlet, NavigationComponent, FooterComponent],
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrl: './app.css',

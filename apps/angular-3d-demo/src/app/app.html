@@ -1,10 +1,5 @@
-<a3d-scene-3d [cameraPosition]="[0, 0, 15]">
-  <a3d-effect-composer>
-    <a3d-bloom-effect [strength]="1.5" [radius]="0.4" [threshold]="0" />
-  </a3d-effect-composer>
-
-  <!-- Demo Content -->
-  <!-- <app-planet [radius]="2" [color]="'#ff0055'" /> -->
-  <!-- <app-star-field /> -->
-  <a3d-orbit-controls />
-</a3d-scene-3d>
+<app-navigation />
+<main class="min-h-screen">
+  <router-outlet />
+</main>
+<app-footer />
