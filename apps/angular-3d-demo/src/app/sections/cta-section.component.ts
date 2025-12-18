@@ -1,14 +1,15 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { CtaSceneComponent } from '../scenes/cta-scene.component';
 
 @Component({
   selector: 'app-cta-section',
-  imports: [],
+  imports: [CtaSceneComponent],
   template: `
     <section
       class="relative w-full py-20x px-4x bg-background-dark overflow-hidden"
     >
-      <!-- 3D Background (add in Phase 4) -->
-      <!-- <app-cta-scene class="absolute inset-0 opacity-40" /> -->
+      <!-- 3D Background -->
+      <app-cta-scene class="absolute inset-0 opacity-40" />
 
       <!-- Content -->
       <div class="relative z-10 max-w-content mx-auto text-center">
