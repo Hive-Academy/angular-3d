@@ -23,6 +23,7 @@
       "always",
       [
         "angular-3d",
+        "angular-gsap",
         "demo",
         "deps",
         "release",
