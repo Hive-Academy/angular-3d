@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 @Component({
   selector: 'app-hero-gsap-teaser',
   imports: [],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
       class="h-screen flex flex-col items-center justify-center p-8x bg-gradient-to-br from-white to-primary-50"
@@ -41,6 +42,5 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
       </div>
     </div>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeroGsapTeaserComponent {}

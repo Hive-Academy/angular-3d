@@ -1,8 +1,7 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
   Scene3dComponent,
   BoxComponent,
-  SphereComponent,
   TorusComponent,
   CylinderComponent,
   PolyhedronComponent,
@@ -16,7 +15,6 @@ import {
   imports: [
     Scene3dComponent,
     BoxComponent,
-    SphereComponent,
     TorusComponent,
     CylinderComponent,
     PolyhedronComponent,
@@ -24,6 +22,7 @@ import {
     DirectionalLightComponent,
     Rotate3dDirective,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="relative min-h-screen bg-background-dark overflow-hidden">
       <scene-3d [cameraPosition]="[0, 0, 15]" [cameraFov]="60">

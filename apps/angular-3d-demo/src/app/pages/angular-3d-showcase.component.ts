@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { HeroSpaceSceneComponent } from '../scenes/hero-space-scene.component';
 import { PrimitivesShowcaseComponent } from '../sections/primitives-showcase.component';
 import { ValueProps3dSceneComponent } from '../scenes/value-props-3d-scene.component';
@@ -10,6 +10,7 @@ import { ValueProps3dSceneComponent } from '../scenes/value-props-3d-scene.compo
     PrimitivesShowcaseComponent,
     ValueProps3dSceneComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- Hero Space Scene -->
     <app-hero-space-scene />

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
   Scene3dComponent,
   AmbientLightComponent,
@@ -16,6 +16,7 @@ import {
     StarFieldComponent,
     Rotate3dDirective,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="relative min-h-screen bg-background-dark overflow-hidden">
       <scene-3d [cameraPosition]="[0, 0, 10]" [cameraFov]="75">

@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-footer',
   imports: [RouterLink],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <footer class="bg-background-dark text-white py-12x mt-20x">
       <div class="max-w-container mx-auto px-4x">
@@ -97,6 +98,5 @@ import { RouterLink } from '@angular/router';
       </div>
     </footer>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FooterComponent {}

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
   Scene3dComponent,
   PolyhedronComponent,
@@ -16,6 +16,7 @@ import {
     DirectionalLightComponent,
     Float3dDirective,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <scene-3d [cameraPosition]="[0, 0, 6]" [cameraFov]="50">
       <!-- Lights -->

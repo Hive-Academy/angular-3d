@@ -18,6 +18,7 @@ import {
     StarFieldComponent,
     Rotate3dDirective,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="relative h-screen bg-background-dark overflow-hidden">
       <scene-3d [cameraPosition]="[0, 0, 5]" [cameraFov]="75">
@@ -45,6 +46,5 @@ import {
       </scene-3d>
     </div>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Hero3dTeaserComponent {}

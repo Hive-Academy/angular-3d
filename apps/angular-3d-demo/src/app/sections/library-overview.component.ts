@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-library-overview',
   imports: [RouterLink],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="bg-background-light py-16x">
       <div class="max-w-container mx-auto px-4x">
@@ -242,6 +243,5 @@ import { RouterLink } from '@angular/router';
       </div>
     </section>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LibraryOverviewComponent {}
