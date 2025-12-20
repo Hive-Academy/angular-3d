@@ -5,6 +5,9 @@ import {
   DirectionalLightComponent,
   StarFieldComponent,
   Rotate3dDirective,
+  GltfModelComponent,
+  OrbitControlsComponent,
+  BloomEffectComponent,
 } from '@hive-academy/angular-3d';
 
 @Component({
@@ -15,11 +18,14 @@ import {
     DirectionalLightComponent,
     StarFieldComponent,
     Rotate3dDirective,
+    GltfModelComponent,
+    OrbitControlsComponent,
+    BloomEffectComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="relative min-h-screen bg-background-dark overflow-hidden">
-      <scene-3d [cameraPosition]="[0, 0, 10]" [cameraFov]="75">
+      <a3d-scene-3d [cameraPosition]="[0, 0, 10]" [cameraFov]="75">
         <!-- Lights -->
         <a3d-ambient-light [intensity]="0.5" />
         <a3d-directional-light
@@ -28,22 +34,31 @@ import {
           [color]="'#A1FF4F'"
         />
 
-        <!-- Star Field (3 layers) -->
-        <a3d-star-field
-          [count]="3000"
-          [colors]="['#FFFFFF', '#A1FF4F', '#6366F1']"
+        <!-- Star Field -->
+        <a3d-star-field [starCount]="3000" [color]="'#FFFFFF'" />
+
+        <!-- Earth Model -->
+        <a3d-gltf-model
+          [modelPath]="'/3d/planet_earth/scene.gltf'"
+          [position]="[0, 0, 0]"
+          [scale]="2.5"
+          rotate3d
+          [rotateConfig]="{ axis: 'y', speed: 60 }"
         />
 
-        <!-- TODO: Add remaining 3D elements when components are ready:
-             - Earth GLTF model
-             - Nebula
-             - Tech logos (SVGIcon)
-             - Particle text
-             - Flying robots (with SpaceFlight3d directive)
-             - OrbitControls
-             - Bloom effect
-        -->
-      </scene-3d>
+        <!-- Controls -->
+        <a3d-orbit-controls
+          [enableDamping]="true"
+          [dampingFactor]="0.05"
+          [minDistance]="5"
+          [maxDistance]="30"
+          [autoRotate]="true"
+          [autoRotateSpeed]="1.0"
+        />
+
+        <!-- Effects -->
+        <a3d-bloom-effect [threshold]="0.9" [strength]="0.8" [radius]="0.4" />
+      </a3d-scene-3d>
 
       <!-- Overlay Text -->
       <div class="absolute bottom-10x left-10x z-10">

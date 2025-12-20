@@ -15,6 +15,8 @@ import {
   inject,
   viewChild,
   afterNextRender,
+  Injector,
+  runInInjectionContext,
 } from '@angular/core';
 import * as THREE from 'three';
 import { SceneService } from './scene.service';
@@ -152,26 +154,32 @@ export class Scene3dComponent implements OnDestroy {
   private camera!: THREE.PerspectiveCamera;
 
   public constructor() {
+    // Capture injector for use in afterNextRender callback
+    const injector = inject(Injector);
+
     // Expose scene immediately so children can access it in ngOnInit
     this.sceneService.setScene(this.scene);
 
     // Setup initialization after first render (browser-only)
     afterNextRender(() => {
-      this.initRenderer();
-      this.initScene(); // Sets background color
-      this.initCamera();
+      // Wrap in injection context so child components can use effect()
+      runInInjectionContext(injector, () => {
+        this.initRenderer();
+        this.initScene(); // Sets background color
+        this.initCamera();
 
-      // Expose renderer and camera (available after init)
-      this.sceneService.setRenderer(this.renderer);
-      this.sceneService.setCamera(this.camera);
+        // Expose renderer and camera (available after init)
+        this.sceneService.setRenderer(this.renderer);
+        this.sceneService.setCamera(this.camera);
 
-      // Start render loop delegating to RenderLoopService
-      this.renderLoop.start(() => {
-        this.renderer.render(this.scene, this.camera);
+        // Start render loop delegating to RenderLoopService
+        this.renderLoop.start(() => {
+          this.renderer.render(this.scene, this.camera);
+        });
+
+        // Setup resize handler
+        this.setupResizeHandler();
       });
-
-      // Setup resize handler
-      this.setupResizeHandler();
     });
 
     // Register cleanup on destroy

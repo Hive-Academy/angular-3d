@@ -9,6 +9,7 @@
 | TASK_2025_012 | Demo App - GSAP Showcase Migration    | 📋 PENDING               | 2025-12-18 |
 | TASK_2025_013 | Angular-3D - Three.js GSAP Directives | ✅ COMPLETE              | 2025-12-18 |
 | TASK_2025_014 | Comprehensive Library Documentation   | 📋 PENDING               | 2025-12-18 |
+| TASK_2025_015 | Angular-3D Architecture Migration     | 🔄 Batch 1/8 IN PROGRESS | 2025-12-20 |
 
 ## Task Dependencies
 

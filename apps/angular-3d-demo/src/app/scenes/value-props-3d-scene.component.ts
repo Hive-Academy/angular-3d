@@ -25,7 +25,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="relative min-h-screen bg-background-dark overflow-hidden">
-      <scene-3d [cameraPosition]="[0, 0, 15]" [cameraFov]="60">
+      <a3d-scene-3d [cameraPosition]="[0, 0, 15]" [cameraFov]="60">
         <!-- Lights -->
         <a3d-ambient-light [intensity]="0.6" />
         <a3d-directional-light [position]="[5, 5, 5]" [intensity]="0.8" />
@@ -36,32 +36,33 @@ import {
           [position]="[-8, 4, 0]"
           [color]="'#6366F1'"
           rotate3d
-          [rotationSpeed]="0.005"
+          [rotateConfig]="{ axis: 'y', speed: 10 }"
         />
-        <a3d-sphere
+        <a3d-polyhedron
+          [type]="'dodecahedron'"
           [position]="[-4, 4, 0]"
           [color]="'#A1FF4F'"
           rotate3d
-          [rotationSpeed]="0.006"
+          [rotateConfig]="{ axis: 'y', speed: 12 }"
         />
         <a3d-torus
           [position]="[0, 4, 0]"
           [color]="'#EC4899'"
           rotate3d
-          [rotationSpeed]="0.007"
+          [rotateConfig]="{ axis: 'y', speed: 8 }"
         />
         <a3d-cylinder
           [position]="[4, 4, 0]"
           [color]="'#F59E0B'"
           rotate3d
-          [rotationSpeed]="0.005"
+          [rotateConfig]="{ axis: 'y', speed: 10 }"
         />
         <a3d-polyhedron
           [type]="'icosahedron'"
           [position]="[8, 4, 0]"
           [color]="'#10B981'"
           rotate3d
-          [rotationSpeed]="0.008"
+          [rotateConfig]="{ axis: 'y', speed: 15 }"
         />
 
         <!-- Row 2 -->
@@ -70,26 +71,27 @@ import {
           [position]="[-6, 0, 0]"
           [color]="'#8B5CF6'"
           rotate3d
-          [rotationSpeed]="0.006"
+          [rotateConfig]="{ axis: 'y', speed: 12 }"
         />
         <a3d-polyhedron
           [type]="'octahedron'"
           [position]="[-2, 0, 0]"
           [color]="'#EF4444'"
           rotate3d
-          [rotationSpeed]="0.007"
+          [rotateConfig]="{ axis: 'y', speed: 14 }"
         />
         <a3d-box
           [position]="[2, 0, 0]"
           [color]="'#3B82F6'"
           rotate3d
-          [rotationSpeed]="0.005"
+          [rotateConfig]="{ axis: 'y', speed: 10 }"
         />
-        <a3d-sphere
+        <a3d-polyhedron
+          [type]="'tetrahedron'"
           [position]="[6, 0, 0]"
           [color]="'#14B8A6'"
           rotate3d
-          [rotationSpeed]="0.008"
+          [rotateConfig]="{ axis: 'y', speed: 16 }"
         />
 
         <!-- Row 3 -->
@@ -97,15 +99,15 @@ import {
           [position]="[-4, -4, 0]"
           [color]="'#F97316'"
           rotate3d
-          [rotationSpeed]="0.006"
+          [rotateConfig]="{ axis: 'y', speed: 12 }"
         />
         <a3d-cylinder
           [position]="[0, -4, 0]"
           [color]="'#06B6D4'"
           rotate3d
-          [rotationSpeed]="0.007"
+          [rotateConfig]="{ axis: 'y', speed: 14 }"
         />
-      </scene-3d>
+      </a3d-scene-3d>
 
       <!-- Overlay Text -->
       <div

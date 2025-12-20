@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import * as THREE from 'three';
 import { NG_3D_PARENT } from '../types/tokens';
+import type { MeshProvider } from '../types/mesh-provider';
 
 @Component({
   selector: 'a3d-cylinder',
@@ -15,7 +16,7 @@ import { NG_3D_PARENT } from '../types/tokens';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
 })
-export class CylinderComponent implements OnDestroy {
+export class CylinderComponent implements OnDestroy, MeshProvider {
   public readonly position = input<[number, number, number]>([0, 0, 0]);
   public readonly rotation = input<[number, number, number]>([0, 0, 0]);
   public readonly scale = input<[number, number, number]>([1, 1, 1]);
@@ -25,7 +26,7 @@ export class CylinderComponent implements OnDestroy {
   public readonly color = input<string | number>('green');
   public readonly wireframe = input<boolean>(false);
 
-  private mesh: THREE.Mesh | null = null;
+  public mesh: THREE.Mesh | null = null;
   private geometry: THREE.CylinderGeometry | null = null;
   private material: THREE.MeshStandardMaterial | null = null;
 
@@ -97,6 +98,13 @@ export class CylinderComponent implements OnDestroy {
       const parent = this.parentFn();
       if (parent) parent.add(this.mesh);
     }
+  }
+
+  /**
+   * Public API: Get the Three.js mesh for directive access
+   */
+  public getMesh(): THREE.Mesh | null {
+    return this.mesh || null;
   }
 
   public ngOnDestroy(): void {

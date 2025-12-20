@@ -18,7 +18,7 @@ import {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <scene-3d [cameraPosition]="[0, 0, 6]" [cameraFov]="50">
+    <a3d-scene-3d [cameraPosition]="[0, 0, 6]" [cameraFov]="50">
       <!-- Lights -->
       <a3d-ambient-light [intensity]="0.6" />
       <a3d-directional-light [position]="[5, 5, 5]" [intensity]="0.8" />
@@ -28,32 +28,26 @@ import {
         [type]="'icosahedron'"
         [position]="[-3, 1, -2]"
         [color]="'#6366F1'"
-        [opacity]="0.35"
         float3d
-        [floatHeight]="0.5"
-        [floatDuration]="4.5"
+        [floatConfig]="{ height: 0.5, speed: 4500 }"
       />
 
       <a3d-polyhedron
         [type]="'octahedron'"
         [position]="[3, -1, -2]"
         [color]="'#A1FF4F'"
-        [opacity]="0.3"
         float3d
-        [floatHeight]="0.4"
-        [floatDuration]="5"
+        [floatConfig]="{ height: 0.4, speed: 5000 }"
       />
 
       <a3d-polyhedron
         [type]="'dodecahedron'"
         [position]="[0, 0, -4]"
         [color]="'#6366F1'"
-        [opacity]="0.4"
         float3d
-        [floatHeight]="0.6"
-        [floatDuration]="4"
+        [floatConfig]="{ height: 0.6, speed: 4000 }"
       />
-    </scene-3d>
+    </a3d-scene-3d>
   `,
 })
 export class CtaSceneComponent {}

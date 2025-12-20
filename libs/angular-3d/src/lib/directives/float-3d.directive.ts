@@ -58,9 +58,9 @@ import {
   inject,
   input,
   OnDestroy,
-  ElementRef,
 } from '@angular/core';
 import type { Mesh } from 'three';
+import { MESH_PROVIDER } from '../types/mesh-provider';
 
 /**
  * Configuration for Float3dDirective
@@ -92,8 +92,11 @@ export interface FloatConfig {
   standalone: true,
 })
 export class Float3dDirective implements AfterViewInit, OnDestroy {
-  // Dependency injection
-  private readonly elementRef = inject(ElementRef<Mesh>);
+  // Inject MeshProvider from host component (Angular 20+ pattern)
+  private readonly meshProvider = inject(MESH_PROVIDER, {
+    optional: true,
+    self: true,
+  });
   private readonly destroyRef = inject(DestroyRef);
 
   /**
@@ -109,19 +112,19 @@ export class Float3dDirective implements AfterViewInit, OnDestroy {
   private originalPosition: [number, number, number] | null = null;
 
   public ngAfterViewInit(): void {
-    // Skip if no configuration provided (directive is optional)
     const config = this.floatConfig();
-    if (!config) {
+    if (!config) return;
+
+    if (!this.meshProvider) {
+      console.warn(
+        '[Float3dDirective] Host component does not provide MESH_PROVIDER'
+      );
       return;
     }
 
-    // Get mesh from ElementRef nativeElement
-    this.mesh = this.elementRef.nativeElement;
-
+    this.mesh = this.meshProvider.getMesh();
     if (!this.mesh) {
-      console.warn(
-        '[Float3dDirective] Could not access mesh from nativeElement'
-      );
+      console.warn('[Float3dDirective] getMesh() returned null');
       return;
     }
 
@@ -165,15 +168,32 @@ export class Float3dDirective implements AfterViewInit, OnDestroy {
     if (!this.mesh || !this.originalPosition) return;
 
     const config = this.floatConfig();
-    const height = config?.height ?? 0.3;
-    const speed = config?.speed ?? 2000;
-    const delay = config?.delay ?? 0;
-    const ease = config?.ease ?? 'sine.inOut';
-    const autoStart = config?.autoStart ?? true;
+    if (!config) {
+      console.warn('[Float3dDirective] config became undefined');
+      return;
+    }
+
+    const height = config.height ?? 0.3;
+    const speed = config.speed ?? 2000;
+    const delay = config.delay ?? 0;
+    const ease = config.ease ?? 'sine.inOut';
+    const autoStart = config.autoStart ?? true;
 
     // Dynamic import for tree-shaking
     import('gsap').then(({ gsap }) => {
-      if (!this.mesh || !this.originalPosition) return;
+      // Check if directive was destroyed during async import
+      if (!this.mesh || !this.originalPosition) {
+        console.warn(
+          '[Float3dDirective] directive destroyed during GSAP import'
+        );
+        return;
+      }
+
+      // Additional safety check for position property
+      if (!this.mesh.position) {
+        console.warn('[Float3dDirective] mesh.position is undefined');
+        return;
+      }
 
       const [_x, y, _z] = this.originalPosition;
 

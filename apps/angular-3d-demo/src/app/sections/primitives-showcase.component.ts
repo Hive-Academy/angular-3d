@@ -33,11 +33,15 @@ import {
         <!-- Box -->
         <div class="bg-white rounded-card shadow-card p-6x">
           <div class="h-48x mb-4x">
-            <scene-3d [cameraPosition]="[0, 0, 3]">
+            <a3d-scene-3d [cameraPosition]="[0, 0, 3]">
               <a3d-ambient-light [intensity]="0.5" />
               <a3d-directional-light [position]="[2, 2, 2]" />
-              <a3d-box [color]="'#6366F1'" rotate3d [rotationSpeed]="0.01" />
-            </scene-3d>
+              <a3d-box
+                [color]="'#6366F1'"
+                rotate3d
+                [rotateConfig]="{ axis: 'y', speed: 10 }"
+              />
+            </a3d-scene-3d>
           </div>
           <h3 class="text-headline-md font-bold mb-2x">Box</h3>
           <code class="text-body-sm text-text-secondary"
@@ -48,15 +52,15 @@ import {
         <!-- Cylinder -->
         <div class="bg-white rounded-card shadow-card p-6x">
           <div class="h-48x mb-4x">
-            <scene-3d [cameraPosition]="[0, 0, 3]">
+            <a3d-scene-3d [cameraPosition]="[0, 0, 3]">
               <a3d-ambient-light [intensity]="0.5" />
               <a3d-directional-light [position]="[2, 2, 2]" />
               <a3d-cylinder
                 [color]="'#EC4899'"
                 rotate3d
-                [rotationSpeed]="0.01"
+                [rotateConfig]="{ axis: 'y', speed: 10 }"
               />
-            </scene-3d>
+            </a3d-scene-3d>
           </div>
           <h3 class="text-headline-md font-bold mb-2x">Cylinder</h3>
           <code class="text-body-sm text-text-secondary"
@@ -67,11 +71,15 @@ import {
         <!-- Torus -->
         <div class="bg-white rounded-card shadow-card p-6x">
           <div class="h-48x mb-4x">
-            <scene-3d [cameraPosition]="[0, 0, 3]">
+            <a3d-scene-3d [cameraPosition]="[0, 0, 3]">
               <a3d-ambient-light [intensity]="0.5" />
               <a3d-directional-light [position]="[2, 2, 2]" />
-              <a3d-torus [color]="'#F59E0B'" rotate3d [rotationSpeed]="0.01" />
-            </scene-3d>
+              <a3d-torus
+                [color]="'#F59E0B'"
+                rotate3d
+                [rotateConfig]="{ axis: 'y', speed: 10 }"
+              />
+            </a3d-scene-3d>
           </div>
           <h3 class="text-headline-md font-bold mb-2x">Torus</h3>
           <code class="text-body-sm text-text-secondary"
@@ -82,16 +90,16 @@ import {
         <!-- Icosahedron -->
         <div class="bg-white rounded-card shadow-card p-6x">
           <div class="h-48x mb-4x">
-            <scene-3d [cameraPosition]="[0, 0, 3]">
+            <a3d-scene-3d [cameraPosition]="[0, 0, 3]">
               <a3d-ambient-light [intensity]="0.5" />
               <a3d-directional-light [position]="[2, 2, 2]" />
               <a3d-polyhedron
                 [type]="'icosahedron'"
                 [color]="'#10B981'"
                 rotate3d
-                [rotationSpeed]="0.01"
+                [rotateConfig]="{ axis: 'y', speed: 10 }"
               />
-            </scene-3d>
+            </a3d-scene-3d>
           </div>
           <h3 class="text-headline-md font-bold mb-2x">Icosahedron</h3>
           <code class="text-body-sm text-text-secondary"

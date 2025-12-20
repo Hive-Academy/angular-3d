@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import * as THREE from 'three';
 import { NG_3D_PARENT } from '../types/tokens';
+import type { MeshProvider } from '../types/mesh-provider';
 
 @Component({
   selector: 'a3d-torus',
@@ -15,7 +16,7 @@ import { NG_3D_PARENT } from '../types/tokens';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
 })
-export class TorusComponent implements OnDestroy {
+export class TorusComponent implements OnDestroy, MeshProvider {
   public readonly position = input<[number, number, number]>([0, 0, 0]);
   public readonly rotation = input<[number, number, number]>([0, 0, 0]);
   public readonly scale = input<[number, number, number]>([1, 1, 1]);
@@ -27,7 +28,7 @@ export class TorusComponent implements OnDestroy {
   public readonly color = input<string | number>('blue');
   public readonly wireframe = input<boolean>(false);
 
-  private mesh!: THREE.Mesh;
+  public mesh!: THREE.Mesh;
   private geometry!: THREE.TorusGeometry;
   private material!: THREE.MeshStandardMaterial;
 
@@ -103,6 +104,13 @@ export class TorusComponent implements OnDestroy {
       const parent = this.parentFn();
       if (parent) parent.add(this.mesh);
     }
+  }
+
+  /**
+   * Public API: Get the Three.js mesh for directive access
+   */
+  public getMesh(): THREE.Mesh | null {
+    return this.mesh || null;
   }
 
   public ngOnDestroy(): void {

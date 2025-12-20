@@ -42,11 +42,11 @@ You decompose implementation plans into **intelligent task batches** and orchest
 **STEP 1: Read Planning Documents**
 
 ```bash
-Read(D:\projects\ptah-extension\task-tracking\TASK_[ID]\implementation-plan.md)
-Read(D:\projects\ptah-extension\task-tracking\TASK_[ID]\task-description.md)
-Read(D:\projects\ptah-extension\task-tracking\TASK_[ID]\context.md)
+Read(D:\projects\angular-3d-workspace\task-tracking\TASK_[ID]\implementation-plan.md)
+Read(D:\projects\angular-3d-workspace\task-tracking\TASK_[ID]\task-description.md)
+Read(D:\projects\angular-3d-workspace\task-tracking\TASK_[ID]\context.md)
 # If UI work:
-Read(D:\projects\ptah-extension\task-tracking\TASK_[ID]\visual-design-specification.md)
+Read(D:\projects\angular-3d-workspace\task-tracking\TASK_[ID]\visual-design-specification.md)
 ```
 
 **STEP 2: Check for Existing Work**
@@ -248,7 +248,7 @@ Use Write tool to create `task-tracking/TASK_[ID]/tasks.md`:
 
 ### Task 1.1: [Description] ⏸️ PENDING
 
-**File**: D:\projects\ptah-extension\[absolute-path]
+**File**: D:\projects\angular-3d-workspace\[absolute-path]
 **Spec Reference**: implementation-plan.md:[line-range]
 **Pattern to Follow**: [example-file.ts:line-number]
 
@@ -272,7 +272,7 @@ Use Write tool to create `task-tracking/TASK_[ID]/tasks.md`:
 
 ### Task 1.2: [Description] ⏸️ PENDING
 
-**File**: D:\projects\ptah-extension\[absolute-path]
+**File**: D:\projects\angular-3d-workspace\[absolute-path]
 **Dependencies**: Task 1.1
 
 [Same structure...]
@@ -296,7 +296,7 @@ Use Write tool to create `task-tracking/TASK_[ID]/tasks.md`:
 **STEP 5: Assign First Batch**
 
 ```bash
-Edit(D:\projects\ptah-extension\task-tracking\TASK_[ID]\tasks.md)
+Edit(D:\projects\angular-3d-workspace\task-tracking\TASK_[ID]\tasks.md)
 # Change Batch 1: "⏸️ PENDING" → "🔄 IN PROGRESS"
 # Change all Task 1.x: "⏸️ PENDING" → "🔄 IN PROGRESS"
 ```
@@ -331,7 +331,7 @@ Orchestrator should invoke:
 Task(subagent*type='[backend-developer|frontend-developer]', prompt=`
 You are assigned Batch 1 for TASK*[ID].
 
-**Task Folder**: D:\projects\ptah-extension\task-tracking\TASK\_[ID]\
+**Task Folder**: D:\projects\angular-3d-workspace\task-tracking\TASK\_[ID]\
 
 ## Your Responsibilities
 
@@ -422,8 +422,8 @@ Check:
 **STEP 2: Verify All Files Exist**
 
 ```bash
-Read(D:\projects\ptah-extension\[file-path-1])
-Read(D:\projects\ptah-extension\[file-path-2])
+Read(D:\projects\angular-3d-workspace\[file-path-1])
+Read(D:\projects\angular-3d-workspace\[file-path-2])
 # For each file in batch - must exist with REAL code
 ```
 
@@ -503,7 +503,7 @@ git log --oneline -1
 **STEP 6: Update tasks.md**
 
 ```bash
-Edit(D:\projects\ptah-extension\task-tracking\TASK_[ID]\tasks.md)
+Edit(D:\projects\angular-3d-workspace\task-tracking\TASK_[ID]\tasks.md)
 # Change all tasks in batch: 🔄 IMPLEMENTED → ✅ COMPLETE
 # Add to batch header: **Commit**: [SHA]
 # Update batch status: 🔄 IN PROGRESS → ✅ COMPLETE
@@ -512,7 +512,7 @@ Edit(D:\projects\ptah-extension\task-tracking\TASK_[ID]\tasks.md)
 **STEP 7: Check Remaining Batches & Return**
 
 ```bash
-Read(D:\projects\ptah-extension\task-tracking\TASK_[ID]\tasks.md)
+Read(D:\projects\angular-3d-workspace\task-tracking\TASK_[ID]\tasks.md)
 # Count batches still ⏸️ PENDING
 ```
 
@@ -583,7 +583,7 @@ Orchestrator should invoke team-leader MODE 3.
 **STEP 1: Read & Verify Final State**
 
 ```bash
-Read(D:\projects\ptah-extension\task-tracking\TASK_[ID]\tasks.md)
+Read(D:\projects\angular-3d-workspace\task-tracking\TASK_[ID]\tasks.md)
 ```
 
 Verify:

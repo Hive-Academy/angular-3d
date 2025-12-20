@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import * as THREE from 'three';
 import { NG_3D_PARENT } from '../types/tokens';
+import type { MeshProvider } from '../types/mesh-provider';
 
 @Component({
   selector: 'a3d-polyhedron',
@@ -15,7 +16,7 @@ import { NG_3D_PARENT } from '../types/tokens';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
 })
-export class PolyhedronComponent implements OnDestroy {
+export class PolyhedronComponent implements OnDestroy, MeshProvider {
   public readonly position = input<[number, number, number]>([0, 0, 0]);
   public readonly rotation = input<[number, number, number]>([0, 0, 0]);
   public readonly scale = input<[number, number, number]>([1, 1, 1]);
@@ -28,7 +29,7 @@ export class PolyhedronComponent implements OnDestroy {
   public readonly color = input<string | number>('purple');
   public readonly wireframe = input<boolean>(false);
 
-  private mesh: THREE.Mesh | null = null;
+  public mesh: THREE.Mesh | null = null;
   private geometry: THREE.PolyhedronGeometry | null = null;
   private material: THREE.MeshStandardMaterial | null = null;
 
@@ -112,6 +113,13 @@ export class PolyhedronComponent implements OnDestroy {
       const parent = this.parentFn();
       if (parent) parent.add(this.mesh);
     }
+  }
+
+  /**
+   * Public API: Get the Three.js mesh for directive access
+   */
+  public getMesh(): THREE.Mesh | null {
+    return this.mesh || null;
   }
 
   public ngOnDestroy(): void {

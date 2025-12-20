@@ -363,6 +363,69 @@ Read([example2])
 - [List patterns and why not needed]
 ```
 
+### STEP 5.6: 🎯 MANDATORY DESIGN FIDELITY VERIFICATION
+
+> [!CAUTION] > **Before marking ANY UI task complete, you MUST verify visual design fidelity.** > **Design documents are the SOURCE OF TRUTH, not implementation-plan code snippets.**
+
+#### Pre-Completion Checklist (REQUIRED)
+
+**For EVERY UI component, verify against design specs:**
+
+```markdown
+## Design Fidelity Checklist
+
+### Visual Matching
+
+- [ ] Compare rendered output to visual-design-specification.md
+- [ ] All specified colors/fonts/spacing match design tokens
+- [ ] All animations/transitions implemented (not just "functional")
+- [ ] All hover/focus states work as specified
+
+### 3D Scene Completeness (if applicable)
+
+- [ ] ALL specified 3D elements present (not simplified versions)
+- [ ] Lighting, controls, post-processing as specified
+- [ ] Responsive particle/complexity reduction working
+
+### No Placeholder Code
+
+- [ ] ZERO TODO comments in production code
+- [ ] ZERO "// placeholder" or "// for now" comments
+- [ ] ZERO empty click handlers
+- [ ] ZERO hardcoded mock data without service connections
+
+### Accessibility
+
+- [ ] All interactive elements have ARIA labels
+- [ ] Keyboard navigation works
+- [ ] Focus rings visible
+- [ ] Reduced motion respected
+```
+
+#### Implementation Plan Code Is NOT Complete
+
+**CRITICAL**: Code examples in `implementation-plan.md` are **architecture patterns**, not production-ready implementations.
+
+```markdown
+❌ WRONG: Copy implementation-plan code verbatim
+❌ WRONG: Ship TODO comments from plan examples
+❌ WRONG: Skip animations because plan didn't show them
+
+✅ CORRECT: Use plan patterns as starting point
+✅ CORRECT: Reference visual-design-specification.md for complete requirements
+✅ CORRECT: Implement ALL visual elements specified in design docs
+```
+
+#### Design Document Priority Order
+
+When implementation-plan conflicts with design-specification:
+
+1. **visual-design-specification.md** = Source of truth for visuals
+2. **design-handoff.md** = Source of truth for component patterns
+3. **implementation-plan.md** = Architecture guidance only
+
+---
+
 ### STEP 6: Execute Your Assignment (Batch or Single Task)
 
 ## 🚨 CRITICAL: NO GIT OPERATIONS - FOCUS ON IMPLEMENTATION ONLY
