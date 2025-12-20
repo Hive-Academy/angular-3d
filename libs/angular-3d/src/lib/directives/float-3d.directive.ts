@@ -52,15 +52,16 @@
  */
 
 import {
-  AfterViewInit,
+  computed,
   DestroyRef,
   Directive,
+  effect,
   inject,
   input,
-  OnDestroy,
 } from '@angular/core';
-import type { Mesh } from 'three';
-import { MESH_PROVIDER } from '../types/mesh-provider';
+import { Mesh } from 'three';
+import { SceneGraphStore } from '../store/scene-graph.store';
+import { OBJECT_ID } from '../tokens/object-id.token';
 
 /**
  * Configuration for Float3dDirective
@@ -91,12 +92,10 @@ export interface FloatConfig {
   selector: '[float3d]',
   standalone: true,
 })
-export class Float3dDirective implements AfterViewInit, OnDestroy {
-  // Inject MeshProvider from host component (Angular 20+ pattern)
-  private readonly meshProvider = inject(MESH_PROVIDER, {
-    optional: true,
-    self: true,
-  });
+export class Float3dDirective {
+  // Inject SceneGraphStore and OBJECT_ID (skipSelf to get parent's ID)
+  private readonly sceneStore = inject(SceneGraphStore);
+  private readonly objectId = inject(OBJECT_ID, { skipSelf: true });
   private readonly destroyRef = inject(DestroyRef);
 
   /**
@@ -108,53 +107,30 @@ export class Float3dDirective implements AfterViewInit, OnDestroy {
 
   // Internal state
   private gsapTimeline: any | null = null; // GSAP timeline reference
-  private mesh: Mesh | null = null;
   private originalPosition: [number, number, number] | null = null;
 
-  public ngAfterViewInit(): void {
-    const config = this.floatConfig();
-    if (!config) return;
+  // Computed signal for mesh access
+  private readonly mesh = computed(() => {
+    const obj = this.sceneStore.getObject(this.objectId);
+    return obj instanceof Mesh ? (obj as Mesh) : null;
+  });
 
-    if (!this.meshProvider) {
-      console.warn(
-        '[Float3dDirective] Host component does not provide MESH_PROVIDER'
-      );
-      return;
-    }
+  public constructor() {
+    // Effect runs when mesh and config are ready
+    effect(() => {
+      const m = this.mesh();
+      const config = this.floatConfig();
 
-    this.mesh = this.meshProvider.getMesh();
-    if (!this.mesh) {
-      console.warn('[Float3dDirective] getMesh() returned null');
-      return;
-    }
-
-    this.initializeAnimation();
+      if (m && config && !this.gsapTimeline) {
+        this.originalPosition = [m.position.x, m.position.y, m.position.z];
+        this.createFloatingAnimation(m, config);
+      }
+    });
 
     // Register cleanup on destroy
     this.destroyRef.onDestroy(() => {
       this.cleanup();
     });
-  }
-
-  public ngOnDestroy(): void {
-    this.cleanup();
-  }
-
-  /**
-   * Initialize the floating animation
-   */
-  private initializeAnimation(): void {
-    if (!this.mesh) return;
-
-    // Store original position for animation and cleanup
-    this.originalPosition = [
-      this.mesh.position.x,
-      this.mesh.position.y,
-      this.mesh.position.z,
-    ];
-
-    // Create floating animation
-    this.createFloatingAnimation();
   }
 
   /**
@@ -164,14 +140,8 @@ export class Float3dDirective implements AfterViewInit, OnDestroy {
    * Creates a smooth sine-wave-like motion by animating UP and DOWN as separate sequential steps
    * within a repeating timeline, ensuring no sudden drops at loop boundaries.
    */
-  private createFloatingAnimation(): void {
-    if (!this.mesh || !this.originalPosition) return;
-
-    const config = this.floatConfig();
-    if (!config) {
-      console.warn('[Float3dDirective] config became undefined');
-      return;
-    }
+  private createFloatingAnimation(mesh: Mesh, config: FloatConfig): void {
+    if (!this.originalPosition) return;
 
     const height = config.height ?? 0.3;
     const speed = config.speed ?? 2000;
@@ -182,7 +152,7 @@ export class Float3dDirective implements AfterViewInit, OnDestroy {
     // Dynamic import for tree-shaking
     import('gsap').then(({ gsap }) => {
       // Check if directive was destroyed during async import
-      if (!this.mesh || !this.originalPosition) {
+      if (!this.originalPosition) {
         console.warn(
           '[Float3dDirective] directive destroyed during GSAP import'
         );
@@ -190,7 +160,7 @@ export class Float3dDirective implements AfterViewInit, OnDestroy {
       }
 
       // Additional safety check for position property
-      if (!this.mesh.position) {
+      if (!mesh.position) {
         console.warn('[Float3dDirective] mesh.position is undefined');
         return;
       }
@@ -209,14 +179,14 @@ export class Float3dDirective implements AfterViewInit, OnDestroy {
       });
 
       // Phase 1: Float UP (smooth acceleration and deceleration)
-      timeline.to(this.mesh.position, {
+      timeline.to(mesh.position, {
         y: y + height,
         duration: speed / 2000, // Half the total speed for up phase (convert ms to s)
         ease: ease,
       });
 
       // Phase 2: Float DOWN (smooth acceleration and deceleration)
-      timeline.to(this.mesh.position, {
+      timeline.to(mesh.position, {
         y: y,
         duration: speed / 2000, // Half the total speed for down phase
         ease: ease,
@@ -242,9 +212,10 @@ export class Float3dDirective implements AfterViewInit, OnDestroy {
     }
 
     // Reset position to original if mesh still exists
-    if (this.mesh && this.originalPosition) {
+    const m = this.mesh();
+    if (m && this.originalPosition) {
       const [x, y, z] = this.originalPosition;
-      this.mesh.position.set(x, y, z);
+      m.position.set(x, y, z);
     }
   }
 
@@ -272,9 +243,10 @@ export class Float3dDirective implements AfterViewInit, OnDestroy {
   public stop(): void {
     if (this.gsapTimeline) {
       this.gsapTimeline.progress(0).pause();
-      if (this.mesh && this.originalPosition) {
+      const m = this.mesh();
+      if (m && this.originalPosition) {
         const [x, y, z] = this.originalPosition;
-        this.mesh.position.set(x, y, z);
+        m.position.set(x, y, z);
       }
     }
   }

@@ -61,15 +61,16 @@
  */
 
 import {
-  AfterViewInit,
+  computed,
   DestroyRef,
   Directive,
+  effect,
   inject,
   input,
-  OnDestroy,
 } from '@angular/core';
 import type { Object3D } from 'three';
-import { MESH_PROVIDER } from '../types/mesh-provider';
+import { SceneGraphStore } from '../store/scene-graph.store';
+import { OBJECT_ID } from '../tokens/object-id.token';
 
 /**
  * Configuration for Rotate3dDirective
@@ -106,12 +107,10 @@ export interface RotateConfig {
   selector: '[rotate3d]',
   standalone: true,
 })
-export class Rotate3dDirective implements AfterViewInit, OnDestroy {
-  // Inject MeshProvider from host component (Angular 20+ pattern)
-  private readonly meshProvider = inject(MESH_PROVIDER, {
-    optional: true,
-    self: true,
-  });
+export class Rotate3dDirective {
+  // Inject SceneGraphStore and OBJECT_ID (skipSelf to get parent's ID)
+  private readonly sceneStore = inject(SceneGraphStore);
+  private readonly objectId = inject(OBJECT_ID, { skipSelf: true });
   private readonly destroyRef = inject(DestroyRef);
 
   /**
@@ -123,44 +122,27 @@ export class Rotate3dDirective implements AfterViewInit, OnDestroy {
 
   // Internal state
   private gsapTimeline: any | null = null;
-  private object3D: Object3D | null = null;
 
-  public ngAfterViewInit(): void {
-    const config = this.rotateConfig();
-    if (!config) return;
+  // Computed signal for object access
+  private readonly object3D = computed(() => {
+    return this.sceneStore.getObject<Object3D>(this.objectId);
+  });
 
-    if (!this.meshProvider) {
-      console.warn(
-        '[Rotate3dDirective] Host component does not provide MESH_PROVIDER'
-      );
-      return;
-    }
+  public constructor() {
+    // Effect runs when object and config are ready
+    effect(() => {
+      const obj = this.object3D();
+      const config = this.rotateConfig();
 
-    this.object3D = this.meshProvider.getMesh();
-    if (!this.object3D) {
-      console.warn('[Rotate3dDirective] getMesh() returned null');
-      return;
-    }
-
-    this.initializeAnimation();
+      if (obj && config && !this.gsapTimeline) {
+        this.createRotationAnimation(obj, config);
+      }
+    });
 
     // Register cleanup on destroy
     this.destroyRef.onDestroy(() => {
       this.cleanup();
     });
-  }
-
-  public ngOnDestroy(): void {
-    this.cleanup();
-  }
-
-  /**
-   * Initialize the rotation animation
-   */
-  private initializeAnimation(): void {
-    if (!this.object3D) return;
-
-    this.createRotationAnimation();
   }
 
   /**
@@ -169,20 +151,7 @@ export class Rotate3dDirective implements AfterViewInit, OnDestroy {
    * Uses GSAP for smooth, continuous rotation with relative rotation (+=PI*2).
    * Supports single-axis rotation (x, y, z) and multi-axis tumbling (xyz).
    */
-  private createRotationAnimation(): void {
-    if (!this.object3D) {
-      console.warn(
-        '[Rotate3dDirective] object3D is null in createRotationAnimation'
-      );
-      return;
-    }
-
-    const config = this.rotateConfig();
-    if (!config) {
-      console.warn('[Rotate3dDirective] config is undefined');
-      return;
-    }
-
+  private createRotationAnimation(obj: Object3D, config: RotateConfig): void {
     // Store configuration locally to prevent it from becoming undefined during async import
     const axis = config.axis ?? 'y';
     const speed = config.speed ?? 60; // 60 seconds for full rotation
@@ -195,16 +164,8 @@ export class Rotate3dDirective implements AfterViewInit, OnDestroy {
 
     // Dynamic import for tree-shaking
     import('gsap').then(({ gsap }) => {
-      // Check if directive was destroyed during async import
-      if (!this.object3D) {
-        console.warn(
-          '[Rotate3dDirective] object3D became null after GSAP import'
-        );
-        return;
-      }
-
       // Additional safety check for rotation property
-      if (!this.object3D.rotation) {
+      if (!obj.rotation) {
         console.warn('[Rotate3dDirective] object3D.rotation is undefined');
         return;
       }
@@ -217,7 +178,7 @@ export class Rotate3dDirective implements AfterViewInit, OnDestroy {
       if (axis === 'x' || axis === 'y' || axis === 'z') {
         const fullRotation = Math.PI * 2 * direction;
 
-        timeline.to(this.object3D.rotation, {
+        timeline.to(obj.rotation, {
           [axis]: `+=${fullRotation}`, // Relative rotation for seamless looping
           duration: speed,
           ease: ease,
@@ -228,7 +189,7 @@ export class Rotate3dDirective implements AfterViewInit, OnDestroy {
         // Use locally stored speeds from closure
         // Create simultaneous rotations on all axes
         timeline.to(
-          this.object3D.rotation,
+          obj.rotation,
           {
             x: `+=${Math.PI * 2 * direction}`,
             duration: xSpeed,
@@ -239,7 +200,7 @@ export class Rotate3dDirective implements AfterViewInit, OnDestroy {
         ); // Start at time 0
 
         timeline.to(
-          this.object3D.rotation,
+          obj.rotation,
           {
             y: `+=${Math.PI * 2 * direction}`,
             duration: ySpeed,
@@ -250,7 +211,7 @@ export class Rotate3dDirective implements AfterViewInit, OnDestroy {
         ); // Start at time 0
 
         timeline.to(
-          this.object3D.rotation,
+          obj.rotation,
           {
             z: `+=${Math.PI * 2 * direction}`,
             duration: zSpeed,
