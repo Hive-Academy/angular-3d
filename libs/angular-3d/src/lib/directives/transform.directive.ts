@@ -27,10 +27,10 @@ import { OBJECT_ID } from '../tokens/object-id.token';
  * Provides reactive inputs for position, rotation, and scale.
  * Single effect monitors all three inputs and updates the store whenever any change.
  *
- * Injects OBJECT_ID from parent component via skipSelf to access the component's
+ * Injects OBJECT_ID from host component to access the component's
  * unique identifier for store updates.
  *
- * Note: Requires parent to provide OBJECT_ID token.
+ * Note: Requires host element to provide OBJECT_ID token.
  */
 @Directive({
   selector: '[a3dTransform]',
@@ -38,7 +38,7 @@ import { OBJECT_ID } from '../tokens/object-id.token';
 })
 export class TransformDirective {
   private readonly store = inject(SceneGraphStore);
-  private readonly objectId = inject(OBJECT_ID, { skipSelf: true });
+  private readonly objectId = inject(OBJECT_ID);
 
   /**
    * Position in 3D space as [x, y, z] tuple
@@ -62,6 +62,11 @@ export class TransformDirective {
     // Single effect for all transform updates
     // Runs whenever position, rotation, or scale changes
     effect(() => {
+      // Wait for object to be registered before updating
+      if (!this.store.hasObject(this.objectId)) {
+        return;
+      }
+
       this.store.update(this.objectId, {
         position: this.position(),
         rotation: this.rotation(),

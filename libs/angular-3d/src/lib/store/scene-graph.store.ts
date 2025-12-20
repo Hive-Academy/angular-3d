@@ -57,6 +57,9 @@ export class SceneGraphStore {
   private readonly _camera = signal<PerspectiveCamera | null>(null);
   private readonly _renderer = signal<WebGLRenderer | null>(null);
 
+  // Ready state - signals when scene initialization is complete
+  private readonly _isReady = signal(false);
+
   // Object registry
   private readonly _registry = signal<Map<string, ObjectEntry>>(new Map());
 
@@ -68,9 +71,8 @@ export class SceneGraphStore {
   public readonly camera = this._camera.asReadonly();
   public readonly renderer = this._renderer.asReadonly();
 
-  public readonly isReady = computed(
-    () => !!this._scene() && !!this._camera() && !!this._renderer()
-  );
+  // Signal indicating scene is ready for object registration
+  public readonly isReady = this._isReady.asReadonly();
 
   public readonly objectCount = computed(() => this._registry().size);
 
@@ -98,6 +100,8 @@ export class SceneGraphStore {
     this._scene.set(scene);
     this._camera.set(camera);
     this._renderer.set(renderer);
+    // Signal ready AFTER all core objects are set
+    this._isReady.set(true);
   }
 
   // ============================================================================
@@ -109,21 +113,35 @@ export class SceneGraphStore {
     object: Object3D,
     type: Object3DType,
     parentId?: string
-  ): void {
-    // Add to parent or scene
-    const parent = parentId
-      ? this._registry().get(parentId)?.object
-      : this._scene();
-    if (parent) {
-      parent.add(object);
-    }
+  ): boolean {
+    try {
+      // Add to parent or scene
+      const parent = parentId
+        ? this._registry().get(parentId)?.object
+        : this._scene();
 
-    // Update registry
-    this._registry.update((registry) => {
-      const newRegistry = new Map(registry);
-      newRegistry.set(id, { object, type, parentId: parentId ?? null });
-      return newRegistry;
-    });
+      if (!parent) {
+        console.warn(
+          `[SceneGraphStore] Cannot add ${id} to scene - scene not initialized yet`
+        );
+        // Still add to registry so component is tracked
+        // Scene will be available on next registration attempt
+      } else {
+        parent.add(object);
+      }
+
+      // Update registry
+      this._registry.update((registry) => {
+        const newRegistry = new Map(registry);
+        newRegistry.set(id, { object, type, parentId: parentId ?? null });
+        return newRegistry;
+      });
+
+      return true;
+    } catch (error) {
+      console.error(`[SceneGraphStore] Failed to register ${id}:`, error);
+      return false;
+    }
   }
 
   public update(
@@ -210,21 +228,41 @@ export class SceneGraphStore {
   // ============================================================================
 
   private disposeObject(object: Object3D): void {
-    // Dispose geometry
-    if ('geometry' in object && object.geometry) {
-      (object.geometry as BufferGeometry).dispose?.();
+    // Dispose geometry with error boundary
+    try {
+      if ('geometry' in object && object.geometry) {
+        (object.geometry as BufferGeometry).dispose?.();
+      }
+    } catch (error) {
+      console.error('[SceneGraphStore] Error disposing geometry:', error);
     }
 
-    // Dispose material(s)
-    if ('material' in object && object.material) {
-      const materials = Array.isArray(object.material)
-        ? object.material
-        : [object.material];
-      materials.forEach((mat: Material) => mat.dispose?.());
+    // Dispose material(s) with error boundary
+    try {
+      if ('material' in object && object.material) {
+        const materials = Array.isArray(object.material)
+          ? object.material
+          : [object.material];
+        materials.forEach((mat: Material) => {
+          try {
+            mat.dispose?.();
+          } catch (e) {
+            console.error('[SceneGraphStore] Error disposing material:', e);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('[SceneGraphStore] Error processing materials:', error);
     }
 
-    // Recursively dispose children
-    object.children.forEach((child) => this.disposeObject(child));
+    // Recursively dispose children with error boundary for each
+    object.children.forEach((child) => {
+      try {
+        this.disposeObject(child);
+      } catch (error) {
+        console.error('[SceneGraphStore] Error disposing child:', error);
+      }
+    });
   }
 
   public clear(): void {

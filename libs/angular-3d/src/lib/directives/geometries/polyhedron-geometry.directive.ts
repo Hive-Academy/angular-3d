@@ -3,6 +3,7 @@ import {
   IcosahedronGeometry,
   DodecahedronGeometry,
   OctahedronGeometry,
+  TetrahedronGeometry,
   BufferGeometry,
 } from 'three';
 import { GEOMETRY_SIGNAL } from '../../tokens/geometry.token';
@@ -10,12 +11,16 @@ import { GEOMETRY_SIGNAL } from '../../tokens/geometry.token';
 /**
  * Supported polyhedron types
  */
-export type PolyhedronType = 'icosahedron' | 'dodecahedron' | 'octahedron';
+export type PolyhedronType =
+  | 'icosahedron'
+  | 'dodecahedron'
+  | 'octahedron'
+  | 'tetrahedron';
 
 /**
  * PolyhedronGeometryDirective - Creates polyhedron geometries and provides via signal
  *
- * Creates THREE polyhedron geometries (Icosahedron, Dodecahedron, Octahedron)
+ * Creates THREE polyhedron geometries (Icosahedron, Dodecahedron, Octahedron, Tetrahedron)
  * with configurable dimensions and writes it to the GEOMETRY_SIGNAL for
  * consumption by MeshDirective.
  *
@@ -53,8 +58,12 @@ export class PolyhedronGeometryDirective {
     let currentGeometry: BufferGeometry | null = null;
 
     effect(() => {
-      // Dispose previous geometry
-      currentGeometry?.dispose();
+      // Dispose OLD geometry safely - clear reference before disposing
+      if (currentGeometry) {
+        const oldGeometry = currentGeometry;
+        currentGeometry = null; // Prevent double-disposal
+        queueMicrotask(() => oldGeometry.dispose()); // Defer disposal
+      }
 
       // Create new geometry based on type
       const [radius, detail] = this.args();
@@ -70,6 +79,9 @@ export class PolyhedronGeometryDirective {
         case 'octahedron':
           currentGeometry = new OctahedronGeometry(radius, detail);
           break;
+        case 'tetrahedron':
+          currentGeometry = new TetrahedronGeometry(radius, detail);
+          break;
         default:
           console.warn(
             `Unknown polyhedron type: ${polyType}. Defaulting to icosahedron.`
@@ -82,7 +94,10 @@ export class PolyhedronGeometryDirective {
 
     // Cleanup on destroy
     this.destroyRef.onDestroy(() => {
-      currentGeometry?.dispose();
+      if (currentGeometry) {
+        currentGeometry.dispose();
+        currentGeometry = null;
+      }
     });
   }
 }

@@ -34,8 +34,12 @@ export class SphereGeometryDirective {
     let currentGeometry: SphereGeometry | null = null;
 
     effect(() => {
-      // Dispose previous geometry
-      currentGeometry?.dispose();
+      // Dispose OLD geometry safely - clear reference before disposing
+      if (currentGeometry) {
+        const oldGeometry = currentGeometry;
+        currentGeometry = null; // Prevent double-disposal
+        queueMicrotask(() => oldGeometry.dispose()); // Defer disposal
+      }
 
       // Create new geometry
       const [radius, widthSegments, heightSegments] = this.args();
@@ -49,7 +53,10 @@ export class SphereGeometryDirective {
 
     // Cleanup on destroy
     this.destroyRef.onDestroy(() => {
-      currentGeometry?.dispose();
+      if (currentGeometry) {
+        currentGeometry.dispose();
+        currentGeometry = null;
+      }
     });
   }
 }

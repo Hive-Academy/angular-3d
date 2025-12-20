@@ -20,7 +20,7 @@
  * ```
  */
 
-import { Directive, inject, effect, input } from '@angular/core';
+import { Directive, inject, effect, input, DestroyRef } from '@angular/core';
 import * as THREE from 'three';
 import { MATERIAL_SIGNAL } from '../../tokens/material.token';
 import { SceneGraphStore } from '../../store/scene-graph.store';
@@ -47,6 +47,7 @@ export class StandardMaterialDirective {
   private readonly materialSignal = inject(MATERIAL_SIGNAL);
   private readonly store = inject(SceneGraphStore);
   private readonly objectId = inject(OBJECT_ID, { skipSelf: true });
+  private readonly destroyRef = inject(DestroyRef);
 
   /**
    * Material color (hex number or CSS color string)
@@ -103,6 +104,14 @@ export class StandardMaterialDirective {
         this.material.metalness = this.metalness();
         this.material.roughness = this.roughness();
         this.material.needsUpdate = true;
+      }
+    });
+
+    // Cleanup on destroy
+    this.destroyRef.onDestroy(() => {
+      if (this.material) {
+        this.material.dispose();
+        this.material = null;
       }
     });
   }

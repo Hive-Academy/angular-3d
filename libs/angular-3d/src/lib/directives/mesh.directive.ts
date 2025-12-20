@@ -67,6 +67,9 @@ export class MeshDirective {
   public constructor() {
     // Effect: Create mesh when geometry and material are ready
     effect(() => {
+      // Wait for scene to be initialized
+      if (!this.store.isReady()) return;
+
       const geometry = this.geometrySignal();
       const material = this.materialSignal();
 
@@ -76,9 +79,13 @@ export class MeshDirective {
       // Only create mesh once
       if (this.mesh) return;
 
-      // Create mesh and register with store
-      this.mesh = new THREE.Mesh(geometry, material);
-      this.store.register(this.objectId, this.mesh, 'mesh');
+      try {
+        // Create mesh and register with store
+        this.mesh = new THREE.Mesh(geometry, material);
+        this.store.register(this.objectId, this.mesh, 'mesh');
+      } catch (error) {
+        console.error(`[MeshDirective] Failed to create mesh:`, error);
+      }
     });
 
     // Cleanup: Remove mesh from store on destroy
