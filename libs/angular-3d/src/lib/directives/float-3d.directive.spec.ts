@@ -1,6 +1,8 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Float3dDirective, FloatConfig } from './float-3d.directive';
+import { SceneGraphStore } from '../store/scene-graph.store';
+import { OBJECT_ID } from '../tokens/object-id.token';
 import * as THREE from 'three';
 
 // Mock GSAP - uses the global mock from test-setup.ts
@@ -9,6 +11,7 @@ import * as THREE from 'three';
 describe('Float3dDirective', () => {
   let mockTimeline: any;
   let mockGsap: any;
+  let mockSceneStore: Partial<SceneGraphStore>;
 
   beforeEach(() => {
     // Get references to mocked GSAP objects
@@ -23,6 +26,15 @@ describe('Float3dDirective', () => {
       isActive: jest.fn(() => false),
     };
     mockGsap.timeline = jest.fn(() => mockTimeline);
+
+    // Mock SceneGraphStore
+    mockSceneStore = {
+      getObject: jest.fn(),
+    };
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SceneGraphStore, useValue: mockSceneStore }],
+    });
   });
 
   afterEach(() => {
@@ -57,35 +69,30 @@ describe('Float3dDirective', () => {
       expect(mockGsap.timeline).not.toHaveBeenCalled();
     });
 
-    it('should access mesh from elementRef.nativeElement', async () => {
+    it('should access mesh from SceneGraphStore', async () => {
       const mesh = new THREE.Mesh();
+      const testObjectId = 'test-mesh-1';
+
+      // Mock getObject to return our mesh
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(mesh);
 
       @Component({
         template: `<div float3d [floatConfig]="config"></div>`,
         standalone: true,
         imports: [Float3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: testObjectId }],
       })
       class TestComponent {
         config: FloatConfig = { height: 0.5 };
-        @ViewChild(Float3dDirective, { read: ElementRef })
-        elementRef!: ElementRef;
       }
 
       const fixture = TestBed.createComponent(TestComponent);
-
-      // Mock the nativeElement to return our mesh
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Float3dDirective);
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: mesh,
-        writable: true,
-      });
-
       fixture.detectChanges();
 
       // Wait for async GSAP import
       await new Promise((resolve) => setTimeout(resolve, 100));
 
+      expect(mockSceneStore.getObject).toHaveBeenCalledWith(testObjectId);
       expect(mesh).toBeTruthy();
     });
   });
@@ -94,25 +101,21 @@ describe('Float3dDirective', () => {
     it('should create GSAP timeline via dynamic import', async () => {
       const mesh = new THREE.Mesh();
       mesh.position.set(0, 0, 0);
+      const testObjectId = 'test-mesh-2';
+
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(mesh);
 
       @Component({
         template: `<div float3d [floatConfig]="config"></div>`,
         standalone: true,
         imports: [Float3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: testObjectId }],
       })
       class TestComponent {
         config: FloatConfig = { height: 0.3 };
       }
 
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Float3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: mesh,
-        writable: true,
-      });
-
       fixture.detectChanges();
 
       // Wait for async GSAP import
@@ -129,20 +132,15 @@ describe('Float3dDirective', () => {
         template: `<div float3d [floatConfig]="config"></div>`,
         standalone: true,
         imports: [Float3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: FloatConfig = {}; // Empty config, should use defaults
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(mesh);
+
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Float3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: mesh,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -165,6 +163,7 @@ describe('Float3dDirective', () => {
         template: `<div float3d [floatConfig]="config"></div>`,
         standalone: true,
         imports: [Float3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: FloatConfig = {
@@ -175,15 +174,9 @@ describe('Float3dDirective', () => {
         };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(mesh);
+
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Float3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: mesh,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -214,20 +207,15 @@ describe('Float3dDirective', () => {
         template: `<div float3d [floatConfig]="config"></div>`,
         standalone: true,
         imports: [Float3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: FloatConfig = { height: 0.5, speed: 2000 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(mesh);
+
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Float3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: mesh,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -257,20 +245,15 @@ describe('Float3dDirective', () => {
         template: `<div float3d [floatConfig]="config"></div>`,
         standalone: true,
         imports: [Float3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: FloatConfig = { height: 0.3, autoStart: false };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(mesh);
+
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Float3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: mesh,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -288,20 +271,15 @@ describe('Float3dDirective', () => {
         template: `<div float3d [floatConfig]="config"></div>`,
         standalone: true,
         imports: [Float3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: FloatConfig = { height: 0.3 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(mesh);
+
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Float3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: mesh,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -321,20 +299,15 @@ describe('Float3dDirective', () => {
         template: `<div float3d [floatConfig]="config"></div>`,
         standalone: true,
         imports: [Float3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: FloatConfig = { height: 0.5 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(mesh);
+
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Float3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: mesh,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -360,21 +333,18 @@ describe('Float3dDirective', () => {
         template: `<div float3d [floatConfig]="config"></div>`,
         standalone: true,
         imports: [Float3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: FloatConfig = { height: 0.3, autoStart: false };
         @ViewChild(Float3dDirective) directive!: Float3dDirective;
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(mesh);
+
       const fixture = TestBed.createComponent(TestComponent);
       const directiveInstance =
         fixture.debugElement.children[0].injector.get(Float3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: mesh,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -394,20 +364,17 @@ describe('Float3dDirective', () => {
         template: `<div float3d [floatConfig]="config"></div>`,
         standalone: true,
         imports: [Float3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: FloatConfig = { height: 0.3 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(mesh);
+
       const fixture = TestBed.createComponent(TestComponent);
       const directiveInstance =
         fixture.debugElement.children[0].injector.get(Float3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: mesh,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -427,20 +394,17 @@ describe('Float3dDirective', () => {
         template: `<div float3d [floatConfig]="config"></div>`,
         standalone: true,
         imports: [Float3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: FloatConfig = { height: 0.5 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(mesh);
+
       const fixture = TestBed.createComponent(TestComponent);
       const directiveInstance =
         fixture.debugElement.children[0].injector.get(Float3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: mesh,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -462,20 +426,17 @@ describe('Float3dDirective', () => {
         template: `<div float3d [floatConfig]="config"></div>`,
         standalone: true,
         imports: [Float3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: FloatConfig = { height: 0.3 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(mesh);
+
       const fixture = TestBed.createComponent(TestComponent);
       const directiveInstance =
         fixture.debugElement.children[0].injector.get(Float3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: mesh,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 100));
 

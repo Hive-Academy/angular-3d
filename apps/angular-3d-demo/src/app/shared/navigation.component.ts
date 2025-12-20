@@ -1,9 +1,10 @@
+import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 @Component({
   selector: 'app-navigation',
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, NgOptimizedImage],
   template: `
     <nav
       class="fixed top-0 left-0 right-0 z-50 bg-background-dark/80 backdrop-blur-md border-b border-neon-green/10"
@@ -16,7 +17,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
           routerLink="/"
           class="text-headline-md font-bold text-neon-green hover:animate-glow transition-all duration-250"
         >
-          Hive Academy
+          <img ngSrc="/assets/logo.png" alt="logo" />
         </a>
 
         <!-- Nav Links -->

@@ -1,6 +1,8 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Rotate3dDirective, RotateConfig } from './rotate-3d.directive';
+import { SceneGraphStore } from '../store/scene-graph.store';
+import { OBJECT_ID } from '../tokens/object-id.token';
 import * as THREE from 'three';
 
 // Mock GSAP - uses the global mock from test-setup.ts
@@ -8,6 +10,7 @@ import * as THREE from 'three';
 describe('Rotate3dDirective', () => {
   let mockTimeline: any;
   let mockGsap: any;
+  let mockSceneStore: Partial<SceneGraphStore>;
 
   beforeEach(() => {
     // Get references to mocked GSAP objects
@@ -30,6 +33,15 @@ describe('Rotate3dDirective', () => {
       _timeScale: 1,
     };
     mockGsap.timeline = jest.fn(() => mockTimeline);
+
+    // Mock SceneGraphStore
+    mockSceneStore = {
+      getObject: jest.fn(),
+    };
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SceneGraphStore, useValue: mockSceneStore }],
+    });
   });
 
   afterEach(() => {
@@ -71,20 +83,15 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = { axis: 'y', speed: 60 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
 
       // Wait for 100ms initialization delay + async GSAP import
@@ -101,20 +108,15 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = { axis: 'y', speed: 60 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
 
       // Timeline should not be created immediately
@@ -137,20 +139,15 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = {}; // Empty config, should use defaults
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 250));
 
@@ -172,20 +169,15 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = { axis: 'x', speed: 30 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 250));
 
@@ -205,20 +197,15 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = { axis: 'z', speed: 45 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 250));
 
@@ -238,20 +225,15 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = { axis: 'y', speed: 60, direction: 1 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 250));
 
@@ -268,20 +250,15 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = { axis: 'y', speed: 60 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 250));
 
@@ -302,20 +279,15 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = { axis: 'xyz', speed: 60 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 250));
 
@@ -330,6 +302,7 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = {
@@ -340,15 +313,9 @@ describe('Rotate3dDirective', () => {
         };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 250));
 
@@ -390,20 +357,15 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = { axis: 'xyz', speed: 60 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 250));
 
@@ -423,20 +385,15 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = { axis: 'y', speed: 60, direction: 1 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 250));
 
@@ -451,20 +408,15 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = { axis: 'y', speed: 60, direction: -1 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 250));
 
@@ -479,20 +431,17 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = { axis: 'y', speed: 60 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
       const directiveInstance =
         fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 250));
 
@@ -511,20 +460,17 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = { axis: 'y', speed: 60 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
       const directiveInstance =
         fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 250));
 
@@ -548,20 +494,15 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = { axis: 'y', speed: 60 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
-      const directiveInstance =
-        fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 250));
 
@@ -579,20 +520,17 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = { axis: 'y', speed: 60 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
       const directiveInstance =
         fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 250));
 
@@ -613,20 +551,17 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = { axis: 'y', speed: 60, autoStart: false };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
       const directiveInstance =
         fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 250));
 
@@ -644,20 +579,17 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = { axis: 'y', speed: 60 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
       const directiveInstance =
         fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 250));
 
@@ -675,20 +607,17 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = { axis: 'y', speed: 60 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
       const directiveInstance =
         fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 250));
 
@@ -707,20 +636,17 @@ describe('Rotate3dDirective', () => {
         template: `<div rotate3d [rotateConfig]="config"></div>`,
         standalone: true,
         imports: [Rotate3dDirective],
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object' }],
       })
       class TestComponent {
         config: RotateConfig = { axis: 'y', speed: 60 };
       }
 
+      (mockSceneStore.getObject as jest.Mock).mockReturnValue(object3D);
+
       const fixture = TestBed.createComponent(TestComponent);
       const directiveInstance =
         fixture.debugElement.children[0].injector.get(Rotate3dDirective);
-
-      Object.defineProperty(directiveInstance['elementRef'], 'nativeElement', {
-        value: object3D,
-        writable: true,
-      });
-
       fixture.detectChanges();
       await new Promise((resolve) => setTimeout(resolve, 250));
 
