@@ -4,8 +4,9 @@
 export * from './float-3d.directive';
 export * from './rotate-3d.directive';
 
-// Core directives (mesh, transform)
+// Core directives (mesh, group, transform)
 export * from './mesh.directive';
+export * from './group.directive';
 export * from './transform.directive';
 
 // Geometry directives

@@ -1,25 +1,19 @@
-import {
-  Component,
-  ChangeDetectionStrategy,
-  OnDestroy,
-  inject,
-  input,
-  effect,
-  forwardRef,
-} from '@angular/core';
-import * as THREE from 'three';
-import { NG_3D_PARENT } from '../types/tokens';
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { OBJECT_ID } from '../tokens/object-id.token';
+import { GroupDirective } from '../directives/group.directive';
+import { TransformDirective } from '../directives/transform.directive';
 
 /**
- * Group Component - Container for 3D objects
+ * GroupComponent - Declarative 3D Group Container
  *
- * Wraps THREE.Group to allow grouping and transforming children together.
- * Provides itself as the NG_3D_PARENT for its content children.
+ * Uses hostDirectives composition pattern - NO Three.js imports!
+ * Groups allow organizing and transforming multiple 3D objects together.
  *
- * Usage:
+ * @example
  * ```html
- * <a3d-group [position]="[10, 0, 0]">
+ * <a3d-group [position]="[10, 0, 0]" [rotation]="[0, Math.PI / 4, 0]">
  *   <a3d-box />
+ *   <a3d-cylinder />
  * </a3d-group>
  * ```
  */
@@ -27,65 +21,21 @@ import { NG_3D_PARENT } from '../types/tokens';
   selector: 'a3d-group',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [],
+  template: '<ng-content />',
   providers: [
+    { provide: OBJECT_ID, useFactory: () => `group-${crypto.randomUUID()}` },
+  ],
+  hostDirectives: [
+    GroupDirective,
     {
-      provide: NG_3D_PARENT,
-      useFactory: (group: GroupComponent) => () => group.group,
-      deps: [forwardRef(() => GroupComponent)],
+      directive: TransformDirective,
+      inputs: ['position', 'rotation', 'scale'],
     },
   ],
-  template: `<ng-content />`,
 })
-export class GroupComponent implements OnDestroy {
-  // Inputs
+export class GroupComponent {
+  // Signal inputs - forwarded to directives via hostDirectives
   public readonly position = input<[number, number, number]>([0, 0, 0]);
   public readonly rotation = input<[number, number, number]>([0, 0, 0]);
   public readonly scale = input<[number, number, number]>([1, 1, 1]);
-
-  // Three.js object
-  public readonly group = new THREE.Group();
-
-  // Parent injection
-  private readonly parentFn = inject(NG_3D_PARENT, { optional: true });
-
-  public constructor() {
-    // React to inputs
-    effect(() => {
-      this.group.position.set(...this.position());
-    });
-    effect(() => {
-      this.group.rotation.set(...this.rotation());
-    });
-    effect(() => {
-      this.group.scale.set(...this.scale());
-    });
-
-    // Parent registration effect
-    effect((onCleanup) => {
-      if (this.parentFn) {
-        const parent = this.parentFn();
-        if (parent) {
-          parent.add(this.group);
-        } else {
-          console.warn('GroupComponent: Parent not ready');
-        }
-
-        onCleanup(() => {
-          parent?.remove(this.group);
-        });
-      } else {
-        console.warn('GroupComponent: No parent found');
-      }
-    });
-  }
-
-  public ngOnDestroy(): void {
-    if (this.parentFn) {
-      const parent = this.parentFn();
-      parent?.remove(this.group);
-    }
-    // Groups don't have geometry/material to dispose, but we clear children
-    this.group.clear();
-  }
 }
