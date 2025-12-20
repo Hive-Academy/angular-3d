@@ -8,7 +8,10 @@ export * from './lib/canvas';
 export * from './lib/render-loop';
 
 // Store - Scene service and context store
-// export * from './lib/store'; // TODO: Implement store
+export * from './lib/store';
+
+// Tokens - Injection tokens for directives
+export * from './lib/tokens';
 
 // Controls - OrbitControls wrapper
 export * from './lib/controls';

@@ -3,3 +3,4 @@
 
 export * from './angular-3d-state.store';
 export * from './component-registry.service';
+export * from './scene-graph.store';

@@ -21,6 +21,7 @@ import {
 import * as THREE from 'three';
 import { SceneService } from './scene.service';
 import { RenderLoopService } from '../render-loop/render-loop.service';
+import { SceneGraphStore } from '../store/scene-graph.store';
 import { NG_3D_PARENT } from '../types/tokens';
 
 /**
@@ -129,6 +130,7 @@ export class Scene3dComponent implements OnDestroy {
   // Dependency injection
   private readonly destroyRef = inject(DestroyRef);
   private readonly sceneService = inject(SceneService);
+  private readonly sceneStore = inject(SceneGraphStore);
   private readonly renderLoop = inject(RenderLoopService);
 
   // Camera inputs
@@ -171,6 +173,9 @@ export class Scene3dComponent implements OnDestroy {
         // Expose renderer and camera (available after init)
         this.sceneService.setRenderer(this.renderer);
         this.sceneService.setCamera(this.camera);
+
+        // Initialize scene graph store with core Three.js objects
+        this.sceneStore.initScene(this.scene, this.camera, this.renderer);
 
         // Start render loop delegating to RenderLoopService
         this.renderLoop.start(() => {
