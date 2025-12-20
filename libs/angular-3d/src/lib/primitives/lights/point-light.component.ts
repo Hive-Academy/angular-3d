@@ -1,67 +1,53 @@
-import {
-  Component,
-  ChangeDetectionStrategy,
-  OnDestroy,
-  inject,
-  input,
-  effect,
-  afterNextRender,
-} from '@angular/core';
-import * as THREE from 'three';
-import { NG_3D_PARENT } from '../../types/tokens';
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { OBJECT_ID } from '../../tokens/object-id.token';
+import { PointLightDirective } from '../../directives/lights/point-light.directive';
+import { TransformDirective } from '../../directives/transform.directive';
 
+/**
+ * PointLightComponent - Declarative Point Light
+ *
+ * Uses hostDirectives composition pattern - NO Three.js imports!
+ * Emits light in all directions from a single point, like a light bulb.
+ * Supports distance falloff, decay, and shadow casting.
+ *
+ * @example
+ * ```html
+ * <a3d-point-light
+ *   [position]="[5, 10, 5]"
+ *   color="yellow"
+ *   [intensity]="2"
+ *   [distance]="50"
+ *   [castShadow]="true" />
+ * ```
+ */
 @Component({
   selector: 'a3d-point-light',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
+  providers: [
+    {
+      provide: OBJECT_ID,
+      useFactory: () => `point-light-${crypto.randomUUID()}`,
+    },
+  ],
+  hostDirectives: [
+    {
+      directive: PointLightDirective,
+      inputs: ['color', 'intensity', 'distance', 'decay', 'castShadow'],
+    },
+    {
+      directive: TransformDirective,
+      inputs: ['position'],
+    },
+  ],
 })
-export class PointLightComponent implements OnDestroy {
+export class PointLightComponent {
+  // Signal inputs - forwarded to directives via hostDirectives
   public readonly position = input<[number, number, number]>([0, 0, 0]);
   public readonly color = input<string | number>('white');
   public readonly intensity = input<number>(1);
   public readonly distance = input<number>(0);
   public readonly decay = input<number>(2);
   public readonly castShadow = input<boolean>(false);
-
-  private light!: THREE.PointLight;
-  private readonly parentFn = inject(NG_3D_PARENT, { optional: true });
-
-  public constructor() {
-    effect(() => {
-      if (this.light) {
-        this.light.position.set(...this.position());
-      }
-    });
-    effect(() => {
-      if (this.light) {
-        this.light.color.set(this.color());
-        this.light.intensity = this.intensity();
-        this.light.distance = this.distance();
-        this.light.decay = this.decay();
-        this.light.castShadow = this.castShadow();
-      }
-    });
-
-    afterNextRender(() => {
-      this.light = new THREE.PointLight(
-        this.color(),
-        this.intensity(),
-        this.distance(),
-        this.decay()
-      );
-      this.light.position.set(...this.position());
-      this.light.castShadow = this.castShadow();
-
-      if (this.parentFn) {
-        const parent = this.parentFn();
-        parent?.add(this.light);
-      }
-    });
-  }
-
-  public ngOnDestroy(): void {
-    if (this.parentFn) this.parentFn()?.remove(this.light);
-    this.light.dispose();
-  }
 }
