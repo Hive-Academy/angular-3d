@@ -136,16 +136,14 @@ export class ViewportPositionDirective {
       const offset = this.viewportOffset();
       const z = this.viewportZ();
 
-      // Configure service viewport plane
-      this.positioningService.setViewportZ(z);
+      // Get reactive position signal from service, passing viewportZ as parameter
+      // This isolates each directive's Z-plane from other directives
+      const positionSignal = this.positioningService.getPosition(position, {
+        ...offset,
+        viewportZ: z,
+      });
 
-      // Get reactive position signal from service
-      const positionSignal = this.positioningService.getPosition(
-        position,
-        offset
-      );
-
-      // Read the position signal (reactive to camera/window changes)
+      // Read the position signal directly (no nested effect)
       // This effect will re-run when:
       // - Input bindings change (position, offset, z)
       // - Camera FOV/position changes (via positionSignal reactivity)

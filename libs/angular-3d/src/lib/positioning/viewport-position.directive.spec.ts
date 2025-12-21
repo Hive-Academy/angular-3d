@@ -405,4 +405,58 @@ describe('ViewportPositionDirective', () => {
       }, 50);
     });
   });
+
+  describe('multi-directive viewportZ isolation', () => {
+    it('should isolate viewportZ between multiple directives', (done) => {
+      // Create second mesh for object-2
+      const testMesh2 = new Mesh(
+        new BoxGeometry(1, 1, 1),
+        new MeshBasicMaterial()
+      );
+      sceneStore.register('object-2', testMesh2, 'mesh');
+
+      // Create first directive with viewportZ = -5
+      @Component({
+        selector: 'app-directive-1',
+        standalone: true,
+        imports: [ViewportPositionDirective],
+        template: `<div [viewportPosition]="'center'" [viewportZ]="-5"></div>`,
+        providers: [{ provide: OBJECT_ID, useValue: 'test-object-id' }],
+      })
+      class Directive1Component {}
+
+      // Create second directive with viewportZ = -10
+      @Component({
+        selector: 'app-directive-2',
+        standalone: true,
+        imports: [ViewportPositionDirective],
+        template: `<div [viewportPosition]="'center'" [viewportZ]="-10"></div>`,
+        providers: [{ provide: OBJECT_ID, useValue: 'object-2' }],
+      })
+      class Directive2Component {}
+
+      const fixture1 = TestBed.createComponent(Directive1Component);
+      const fixture2 = TestBed.createComponent(Directive2Component);
+
+      fixture1.detectChanges();
+      fixture2.detectChanges();
+
+      // Allow effects to run
+      setTimeout(() => {
+        const obj1 = sceneStore.getObject('test-object-id');
+        const obj2 = sceneStore.getObject('object-2');
+
+        // Verify each directive has its own viewportZ
+        expect(obj1?.position.z).toBe(-5);
+        expect(obj2?.position.z).toBe(-10);
+
+        // Verify they don't interfere with each other
+        expect(obj1?.position.z).not.toBe(obj2?.position.z);
+
+        fixture1.destroy();
+        fixture2.destroy();
+        done();
+      }, 100);
+    });
+  });
 });

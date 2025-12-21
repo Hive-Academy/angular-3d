@@ -143,7 +143,7 @@ export class ViewportPositioningService {
    * Returns reactive signal that auto-updates on camera/window changes.
    *
    * @param name - Named position (9 variants: corners, edges, center)
-   * @param options - Optional offsets in world units
+   * @param options - Optional offsets and viewportZ in world units
    * @returns Signal of [x, y, z] world coordinates
    *
    * @example
@@ -162,11 +162,23 @@ export class ViewportPositioningService {
    */
   public getNamedPosition(
     name: NamedPosition,
-    options: PositionOffset = {}
+    options: PositionOffset & { viewportZ?: number } = {}
   ): Signal<[number, number, number]> {
     return computed(() => {
-      const halfW = this.viewportWidth() / 2;
-      const halfH = this.viewportHeight() / 2;
+      const camera = this.sceneStore.camera();
+      if (!camera) return [0, 0, 0];
+
+      const viewportZ = options.viewportZ ?? this._viewportZ();
+
+      const height = this.calculateViewportHeight(
+        camera.fov,
+        camera.position.z,
+        viewportZ
+      );
+      const width = height * this._aspect();
+
+      const halfW = width / 2;
+      const halfH = height / 2;
 
       const positions: Record<NamedPosition, [number, number]> = {
         center: [0, 0],
@@ -184,7 +196,7 @@ export class ViewportPositioningService {
       return [
         x + (options.offsetX ?? 0),
         y + (options.offsetY ?? 0),
-        this._viewportZ() + (options.offsetZ ?? 0),
+        viewportZ + (options.offsetZ ?? 0),
       ];
     });
   }
@@ -196,7 +208,7 @@ export class ViewportPositioningService {
    * Supports both string percentages ('50%') and decimal values (0.5).
    *
    * @param pos - Percentage position { x, y }
-   * @param options - Optional offsets in world units
+   * @param options - Optional offsets and viewportZ in world units
    * @returns Signal of [x, y, z] world coordinates
    *
    * @example
@@ -213,9 +225,21 @@ export class ViewportPositioningService {
    */
   public getPercentagePosition(
     pos: PercentagePosition,
-    options: PositionOffset = {}
+    options: PositionOffset & { viewportZ?: number } = {}
   ): Signal<[number, number, number]> {
     return computed(() => {
+      const camera = this.sceneStore.camera();
+      if (!camera) return [0, 0, 0];
+
+      const viewportZ = options.viewportZ ?? this._viewportZ();
+
+      const height = this.calculateViewportHeight(
+        camera.fov,
+        camera.position.z,
+        viewportZ
+      );
+      const width = height * this._aspect();
+
       // Parse percentage strings or decimal values
       const parsePercent = (val: string | number): number => {
         if (typeof val === 'string') {
@@ -228,13 +252,13 @@ export class ViewportPositioningService {
       const yPercent = parsePercent(pos.y);
 
       // Convert to world coordinates (-0.5 to 0.5 viewport space)
-      const x = (xPercent - 0.5) * this.viewportWidth();
-      const y = (0.5 - yPercent) * this.viewportHeight(); // Invert Y (CSS is top-down)
+      const x = (xPercent - 0.5) * width;
+      const y = (0.5 - yPercent) * height; // Invert Y (CSS is top-down)
 
       return [
         x + (options.offsetX ?? 0),
         y + (options.offsetY ?? 0),
-        this._viewportZ() + (options.offsetZ ?? 0),
+        viewportZ + (options.offsetZ ?? 0),
       ];
     });
   }
@@ -262,24 +286,38 @@ export class ViewportPositioningService {
     options: PixelPositionOptions = {}
   ): Signal<[number, number, number]> {
     return computed(() => {
-      const viewportWidth =
+      const camera = this.sceneStore.camera();
+      if (!camera) return [0, 0, 0];
+
+      const viewportZ = options.viewportZ ?? this._viewportZ();
+
+      const height = this.calculateViewportHeight(
+        camera.fov,
+        camera.position.z,
+        viewportZ
+      );
+      const width = height * this._aspect();
+
+      const screenWidth =
         options.viewportWidth ??
         (typeof window !== 'undefined' ? window.innerWidth : 1920);
-      const viewportHeight =
+      const screenHeight =
         options.viewportHeight ??
         (typeof window !== 'undefined' ? window.innerHeight : 1080);
 
       // Convert pixels to viewport percentage
-      const xPercent = pos.x / viewportWidth;
-      const yPercent = pos.y / viewportHeight;
+      const xPercent = pos.x / screenWidth;
+      const yPercent = pos.y / screenHeight;
 
-      // Reuse percentage position calculation
-      const percentageSignal = this.getPercentagePosition(
-        { x: xPercent, y: yPercent },
-        options
-      );
+      // Convert to world coordinates (-0.5 to 0.5 viewport space)
+      const x = (xPercent - 0.5) * width;
+      const y = (0.5 - yPercent) * height; // Invert Y (CSS is top-down)
 
-      return percentageSignal();
+      return [
+        x + (options.offsetX ?? 0),
+        y + (options.offsetY ?? 0),
+        viewportZ + (options.offsetZ ?? 0),
+      ];
     });
   }
 
@@ -336,18 +374,15 @@ export class ViewportPositioningService {
   /**
    * Set viewport Z plane (depth layer)
    *
-   * Allows positioning objects at different Z depths while maintaining
-   * viewport-relative positioning.
+   * @deprecated Use viewportZ parameter in getPosition() methods instead.
+   * This method mutates shared service state and affects ALL directives.
+   *
+   * For per-directive Z-plane isolation, pass viewportZ in options:
+   * ```typescript
+   * service.getPosition('center', { viewportZ: -10 })
+   * ```
    *
    * @param z - Z position of viewport plane
-   *
-   * @example
-   * ```typescript
-   * // Position objects at Z = -10
-   * service.setViewportZ(-10);
-   * const pos = service.getNamedPosition('center');
-   * // Returns [0, 0, -10]
-   * ```
    */
   public setViewportZ(z: number): void {
     this._viewportZ.set(z);

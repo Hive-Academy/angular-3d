@@ -109,7 +109,8 @@ export interface PositionOffset {
  * const options: PixelPositionOptions = {
  *   unit: 'viewport',
  *   offsetX: 2,
- *   offsetZ: -10
+ *   offsetZ: -10,
+ *   viewportZ: -5
  * };
  * ```
  */
@@ -120,6 +121,8 @@ export interface PixelPositionOptions extends PositionOffset {
   viewportWidth?: number;
   /** Override viewport height (default: window.innerHeight) */
   viewportHeight?: number;
+  /** Viewport Z plane for this calculation (isolates from service state) */
+  viewportZ?: number;
 }
 
 /**
