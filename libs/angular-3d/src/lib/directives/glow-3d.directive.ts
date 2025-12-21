@@ -189,9 +189,9 @@ export class Glow3dDirective {
     const glowRadius = baseRadius * this.glowScale();
     const segments = this.glowSegments();
 
-    // Create glow geometry
+    // Create glow geometry with base radius (no scale multiplier - use mesh.scale instead)
     this.glowGeometry = new THREE.SphereGeometry(
-      glowRadius,
+      baseRadius,
       segments,
       segments
     );
@@ -209,45 +209,22 @@ export class Glow3dDirective {
     // Create glow mesh
     this.glowMesh = new THREE.Mesh(this.glowGeometry, this.glowMaterial);
 
+    // Set initial scale
+    const initialScale = this.glowScale();
+    this.glowMesh.scale.setScalar(initialScale);
+
     // Add as child of target object (inherits transforms)
     this.targetObject.add(this.glowMesh);
   }
 
   /**
-   * Update glow scale (recreate geometry if needed)
+   * Update glow scale using mesh.scale (no geometry recreation)
+   * This is much more efficient than recreating geometry on every scale change
    */
   private updateGlowScale(scale: number): void {
-    if (!this.targetObject || !this.glowMesh) return;
+    if (!this.glowMesh) return;
 
-    // Calculate new radius
-    let baseRadius = 1;
-
-    if (this.targetObject instanceof THREE.Mesh) {
-      if (!this.targetObject.geometry.boundingSphere) {
-        this.targetObject.geometry.computeBoundingSphere();
-      }
-      baseRadius = this.targetObject.geometry.boundingSphere?.radius || 1;
-    } else {
-      const bbox = new THREE.Box3().setFromObject(this.targetObject);
-      const size = new THREE.Vector3();
-      bbox.getSize(size);
-      baseRadius = Math.max(size.x, size.y, size.z) / 2;
-    }
-
-    const glowRadius = baseRadius * scale;
-
-    // Recreate geometry with new radius
-    if (this.glowGeometry) {
-      this.glowGeometry.dispose();
-    }
-
-    const segments = this.glowSegments();
-    this.glowGeometry = new THREE.SphereGeometry(
-      glowRadius,
-      segments,
-      segments
-    );
-
-    this.glowMesh.geometry = this.glowGeometry;
+    // Update mesh scale directly - no need to recreate geometry
+    this.glowMesh.scale.setScalar(scale);
   }
 }

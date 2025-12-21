@@ -3,3 +3,6 @@
 
 // Performance optimization
 export * from './advanced-performance-optimizer.service';
+
+// Text utilities
+export * from './text-sampling.service';

@@ -41,6 +41,18 @@ export class GltfModelComponent implements OnDestroy {
   // Track if model has been added to scene (for browser-only operations)
   private readonly isInitialized = signal(false);
 
+  /**
+   * Loading state signal - true while model is being fetched
+   * Useful for displaying loading spinners in UI
+   */
+  public readonly isLoading = signal(false);
+
+  /**
+   * Load error signal - contains error message if loading failed
+   * Null if no error or model loaded successfully
+   */
+  public readonly loadError = signal<string | null>(null);
+
   public constructor() {
     // Model Loading Effect - runs in injection context (constructor)
     // This effect will react to modelPath/useDraco changes and load the model
@@ -48,17 +60,31 @@ export class GltfModelComponent implements OnDestroy {
       const path = this.modelPath();
       const useDraco = this.useDraco();
 
+      // Set loading state
+      this.isLoading.set(true);
+      this.loadError.set(null);
+
       // Initiate load
       const result = this.gltfLoader.load(path, {
         useDraco: useDraco,
       });
 
       // Handle loading completion
-      // Since result.data is a signal, reading it here creates a dependency
-      // When data updates, this effect re-runs
+      // Since result.data and result.error are signals, reading them here creates dependencies
+      // When they update, this effect re-runs
       const data = result.data();
+      const error = result.error();
 
-      if (data) {
+      if (error) {
+        // Loading failed
+        this.isLoading.set(false);
+        this.loadError.set(error.message || 'Failed to load GLTF model');
+        console.error('[GltfModelComponent] Load error:', error);
+      } else if (data) {
+        // Loading succeeded
+        this.isLoading.set(false);
+        this.loadError.set(null);
+
         // Clone to allow multiple instances
         this.group = data.scene.clone();
 
@@ -86,6 +112,7 @@ export class GltfModelComponent implements OnDestroy {
           console.warn('GltfModelComponent: No parent found');
         }
       }
+      // else: still loading (data and error both null)
 
       onCleanup(() => {
         if (this.group && this.parentFn) {

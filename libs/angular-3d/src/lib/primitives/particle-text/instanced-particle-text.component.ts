@@ -15,6 +15,7 @@ import { NG_3D_PARENT } from '../../types/tokens';
 import { OBJECT_ID } from '../../tokens/object-id.token';
 import { RenderLoopService } from '../../render-loop/render-loop.service';
 import { SceneService } from '../../canvas/scene.service';
+import { TextSamplingService } from '../../services/text-sampling.service';
 
 /**
  * InstancedParticleTextComponent - Smoke Cloud Text using Instanced Meshes
@@ -107,6 +108,7 @@ export class InstancedParticleTextComponent implements OnDestroy {
   private readonly destroyRef = inject(DestroyRef);
   private readonly renderLoop = inject(RenderLoopService);
   private readonly sceneService = inject(SceneService);
+  private readonly textSampling = inject(TextSamplingService);
 
   // Internal state
   private textCanvas!: HTMLCanvasElement;
@@ -213,7 +215,7 @@ export class InstancedParticleTextComponent implements OnDestroy {
   }
 
   /**
-   * Sample pixel positions from canvas-rendered text
+   * Sample pixel positions from canvas-rendered text using TextSamplingService
    */
   private sampleTextCoordinates(text: string, fontSize: number): void {
     // Setup canvas dimensions
@@ -228,36 +230,40 @@ export class InstancedParticleTextComponent implements OnDestroy {
     this.stringBox.wScene = textWidth * this.fontScaleFactor();
     this.stringBox.hScene = textHeight * this.fontScaleFactor();
 
-    // Resize canvas and render text
+    // Resize canvas for later use
     this.textCanvas.width = textWidth;
     this.textCanvas.height = textHeight;
-    this.textCtx.font = `bold ${fontSize}px ${fontName}`;
-    this.textCtx.fillStyle = '#ffffff';
-    this.textCtx.textAlign = 'left';
-    this.textCtx.textBaseline = 'top';
-    this.textCtx.clearRect(0, 0, textWidth, textHeight);
-    this.textCtx.fillText(text, 0, 0);
 
-    // Sample coordinates from image data
-    if (this.stringBox.wTexture > 0) {
-      const imageData = this.textCtx.getImageData(
-        0,
-        0,
-        this.textCanvas.width,
-        this.textCanvas.height
-      );
+    // Use TextSamplingService for pixel sampling (sample every pixel for instanced mesh)
+    const positions = this.textSampling.sampleTextPositions(text, fontSize, 1);
+
+    // Convert normalized positions to pixel coordinates and build recycling structure
+    if (positions.length > 0) {
+      // Build 2D mask from sampled positions for recycling logic
       const imageMask: boolean[][] = Array.from(
         Array(this.textCanvas.height),
-        () => new Array(this.textCanvas.width)
+        () => new Array(this.textCanvas.width).fill(false)
       );
 
-      // Build 2D mask from image data
-      for (let i = 0; i < this.textCanvas.height; i++) {
-        for (let j = 0; j < this.textCanvas.width; j++) {
-          const alpha = imageData.data[(j + i * this.textCanvas.width) * 4 + 3];
-          imageMask[i][j] = alpha > 128;
+      // Convert normalized positions back to pixel coordinates
+      const pixelCoords: Array<{ x: number; y: number }> = [];
+      positions.forEach(([nx, ny]) => {
+        // Reverse the normalization from TextSamplingService
+        const padding = 20;
+        const canvasWidth = textWidth + padding * 2;
+        const canvasHeight = textHeight + padding * 2;
+        const x = Math.round(nx * fontSize + canvasWidth / 2);
+        const y = Math.round(-ny * fontSize + canvasHeight / 2);
+
+        // Adjust for padding offset to get texture coordinates
+        const texX = x - padding;
+        const texY = y - padding;
+
+        if (texX >= 0 && texX < textWidth && texY >= 0 && texY < textHeight) {
+          imageMask[texY][texX] = true;
+          pixelCoords.push({ x: texX, y: texY });
         }
-      }
+      });
 
       if (this.textureCoordinates.length !== 0) {
         // Clean up deleted coordinates from previous frame
@@ -279,7 +285,7 @@ export class InstancedParticleTextComponent implements OnDestroy {
         });
       }
 
-      // Add new coordinates - sample every pixel for better text definition
+      // Add new coordinates from remaining pixels in mask
       for (let i = 0; i < this.textCanvas.height; i++) {
         for (let j = 0; j < this.textCanvas.width; j++) {
           if (imageMask[i][j]) {

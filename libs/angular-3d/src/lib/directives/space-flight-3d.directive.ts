@@ -275,9 +275,23 @@ export class SpaceFlight3dDirective {
 
   /**
    * Calculate total duration of all waypoints
+   * Guards against zero/invalid duration to prevent division by zero
    */
   private getTotalDuration(): number {
-    return this.flightPath().reduce((sum, wp) => sum + wp.duration, 0);
+    const duration = this.flightPath().reduce(
+      (sum, wp) => sum + wp.duration,
+      0
+    );
+
+    if (duration <= 0) {
+      console.warn(
+        '[SpaceFlight3d] Invalid total duration (zero or negative), using default 1s. ' +
+          'Check flightPath waypoints have positive duration values.'
+      );
+      return 1; // Minimum 1 second to prevent division by zero
+    }
+
+    return duration;
   }
 
   /**

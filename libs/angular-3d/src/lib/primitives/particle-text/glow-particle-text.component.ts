@@ -11,6 +11,7 @@ import * as THREE from 'three';
 import { NG_3D_PARENT } from '../../types/tokens';
 import { OBJECT_ID } from '../../tokens/object-id.token';
 import { RenderLoopService } from '../../render-loop/render-loop.service';
+import { TextSamplingService } from '../../services/text-sampling.service';
 
 /**
  * GlowParticleTextComponent - Neon Tube-Like Glowing Text
@@ -80,6 +81,7 @@ export class GlowParticleTextComponent implements OnDestroy {
   private readonly parent = inject(NG_3D_PARENT);
   private readonly destroyRef = inject(DestroyRef);
   private readonly renderLoop = inject(RenderLoopService);
+  private readonly textSampling = inject(TextSamplingService);
 
   // Internal state
   private particles: ParticleData[] = [];
@@ -133,55 +135,14 @@ export class GlowParticleTextComponent implements OnDestroy {
   }
 
   /**
-   * Sample pixel positions from canvas-rendered text
+   * Sample pixel positions from canvas-rendered text using TextSamplingService
    */
   private sampleTextPositions(
     text: string,
     fontSize: number
   ): [number, number][] {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    if (!ctx) return [];
-
-    // Setup canvas
-    const padding = 20;
-    ctx.font = `bold ${fontSize}px Arial`;
-    const metrics = ctx.measureText(text);
-    const textWidth = metrics.width;
-    const textHeight = fontSize * 1.2;
-
-    canvas.width = textWidth + padding * 2;
-    canvas.height = textHeight + padding * 2;
-
-    // Render text
-    ctx.fillStyle = 'white';
-    ctx.font = `bold ${fontSize}px Arial`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(text, canvas.width / 2, canvas.height / 2);
-
-    // Sample pixels
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-    const positions: [number, number][] = [];
-
-    // Sample every pixel for high density (neon tube effect requires tight clustering)
-    for (let y = 0; y < canvas.height; y++) {
-      for (let x = 0; x < canvas.width; x++) {
-        const index = (y * canvas.width + x) * 4;
-        const alpha = data[index + 3];
-
-        // If pixel is part of text
-        if (alpha > 128) {
-          // Normalize to centered coordinates
-          const nx = (x - canvas.width / 2) / fontSize;
-          const ny = -(y - canvas.height / 2) / fontSize;
-          positions.push([nx, ny]);
-        }
-      }
-    }
-
-    return positions;
+    // Use shared TextSamplingService (sample every pixel for neon tube effect - tight clustering)
+    return this.textSampling.sampleTextPositions(text, fontSize, 1);
   }
 
   /**

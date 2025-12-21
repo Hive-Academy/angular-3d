@@ -36,6 +36,9 @@ export class EffectComposerService implements OnDestroy {
   private readonly _isEnabled = signal<boolean>(false);
   public readonly isEnabled = this._isEnabled.asReadonly();
 
+  // Pending enable flag for enable() called before init()
+  private pendingEnable = false;
+
   /**
    * Initialize the effect composer with scene resources
    */
@@ -61,6 +64,12 @@ export class EffectComposerService implements OnDestroy {
 
     // If enabled, ensure render loop is using composer
     if (this._isEnabled()) {
+      this.updateRenderLoop();
+    }
+
+    // Apply pending enable if it was requested before init
+    if (this.pendingEnable) {
+      this.pendingEnable = false;
       this.updateRenderLoop();
     }
   }
@@ -90,11 +99,22 @@ export class EffectComposerService implements OnDestroy {
 
   /**
    * Enable post-processing
+   * If composer is not yet initialized, enable request is queued
    */
   public enable(): void {
     if (this._isEnabled()) return;
     this._isEnabled.set(true);
-    this.updateRenderLoop();
+
+    if (this.composer) {
+      // Composer initialized - enable immediately
+      this.updateRenderLoop();
+    } else {
+      // Composer not yet initialized - queue enable for after init()
+      this.pendingEnable = true;
+      console.warn(
+        '[EffectComposer] Enable requested before init, will activate after init'
+      );
+    }
   }
 
   /**

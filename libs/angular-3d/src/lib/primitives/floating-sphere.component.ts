@@ -71,12 +71,16 @@ export class FloatingSphereComponent {
   public readonly rotation = input<[number, number, number]>([0, 0, 0]);
   public readonly scale = input<[number, number, number]>([1, 1, 1]);
 
-  // Geometry inputs - forwarded to SphereGeometryDirective
-  // args: [radius, widthSegments, heightSegments]
+  /**
+   * Sphere geometry parameters forwarded to SphereGeometryDirective
+   * @param args - Tuple of [radius, widthSegments, heightSegments]
+   * @default [1, 32, 16] - Unit sphere with 32x16 segments
+   * @example
+   * ```html
+   * <a3d-floating-sphere [args]="[2.5, 64, 32]" />
+   * ```
+   */
   public readonly args = input<[number, number, number]>([1, 32, 16]);
-  public readonly radius = input<number>(1);
-  public readonly widthSegments = input<number>(32);
-  public readonly heightSegments = input<number>(16);
 
   // Material inputs - forwarded to PhysicalMaterialDirective
   public readonly color = input<number | string>(0xff6b6b);
