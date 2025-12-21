@@ -86,6 +86,29 @@ export class ViewportPositioningService {
   // ============================================================================
 
   /**
+   * FIX TASK 5.4: Signal indicating whether camera is initialized and ready
+   *
+   * Use this to distinguish between "camera not initialized" and "valid zero position".
+   *
+   * @returns true if camera is initialized, false otherwise
+   *
+   * @example
+   * ```typescript
+   * effect(() => {
+   *   if (!service.isCameraReady()) {
+   *     console.log('Camera not ready - position calculations will return [0, 0, 0]');
+   *     return;
+   *   }
+   *   const pos = service.getNamedPosition('center')();
+   *   console.log('Valid position:', pos);
+   * });
+   * ```
+   */
+  public readonly isCameraReady = computed(
+    () => this.sceneStore.camera() !== null
+  );
+
+  /**
    * Viewport width in world units (reactive to camera FOV and aspect changes)
    *
    * Automatically recalculates when:
@@ -93,6 +116,9 @@ export class ViewportPositioningService {
    * - Camera Z position changes
    * - Window aspect ratio changes
    * - Viewport Z plane changes
+   *
+   * **Note**: Returns 0 if camera not initialized. Check `isCameraReady()` to distinguish
+   * from valid zero width.
    */
   public readonly viewportWidth = computed(() => {
     const camera = this.sceneStore.camera();
@@ -113,6 +139,9 @@ export class ViewportPositioningService {
    * - Camera FOV changes
    * - Camera Z position changes
    * - Viewport Z plane changes
+   *
+   * **Note**: Returns 0 if camera not initialized. Check `isCameraReady()` to distinguish
+   * from valid zero height.
    */
   public readonly viewportHeight = computed(() => {
     const camera = this.sceneStore.camera();
@@ -144,7 +173,8 @@ export class ViewportPositioningService {
    *
    * @param name - Named position (9 variants: corners, edges, center)
    * @param options - Optional offsets and viewportZ in world units
-   * @returns Signal of [x, y, z] world coordinates
+   * @returns Signal of [x, y, z] world coordinates. Returns [0, 0, 0] if camera not initialized.
+   *          Check `isCameraReady()` to distinguish uninitialized from valid zero position.
    *
    * @example
    * ```typescript
@@ -155,6 +185,10 @@ export class ViewportPositioningService {
    * });
    *
    * effect(() => {
+   *   if (!service.isCameraReady()) {
+   *     console.log('Camera not ready');
+   *     return;
+   *   }
    *   const [x, y, z] = pos();
    *   console.log('Position:', x, y, z);
    * });
@@ -241,15 +275,25 @@ export class ViewportPositioningService {
       const width = height * this._aspect();
 
       // Parse percentage strings or decimal values
-      const parsePercent = (val: string | number): number => {
+      // FIX TASK 5.2: Validate percentage input to prevent NaN
+      const parsePercent = (val: string | number, axis: 'x' | 'y'): number => {
         if (typeof val === 'string') {
-          return parseFloat(val) / 100;
+          const parsed = parseFloat(val);
+          if (isNaN(parsed)) {
+            throw new Error(
+              `Invalid percentage value for ${axis}: "${val}". Expected format: "50%" or 0.5`
+            );
+          }
+          return parsed / 100;
+        }
+        if (isNaN(val)) {
+          throw new Error(`Invalid percentage value for ${axis}: NaN`);
         }
         return val;
       };
 
-      const xPercent = parsePercent(pos.x);
-      const yPercent = parsePercent(pos.y);
+      const xPercent = parsePercent(pos.x, 'x');
+      const yPercent = parsePercent(pos.y, 'y');
 
       // Convert to world coordinates (-0.5 to 0.5 viewport space)
       const x = (xPercent - 0.5) * width;
@@ -268,6 +312,9 @@ export class ViewportPositioningService {
    *
    * Returns reactive signal that auto-updates on camera/window changes.
    * Converts absolute pixel coordinates to world units.
+   *
+   * **Note**: Despite the name, this returns world coordinates [x, y, z],
+   * NOT pixel values. The input is in pixels, output is in world units.
    *
    * @param pos - Pixel position { x, y }
    * @param options - Optional configuration and offsets
@@ -309,6 +356,7 @@ export class ViewportPositioningService {
       const xPercent = pos.x / screenWidth;
       const yPercent = pos.y / screenHeight;
 
+      // FIX TASK 5.1: Inline calculation instead of creating signal inside computed
       // Convert to world coordinates (-0.5 to 0.5 viewport space)
       const x = (xPercent - 0.5) * width;
       const y = (0.5 - yPercent) * height; // Invert Y (CSS is top-down)
@@ -327,6 +375,9 @@ export class ViewportPositioningService {
    * Returns reactive signal that auto-updates on camera/window changes.
    * Automatically discriminates between named, percentage, and pixel positions.
    *
+   * **IMPORTANT**: For pixel positions, you MUST specify `unit: 'px'` in options.
+   * Without explicit unit, numeric positions default to percentage.
+   *
    * @param position - Named, percentage, or pixel position
    * @param options - Optional configuration and offsets
    * @returns Signal of [x, y, z] world coordinates
@@ -336,11 +387,12 @@ export class ViewportPositioningService {
    * // Named position
    * const pos1 = service.getPosition('center');
    *
-   * // Percentage position
-   * const pos2 = service.getPosition({ x: '50%', y: '50%' });
+   * // Percentage position (default for numeric)
+   * const pos2 = service.getPosition({ x: 0.5, y: 0.5 });  // 50%, 50%
+   * const pos3 = service.getPosition({ x: 1, y: 1 });      // 100%, 100%
    *
-   * // Pixel position
-   * const pos3 = service.getPosition({ x: 100, y: 50 }, { unit: 'px' });
+   * // Pixel position (requires explicit unit)
+   * const pos4 = service.getPosition({ x: 100, y: 50 }, { unit: 'px' });
    * ```
    */
   public getPosition(
@@ -354,16 +406,17 @@ export class ViewportPositioningService {
       return this.getNamedPosition(position, options);
     }
 
-    // Check if it's pixel coordinates (numbers, not percentage strings)
+    // FIX TASK 5.3: Require explicit unit: 'px' for pixel positions (no heuristic)
+    // Pixel position (EXPLICIT unit required)
     if (
       typeof position.x === 'number' &&
       typeof position.y === 'number' &&
-      (options.unit === 'px' || (!options.unit && position.x > 1))
+      options.unit === 'px'
     ) {
       return this.getPixelPosition(position as PixelPosition, options);
     }
 
-    // Percentage position (default for object positions)
+    // Default to percentage
     return this.getPercentagePosition(position as PercentagePosition, options);
   }
 
@@ -494,10 +547,13 @@ export class ViewportPositioningService {
    * Uses perspective projection math:
    * height = 2 * tan(fov/2) * distance
    *
+   * FIX TASK 5.5: Validate that viewport plane is behind camera (positive distance)
+   *
    * @param fov - Camera field of view in degrees
    * @param cameraZ - Camera Z position
    * @param viewportZ - Viewport plane Z position
    * @returns Viewport height in world units
+   * @throws {Error} If viewport plane is in front of or at the same position as camera
    */
   private calculateViewportHeight(
     fov: number,
@@ -505,6 +561,16 @@ export class ViewportPositioningService {
     viewportZ: number
   ): number {
     const distance = cameraZ - viewportZ;
+
+    if (distance <= 0) {
+      throw new Error(
+        `Invalid viewport configuration: viewport plane (Z=${viewportZ}) ` +
+          `must be behind camera (Z=${cameraZ}). ` +
+          `Distance: ${distance}. ` +
+          `Hint: Use negative viewportZ values (e.g., -5) to position viewport behind camera.`
+      );
+    }
+
     const fovRad = (fov * Math.PI) / 180;
     return 2 * Math.tan(fovRad / 2) * distance;
   }

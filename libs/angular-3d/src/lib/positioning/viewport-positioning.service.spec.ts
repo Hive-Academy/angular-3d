@@ -430,16 +430,13 @@ describe('ViewportPositioningService', () => {
       expect(z).toBe(0);
     });
 
-    it('should auto-detect pixel positions for large numbers', () => {
-      const posSignal = service.getPosition(
-        { x: 100, y: 50 },
-        { viewportWidth: 1920, viewportHeight: 1080 }
-      );
+    it('should treat numeric positions as percentage by default', () => {
+      const posSignal = service.getPosition({ x: 0.5, y: 0.5 });
       const [x, y, z] = posSignal();
 
-      // Large numbers (>1) should be interpreted as pixels
-      expect(typeof x).toBe('number');
-      expect(typeof y).toBe('number');
+      // Should be center (50%, 50%)
+      expect(x).toBeCloseTo(0);
+      expect(y).toBeCloseTo(0);
     });
   });
 
@@ -652,6 +649,16 @@ describe('ViewportPositioningService', () => {
       expect(service.viewportHeight()).toBe(0);
     });
 
+    // FIX TASK 5.4: Test isCameraReady signal
+    it('should signal when camera is not ready', () => {
+      expect(service.isCameraReady()).toBe(false);
+    });
+
+    it('should signal when camera is ready', () => {
+      setupCamera();
+      expect(service.isCameraReady()).toBe(true);
+    });
+
     it('should handle SSR environment (no window)', () => {
       // Service should not throw errors even if window is undefined
       expect(() => {
@@ -707,6 +714,93 @@ describe('ViewportPositioningService', () => {
       expect(x).toBe(-5);
       expect(y).toBe(-3);
       expect(z).toBe(-10);
+    });
+  });
+
+  // ============================================================================
+  // Validation Tests (BATCH 5 P2 FIXES)
+  // ============================================================================
+
+  describe('Input Validation', () => {
+    beforeEach(() => {
+      setupCamera(75, 20);
+    });
+
+    // FIX TASK 5.2: Test invalid percentage string validation
+    it('should throw error for invalid percentage string (x)', () => {
+      expect(() => {
+        const posSignal = service.getPercentagePosition({
+          x: 'abc%',
+          y: '50%',
+        });
+        posSignal(); // Trigger computed
+      }).toThrowError(/Invalid percentage value for x: "abc%"/);
+    });
+
+    it('should throw error for invalid percentage string (y)', () => {
+      expect(() => {
+        const posSignal = service.getPercentagePosition({
+          x: '50%',
+          y: 'xyz%',
+        });
+        posSignal(); // Trigger computed
+      }).toThrowError(/Invalid percentage value for y: "xyz%"/);
+    });
+
+    it('should throw error for NaN percentage value', () => {
+      expect(() => {
+        const posSignal = service.getPercentagePosition({ x: NaN, y: 0.5 });
+        posSignal(); // Trigger computed
+      }).toThrowError(/Invalid percentage value for x: NaN/);
+    });
+
+    // FIX TASK 5.5: Test negative distance validation
+    it('should throw error when viewport plane is in front of camera', () => {
+      expect(() => {
+        const posSignal = service.getNamedPosition('center', { viewportZ: 25 }); // camera at Z=20
+        posSignal(); // Trigger computed
+      }).toThrowError(
+        /Invalid viewport configuration: viewport plane \(Z=25\) must be behind camera/
+      );
+    });
+
+    it('should throw error when viewport plane is at camera position', () => {
+      expect(() => {
+        const posSignal = service.getNamedPosition('center', { viewportZ: 20 }); // camera at Z=20
+        posSignal(); // Trigger computed
+      }).toThrowError(/Invalid viewport configuration/);
+    });
+
+    it('should include helpful hint in negative distance error', () => {
+      expect(() => {
+        const posSignal = service.getNamedPosition('center', { viewportZ: 30 });
+        posSignal();
+      }).toThrowError(/Hint: Use negative viewportZ values/);
+    });
+
+    // FIX TASK 5.3: Test that numeric positions default to percentage (not pixel)
+    it('should treat { x: 1, y: 1 } as 100% (not 1px) without explicit unit', () => {
+      const posSignal = service.getPosition({ x: 1, y: 1 }); // No unit specified
+      const [x, y] = posSignal();
+
+      const halfW = service.viewportWidth() / 2;
+      const halfH = service.viewportHeight() / 2;
+
+      // Should be bottom-right corner (100%, 100%)
+      expect(x).toBeCloseTo(halfW);
+      expect(y).toBeCloseTo(-halfH);
+    });
+
+    it('should require explicit unit: "px" for pixel positions', () => {
+      const posSignal = service.getPosition(
+        { x: 100, y: 50 },
+        { unit: 'px', viewportWidth: 1920, viewportHeight: 1080 }
+      );
+      const [x, y] = posSignal();
+
+      // Should be pixel position (not percentage)
+      expect(typeof x).toBe('number');
+      expect(typeof y).toBe('number');
     });
   });
 
