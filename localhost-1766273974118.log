@@ -1,362 +1,102 @@
-VM13032:63 Angular is running in development mode.
-VM13032:63 NG02952: The NgOptimizedImage directive (activated on an <img> element with the `ngSrc="/logo.png"`) has detected that the aspect ratio of the image does not match the aspect ratio indicated by the width and height attributes. 
+debug_node.mjs:18311 Angular is running in development mode.
+common.mjs:1781 NG02952: The NgOptimizedImage directive (activated on an <img> element with the `ngSrc="/logo.png"`) has detected that the aspect ratio of the image does not match the aspect ratio indicated by the width and height attributes. 
 Intrinsic image size: 240w x 140h (aspect-ratio: 1.71). 
 Supplied width and height attributes: 120w x 40h (aspect-ratio: 3). 
 To fix this, update the width and height attributes.
-console.<computed> @ VM13032:63
 callback @ common.mjs:1781
-(anonymous) @ dom_renderer.mjs:746
-invokeTask @ zone.js:431
-runTask @ zone.js:161
-invokeTask @ zone.js:515
-invokeTask @ zone.js:1141
-globalCallback @ zone.js:1172
-globalZoneAwareCallback @ zone.js:1205
-content_script_bundle.js:1 Attempting handshake with backend Sun Dec 21 2025 02:32:05 GMT+0200 (Eastern European Standard Time)
-VM13032:63 [AmbientLightDirective] OBJECT_ID injection result: ambient-light-f70d324a-96dd-458c-b75b-1e83b699593d
-VM13032:63 [DirectionalLightDirective] OBJECT_ID injection result: directional-light-137844e4-c224-455c-87e3-27f0bb12ece6
-VM13032:63 [TransformDirective] OBJECT_ID injection result: directional-light-137844e4-c224-455c-87e3-27f0bb12ece6
-VM13032:63 [DirectionalLightDirective] OBJECT_ID injection result: directional-light-11ee0a21-cfb0-4b1b-81d3-8875b35c9b16
-VM13032:63 [TransformDirective] OBJECT_ID injection result: directional-light-11ee0a21-cfb0-4b1b-81d3-8875b35c9b16
-VM13032:63 [PointLightDirective] OBJECT_ID injection result: point-light-51b9a354-03a7-4dd3-86bc-f9c8967ef854
-VM13032:63 [TransformDirective] OBJECT_ID injection result: point-light-51b9a354-03a7-4dd3-86bc-f9c8967ef854
-VM13032:63 [MeshDirective] OBJECT_ID injection result: polyhedron-a306b751-f5d8-4b4b-a4ed-01bdce544b42
-VM13032:63 [TransformDirective] OBJECT_ID injection result: polyhedron-a306b751-f5d8-4b4b-a4ed-01bdce544b42
-VM13032:63 [StandardMaterialDirective] OBJECT_ID injection result: polyhedron-a306b751-f5d8-4b4b-a4ed-01bdce544b42
-VM13032:63 [Rotate3dDirective] OBJECT_ID injection result: polyhedron-a306b751-f5d8-4b4b-a4ed-01bdce544b42
-VM13032:63 [MeshDirective] OBJECT_ID injection result: polyhedron-a44e9de8-beb5-49d0-9f3b-e7147bdc0bde
-VM13032:63 [TransformDirective] OBJECT_ID injection result: polyhedron-a44e9de8-beb5-49d0-9f3b-e7147bdc0bde
-VM13032:63 [StandardMaterialDirective] OBJECT_ID injection result: polyhedron-a44e9de8-beb5-49d0-9f3b-e7147bdc0bde
-VM13032:63 [Rotate3dDirective] OBJECT_ID injection result: polyhedron-a44e9de8-beb5-49d0-9f3b-e7147bdc0bde
-VM13032:63 [MeshDirective] OBJECT_ID injection result: polyhedron-d7d85d34-0bd3-45ee-b1af-244468c6c6ef
-VM13032:63 [TransformDirective] OBJECT_ID injection result: polyhedron-d7d85d34-0bd3-45ee-b1af-244468c6c6ef
-VM13032:63 [StandardMaterialDirective] OBJECT_ID injection result: polyhedron-d7d85d34-0bd3-45ee-b1af-244468c6c6ef
-VM13032:63 [Rotate3dDirective] OBJECT_ID injection result: polyhedron-d7d85d34-0bd3-45ee-b1af-244468c6c6ef
-VM13032:63 [MeshDirective] OBJECT_ID injection result: polyhedron-13989bb8-2914-4155-a850-dd4def58ee5f
-VM13032:63 [TransformDirective] OBJECT_ID injection result: polyhedron-13989bb8-2914-4155-a850-dd4def58ee5f
-VM13032:63 [StandardMaterialDirective] OBJECT_ID injection result: polyhedron-13989bb8-2914-4155-a850-dd4def58ee5f
-VM13032:63 [Rotate3dDirective] OBJECT_ID injection result: polyhedron-13989bb8-2914-4155-a850-dd4def58ee5f
-VM13032:63 [MeshDirective] OBJECT_ID injection result: polyhedron-061811ef-a646-464a-a3d0-07226c14305b
-VM13032:63 [TransformDirective] OBJECT_ID injection result: polyhedron-061811ef-a646-464a-a3d0-07226c14305b
-VM13032:63 [StandardMaterialDirective] OBJECT_ID injection result: polyhedron-061811ef-a646-464a-a3d0-07226c14305b
-VM13032:63 [Rotate3dDirective] OBJECT_ID injection result: polyhedron-061811ef-a646-464a-a3d0-07226c14305b
-VM13032:63 [AmbientLightDirective] OBJECT_ID injection result: ambient-light-7dd1d40b-8332-4583-8d23-d0d2ddd97bb5
-VM13032:63 [DirectionalLightDirective] OBJECT_ID injection result: directional-light-68b92660-cfe7-4102-8d84-736913af338f
-VM13032:63 [TransformDirective] OBJECT_ID injection result: directional-light-68b92660-cfe7-4102-8d84-736913af338f
-VM13032:63 [MeshDirective] OBJECT_ID injection result: polyhedron-bded1860-ca90-4309-8b3d-c303615cf1ca
-VM13032:63 [TransformDirective] OBJECT_ID injection result: polyhedron-bded1860-ca90-4309-8b3d-c303615cf1ca
-VM13032:63 [StandardMaterialDirective] OBJECT_ID injection result: polyhedron-bded1860-ca90-4309-8b3d-c303615cf1ca
-VM13032:63 [Rotate3dDirective] OBJECT_ID injection result: polyhedron-bded1860-ca90-4309-8b3d-c303615cf1ca
-VM13032:63 [MeshDirective] OBJECT_ID injection result: box-0a538ac1-22d0-4c7e-9d78-76e7ac5156ce
-VM13032:63 [TransformDirective] OBJECT_ID injection result: box-0a538ac1-22d0-4c7e-9d78-76e7ac5156ce
-VM13032:63 [StandardMaterialDirective] OBJECT_ID injection result: box-0a538ac1-22d0-4c7e-9d78-76e7ac5156ce
-VM13032:63 [Rotate3dDirective] OBJECT_ID injection result: box-0a538ac1-22d0-4c7e-9d78-76e7ac5156ce
-VM13032:63 [Float3dDirective] OBJECT_ID injection result: box-0a538ac1-22d0-4c7e-9d78-76e7ac5156ce
-VM13032:63 [MeshDirective] OBJECT_ID injection result: torus-ac65000a-780d-44e5-b9e7-56180fdc3934
-VM13032:63 [TransformDirective] OBJECT_ID injection result: torus-ac65000a-780d-44e5-b9e7-56180fdc3934
-VM13032:63 [StandardMaterialDirective] OBJECT_ID injection result: torus-ac65000a-780d-44e5-b9e7-56180fdc3934
-VM13032:63 [Float3dDirective] OBJECT_ID injection result: torus-ac65000a-780d-44e5-b9e7-56180fdc3934
-VM13032:63 [MeshDirective] OBJECT_ID injection result: torus-205bfb2b-450a-4a84-a596-6def2fab5db4
-VM13032:63 [TransformDirective] OBJECT_ID injection result: torus-205bfb2b-450a-4a84-a596-6def2fab5db4
-VM13032:63 [StandardMaterialDirective] OBJECT_ID injection result: torus-205bfb2b-450a-4a84-a596-6def2fab5db4
-VM13032:63 [Rotate3dDirective] OBJECT_ID injection result: torus-205bfb2b-450a-4a84-a596-6def2fab5db4
-VM13032:63 [MeshDirective] OBJECT_ID injection result: polyhedron-d88404ba-b4eb-40c7-8c4c-f1d36cfe0808
-VM13032:63 [TransformDirective] OBJECT_ID injection result: polyhedron-d88404ba-b4eb-40c7-8c4c-f1d36cfe0808
-VM13032:63 [StandardMaterialDirective] OBJECT_ID injection result: polyhedron-d88404ba-b4eb-40c7-8c4c-f1d36cfe0808
-VM13032:63 [Rotate3dDirective] OBJECT_ID injection result: polyhedron-d88404ba-b4eb-40c7-8c4c-f1d36cfe0808
-VM13032:63 [Float3dDirective] OBJECT_ID injection result: polyhedron-d88404ba-b4eb-40c7-8c4c-f1d36cfe0808
-VM13032:63 [AmbientLightDirective] OBJECT_ID injection result: ambient-light-ac532d2f-44b1-4761-84d6-9feb0bc9bfae
-VM13032:63 [DirectionalLightDirective] OBJECT_ID injection result: directional-light-af83aea0-e289-40b6-b42e-94e35349ab63
-VM13032:63 [TransformDirective] OBJECT_ID injection result: directional-light-af83aea0-e289-40b6-b42e-94e35349ab63
-VM13032:63 [MeshDirective] OBJECT_ID injection result: polyhedron-c9789cdc-2371-4f4f-9b3d-4e97d1a6ebc5
-VM13032:63 [TransformDirective] OBJECT_ID injection result: polyhedron-c9789cdc-2371-4f4f-9b3d-4e97d1a6ebc5
-VM13032:63 [StandardMaterialDirective] OBJECT_ID injection result: polyhedron-c9789cdc-2371-4f4f-9b3d-4e97d1a6ebc5
-VM13032:63 [Float3dDirective] OBJECT_ID injection result: polyhedron-c9789cdc-2371-4f4f-9b3d-4e97d1a6ebc5
-VM13032:63 [MeshDirective] OBJECT_ID injection result: polyhedron-5404c71e-30c1-47e1-b8ef-c3661436ecf3
-VM13032:63 [TransformDirective] OBJECT_ID injection result: polyhedron-5404c71e-30c1-47e1-b8ef-c3661436ecf3
-VM13032:63 [StandardMaterialDirective] OBJECT_ID injection result: polyhedron-5404c71e-30c1-47e1-b8ef-c3661436ecf3
-VM13032:63 [Float3dDirective] OBJECT_ID injection result: polyhedron-5404c71e-30c1-47e1-b8ef-c3661436ecf3
-VM13032:63 [MeshDirective] OBJECT_ID injection result: polyhedron-7d3faa5f-4ce9-49b6-8727-e22395265988
-VM13032:63 [TransformDirective] OBJECT_ID injection result: polyhedron-7d3faa5f-4ce9-49b6-8727-e22395265988
-VM13032:63 [StandardMaterialDirective] OBJECT_ID injection result: polyhedron-7d3faa5f-4ce9-49b6-8727-e22395265988
-VM13032:63 [Float3dDirective] OBJECT_ID injection result: polyhedron-7d3faa5f-4ce9-49b6-8727-e22395265988
-VM13032:63 [TransformDirective] Effect: hasObject= false id= directional-light-137844e4-c224-455c-87e3-27f0bb12ece6
-VM13032:63 [TransformDirective] Effect: Object not registered yet, waiting...
-VM13032:63 [TransformDirective] Effect: hasObject= false id= directional-light-11ee0a21-cfb0-4b1b-81d3-8875b35c9b16
-VM13032:63 [TransformDirective] Effect: Object not registered yet, waiting...
-VM13032:63 [TransformDirective] Effect: hasObject= false id= point-light-51b9a354-03a7-4dd3-86bc-f9c8967ef854
-VM13032:63 [TransformDirective] Effect: Object not registered yet, waiting...
-VM13032:63 [TransformDirective] Effect: hasObject= false id= polyhedron-a306b751-f5d8-4b4b-a4ed-01bdce544b42
-VM13032:63 [TransformDirective] Effect: Object not registered yet, waiting...
-VM13032:63 [StandardMaterialDirective] Effect1: Creating material with color= #6366F1 wireframe= true id= polyhedron-a306b751-f5d8-4b4b-a4ed-01bdce544b42
-VM13032:63 [StandardMaterialDirective] Effect1: Material created and signal set
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #6366F1 wireframe= true id= polyhedron-a306b751-f5d8-4b4b-a4ed-01bdce544b42
-VM13032:63 [TransformDirective] Effect: hasObject= false id= polyhedron-a44e9de8-beb5-49d0-9f3b-e7147bdc0bde
-VM13032:63 [TransformDirective] Effect: Object not registered yet, waiting...
-VM13032:63 [StandardMaterialDirective] Effect1: Creating material with color= #A1FF4F wireframe= true id= polyhedron-a44e9de8-beb5-49d0-9f3b-e7147bdc0bde
-VM13032:63 [StandardMaterialDirective] Effect1: Material created and signal set
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #A1FF4F wireframe= true id= polyhedron-a44e9de8-beb5-49d0-9f3b-e7147bdc0bde
-VM13032:63 [TransformDirective] Effect: hasObject= false id= polyhedron-d7d85d34-0bd3-45ee-b1af-244468c6c6ef
-VM13032:63 [TransformDirective] Effect: Object not registered yet, waiting...
-VM13032:63 [StandardMaterialDirective] Effect1: Creating material with color= #D946EF wireframe= true id= polyhedron-d7d85d34-0bd3-45ee-b1af-244468c6c6ef
-VM13032:63 [StandardMaterialDirective] Effect1: Material created and signal set
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #D946EF wireframe= true id= polyhedron-d7d85d34-0bd3-45ee-b1af-244468c6c6ef
-VM13032:63 [TransformDirective] Effect: hasObject= false id= polyhedron-13989bb8-2914-4155-a850-dd4def58ee5f
-VM13032:63 [TransformDirective] Effect: Object not registered yet, waiting...
-VM13032:63 [StandardMaterialDirective] Effect1: Creating material with color= #4FFFDF wireframe= true id= polyhedron-13989bb8-2914-4155-a850-dd4def58ee5f
-VM13032:63 [StandardMaterialDirective] Effect1: Material created and signal set
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #4FFFDF wireframe= true id= polyhedron-13989bb8-2914-4155-a850-dd4def58ee5f
-VM13032:63 [TransformDirective] Effect: hasObject= false id= polyhedron-061811ef-a646-464a-a3d0-07226c14305b
-VM13032:63 [TransformDirective] Effect: Object not registered yet, waiting...
-VM13032:63 [StandardMaterialDirective] Effect1: Creating material with color= #FF6BD4 wireframe= true id= polyhedron-061811ef-a646-464a-a3d0-07226c14305b
-VM13032:63 [StandardMaterialDirective] Effect1: Material created and signal set
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #FF6BD4 wireframe= true id= polyhedron-061811ef-a646-464a-a3d0-07226c14305b
-VM13032:63 [TransformDirective] Effect: hasObject= false id= directional-light-68b92660-cfe7-4102-8d84-736913af338f
-VM13032:63 [TransformDirective] Effect: Object not registered yet, waiting...
-VM13032:63 [TransformDirective] Effect: hasObject= false id= polyhedron-bded1860-ca90-4309-8b3d-c303615cf1ca
-VM13032:63 [TransformDirective] Effect: Object not registered yet, waiting...
-VM13032:63 [StandardMaterialDirective] Effect1: Creating material with color= #6366F1 wireframe= true id= polyhedron-bded1860-ca90-4309-8b3d-c303615cf1ca
-VM13032:63 [StandardMaterialDirective] Effect1: Material created and signal set
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #6366F1 wireframe= true id= polyhedron-bded1860-ca90-4309-8b3d-c303615cf1ca
-VM13032:63 [TransformDirective] Effect: hasObject= false id= box-0a538ac1-22d0-4c7e-9d78-76e7ac5156ce
-VM13032:63 [TransformDirective] Effect: Object not registered yet, waiting...
-VM13032:63 [StandardMaterialDirective] Effect1: Creating material with color= #A1FF4F wireframe= false id= box-0a538ac1-22d0-4c7e-9d78-76e7ac5156ce
-VM13032:63 [StandardMaterialDirective] Effect1: Material created and signal set
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #A1FF4F wireframe= false id= box-0a538ac1-22d0-4c7e-9d78-76e7ac5156ce
-VM13032:63 [TransformDirective] Effect: hasObject= false id= torus-ac65000a-780d-44e5-b9e7-56180fdc3934
-VM13032:63 [TransformDirective] Effect: Object not registered yet, waiting...
-VM13032:63 [StandardMaterialDirective] Effect1: Creating material with color= #D946EF wireframe= false id= torus-ac65000a-780d-44e5-b9e7-56180fdc3934
-VM13032:63 [StandardMaterialDirective] Effect1: Material created and signal set
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #D946EF wireframe= false id= torus-ac65000a-780d-44e5-b9e7-56180fdc3934
-VM13032:63 [TransformDirective] Effect: hasObject= false id= torus-205bfb2b-450a-4a84-a596-6def2fab5db4
-VM13032:63 [TransformDirective] Effect: Object not registered yet, waiting...
-VM13032:63 [StandardMaterialDirective] Effect1: Creating material with color= #4FFFDF wireframe= false id= torus-205bfb2b-450a-4a84-a596-6def2fab5db4
-VM13032:63 [StandardMaterialDirective] Effect1: Material created and signal set
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #4FFFDF wireframe= false id= torus-205bfb2b-450a-4a84-a596-6def2fab5db4
-VM13032:63 [TransformDirective] Effect: hasObject= false id= polyhedron-d88404ba-b4eb-40c7-8c4c-f1d36cfe0808
-VM13032:63 [TransformDirective] Effect: Object not registered yet, waiting...
-VM13032:63 [StandardMaterialDirective] Effect1: Creating material with color= #FF6BD4 wireframe= true id= polyhedron-d88404ba-b4eb-40c7-8c4c-f1d36cfe0808
-VM13032:63 [StandardMaterialDirective] Effect1: Material created and signal set
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #FF6BD4 wireframe= true id= polyhedron-d88404ba-b4eb-40c7-8c4c-f1d36cfe0808
-VM13032:63 [TransformDirective] Effect: hasObject= false id= directional-light-af83aea0-e289-40b6-b42e-94e35349ab63
-VM13032:63 [TransformDirective] Effect: Object not registered yet, waiting...
-VM13032:63 [TransformDirective] Effect: hasObject= false id= polyhedron-c9789cdc-2371-4f4f-9b3d-4e97d1a6ebc5
-VM13032:63 [TransformDirective] Effect: Object not registered yet, waiting...
-VM13032:63 [StandardMaterialDirective] Effect1: Creating material with color= #6366F1 wireframe= false id= polyhedron-c9789cdc-2371-4f4f-9b3d-4e97d1a6ebc5
-VM13032:63 [StandardMaterialDirective] Effect1: Material created and signal set
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #6366F1 wireframe= false id= polyhedron-c9789cdc-2371-4f4f-9b3d-4e97d1a6ebc5
-VM13032:63 [TransformDirective] Effect: hasObject= false id= polyhedron-5404c71e-30c1-47e1-b8ef-c3661436ecf3
-VM13032:63 [TransformDirective] Effect: Object not registered yet, waiting...
-VM13032:63 [StandardMaterialDirective] Effect1: Creating material with color= #A1FF4F wireframe= false id= polyhedron-5404c71e-30c1-47e1-b8ef-c3661436ecf3
-VM13032:63 [StandardMaterialDirective] Effect1: Material created and signal set
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #A1FF4F wireframe= false id= polyhedron-5404c71e-30c1-47e1-b8ef-c3661436ecf3
-VM13032:63 [TransformDirective] Effect: hasObject= false id= polyhedron-7d3faa5f-4ce9-49b6-8727-e22395265988
-VM13032:63 [TransformDirective] Effect: Object not registered yet, waiting...
-VM13032:63 [StandardMaterialDirective] Effect1: Creating material with color= #6366F1 wireframe= false id= polyhedron-7d3faa5f-4ce9-49b6-8727-e22395265988
-VM13032:63 [StandardMaterialDirective] Effect1: Material created and signal set
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #6366F1 wireframe= false id= polyhedron-7d3faa5f-4ce9-49b6-8727-e22395265988
-VM13032:63 [TransformDirective] Effect: hasObject= true id= directional-light-137844e4-c224-455c-87e3-27f0bb12ece6
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [5,5,5] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [TransformDirective] Effect: hasObject= true id= directional-light-11ee0a21-cfb0-4b1b-81d3-8875b35c9b16
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [-5,3,2] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [TransformDirective] Effect: hasObject= true id= point-light-51b9a354-03a7-4dd3-86bc-f9c8967ef854
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [0,2,3] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [MeshDirective] Creating and registering mesh: polyhedron-a306b751-f5d8-4b4b-a4ed-01bdce544b42
-VM13032:63 [MeshDirective] Mesh registered successfully: polyhedron-a306b751-f5d8-4b4b-a4ed-01bdce544b42
-VM13032:63 [TransformDirective] Effect: hasObject= true id= polyhedron-a306b751-f5d8-4b4b-a4ed-01bdce544b42
- [TransformDirective] Effect: Applying transform pos= [-1,1,-2] rot= [0,0,0] scl= [1,1,1]
- [StandardMaterialDirective] Effect2: Updating material color= #6366F1 wireframe= true id= polyhedron-a306b751-f5d8-4b4b-a4ed-01bdce544b42
- [MeshDirective] Creating and registering mesh: polyhedron-a44e9de8-beb5-49d0-9f3b-e7147bdc0bde
- [MeshDirective] Mesh registered successfully: polyhedron-a44e9de8-beb5-49d0-9f3b-e7147bdc0bde
- [TransformDirective] Effect: hasObject= true id= polyhedron-a44e9de8-beb5-49d0-9f3b-e7147bdc0bde
- [TransformDirective] Effect: Applying transform pos= [4,2.5,-4] rot= [0,0,0] scl= [1,1,1]
- [StandardMaterialDirective] Effect2: Updating material color= #A1FF4F wireframe= true id= polyhedron-a44e9de8-beb5-49d0-9f3b-e7147bdc0bde
- [MeshDirective] Creating and registering mesh: polyhedron-d7d85d34-0bd3-45ee-b1af-244468c6c6ef
- [MeshDirective] Mesh registered successfully: polyhedron-d7d85d34-0bd3-45ee-b1af-244468c6c6ef
- [TransformDirective] Effect: hasObject= true id= polyhedron-d7d85d34-0bd3-45ee-b1af-244468c6c6ef
- [TransformDirective] Effect: Applying transform pos= [3.5,-2,-3] rot= [0,0,0] scl= [1,1,1]
- [StandardMaterialDirective] Effect2: Updating material color= #D946EF wireframe= true id= polyhedron-d7d85d34-0bd3-45ee-b1af-244468c6c6ef
- [MeshDirective] Creating and registering mesh: polyhedron-13989bb8-2914-4155-a850-dd4def58ee5f
- [MeshDirective] Mesh registered successfully: polyhedron-13989bb8-2914-4155-a850-dd4def58ee5f
- [TransformDirective] Effect: hasObject= true id= polyhedron-13989bb8-2914-4155-a850-dd4def58ee5f
- [TransformDirective] Effect: Applying transform pos= [-2,-1.5,-1] rot= [0,0,0] scl= [1,1,1]
- [StandardMaterialDirective] Effect2: Updating material color= #4FFFDF wireframe= true id= polyhedron-13989bb8-2914-4155-a850-dd4def58ee5f
- [MeshDirective] Creating and registering mesh: polyhedron-061811ef-a646-464a-a3d0-07226c14305b
- [MeshDirective] Mesh registered successfully: polyhedron-061811ef-a646-464a-a3d0-07226c14305b
- [TransformDirective] Effect: hasObject= true id= polyhedron-061811ef-a646-464a-a3d0-07226c14305b
- [TransformDirective] Effect: Applying transform pos= [5,0,-5] rot= [0,0,0] scl= [1,1,1]
- [StandardMaterialDirective] Effect2: Updating material color= #FF6BD4 wireframe= true id= polyhedron-061811ef-a646-464a-a3d0-07226c14305b
- [TransformDirective] Effect: hasObject= true id= directional-light-137844e4-c224-455c-87e3-27f0bb12ece6
- [TransformDirective] Effect: Applying transform pos= [5,5,5] rot= [0,0,0] scl= [1,1,1]
- [TransformDirective] Effect: hasObject= true id= directional-light-11ee0a21-cfb0-4b1b-81d3-8875b35c9b16
- [TransformDirective] Effect: Applying transform pos= [-5,3,2] rot= [0,0,0] scl= [1,1,1]
- [TransformDirective] Effect: hasObject= true id= point-light-51b9a354-03a7-4dd3-86bc-f9c8967ef854
- [TransformDirective] Effect: Applying transform pos= [0,2,3] rot= [0,0,0] scl= [1,1,1]
- [TransformDirective] Effect: hasObject= true id= polyhedron-a306b751-f5d8-4b4b-a4ed-01bdce544b42
- [TransformDirective] Effect: Applying transform pos= [-1,1,-2] rot= [0,0,0] scl= [1,1,1]
- [StandardMaterialDirective] Effect2: Updating material color= #6366F1 wireframe= true id= polyhedron-a306b751-f5d8-4b4b-a4ed-01bdce544b42
- [TransformDirective] Effect: hasObject= true id= polyhedron-a44e9de8-beb5-49d0-9f3b-e7147bdc0bde
- [TransformDirective] Effect: Applying transform pos= [4,2.5,-4] rot= [0,0,0] scl= [1,1,1]
- [StandardMaterialDirective] Effect2: Updating material color= #A1FF4F wireframe= true id= polyhedron-a44e9de8-beb5-49d0-9f3b-e7147bdc0bde
- [TransformDirective] Effect: hasObject= true id= polyhedron-d7d85d34-0bd3-45ee-b1af-244468c6c6ef
- [TransformDirective] Effect: Applying transform pos= [3.5,-2,-3] rot= [0,0,0] scl= [1,1,1]
- [StandardMaterialDirective] Effect2: Updating material color= #D946EF wireframe= true id= polyhedron-d7d85d34-0bd3-45ee-b1af-244468c6c6ef
- [TransformDirective] Effect: hasObject= true id= polyhedron-13989bb8-2914-4155-a850-dd4def58ee5f
- [TransformDirective] Effect: Applying transform pos= [-2,-1.5,-1] rot= [0,0,0] scl= [1,1,1]
- [StandardMaterialDirective] Effect2: Updating material color= #4FFFDF wireframe= true id= polyhedron-13989bb8-2914-4155-a850-dd4def58ee5f
- [TransformDirective] Effect: hasObject= true id= directional-light-68b92660-cfe7-4102-8d84-736913af338f
- [TransformDirective] Effect: Applying transform pos= [5,5,5] rot= [0,0,0] scl= [1,1,1]
- [MeshDirective] Creating and registering mesh: polyhedron-bded1860-ca90-4309-8b3d-c303615cf1ca
- [MeshDirective] Mesh registered successfully: polyhedron-bded1860-ca90-4309-8b3d-c303615cf1ca
- [TransformDirective] Effect: hasObject= true id= polyhedron-bded1860-ca90-4309-8b3d-c303615cf1ca
- [TransformDirective] Effect: Applying transform pos= [0,0,0] rot= [0,0,0] scl= [1,1,1]
- [StandardMaterialDirective] Effect2: Updating material color= #6366F1 wireframe= true id= polyhedron-bded1860-ca90-4309-8b3d-c303615cf1ca
- [MeshDirective] Creating and registering mesh: box-0a538ac1-22d0-4c7e-9d78-76e7ac5156ce
- [MeshDirective] Mesh registered successfully: box-0a538ac1-22d0-4c7e-9d78-76e7ac5156ce
- [TransformDirective] Effect: hasObject= true id= box-0a538ac1-22d0-4c7e-9d78-76e7ac5156ce
- [TransformDirective] Effect: Applying transform pos= [-2.5,1.5,-1] rot= [0,0,0] scl= [1,1,1]
- [StandardMaterialDirective] Effect2: Updating material color= #A1FF4F wireframe= false id= box-0a538ac1-22d0-4c7e-9d78-76e7ac5156ce
- [MeshDirective] Creating and registering mesh: torus-ac65000a-780d-44e5-b9e7-56180fdc3934
- [MeshDirective] Mesh registered successfully: torus-ac65000a-780d-44e5-b9e7-56180fdc3934
- [TransformDirective] Effect: hasObject= true id= torus-ac65000a-780d-44e5-b9e7-56180fdc3934
- [TransformDirective] Effect: Applying transform pos= [2.5,-1,-1] rot= [0,0,0] scl= [1,1,1]
- [StandardMaterialDirective] Effect2: Updating material color= #D946EF wireframe= false id= torus-ac65000a-780d-44e5-b9e7-56180fdc3934
- [MeshDirective] Creating and registering mesh: torus-205bfb2b-450a-4a84-a596-6def2fab5db4
- [MeshDirective] Mesh registered successfully: torus-205bfb2b-450a-4a84-a596-6def2fab5db4
- [TransformDirective] Effect: hasObject= true id= torus-205bfb2b-450a-4a84-a596-6def2fab5db4
- [TransformDirective] Effect: Applying transform pos= [-1.5,-1.5,0] rot= [0,0,0] scl= [1,1,1]
- [StandardMaterialDirective] Effect2: Updating material color= #4FFFDF wireframe= false id= torus-205bfb2b-450a-4a84-a596-6def2fab5db4
- [MeshDirective] Creating and registering mesh: polyhedron-d88404ba-b4eb-40c7-8c4c-f1d36cfe0808
- [MeshDirective] Mesh registered successfully: polyhedron-d88404ba-b4eb-40c7-8c4c-f1d36cfe0808
- [TransformDirective] Effect: hasObject= true id= polyhedron-d88404ba-b4eb-40c7-8c4c-f1d36cfe0808
- [TransformDirective] Effect: Applying transform pos= [1.5,1.5,-2] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #FF6BD4 wireframe= true id= polyhedron-d88404ba-b4eb-40c7-8c4c-f1d36cfe0808
-VM13032:63 [TransformDirective] Effect: hasObject= true id= directional-light-68b92660-cfe7-4102-8d84-736913af338f
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [5,5,5] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [TransformDirective] Effect: hasObject= true id= polyhedron-bded1860-ca90-4309-8b3d-c303615cf1ca
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [0,0,0] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #6366F1 wireframe= true id= polyhedron-bded1860-ca90-4309-8b3d-c303615cf1ca
-VM13032:63 [TransformDirective] Effect: hasObject= true id= box-0a538ac1-22d0-4c7e-9d78-76e7ac5156ce
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [-2.5,1.5,-1] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #A1FF4F wireframe= false id= box-0a538ac1-22d0-4c7e-9d78-76e7ac5156ce
-VM13032:63 [TransformDirective] Effect: hasObject= true id= torus-ac65000a-780d-44e5-b9e7-56180fdc3934
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [2.5,-1,-1] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #D946EF wireframe= false id= torus-ac65000a-780d-44e5-b9e7-56180fdc3934
-VM13032:63 [TransformDirective] Effect: hasObject= true id= torus-205bfb2b-450a-4a84-a596-6def2fab5db4
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [-1.5,-1.5,0] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #4FFFDF wireframe= false id= torus-205bfb2b-450a-4a84-a596-6def2fab5db4
-VM13032:63 [TransformDirective] Effect: hasObject= true id= directional-light-af83aea0-e289-40b6-b42e-94e35349ab63
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [5,5,5] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [MeshDirective] Creating and registering mesh: polyhedron-c9789cdc-2371-4f4f-9b3d-4e97d1a6ebc5
-VM13032:63 [MeshDirective] Mesh registered successfully: polyhedron-c9789cdc-2371-4f4f-9b3d-4e97d1a6ebc5
-VM13032:63 [TransformDirective] Effect: hasObject= true id= polyhedron-c9789cdc-2371-4f4f-9b3d-4e97d1a6ebc5
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [-3,1,-2] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #6366F1 wireframe= false id= polyhedron-c9789cdc-2371-4f4f-9b3d-4e97d1a6ebc5
-VM13032:63 [MeshDirective] Creating and registering mesh: polyhedron-5404c71e-30c1-47e1-b8ef-c3661436ecf3
-VM13032:63 [MeshDirective] Mesh registered successfully: polyhedron-5404c71e-30c1-47e1-b8ef-c3661436ecf3
-VM13032:63 [TransformDirective] Effect: hasObject= true id= polyhedron-5404c71e-30c1-47e1-b8ef-c3661436ecf3
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [3,-1,-2] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #A1FF4F wireframe= false id= polyhedron-5404c71e-30c1-47e1-b8ef-c3661436ecf3
-VM13032:63 [MeshDirective] Creating and registering mesh: polyhedron-7d3faa5f-4ce9-49b6-8727-e22395265988
-VM13032:63 [MeshDirective] Mesh registered successfully: polyhedron-7d3faa5f-4ce9-49b6-8727-e22395265988
-VM13032:63 [TransformDirective] Effect: hasObject= true id= polyhedron-7d3faa5f-4ce9-49b6-8727-e22395265988
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [0,0,-4] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #6366F1 wireframe= false id= polyhedron-7d3faa5f-4ce9-49b6-8727-e22395265988
-VM13032:63 [TransformDirective] Effect: hasObject= true id= directional-light-af83aea0-e289-40b6-b42e-94e35349ab63
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [5,5,5] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [TransformDirective] Effect: hasObject= true id= polyhedron-c9789cdc-2371-4f4f-9b3d-4e97d1a6ebc5
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [-3,1,-2] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #6366F1 wireframe= false id= polyhedron-c9789cdc-2371-4f4f-9b3d-4e97d1a6ebc5
-VM13032:63 [TransformDirective] Effect: hasObject= true id= polyhedron-5404c71e-30c1-47e1-b8ef-c3661436ecf3
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [3,-1,-2] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #A1FF4F wireframe= false id= polyhedron-5404c71e-30c1-47e1-b8ef-c3661436ecf3
-VM13032:63 [TransformDirective] Effect: hasObject= true id= directional-light-137844e4-c224-455c-87e3-27f0bb12ece6
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [5,5,5] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [TransformDirective] Effect: hasObject= true id= directional-light-11ee0a21-cfb0-4b1b-81d3-8875b35c9b16
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [-5,3,2] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [TransformDirective] Effect: hasObject= true id= point-light-51b9a354-03a7-4dd3-86bc-f9c8967ef854
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [0,2,3] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [TransformDirective] Effect: hasObject= true id= polyhedron-a306b751-f5d8-4b4b-a4ed-01bdce544b42
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [-1,1,-2] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #6366F1 wireframe= true id= polyhedron-a306b751-f5d8-4b4b-a4ed-01bdce544b42
-VM13032:63 [TransformDirective] Effect: hasObject= true id= polyhedron-a44e9de8-beb5-49d0-9f3b-e7147bdc0bde
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [4,2.5,-4] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #A1FF4F wireframe= true id= polyhedron-a44e9de8-beb5-49d0-9f3b-e7147bdc0bde
-VM13032:63 [TransformDirective] Effect: hasObject= true id= polyhedron-d7d85d34-0bd3-45ee-b1af-244468c6c6ef
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [3.5,-2,-3] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #D946EF wireframe= true id= polyhedron-d7d85d34-0bd3-45ee-b1af-244468c6c6ef
-VM13032:63 [TransformDirective] Effect: hasObject= true id= polyhedron-13989bb8-2914-4155-a850-dd4def58ee5f
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [-2,-1.5,-1] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #4FFFDF wireframe= true id= polyhedron-13989bb8-2914-4155-a850-dd4def58ee5f
-VM13032:63 [TransformDirective] Effect: hasObject= true id= polyhedron-061811ef-a646-464a-a3d0-07226c14305b
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [5,0,-5] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #FF6BD4 wireframe= true id= polyhedron-061811ef-a646-464a-a3d0-07226c14305b
-VM13032:63 [TransformDirective] Effect: hasObject= true id= directional-light-68b92660-cfe7-4102-8d84-736913af338f
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [5,5,5] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [TransformDirective] Effect: hasObject= true id= polyhedron-bded1860-ca90-4309-8b3d-c303615cf1ca
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [0,0,0] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #6366F1 wireframe= true id= polyhedron-bded1860-ca90-4309-8b3d-c303615cf1ca
-VM13032:63 [TransformDirective] Effect: hasObject= true id= box-0a538ac1-22d0-4c7e-9d78-76e7ac5156ce
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [-2.5,1.5,-1] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #A1FF4F wireframe= false id= box-0a538ac1-22d0-4c7e-9d78-76e7ac5156ce
-VM13032:63 [TransformDirective] Effect: hasObject= true id= torus-ac65000a-780d-44e5-b9e7-56180fdc3934
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [2.5,-1,-1] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #D946EF wireframe= false id= torus-ac65000a-780d-44e5-b9e7-56180fdc3934
-VM13032:63 [TransformDirective] Effect: hasObject= true id= torus-205bfb2b-450a-4a84-a596-6def2fab5db4
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [-1.5,-1.5,0] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #4FFFDF wireframe= false id= torus-205bfb2b-450a-4a84-a596-6def2fab5db4
-VM13032:63 [TransformDirective] Effect: hasObject= true id= polyhedron-d88404ba-b4eb-40c7-8c4c-f1d36cfe0808
-VM13032:63 [TransformDirective] Effect: Applying transform pos= [1.5,1.5,-2] rot= [0,0,0] scl= [1,1,1]
-VM13032:63 [StandardMaterialDirective] Effect2: Updating material color= #FF6BD4 wireframe= true id= polyhedron-d88404ba-b4eb-40c7-8c4c-f1d36cfe0808
-VM13032:63 === DEBUG: Scene3dComponent - Scene Hierarchy ===
-VM13032:63 Scene children count: 8
-VM13032:63   Scene: pos=[0.00, 0.00, 0.00] wireframe=N/A 
-VM13032:63   Points: pos=[0.00, 0.00, 0.00] wireframe=N/A 
-VM13032:63   AmbientLight: pos=[0.00, 0.00, 0.00] wireframe=N/A 
-VM13032:63   DirectionalLight: pos=[5.00, 5.00, 5.00] wireframe=N/A 
-VM13032:63   Object3D: pos=[0.00, 0.00, 0.00] wireframe=N/A 
-VM13032:63   DirectionalLight: pos=[-5.00, 3.00, 2.00] wireframe=N/A 
-VM13032:63   Object3D: pos=[0.00, 0.00, 0.00] wireframe=N/A 
-VM13032:63   PointLight: pos=[0.00, 2.00, 3.00] wireframe=N/A 
-VM13032:63   Group: pos=[2.50, -0.50, 0.00] wireframe=N/A Sketchfab_Scene
-VM13032:63   Object3D: pos=[0.00, 0.00, 0.00] wireframe=N/A Sketchfab_model
-VM13032:63   Object3D: pos=[0.00, 0.00, 0.00] wireframe=N/A ROBO_v4objcleanermaterialmergergles
-VM13032:63   Mesh: pos=[0.00, 0.00, 0.00] wireframe=false Object_2
-VM13032:63   Mesh: pos=[0.00, 0.00, 0.00] wireframe=false Object_3
-VM13032:63   Mesh: pos=[0.00, 0.00, 0.00] wireframe=false Object_4
-VM13032:63   Mesh: pos=[0.00, 0.00, 0.00] wireframe=false Object_5
-VM13032:63   Mesh: pos=[0.00, 0.00, 0.00] wireframe=false Object_6
-VM13032:63   Mesh: pos=[0.00, 0.00, 0.00] wireframe=false Object_7
-VM13032:63   Mesh: pos=[0.00, 0.00, 0.00] wireframe=false Object_8
-VM13032:63 === END Scene Hierarchy ===
-VM13032:63 === DEBUG: Scene3dComponent - Scene Hierarchy ===
-VM13032:63 Scene children count: 7
-VM13032:63   Scene: pos=[0.00, 0.00, 0.00] wireframe=N/A 
-VM13032:63   Points: pos=[0.00, 0.00, 0.00] wireframe=N/A 
-VM13032:63   Points: pos=[0.00, 0.00, 0.00] wireframe=N/A 
-VM13032:63   Points: pos=[0.00, 0.00, 0.00] wireframe=N/A 
-VM13032:63   Points: pos=[0.00, 0.00, 0.00] wireframe=N/A 
-VM13032:63   AmbientLight: pos=[0.00, 0.00, 0.00] wireframe=N/A 
-VM13032:63   DirectionalLight: pos=[5.00, 5.00, 5.00] wireframe=N/A 
-VM13032:63   Object3D: pos=[0.00, 0.00, 0.00] wireframe=N/A 
-VM13032:63 === END Scene Hierarchy ===
-VM13032:63 === DEBUG: Scene3dComponent - Scene Hierarchy ===
-VM13032:63 Scene children count: 16
-VM13032:63   Scene: pos=[0.00, 0.00, 0.00] wireframe=N/A 
-VM13032:63   AmbientLight: pos=[0.00, 0.00, 0.00] wireframe=N/A 
-VM13032:63   DirectionalLight: pos=[5.00, 5.00, 5.00] wireframe=N/A 
-VM13032:63   Object3D: pos=[0.00, 0.00, 0.00] wireframe=N/A 
-VM13032:63   Mesh: pos=[-1.00, 1.00, -2.00] wireframe=true 
-VM13032:63   Mesh: pos=[4.00, 2.50, -4.00] wireframe=true 
-VM13032:63   Mesh: pos=[3.50, -2.00, -3.00] wireframe=true 
-VM13032:63   Mesh: pos=[-2.00, -1.50, -1.00] wireframe=true 
-VM13032:63   Mesh: pos=[5.00, 0.00, -5.00] wireframe=true 
-VM13032:63   Mesh: pos=[0.00, 0.00, 0.00] wireframe=true 
-VM13032:63   Mesh: pos=[-2.50, 1.76, -1.00] wireframe=false 
-VM13032:63   Mesh: pos=[2.50, -0.61, -1.00] wireframe=false 
-VM13032:63   Mesh: pos=[-1.50, -1.50, 0.00] wireframe=false 
-VM13032:63   Mesh: pos=[1.50, 1.75, -2.00] wireframe=true 
-VM13032:63   Mesh: pos=[-3.00, 1.46, -2.00] wireframe=false 
-VM13032:63   Mesh: pos=[3.00, -0.66, -2.00] wireframe=false 
-VM13032:63   Mesh: pos=[0.00, 0.59, -4.00] wireframe=false 
-VM13032:63 === END Scene Hierarchy ===
+root_effect_scheduler.mjs:3637 ERROR RuntimeError: NG02954: The NgOptimizedImage directive (activated on an <img> element with the `ngSrc="images/showcase/angular-3d-step1.png"`) has detected that these required attributes are missing: "width", "height". Including "width" and "height" attributes will prevent image-related layout shifts. To fix this, include "width" and "height" attributes on the image tag or turn on "fill" mode with the `fill` attribute.
+    at assertNonEmptyWidthAndHeight (common.mjs:1821:11)
+    at _NgOptimizedImage.ngOnInit (common.mjs:1201:9)
+    at callHookInternal (debug_node.mjs:860:14)
+    at callHook (debug_node.mjs:887:13)
+    at callHooks (debug_node.mjs:841:17)
+    at executeInitAndCheckHooks (debug_node.mjs:791:9)
+    at refreshView (debug_node.mjs:10179:21)
+    at detectChangesInView (debug_node.mjs:10384:9)
+    at detectChangesInViewIfAttached (debug_node.mjs:10344:5)
+    at detectChangesInEmbeddedViews (debug_node.mjs:10301:13)
+handleError @ root_effect_scheduler.mjs:3637
+root_effect_scheduler.mjs:3637 ERROR RuntimeError: NG02954: The NgOptimizedImage directive (activated on an <img> element with the `ngSrc="images/showcase/angular-3d-step2.png"`) has detected that these required attributes are missing: "width", "height". Including "width" and "height" attributes will prevent image-related layout shifts. To fix this, include "width" and "height" attributes on the image tag or turn on "fill" mode with the `fill` attribute.
+    at assertNonEmptyWidthAndHeight (common.mjs:1821:11)
+    at _NgOptimizedImage.ngOnInit (common.mjs:1201:9)
+    at callHookInternal (debug_node.mjs:860:14)
+    at callHook (debug_node.mjs:887:13)
+    at callHooks (debug_node.mjs:841:17)
+    at executeInitAndCheckHooks (debug_node.mjs:791:9)
+    at refreshView (debug_node.mjs:10179:21)
+    at detectChangesInView (debug_node.mjs:10384:9)
+    at detectChangesInViewIfAttached (debug_node.mjs:10344:5)
+    at detectChangesInEmbeddedViews (debug_node.mjs:10301:13)
+handleError @ root_effect_scheduler.mjs:3637
+root_effect_scheduler.mjs:3637 ERROR RuntimeError: NG02954: The NgOptimizedImage directive (activated on an <img> element with the `ngSrc="images/showcase/angular-3d-hero.png"`) has detected that these required attributes are missing: "width", "height". Including "width" and "height" attributes will prevent image-related layout shifts. To fix this, include "width" and "height" attributes on the image tag or turn on "fill" mode with the `fill` attribute.
+    at assertNonEmptyWidthAndHeight (common.mjs:1821:11)
+    at _NgOptimizedImage.ngOnInit (common.mjs:1201:9)
+    at callHookInternal (debug_node.mjs:860:14)
+    at callHook (debug_node.mjs:887:13)
+    at callHooks (debug_node.mjs:841:17)
+    at executeInitAndCheckHooks (debug_node.mjs:791:9)
+    at refreshView (debug_node.mjs:10179:21)
+    at detectChangesInView (debug_node.mjs:10384:9)
+    at detectChangesInViewIfAttached (debug_node.mjs:10344:5)
+    at detectChangesInEmbeddedViews (debug_node.mjs:10301:13)
+handleError @ root_effect_scheduler.mjs:3637
+root_effect_scheduler.mjs:3637 ERROR RuntimeError: NG02954: The NgOptimizedImage directive (activated on an <img> element with the `ngSrc="images/showcase/angular-gsap-hero.png"`) has detected that these required attributes are missing: "width", "height". Including "width" and "height" attributes will prevent image-related layout shifts. To fix this, include "width" and "height" attributes on the image tag or turn on "fill" mode with the `fill` attribute.
+    at assertNonEmptyWidthAndHeight (common.mjs:1821:11)
+    at _NgOptimizedImage.ngOnInit (common.mjs:1201:9)
+    at callHookInternal (debug_node.mjs:860:14)
+    at callHook (debug_node.mjs:887:13)
+    at callHooks (debug_node.mjs:841:17)
+    at executeInitAndCheckHooks (debug_node.mjs:791:9)
+    at refreshView (debug_node.mjs:10179:21)
+    at detectChangesInView (debug_node.mjs:10384:9)
+    at detectChangesInViewIfAttached (debug_node.mjs:10344:5)
+    at detectChangesInEmbeddedViews (debug_node.mjs:10301:13)
+handleError @ root_effect_scheduler.mjs:3637
+root_effect_scheduler.mjs:3637 ERROR RuntimeError: NG02954: The NgOptimizedImage directive (activated on an <img> element with the `ngSrc="images/showcase/angular-gsap-step1.png"`) has detected that these required attributes are missing: "width", "height". Including "width" and "height" attributes will prevent image-related layout shifts. To fix this, include "width" and "height" attributes on the image tag or turn on "fill" mode with the `fill` attribute.
+    at assertNonEmptyWidthAndHeight (common.mjs:1821:11)
+    at _NgOptimizedImage.ngOnInit (common.mjs:1201:9)
+    at callHookInternal (debug_node.mjs:860:14)
+    at callHook (debug_node.mjs:887:13)
+    at callHooks (debug_node.mjs:841:17)
+    at executeInitAndCheckHooks (debug_node.mjs:791:9)
+    at refreshView (debug_node.mjs:10179:21)
+    at detectChangesInView (debug_node.mjs:10384:9)
+    at detectChangesInViewIfAttached (debug_node.mjs:10344:5)
+    at detectChangesInEmbeddedViews (debug_node.mjs:10301:13)
+handleError @ root_effect_scheduler.mjs:3637
+root_effect_scheduler.mjs:3637 ERROR RuntimeError: NG02954: The NgOptimizedImage directive (activated on an <img> element with the `ngSrc="images/showcase/angular-gsap-step2.png"`) has detected that these required attributes are missing: "width", "height". Including "width" and "height" attributes will prevent image-related layout shifts. To fix this, include "width" and "height" attributes on the image tag or turn on "fill" mode with the `fill` attribute.
+    at assertNonEmptyWidthAndHeight (common.mjs:1821:11)
+    at _NgOptimizedImage.ngOnInit (common.mjs:1201:9)
+    at callHookInternal (debug_node.mjs:860:14)
+    at callHook (debug_node.mjs:887:13)
+    at callHooks (debug_node.mjs:841:17)
+    at executeInitAndCheckHooks (debug_node.mjs:791:9)
+    at refreshView (debug_node.mjs:10179:21)
+    at detectChangesInView (debug_node.mjs:10384:9)
+    at detectChangesInViewIfAttached (debug_node.mjs:10344:5)
+    at detectChangesInEmbeddedViews (debug_node.mjs:10301:13)
+handleError @ root_effect_scheduler.mjs:3637
+root_effect_scheduler.mjs:3637 ERROR RuntimeError: NG02954: The NgOptimizedImage directive (activated on an <img> element with the `ngSrc="images/showcase/angular-gsap-hero.png"`) has detected that these required attributes are missing: "width", "height". Including "width" and "height" attributes will prevent image-related layout shifts. To fix this, include "width" and "height" attributes on the image tag or turn on "fill" mode with the `fill` attribute.
+    at assertNonEmptyWidthAndHeight (common.mjs:1821:11)
+    at _NgOptimizedImage.ngOnInit (common.mjs:1201:9)
+    at callHookInternal (debug_node.mjs:860:14)
+    at callHook (debug_node.mjs:887:13)
+    at callHooks (debug_node.mjs:841:17)
+    at executeInitAndCheckHooks (debug_node.mjs:791:9)
+    at refreshView (debug_node.mjs:10179:21)
+    at detectChangesInView (debug_node.mjs:10384:9)
+    at detectChangesInViewIfAttached (debug_node.mjs:10344:5)
+    at detectChangesInEmbeddedViews (debug_node.mjs:10301:13)
+handleError @ root_effect_scheduler.mjs:3637
+root_effect_scheduler.mjs:3637 ERROR RuntimeError: NG02954: The NgOptimizedImage directive (activated on an <img> element with the `ngSrc="images/showcase/angular-3d-hero.png"`) has detected that these required attributes are missing: "width", "height". Including "width" and "height" attributes will prevent image-related layout shifts. To fix this, include "width" and "height" attributes on the image tag or turn on "fill" mode with the `fill` attribute.
+    at assertNonEmptyWidthAndHeight (common.mjs:1821:11)
+    at _NgOptimizedImage.ngOnInit (common.mjs:1201:9)
+    at callHookInternal (debug_node.mjs:860:14)
+    at callHook (debug_node.mjs:887:13)
+    at callHooks (debug_node.mjs:841:17)
+    at executeInitAndCheckHooks (debug_node.mjs:791:9)
+    at refreshView (debug_node.mjs:10179:21)
+    at detectChangesInView (debug_node.mjs:10384:9)
+    at detectChangesInViewIfAttached (debug_node.mjs:10344:5)
+    at detectChangesInEmbeddedViews (debug_node.mjs:10301:13)
+handleError @ root_effect_scheduler.mjs:3637

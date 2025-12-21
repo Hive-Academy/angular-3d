@@ -309,20 +309,24 @@ export class ScrollAnimationDirective implements OnDestroy {
           to: { scale: 1, opacity: 1, duration, delay, ease },
         };
 
-      case 'parallax':
+      case 'parallax': {
+        // True parallax: element moves at a different speed than scroll
+        // speed < 1: moves slower (background effect)
+        // speed > 1: moves faster (foreground effect)
+        const speed = config.speed ?? 0.5;
+        const movement = (1 - speed) * 100; // Calculate movement based on speed differential
         return {
           from: {
-            y: 0,
-            yPercent: config.yPercent ?? 0,
+            yPercent: -movement / 2,
             xPercent: config.xPercent ?? 0,
           },
           to: {
-            y: config.speed ? (config.speed - 1) * 100 : -50,
-            yPercent: config.yPercent ?? 0,
+            yPercent: movement / 2,
             xPercent: config.xPercent ?? 0,
             ease: 'none', // Parallax should be linear
           },
         };
+      }
 
       default:
         return {

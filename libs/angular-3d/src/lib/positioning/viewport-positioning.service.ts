@@ -15,6 +15,9 @@
  *
  * @example
  * ```typescript
+ * import { effect, inject } from '@angular/core';
+ * import { ViewportPositioningService } from '@hive-academy/angular-3d';
+ *
  * class MyComponent {
  *   private readonly positioning = inject(ViewportPositioningService);
  *
@@ -52,18 +55,17 @@ import type {
   PixelPositionOptions,
 } from './viewport-positioning.types';
 
+/**
+ * Default viewport dimensions for SSR environment (Full HD resolution)
+ * Used when window object is unavailable (server-side rendering)
+ */
+const DEFAULT_SSR_VIEWPORT_WIDTH = 1920;
+const DEFAULT_SSR_VIEWPORT_HEIGHT = 1080;
+
 @Injectable({ providedIn: 'root' })
 export class ViewportPositioningService {
-  // ============================================================================
-  // Dependencies
-  // ============================================================================
-
   private readonly sceneStore = inject(SceneGraphStore);
   private readonly destroyRef = inject(DestroyRef);
-
-  // ============================================================================
-  // Reactive State Signals
-  // ============================================================================
 
   /**
    * Z position of the viewport plane (depth layer)
@@ -74,16 +76,9 @@ export class ViewportPositioningService {
   /**
    * Window aspect ratio (width / height)
    * Updated reactively on window resize
+   * Default: 16/9 for SSR environment (updated on first browser render)
    */
-  private readonly _aspect = signal<number>(
-    typeof window !== 'undefined'
-      ? window.innerWidth / window.innerHeight
-      : 16 / 9
-  );
-
-  // ============================================================================
-  // Public Computed Signals (Reactive Viewport Dimensions)
-  // ============================================================================
+  private readonly _aspect = signal<number>(16 / 9);
 
   /**
    * FIX TASK 5.4: Signal indicating whether camera is initialized and ready
@@ -94,6 +89,11 @@ export class ViewportPositioningService {
    *
    * @example
    * ```typescript
+   * import { effect, inject } from '@angular/core';
+   * import { ViewportPositioningService } from '@hive-academy/angular-3d';
+   *
+   * const service = inject(ViewportPositioningService);
+   *
    * effect(() => {
    *   if (!service.isCameraReady()) {
    *     console.log('Camera not ready - position calculations will return [0, 0, 0]');
@@ -154,17 +154,9 @@ export class ViewportPositioningService {
     );
   });
 
-  // ============================================================================
-  // Initialization
-  // ============================================================================
-
   constructor() {
     this.setupResizeListener();
   }
-
-  // ============================================================================
-  // Public API Methods (Position Calculations)
-  // ============================================================================
 
   /**
    * Get 3D position from named position (e.g., 'top-center', 'bottom-right')
@@ -178,6 +170,11 @@ export class ViewportPositioningService {
    *
    * @example
    * ```typescript
+   * import { effect, inject } from '@angular/core';
+   * import { ViewportPositioningService } from '@hive-academy/angular-3d';
+   *
+   * const service = inject(ViewportPositioningService);
+   *
    * // Top-right corner with offset
    * const pos = service.getNamedPosition('top-right', {
    *   offsetX: -2,
@@ -247,6 +244,11 @@ export class ViewportPositioningService {
    *
    * @example
    * ```typescript
+   * import { inject } from '@angular/core';
+   * import { ViewportPositioningService } from '@hive-academy/angular-3d';
+   *
+   * const service = inject(ViewportPositioningService);
+   *
    * // Center using percentages
    * const pos1 = service.getPercentagePosition({ x: '50%', y: '50%' });
    *
@@ -308,21 +310,28 @@ export class ViewportPositioningService {
   }
 
   /**
-   * Get 3D position from pixel coordinates
+   * Convert pixel screen coordinates to 3D world position
    *
    * Returns reactive signal that auto-updates on camera/window changes.
    * Converts absolute pixel coordinates to world units.
    *
-   * **Note**: Despite the name, this returns world coordinates [x, y, z],
-   * NOT pixel values. The input is in pixels, output is in world units.
+   * **Note**: Despite the name "getPixelPosition", this returns world coordinates [x, y, z],
+   * NOT pixel values. The INPUT is in pixels (screen coordinates), but the OUTPUT is in
+   * Three.js world units. Use this to position 3D objects at specific screen pixel locations.
    *
-   * @param pos - Pixel position { x, y }
+   * @param pos - Pixel position { x, y } (screen coordinates from top-left)
    * @param options - Optional configuration and offsets
-   * @returns Signal of [x, y, z] world coordinates
+   * @returns Signal of world position [x, y, z] in Three.js world units
    *
    * @example
    * ```typescript
-   * // 100 pixels from left, 50 pixels from top
+   * import { inject } from '@angular/core';
+   * import { ViewportPositioningService } from '@hive-academy/angular-3d';
+   *
+   * const service = inject(ViewportPositioningService);
+   *
+   * // Position object at 100px from left, 50px from top (screen coordinates)
+   * // Returns world coordinates like [2.3, -1.5, 0] in Three.js world units
    * const pos = service.getPixelPosition({ x: 100, y: 50 }, {
    *   offsetZ: -15
    * });
@@ -347,10 +356,14 @@ export class ViewportPositioningService {
 
       const screenWidth =
         options.viewportWidth ??
-        (typeof window !== 'undefined' ? window.innerWidth : 1920);
+        (typeof window !== 'undefined'
+          ? window.innerWidth
+          : DEFAULT_SSR_VIEWPORT_WIDTH);
       const screenHeight =
         options.viewportHeight ??
-        (typeof window !== 'undefined' ? window.innerHeight : 1080);
+        (typeof window !== 'undefined'
+          ? window.innerHeight
+          : DEFAULT_SSR_VIEWPORT_HEIGHT);
 
       // Convert pixels to viewport percentage
       const xPercent = pos.x / screenWidth;
@@ -384,6 +397,11 @@ export class ViewportPositioningService {
    *
    * @example
    * ```typescript
+   * import { inject } from '@angular/core';
+   * import { ViewportPositioningService } from '@hive-academy/angular-3d';
+   *
+   * const service = inject(ViewportPositioningService);
+   *
    * // Named position
    * const pos1 = service.getPosition('center');
    *
@@ -420,10 +438,6 @@ export class ViewportPositioningService {
     return this.getPercentagePosition(position as PercentagePosition, options);
   }
 
-  // ============================================================================
-  // Configuration Methods
-  // ============================================================================
-
   /**
    * Set viewport Z plane (depth layer)
    *
@@ -441,10 +455,6 @@ export class ViewportPositioningService {
     this._viewportZ.set(z);
   }
 
-  // ============================================================================
-  // Utility Methods (Responsive Helpers)
-  // ============================================================================
-
   /**
    * Convert world units to approximate pixels
    *
@@ -455,6 +465,11 @@ export class ViewportPositioningService {
    *
    * @example
    * ```typescript
+   * import { inject } from '@angular/core';
+   * import { ViewportPositioningService } from '@hive-academy/angular-3d';
+   *
+   * const service = inject(ViewportPositioningService);
+   *
    * const worldDistance = 5;
    * const pixels = service.worldToPixels(worldDistance);
    * console.log(`${worldDistance} world units ≈ ${pixels}px`);
@@ -465,7 +480,9 @@ export class ViewportPositioningService {
     if (viewportHeight === 0) return 0;
 
     const screenHeight =
-      typeof window !== 'undefined' ? window.innerHeight : 1080;
+      typeof window !== 'undefined'
+        ? window.innerHeight
+        : DEFAULT_SSR_VIEWPORT_HEIGHT;
     return (worldUnits / viewportHeight) * screenHeight;
   }
 
@@ -479,6 +496,11 @@ export class ViewportPositioningService {
    *
    * @example
    * ```typescript
+   * import { inject } from '@angular/core';
+   * import { ViewportPositioningService } from '@hive-academy/angular-3d';
+   *
+   * const service = inject(ViewportPositioningService);
+   *
    * const pixels = 100;
    * const worldUnits = service.pixelsToWorld(pixels);
    * console.log(`${pixels}px ≈ ${worldUnits} world units`);
@@ -489,7 +511,9 @@ export class ViewportPositioningService {
     if (viewportHeight === 0) return 0;
 
     const screenHeight =
-      typeof window !== 'undefined' ? window.innerHeight : 1080;
+      typeof window !== 'undefined'
+        ? window.innerHeight
+        : DEFAULT_SSR_VIEWPORT_HEIGHT;
     return (pixels / screenHeight) * viewportHeight;
   }
 
@@ -503,6 +527,11 @@ export class ViewportPositioningService {
    *
    * @example
    * ```typescript
+   * import { inject } from '@angular/core';
+   * import { ViewportPositioningService } from '@hive-academy/angular-3d';
+   *
+   * const service = inject(ViewportPositioningService);
+   *
    * // 5% of viewport height
    * const fontSize = service.getResponsiveFontSize(5);
    * ```
@@ -510,10 +539,6 @@ export class ViewportPositioningService {
   public getResponsiveFontSize(vhPercent: number): number {
     return (this.viewportHeight() * vhPercent) / 100;
   }
-
-  // ============================================================================
-  // Private Methods
-  // ============================================================================
 
   /**
    * Set up window resize listener with cleanup

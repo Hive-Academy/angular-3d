@@ -9,6 +9,7 @@
 | TASK_2025_012 | Demo App - GSAP Showcase Migration  | 🔄 Requirements Complete | 2025-12-18 |
 | TASK_2025_014 | Comprehensive Library Documentation | 📋 PENDING               | 2025-12-18 |
 | TASK_2025_016 | Viewport 3D Positioning Feature     | 📋 PENDING               | 2025-12-20 |
+| TASK_2025_018 | Hero Section Enhancement            | 📋 PENDING               | 2025-12-21 |
 
 ## Task Dependencies
 
