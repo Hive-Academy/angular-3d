@@ -89,6 +89,9 @@ export class GlowParticleTextComponent implements OnDestroy {
   private particleTexture?: THREE.CanvasTexture;
   private time = 0;
 
+  // Particle count limit to prevent browser freezing
+  private readonly MAX_PARTICLES = 10000;
+
   constructor() {
     // Effect: Initialize particle system when text changes
     effect(() => {
@@ -183,6 +186,16 @@ export class GlowParticleTextComponent implements OnDestroy {
         });
       }
     });
+
+    // Validate particle count and warn if exceeding limit
+    if (this.particles.length > this.MAX_PARTICLES) {
+      console.warn(
+        `[GlowParticleText] Generated ${this.particles.length} particles (max ${this.MAX_PARTICLES}). ` +
+          `Consider reducing fontSize or particleDensity for better performance. ` +
+          `Truncating to ${this.MAX_PARTICLES} particles.`
+      );
+      this.particles = this.particles.slice(0, this.MAX_PARTICLES);
+    }
   }
 
   /**

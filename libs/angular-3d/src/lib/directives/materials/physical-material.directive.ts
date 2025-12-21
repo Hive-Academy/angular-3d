@@ -94,8 +94,27 @@ export class PhysicalMaterialDirective {
    * Controls light bending through transparent materials
    * Water: 1.333, Glass: 1.5, Diamond: 2.42
    * Default: 1.5 (glass)
+   *
+   * Note: IOR must be >= 1.0 (physically valid range)
+   * Values < 1 will be clamped to 1.0
    */
-  public readonly ior = input<number>(1.5);
+  public readonly ior = input(1.5, {
+    transform: (value: number) => {
+      if (value < 1) {
+        console.warn(
+          `[PhysicalMaterial] IOR must be >= 1.0 (physically valid). Clamping from ${value} to 1.0. ` +
+            `Common values: air=1.0, water=1.333, glass=1.5, diamond=2.42`
+        );
+        return 1.0;
+      }
+      if (value > 3) {
+        console.warn(
+          `[PhysicalMaterial] IOR > 3.0 is unusual (diamond=2.42). Using ${value} but verify this is correct.`
+        );
+      }
+      return value;
+    },
+  });
 
   /**
    * Render geometry as wireframe

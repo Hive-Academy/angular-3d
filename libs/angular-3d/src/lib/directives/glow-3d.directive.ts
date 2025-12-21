@@ -29,6 +29,7 @@ import {
   input,
   DestroyRef,
   afterNextRender,
+  isDevMode,
 } from '@angular/core';
 import * as THREE from 'three';
 import { ColorRepresentation } from 'three';
@@ -109,7 +110,9 @@ export class Glow3dDirective {
       effect(() => {
         // Skip if no objectId
         if (!this.objectId) {
-          console.warn('[Glow3dDirective] No OBJECT_ID available');
+          if (isDevMode()) {
+            console.warn('[Glow3dDirective] No OBJECT_ID available');
+          }
           return;
         }
 

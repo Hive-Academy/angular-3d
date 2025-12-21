@@ -18,6 +18,7 @@ import {
   computed,
   inject,
   DestroyRef,
+  isDevMode,
 } from '@angular/core';
 import * as THREE from 'three';
 import { SceneGraphStore } from '../store/scene-graph.store';
@@ -153,7 +154,9 @@ export class AdvancedPerformanceOptimizerService {
   initialize(camera?: THREE.Camera): void {
     // Store camera reference for frustum culling
     // Implementation would use camera.frustum for culling checks
-    console.log('[AdvancedPerformanceOptimizer] Initialized with camera');
+    if (isDevMode()) {
+      console.log('[AdvancedPerformanceOptimizer] Initialized with camera');
+    }
   }
 
   // ============================================================================
@@ -316,12 +319,16 @@ export class AdvancedPerformanceOptimizerService {
     // - Texture resolution
     // - Particle counts
     // - Post-processing effects
-    console.log('[AdvancedPerformanceOptimizer] Scaling quality DOWN');
+    if (isDevMode()) {
+      console.log('[AdvancedPerformanceOptimizer] Scaling quality DOWN');
+    }
   }
 
   private scaleQualityUp(): void {
     // Implementation would restore quality settings
-    console.log('[AdvancedPerformanceOptimizer] Scaling quality UP');
+    if (isDevMode()) {
+      console.log('[AdvancedPerformanceOptimizer] Scaling quality UP');
+    }
   }
 
   // ============================================================================
@@ -411,6 +418,8 @@ export class AdvancedPerformanceOptimizerService {
 
   private cleanup(): void {
     this.registeredObjects.clear();
-    console.log('[AdvancedPerformanceOptimizer] Cleaned up');
+    if (isDevMode()) {
+      console.log('[AdvancedPerformanceOptimizer] Cleaned up');
+    }
   }
 }

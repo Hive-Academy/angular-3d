@@ -132,6 +132,9 @@ export class InstancedParticleTextComponent implements OnDestroy {
   // Billboarding state tracking
   private billboardingActive = signal(false);
 
+  // Particle count limit to prevent browser freezing
+  private readonly MAX_PARTICLES = 10000;
+
   constructor() {
     // Initialize canvas for text rendering
     this.textCanvas = document.createElement('canvas');
@@ -209,6 +212,20 @@ export class InstancedParticleTextComponent implements OnDestroy {
    * Refresh text rendering and particle system
    */
   private refreshText(text: string, fontSize: number): void {
+    // Handle empty text - skip mesh creation and clean up existing mesh
+    if (!text || text.trim().length === 0) {
+      const parent = this.parent();
+      if (this.instancedMesh && parent) {
+        parent.remove(this.instancedMesh);
+        this.instancedMesh.geometry.dispose();
+        (this.instancedMesh.material as THREE.MeshBasicMaterial).dispose();
+        this.instancedMesh = undefined;
+      }
+      this.particles = [];
+      this.textureCoordinates = [];
+      return;
+    }
+
     this.sampleTextCoordinates(text, fontSize);
     this.updateParticles();
     this.recreateInstancedMesh();
@@ -337,6 +354,16 @@ export class InstancedParticleTextComponent implements OnDestroy {
     });
 
     this.particles = newParticles;
+
+    // Validate particle count and warn if exceeding limit
+    if (this.particles.length > this.MAX_PARTICLES) {
+      console.warn(
+        `[InstancedParticleText] Generated ${this.particles.length} particles (max ${this.MAX_PARTICLES}). ` +
+          `Consider reducing fontSize or particlesPerPixel for better performance. ` +
+          `Truncating to ${this.MAX_PARTICLES} particles.`
+      );
+      this.particles = this.particles.slice(0, this.MAX_PARTICLES);
+    }
   }
 
   /**
