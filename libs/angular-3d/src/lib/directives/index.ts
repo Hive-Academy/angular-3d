@@ -18,6 +18,7 @@ export * from './geometries/polyhedron-geometry.directive';
 
 // Material directives
 export * from './materials/standard-material.directive';
+export * from './materials/physical-material.directive';
 
 // Light directives
 export * from './light.directive';

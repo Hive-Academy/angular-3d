@@ -25,3 +25,10 @@ export * from './lights/spot-light.component';
 // Particle text components
 export * from './particle-text/instanced-particle-text.component';
 export * from './particle-text/smoke-particle-text.component';
+export * from './particle-text/glow-particle-text.component';
+
+// Volumetric components
+export * from './nebula-volumetric.component';
+
+// Physical material primitives
+export * from './floating-sphere.component';

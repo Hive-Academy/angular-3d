@@ -1,6 +1,6 @@
 # Development Tasks - TASK_2025_017
 
-**Total Tasks**: 20 | **Batches**: 6 | **Status**: 1/6 complete
+**Total Tasks**: 20 | **Batches**: 6 | **Status**: 2/6 complete
 
 ---
 
@@ -142,7 +142,9 @@
 
 ---
 
-## Batch 2: P1 Particle Text - Instanced & Smoke (12 hours) - 🔄 IMPLEMENTED
+## Batch 2: P1 Particle Text - Instanced & Smoke (12 hours) - ✅ COMPLETE
+
+**Commit**: `3c997f4` feat(angular-3d): add instanced and smoke particle text components
 
 **Developer**: backend-developer
 **Tasks**: 3 | **Dependencies**: Batch 1
@@ -235,12 +237,12 @@
 
 ---
 
-## Batch 3: P1 Particle Text - Glow, Nebula, Sphere (13 hours) - PENDING
+## Batch 3: P1 Particle Text - Glow, Nebula, Sphere (13 hours) - 🔄 IN PROGRESS
 
 **Developer**: backend-developer
 **Tasks**: 5 | **Dependencies**: Batch 1 (BloomEffect)
 
-### Task 3.1: Create GlowParticleTextComponent - PENDING
+### Task 3.1: Create GlowParticleTextComponent - 🔄 IMPLEMENTED
 
 **File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\particle-text\glow-particle-text.component.ts
 **Spec Reference**: implementation-plan.md:505-567
@@ -270,7 +272,7 @@
 
 ---
 
-### Task 3.2: Create PhysicalMaterialDirective - PENDING
+### Task 3.2: Create PhysicalMaterialDirective - 🔄 IMPLEMENTED
 
 **File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\directives\materials\physical-material.directive.ts
 **Spec Reference**: implementation-plan.md:707-765
@@ -297,7 +299,7 @@
 
 ---
 
-### Task 3.3: Create FloatingSphereComponent - PENDING
+### Task 3.3: Create FloatingSphereComponent - 🔄 IMPLEMENTED
 
 **File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\floating-sphere.component.ts
 **Spec Reference**: implementation-plan.md:705-765
@@ -323,7 +325,7 @@
 
 ---
 
-### Task 3.4: Create NebulaVolumetricComponent - PENDING
+### Task 3.4: Create NebulaVolumetricComponent - 🔄 IMPLEMENTED
 
 **File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\nebula-volumetric.component.ts
 **Spec Reference**: implementation-plan.md:570-699
@@ -356,7 +358,7 @@
 
 ---
 
-### Task 3.5: Update Library Public API - Export Glow, Sphere, Nebula - PENDING
+### Task 3.5: Update Library Public API - Export Glow, Sphere, Nebula - 🔄 IMPLEMENTED
 
 **File**: D:\projects\angular-3d\src\index.ts
 **Dependencies**: Task 3.1, Task 3.2, Task 3.3, Task 3.4
