@@ -109,7 +109,7 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
                     d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z"
                   />
                 </svg>
-                DATA FOUNDATION LAYER
+                3D VISUALIZATION LAYER
               </span>
             </div>
 
@@ -126,7 +126,7 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
                 to: { opacity: 1, y: 0 }
               }"
             >
-              ChromaDB
+              Angular 3D
             </h2>
 
             <!-- Subtitle -->
@@ -142,9 +142,9 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
                 to: { opacity: 1, y: 0 }
               }"
             >
-              Vector database for semantic search and RAG applications.
+              Pure Angular wrapper for Three.js with signal-based reactivity.
               <span class="block mt-2 text-indigo-600 font-semibold">
-                Build production-ready AI features in minutes, not weeks.
+                Build immersive 3D experiences with familiar Angular patterns.
               </span>
             </p>
 
@@ -163,22 +163,26 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
             >
               <div class="text-center">
                 <div class="text-4xl font-bold text-indigo-600 mb-2">
-                  Sub-100ms
+                  10+ Primitives
                 </div>
                 <div class="text-sm text-gray-500 uppercase tracking-wide">
-                  Vector Search
-                </div>
-              </div>
-              <div class="text-center">
-                <div class="text-4xl font-bold text-purple-600 mb-2">70%</div>
-                <div class="text-sm text-gray-500 uppercase tracking-wide">
-                  Less Boilerplate
+                  3D Components
                 </div>
               </div>
               <div class="text-center">
-                <div class="text-4xl font-bold text-pink-600 mb-2">10K+</div>
+                <div class="text-4xl font-bold text-purple-600 mb-2">
+                  Signal-Based
+                </div>
                 <div class="text-sm text-gray-500 uppercase tracking-wide">
-                  Documents/sec
+                  Reactivity
+                </div>
+              </div>
+              <div class="text-center">
+                <div class="text-4xl font-bold text-pink-600 mb-2">
+                  SSR-Safe
+                </div>
+                <div class="text-sm text-gray-500 uppercase tracking-wide">
+                  Server Compatible
                 </div>
               </div>
             </div>
@@ -470,96 +474,95 @@ export class ChromadbSectionComponent {
   }
 
   /**
-   * Business value timeline
-   * Based on task-tracking/TASK_2025_017/library-analysis.md
+   * Angular 3D feature timeline
+   * Based on @hive-academy/angular-3d library capabilities
    */
   public readonly codeTimeline = signal<TimelineStep[]>([
     {
-      id: 'rag-pipeline',
+      id: 'scene-container',
       step: 1,
-      title: 'Build RAG Applications in Minutes',
+      title: 'Scene3D - Zero-Config 3D Canvas',
       description:
-        'Transform your enterprise knowledge into intelligent AI systems. Our ChromaDB integration enables semantic search across documents with AI-powered understanding, bringing ChatGPT-like capabilities to your internal data. Deploy production-ready RAG applications without months of development.',
-      code: 'assets/images/step_1.png', // AI-generated image
+        'The Scene3D component handles WebGL context, render loop, camera setup, and responsive sizing automatically. Simply declare your scene and let Angular 3D manage the complexity. Works with SSR out of the box with platform detection built-in.',
+      code: 'images/showcase/angular-3d-step1.png',
       language: 'image',
       layout: 'left',
       notes: [
-        'RAG pipelines ready in 3 lines of code',
-        'Semantic search with AI understanding',
-        'Enterprise knowledge retrieval',
-        'Build ChatGPT-like internal systems',
+        'Automatic WebGL context management',
+        'Built-in render loop with requestAnimationFrame',
+        'Responsive canvas with resize handling',
+        'SSR-safe with platform detection',
       ],
     },
     {
-      id: 'developer-productivity',
+      id: 'primitives',
       step: 2,
-      title: '70% Less Boilerplate Code',
+      title: '10+ 3D Primitive Components',
       description:
-        'Our TypeORM-style repository pattern eliminates repetitive code. Inherit 15+ CRUD methods automatically, focus on business logic instead of infrastructure. Smart defaults for embeddings, timestamps, and IDs mean you write only what matters.',
-      code: 'assets/images/step_2.png', // AI-generated image
+        'Build complex 3D scenes using familiar Angular component patterns. Box, Sphere, Cylinder, Torus, Polyhedron, and more - all as declarative components with signal-based inputs for real-time updates. Full TypeScript type safety included.',
+      code: 'images/showcase/angular-3d-step2.png',
       language: 'image',
       layout: 'right',
       notes: [
-        '15+ methods inherited automatically',
-        'TypeORM-style familiar patterns',
-        'Zero boilerplate, maximum productivity',
-        'Focus on features, not infrastructure',
+        'Declarative <app-box>, <app-sphere>, <app-torus>',
+        'Signal-based inputs for reactive updates',
+        'Position, rotation, scale as simple arrays',
+        'Full Three.js mesh access when needed',
       ],
     },
     {
-      id: 'enterprise-ready',
+      id: 'animations',
       step: 3,
-      title: 'Enterprise Multi-Tenancy Built-In',
+      title: 'GSAP-Powered 3D Animations',
       description:
-        'Launch your SaaS with confidence. Complete tenant isolation ensures data privacy and compliance with GDPR, HIPAA, and SOC2 standards. Intelligent caching, connection pooling, and automatic health checks provide production-grade reliability from day one.',
-      code: 'assets/images/step_3.png', // AI-generated image
+        'Float3dDirective and Rotate3dDirective bring smooth GSAP animations to your 3D objects. Configure animation parameters with simple inputs - height, speed, easing. Play, pause, and control animations programmatically via public API.',
+      code: 'images/showcase/angular-3d-hero.png',
       language: 'image',
       layout: 'left',
       notes: [
-        'Complete data isolation per tenant',
-        'GDPR, HIPAA, SOC2 compliant',
-        'Production-ready reliability',
-        'Intelligent caching & health checks',
+        'float3d directive for floating/bobbing',
+        'rotate3d directive for continuous rotation',
+        'Configurable speed, height, easing functions',
+        'Full playback control: play(), pause(), stop()',
       ],
     },
     {
-      id: 'performance',
+      id: 'advanced',
       step: 4,
-      title: 'Sub-100ms Performance at Scale',
+      title: 'Advanced Primitives & Effects',
       description:
-        'Handle 10,000+ documents with lightning-fast vector search under 100ms. Batch operations process 100 documents per second. Built-in performance monitoring, retry mechanisms, and comprehensive error handling ensure your AI stays responsive as you scale.',
-      code: 'assets/images/step_4.png', // AI-generated image
+        'Beyond basic shapes, Angular 3D provides GltfModel for 3D models, StarField and Nebula for space scenes, ParticleSystem for effects, and SceneLighting for quick lighting setups. Build production-ready 3D experiences.',
+      code: 'images/showcase/angular-gsap-hero.png',
       language: 'image',
       layout: 'right',
       notes: [
-        'Sub-100ms search for 10K+ documents',
-        'Batch: 100 documents/second',
-        'Built-in performance monitoring',
-        'Production error handling & retry',
+        'GLTF/GLB model loading with GltfModel',
+        'Procedural StarField and Nebula components',
+        'ParticleSystem for dynamic effects',
+        'SceneLighting presets for quick setup',
       ],
     },
   ]);
 
   /**
-   * LangGraph ecosystem integrations
+   * Angular 3D ecosystem integrations
    */
   public readonly integrations = signal([
     {
-      icon: '🧠',
-      name: 'Memory Module',
+      icon: '🎬',
+      name: 'GSAP Animations',
       description:
-        'Long-term contextual memory for AI agents powered by vector search',
+        'Smooth float and rotate animations via Float3d and Rotate3d directives',
+    },
+    {
+      icon: '📦',
+      name: 'Three.js r150+',
+      description: 'Full access to latest Three.js features and performance',
     },
     {
       icon: '🔄',
-      name: 'Workflow Engine',
-      description:
-        'State persistence and retrieval for complex agent workflows',
-    },
-    {
-      icon: '📊',
-      name: 'Monitoring',
-      description: 'Vector operation metrics and performance tracking',
+      name: 'Angular Signals',
+      description: 'Reactive 3D property updates with signal-based inputs',
     },
   ]);
 }

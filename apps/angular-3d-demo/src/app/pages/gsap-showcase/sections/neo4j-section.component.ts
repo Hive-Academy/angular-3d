@@ -104,7 +104,7 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
                     d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z"
                   />
                 </svg>
-                DATA FOUNDATION LAYER
+                SCROLL ANIMATION LAYER
               </span>
             </div>
 
@@ -121,7 +121,7 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
                 to: { opacity: 1, y: 0 }
               }"
             >
-              Neo4j
+              Angular GSAP
             </h2>
 
             <!-- Subtitle -->
@@ -137,9 +137,9 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
                 to: { opacity: 1, y: 0 }
               }"
             >
-              Enterprise-grade graph relationships for AI knowledge graphs
+              GSAP-powered scroll animations for Angular applications.
               <span class="block mt-2 text-indigo-600 font-semibold">
-                Model complex relationships for AI decision-making
+                Create stunning scroll experiences with minimal code.
               </span>
             </p>
 
@@ -158,26 +158,26 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
             >
               <div class="text-center">
                 <div class="text-4xl font-bold text-indigo-600 mb-2">
-                  7 Decorators
+                  10+ Animations
                 </div>
                 <div class="text-sm text-gray-500 uppercase tracking-wide">
-                  CRUD System
+                  Built-in Effects
                 </div>
               </div>
               <div class="text-center">
                 <div class="text-4xl font-bold text-purple-600 mb-2">
-                  100+ Connections
+                  ScrollTrigger
                 </div>
                 <div class="text-sm text-gray-500 uppercase tracking-wide">
-                  Concurrent Pool
+                  GSAP-Powered
                 </div>
               </div>
               <div class="text-center">
                 <div class="text-4xl font-bold text-pink-600 mb-2">
-                  1000+ Nodes/sec
+                  SSR-Safe
                 </div>
                 <div class="text-sm text-gray-500 uppercase tracking-wide">
-                  Graph Traversal
+                  Server Ready
                 </div>
               </div>
             </div>
@@ -410,93 +410,94 @@ export class Neo4jSectionComponent {
   }
 
   /**
-   * Business value timeline - 4 steps
+   * Angular GSAP feature timeline
+   * Based on @hive-academy/angular-gsap library capabilities
    */
   public readonly codeTimeline = signal<TimelineStep[]>([
     {
-      id: 'complex-relationships',
+      id: 'scroll-animation',
       step: 1,
-      title: 'Model Complex Relationships',
+      title: 'ScrollAnimationDirective - Declarative Animations',
       description:
-        'Revolutionary 7-decorator Entity CRUD system (@FindOne, @FindMany, @CreateEntity, @UpdateEntity, @DeleteEntity, @CountEntities, @ExistsEntity) reduces boilerplate code by 90%. Build sophisticated knowledge graphs and relationship models for AI decision-making with type-safe queries, enterprise-grade Neo4jQueryBuilder, and intelligent graph traversal algorithms.',
-      code: 'assets/images/libraries/neo4j_step_1.png',
+        'Apply scroll-triggered animations to any DOM element with a simple directive. Choose from 10+ built-in animations (fadeIn, slideUp, scaleIn, parallax) or create custom animations with GSAP TweenVars. Full control over start/end triggers, duration, easing, and scrub behavior.',
+      code: 'images/showcase/angular-gsap-step1.png',
       language: 'image',
       layout: 'left',
       notes: [
-        '7 CRUD decorators eliminate 90% of boilerplate code',
-        'Type-safe query builder for complex graph relationships',
-        'Knowledge graphs for AI reasoning and decision-making',
-        'Intelligent graph traversal with fluent API',
+        '10+ built-in animation types',
+        'Custom from/to with GSAP TweenVars',
+        'Configurable ScrollTrigger options',
+        'once: true/false for repeat control',
       ],
     },
     {
-      id: 'enterprise-security',
+      id: 'hijacked-scroll',
       step: 2,
-      title: 'Enterprise Security Built-In',
+      title: 'Hijacked Scroll - Step-by-Step Sequences',
       description:
-        'Comprehensive 5-decorator security layer provides enterprise-grade protection: @Safe for input sanitization, @Authorize for role-based access control, @ValidateInput for schema validation, @AuditLog for compliance tracking, and @RateLimit for DoS protection. Type-safe query builder prevents injection attacks while maintaining developer productivity with full TypeScript support.',
-      code: 'assets/images/libraries/neo4j_step_2.png',
+        'Create scroll-jacked experiences where the viewport is pinned while users scroll through content steps. Perfect for tutorials, product showcases, and storytelling. HijackedScrollDirective and HijackedScrollItemDirective work together for seamless step transitions.',
+      code: 'images/showcase/angular-gsap-step2.png',
       language: 'image',
       layout: 'right',
       notes: [
-        '5 security decorators (Safe, Authorize, Validate, Audit, RateLimit)',
-        'Type-safe query builder prevents injection attacks',
-        'GDPR, HIPAA, SOC2 compliance with audit logging',
-        'Enterprise access control with role-based permissions',
+        'Pinned viewport during scroll',
+        'Step-by-step content transitions',
+        'currentStepChange and progressChange outputs',
+        'Configurable scroll height per step',
       ],
     },
     {
-      id: 'graph-algorithms',
+      id: 'timeline-component',
       step: 3,
-      title: 'Graph Algorithms for AI',
+      title: 'HijackedScrollTimeline Component',
       description:
-        'Specialized GraphRepository provides advanced algorithms for AI applications: centrality analysis identifies key nodes in knowledge graphs, community detection discovers relationships patterns, shortest path finds optimal connections. Perfect for knowledge graphs, recommendation engines, relationship analysis, and network intelligence for AI decision-making systems.',
-      code: 'assets/images/libraries/neo4j_step_3.png',
+        'Convenience wrapper component with content projection for building timeline-style showcases. Simply drop in your content items with hijackedScrollItem directive and the component handles all the animation orchestration, progress tracking, and cleanup automatically.',
+      code: 'images/showcase/angular-gsap-hero.png',
       language: 'image',
       layout: 'left',
       notes: [
-        'Centrality algorithms identify key knowledge graph nodes',
-        'Community detection discovers relationship patterns',
-        'Shortest path finds optimal entity connections',
-        'Recommendation engines powered by graph analysis',
+        '<agsp-hijacked-scroll-timeline> wrapper',
+        'Content projection for child items',
+        'Automatic animation orchestration',
+        'Built-in progress and step tracking',
       ],
     },
     {
-      id: 'multi-tenant-isolation',
+      id: 'section-sticky',
       step: 4,
-      title: 'Multi-Tenant Graph Isolation',
+      title: 'SectionStickyDirective - Smart Sticky Navigation',
       description:
-        'Database-per-tenant architecture provides complete data isolation for SaaS applications. Automatic tenant routing ensures each customer data remains separate with zero cross-contamination risk. ACID transactions, connection pooling, and intelligent caching optimize performance while maintaining enterprise-grade security and compliance standards.',
-      code: 'assets/images/libraries/neo4j_step_4.png',
+        'Create sticky navigation elements that appear only when their parent section is in view. Uses IntersectionObserver for performance-optimized visibility detection. Perfect for sidebar navigation, progress indicators, and contextual UI elements.',
+      code: 'images/showcase/angular-3d-hero.png',
       language: 'image',
       layout: 'right',
       notes: [
-        'Database-per-tenant complete data isolation',
-        'Automatic tenant routing prevents cross-contamination',
-        'ACID transactions with connection pooling (100+ concurrent)',
-        'Enterprise-grade security and compliance',
+        'IntersectionObserver-based detection',
+        'Position: fixed when section in view',
+        'Configurable root margin',
+        'Automatic visibility management',
       ],
     },
   ]);
 
   /**
-   * Integration ecosystem cards - 3 per library
+   * Angular GSAP ecosystem integrations
    */
   public readonly integrations = signal([
     {
-      icon: '🧠',
-      name: 'Memory Module',
-      description: 'Graph storage for relationship tracking',
+      icon: '🎬',
+      name: 'GSAP ScrollTrigger',
+      description: 'Full GSAP ScrollTrigger plugin integration',
     },
     {
-      icon: '🤖',
-      name: 'Multi-Agent',
-      description: 'Agent coordination and relationship modeling',
+      icon: '📱',
+      name: 'SSR Compatible',
+      description: 'Server-side rendering safe with platform detection',
     },
     {
-      icon: '⚙️',
-      name: 'Workflow Engine',
-      description: 'Workflow relationship analysis',
+      icon: '🎯',
+      name: 'TypeScript First',
+      description: 'Full type safety with ScrollAnimationConfig interfaces',
     },
   ]);
 }
