@@ -48,8 +48,18 @@ import { OBJECT_ID } from '../../tokens/object-id.token';
 })
 export class AmbientLightDirective {
   private readonly store = inject(SceneGraphStore);
-  private readonly objectId = inject(OBJECT_ID);
+  // DEBUG: Make optional to trace injection issue
+  private readonly objectId = inject(OBJECT_ID, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
+
+  // DEBUG: Log injection result
+  private readonly _debug = (() => {
+    console.log(
+      '[AmbientLightDirective] OBJECT_ID injection result:',
+      this.objectId
+    );
+    return true;
+  })();
 
   /** Light color (CSS color string or hex number) */
   public readonly color = input<string | number>('white');
@@ -71,6 +81,14 @@ export class AmbientLightDirective {
 
     // Create and register light after render
     afterNextRender(() => {
+      // DEBUG: Skip if no OBJECT_ID
+      if (!this.objectId) {
+        console.error(
+          '[AmbientLightDirective] No OBJECT_ID available - cannot register light'
+        );
+        return;
+      }
+
       // Create THREE.AmbientLight
       this.light = new THREE.AmbientLight(this.color(), this.intensity());
 
@@ -80,7 +98,9 @@ export class AmbientLightDirective {
 
     // Cleanup: Remove light from store on destroy
     this.destroyRef.onDestroy(() => {
-      this.store.remove(this.objectId);
+      if (this.objectId) {
+        this.store.remove(this.objectId);
+      }
     });
   }
 }

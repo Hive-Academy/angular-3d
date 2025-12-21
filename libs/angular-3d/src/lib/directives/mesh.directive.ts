@@ -56,10 +56,17 @@ import { MATERIAL_SIGNAL } from '../tokens/material.token';
 })
 export class MeshDirective {
   private readonly store = inject(SceneGraphStore);
-  private readonly objectId = inject(OBJECT_ID);
+  // DEBUG: Make optional to trace injection issue
+  private readonly objectId = inject(OBJECT_ID, { optional: true });
   private readonly geometrySignal = inject(GEOMETRY_SIGNAL);
   private readonly materialSignal = inject(MATERIAL_SIGNAL);
   private readonly destroyRef = inject(DestroyRef);
+
+  // DEBUG: Log injection result
+  private readonly _debug = (() => {
+    console.log('[MeshDirective] OBJECT_ID injection result:', this.objectId);
+    return true;
+  })();
 
   /** Reference to created mesh (null until both geometry and material are ready) */
   public mesh: THREE.Mesh | null = null;
@@ -79,10 +86,26 @@ export class MeshDirective {
       // Only create mesh once
       if (this.mesh) return;
 
+      // DEBUG: Skip if no OBJECT_ID (will show in console)
+      if (!this.objectId) {
+        console.error(
+          '[MeshDirective] No OBJECT_ID available - cannot register mesh'
+        );
+        return;
+      }
+
       try {
         // Create mesh and register with store
         this.mesh = new THREE.Mesh(geometry, material);
+        console.log(
+          '[MeshDirective] Creating and registering mesh:',
+          this.objectId
+        );
         this.store.register(this.objectId, this.mesh, 'mesh');
+        console.log(
+          '[MeshDirective] Mesh registered successfully:',
+          this.objectId
+        );
       } catch (error) {
         console.error(`[MeshDirective] Failed to create mesh:`, error);
       }
@@ -90,7 +113,9 @@ export class MeshDirective {
 
     // Cleanup: Remove mesh from store on destroy
     this.destroyRef.onDestroy(() => {
-      this.store.remove(this.objectId);
+      if (this.objectId) {
+        this.store.remove(this.objectId);
+      }
     });
   }
 }

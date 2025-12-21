@@ -13,6 +13,7 @@ export {
   type HijackedScrollItemConfig,
   type SlideDirection,
 } from './lib/directives/hijacked-scroll-item.directive';
+export { SectionStickyDirective } from './lib/directives/section-sticky.directive';
 
 // Components
 export { HijackedScrollTimelineComponent } from './lib/components/hijacked-scroll-timeline.component';

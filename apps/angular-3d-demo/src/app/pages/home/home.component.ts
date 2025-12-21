@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Hero3dTeaserComponent } from '../sections/hero-3d-teaser.component';
-import { Angular3dSectionComponent } from '../sections/angular-3d-section.component';
-import { AngularGsapSectionComponent } from '../sections/angular-gsap-section.component';
-import { CtaSectionComponent } from '../sections/cta-section.component';
+import { Hero3dTeaserComponent } from './sections/hero-3d-teaser.component';
+import { Angular3dSectionComponent } from './sections/angular-3d-section.component';
+import { AngularGsapSectionComponent } from './sections/angular-gsap-section.component';
+import { CtaSectionComponent } from './sections/cta-section.component';
 import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
 
 /**
@@ -49,7 +49,7 @@ import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
           <div
             scrollAnimation
             [scrollConfig]="{
-              animation: 'fadeInUp',
+              animation: 'slideUp',
               start: 'top 90%',
               duration: 0.8,
               delay: 0,
@@ -67,7 +67,7 @@ import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
           <h1
             scrollAnimation
             [scrollConfig]="{
-              animation: 'fadeInUp',
+              animation: 'slideUp',
               start: 'top 85%',
               duration: 1,
               delay: 0.1,
@@ -83,7 +83,7 @@ import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
           <p
             scrollAnimation
             [scrollConfig]="{
-              animation: 'fadeInUp',
+              animation: 'slideUp',
               start: 'top 80%',
               duration: 1,
               delay: 0.2,
@@ -100,7 +100,7 @@ import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
           <div
             scrollAnimation
             [scrollConfig]="{
-              animation: 'fadeInUp',
+              animation: 'slideUp',
               start: 'top 75%',
               duration: 0.8,
               delay: 0.3,
@@ -126,7 +126,7 @@ import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
           <div
             scrollAnimation
             [scrollConfig]="{
-              animation: 'fadeInUp',
+              animation: 'slideUp',
               start: 'top 70%',
               duration: 0.8,
               delay: 0.4,

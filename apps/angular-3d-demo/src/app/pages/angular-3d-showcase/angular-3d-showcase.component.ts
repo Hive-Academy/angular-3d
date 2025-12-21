@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { HeroSpaceSceneComponent } from '../scenes/hero-space-scene.component';
-import { PrimitivesShowcaseComponent } from '../sections/primitives-showcase.component';
-import { ValueProps3dSceneComponent } from '../scenes/value-props-3d-scene.component';
+import { HeroSpaceSceneComponent } from './scenes/hero-space-scene.component';
+import { PrimitivesShowcaseComponent } from './sections/primitives-showcase.component';
+import { ValueProps3dSceneComponent } from './scenes/value-props-3d-scene.component';
 
 @Component({
   selector: 'app-angular-3d-showcase',

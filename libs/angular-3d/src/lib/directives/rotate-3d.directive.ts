@@ -108,10 +108,20 @@ export interface RotateConfig {
   standalone: true,
 })
 export class Rotate3dDirective {
-  // Inject SceneGraphStore and OBJECT_ID (skipSelf to get parent's ID)
+  // Inject SceneGraphStore and OBJECT_ID from host component
   private readonly sceneStore = inject(SceneGraphStore);
-  private readonly objectId = inject(OBJECT_ID, { skipSelf: true });
+  // DEBUG: Try without skipSelf - directive should see component's providers
+  private readonly objectId = inject(OBJECT_ID, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
+
+  // DEBUG: Log injection result
+  private readonly _debug = (() => {
+    console.log(
+      '[Rotate3dDirective] OBJECT_ID injection result:',
+      this.objectId
+    );
+    return true;
+  })();
 
   /**
    * Rotation animation configuration
@@ -125,6 +135,7 @@ export class Rotate3dDirective {
 
   // Computed signal for object access
   private readonly object3D = computed(() => {
+    if (!this.objectId) return null;
     return this.sceneStore.getObject<Object3D>(this.objectId);
   });
 

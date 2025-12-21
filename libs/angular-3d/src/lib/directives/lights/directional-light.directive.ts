@@ -52,8 +52,18 @@ import { OBJECT_ID } from '../../tokens/object-id.token';
 })
 export class DirectionalLightDirective {
   private readonly store = inject(SceneGraphStore);
-  private readonly objectId = inject(OBJECT_ID);
+  // DEBUG: Make optional to trace injection issue
+  private readonly objectId = inject(OBJECT_ID, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
+
+  // DEBUG: Log injection result
+  private readonly _debug = (() => {
+    console.log(
+      '[DirectionalLightDirective] OBJECT_ID injection result:',
+      this.objectId
+    );
+    return true;
+  })();
 
   /** Light color (CSS color string or hex number) */
   public readonly color = input<string | number>('white');
@@ -90,6 +100,14 @@ export class DirectionalLightDirective {
 
     // Create and register light after render
     afterNextRender(() => {
+      // DEBUG: Skip if no OBJECT_ID
+      if (!this.objectId) {
+        console.error(
+          '[DirectionalLightDirective] No OBJECT_ID available - cannot register light'
+        );
+        return;
+      }
+
       // Create THREE.DirectionalLight
       this.light = new THREE.DirectionalLight(this.color(), this.intensity());
       this.light.target.position.set(...this.target());
@@ -108,8 +126,10 @@ export class DirectionalLightDirective {
 
     // Cleanup: Remove light and target from store on destroy
     this.destroyRef.onDestroy(() => {
-      this.store.remove(this.objectId);
-      this.store.remove(`${this.objectId}-target`);
+      if (this.objectId) {
+        this.store.remove(this.objectId);
+        this.store.remove(`${this.objectId}-target`);
+      }
     });
   }
 }

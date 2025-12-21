@@ -45,7 +45,7 @@ export interface FrameContext {
  * }
  * ```
  */
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class RenderLoopService implements OnDestroy {
   private readonly ngZone = inject(NgZone);
 

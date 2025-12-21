@@ -17,7 +17,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
           routerLink="/"
           class="text-headline-md font-bold text-neon-green hover:animate-glow transition-all duration-250"
         >
-          <img ngSrc="/assets/logo.png" alt="logo" />
+          <img ngSrc="/logo.png" alt="logo" width="120" height="40" priority />
         </a>
 
         <!-- Nav Links -->

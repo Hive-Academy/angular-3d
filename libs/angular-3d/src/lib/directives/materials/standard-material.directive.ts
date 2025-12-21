@@ -46,8 +46,19 @@ import { OBJECT_ID } from '../../tokens/object-id.token';
 export class StandardMaterialDirective {
   private readonly materialSignal = inject(MATERIAL_SIGNAL);
   private readonly store = inject(SceneGraphStore);
-  private readonly objectId = inject(OBJECT_ID, { skipSelf: true });
+  // DEBUG: Removed skipSelf, added optional to trace injection issue
+  // skipSelf was WRONG - it skips the component's providers where OBJECT_ID is defined!
+  private readonly objectId = inject(OBJECT_ID, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
+
+  // DEBUG: Log injection result
+  private readonly _debug = (() => {
+    console.log(
+      '[StandardMaterialDirective] OBJECT_ID injection result:',
+      this.objectId
+    );
+    return true;
+  })();
 
   /**
    * Material color (hex number or CSS color string)
@@ -79,14 +90,32 @@ export class StandardMaterialDirective {
   public constructor() {
     // Effect 1: Create material once and set signal
     effect(() => {
+      const color = this.color();
+      const wireframe = this.wireframe();
+      const metalness = this.metalness();
+      const roughness = this.roughness();
+
+      console.log(
+        '[StandardMaterialDirective] Effect1: Creating material with',
+        'color=',
+        color,
+        'wireframe=',
+        wireframe,
+        'id=',
+        this.objectId
+      );
+
       if (!this.material) {
         this.material = new THREE.MeshStandardMaterial({
-          color: this.color(),
-          wireframe: this.wireframe(),
-          metalness: this.metalness(),
-          roughness: this.roughness(),
+          color,
+          wireframe,
+          metalness,
+          roughness,
         });
         this.materialSignal.set(this.material);
+        console.log(
+          '[StandardMaterialDirective] Effect1: Material created and signal set'
+        );
       }
     });
 
@@ -95,10 +124,26 @@ export class StandardMaterialDirective {
     // Uses store.update() to ensure proper material.needsUpdate handling
     effect(() => {
       if (this.material) {
-        this.store.update(this.objectId, undefined, {
-          color: this.color(),
-          wireframe: this.wireframe(),
-        });
+        const color = this.color();
+        const wireframe = this.wireframe();
+
+        console.log(
+          '[StandardMaterialDirective] Effect2: Updating material',
+          'color=',
+          color,
+          'wireframe=',
+          wireframe,
+          'id=',
+          this.objectId
+        );
+
+        // DEBUG: Skip store update if no OBJECT_ID
+        if (this.objectId) {
+          this.store.update(this.objectId, undefined, {
+            color,
+            wireframe,
+          });
+        }
 
         // Update metalness and roughness directly (not in store interface yet)
         this.material.metalness = this.metalness();

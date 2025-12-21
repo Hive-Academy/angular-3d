@@ -51,8 +51,18 @@ import { OBJECT_ID } from '../../tokens/object-id.token';
 })
 export class PointLightDirective {
   private readonly store = inject(SceneGraphStore);
-  private readonly objectId = inject(OBJECT_ID);
+  // DEBUG: Make optional to trace injection issue
+  private readonly objectId = inject(OBJECT_ID, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
+
+  // DEBUG: Log injection result
+  private readonly _debug = (() => {
+    console.log(
+      '[PointLightDirective] OBJECT_ID injection result:',
+      this.objectId
+    );
+    return true;
+  })();
 
   /** Light color (CSS color string or hex number) */
   public readonly color = input<string | number>('white');
@@ -86,6 +96,14 @@ export class PointLightDirective {
 
     // Create and register light after render
     afterNextRender(() => {
+      // DEBUG: Skip if no OBJECT_ID
+      if (!this.objectId) {
+        console.error(
+          '[PointLightDirective] No OBJECT_ID available - cannot register light'
+        );
+        return;
+      }
+
       // Create THREE.PointLight
       this.light = new THREE.PointLight(
         this.color(),
@@ -101,7 +119,9 @@ export class PointLightDirective {
 
     // Cleanup: Remove light from store on destroy
     this.destroyRef.onDestroy(() => {
-      this.store.remove(this.objectId);
+      if (this.objectId) {
+        this.store.remove(this.objectId);
+      }
     });
   }
 }

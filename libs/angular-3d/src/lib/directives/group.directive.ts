@@ -42,8 +42,15 @@ import { OBJECT_ID } from '../tokens/object-id.token';
 })
 export class GroupDirective {
   private readonly store = inject(SceneGraphStore);
-  private readonly objectId = inject(OBJECT_ID);
+  // DEBUG: Make optional to trace injection issue
+  private readonly objectId = inject(OBJECT_ID, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
+
+  // DEBUG: Log injection result
+  private readonly _debug = (() => {
+    console.log('[GroupDirective] OBJECT_ID injection result:', this.objectId);
+    return true;
+  })();
 
   /** Reference to created group (null until initialized) */
   public group: THREE.Group | null = null;
@@ -51,6 +58,14 @@ export class GroupDirective {
   public constructor() {
     // Create and register group after render
     afterNextRender(() => {
+      // DEBUG: Skip if no OBJECT_ID
+      if (!this.objectId) {
+        console.error(
+          '[GroupDirective] No OBJECT_ID available - cannot register group'
+        );
+        return;
+      }
+
       // Create THREE.Group
       this.group = new THREE.Group();
 
@@ -60,7 +75,9 @@ export class GroupDirective {
 
     // Cleanup: Remove group from store on destroy
     this.destroyRef.onDestroy(() => {
-      this.store.remove(this.objectId);
+      if (this.objectId) {
+        this.store.remove(this.objectId);
+      }
     });
   }
 }

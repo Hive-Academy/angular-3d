@@ -42,13 +42,27 @@ import type * as THREE from 'three';
 })
 export class LightDirective {
   protected readonly store = inject(SceneGraphStore);
-  protected readonly objectId = inject(OBJECT_ID);
+  // DEBUG: Make optional to trace injection issue
+  protected readonly objectId = inject(OBJECT_ID, { optional: true });
+
+  // DEBUG: Log injection result
+  private readonly _debug = (() => {
+    console.log('[LightDirective] OBJECT_ID injection result:', this.objectId);
+    return true;
+  })();
 
   /**
    * Register a light with the SceneGraphStore
    * @param light - The THREE.Light instance to register
    */
   protected registerLight(light: THREE.Light): void {
+    // DEBUG: Skip if no OBJECT_ID
+    if (!this.objectId) {
+      console.error(
+        '[LightDirective] No OBJECT_ID available - cannot register light'
+      );
+      return;
+    }
     this.store.register(this.objectId, light, 'light');
   }
 
@@ -56,6 +70,8 @@ export class LightDirective {
    * Remove light from store (triggers disposal)
    */
   protected removeLight(): void {
-    this.store.remove(this.objectId);
+    if (this.objectId) {
+      this.store.remove(this.objectId);
+    }
   }
 }

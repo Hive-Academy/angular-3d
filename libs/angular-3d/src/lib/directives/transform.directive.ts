@@ -38,7 +38,17 @@ import { OBJECT_ID } from '../tokens/object-id.token';
 })
 export class TransformDirective {
   private readonly store = inject(SceneGraphStore);
-  private readonly objectId = inject(OBJECT_ID);
+  // DEBUG: Make optional to trace injection issue
+  private readonly objectId = inject(OBJECT_ID, { optional: true });
+
+  // DEBUG: Log injection result
+  private readonly _debug = (() => {
+    console.log(
+      '[TransformDirective] OBJECT_ID injection result:',
+      this.objectId
+    );
+    return true;
+  })();
 
   /**
    * Position in 3D space as [x, y, z] tuple
@@ -62,15 +72,45 @@ export class TransformDirective {
     // Single effect for all transform updates
     // Runs whenever position, rotation, or scale changes
     effect(() => {
-      // Wait for object to be registered before updating
-      if (!this.store.hasObject(this.objectId)) {
+      // DEBUG: Skip if no OBJECT_ID
+      if (!this.objectId) {
+        console.log('[TransformDirective] Effect: No OBJECT_ID, skipping');
         return;
       }
 
+      // Wait for object to be registered before updating
+      const hasObject = this.store.hasObject(this.objectId);
+      console.log(
+        '[TransformDirective] Effect: hasObject=',
+        hasObject,
+        'id=',
+        this.objectId
+      );
+
+      if (!hasObject) {
+        console.log(
+          '[TransformDirective] Effect: Object not registered yet, waiting...'
+        );
+        return;
+      }
+
+      const pos = this.position();
+      const rot = this.rotation();
+      const scl = this.scale();
+      console.log(
+        '[TransformDirective] Effect: Applying transform',
+        'pos=',
+        JSON.stringify(pos),
+        'rot=',
+        JSON.stringify(rot),
+        'scl=',
+        JSON.stringify(scl)
+      );
+
       this.store.update(this.objectId, {
-        position: this.position(),
-        rotation: this.rotation(),
-        scale: this.scale(),
+        position: pos,
+        rotation: rot,
+        scale: scl,
       });
     });
   }

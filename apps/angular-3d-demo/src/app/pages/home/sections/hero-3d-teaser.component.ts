@@ -56,16 +56,24 @@ import {
           [color]="'#D946EF'"
         />
 
-        <!-- Dense Star Field - 3 layers for depth -->
-        <a3d-star-field [starCount]="2500" [color]="'#FFFFFF'" />
+        <!-- Enhanced Star Field with multiple layers -->
+        <a3d-star-field
+          [starCount]="3000"
+          [radius]="50"
+          [enableTwinkle]="true"
+          [stellarColors]="true"
+          [multiSize]="true"
+        />
 
-        <!-- GLTF Robot Model - Main Hero Element -->
+        <!-- GLTF Robot Model - Main Hero Element with floating animation 
         <a3d-gltf-model
+          float3d
+          [floatConfig]="{ speed: 2500, height: 0.3 }"
           [modelPath]="'/3d/mini_robot.glb'"
           [position]="[2.5, -0.5, 0]"
           [scale]="[1.5, 1.5, 1.5]"
           [rotation]="[0, -0.5, 0]"
-        />
+        />-->
 
         <!-- Rotating Icosahedron - Secondary focal point -->
         <a3d-polyhedron
@@ -87,8 +95,6 @@ import {
           [wireframe]="true"
           rotate3d
           [rotateConfig]="{ axis: 'xyz', speed: 1.2 }"
-          float3d
-          [floatConfig]="{ height: 0.3, speed: 3500 }"
         />
 
         <a3d-polyhedron
@@ -109,8 +115,6 @@ import {
           [wireframe]="true"
           rotate3d
           [rotateConfig]="{ axis: 'x', speed: 1 }"
-          float3d
-          [floatConfig]="{ height: 0.2, speed: 3000 }"
         />
 
         <a3d-polyhedron

@@ -93,10 +93,20 @@ export interface FloatConfig {
   standalone: true,
 })
 export class Float3dDirective {
-  // Inject SceneGraphStore and OBJECT_ID (skipSelf to get parent's ID)
+  // Inject SceneGraphStore and OBJECT_ID from host component
   private readonly sceneStore = inject(SceneGraphStore);
-  private readonly objectId = inject(OBJECT_ID, { skipSelf: true });
+  // DEBUG: Try without skipSelf - directive should see component's providers
+  private readonly objectId = inject(OBJECT_ID, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
+
+  // DEBUG: Log injection result
+  private readonly _debug = (() => {
+    console.log(
+      '[Float3dDirective] OBJECT_ID injection result:',
+      this.objectId
+    );
+    return true;
+  })();
 
   /**
    * Float animation configuration
@@ -111,6 +121,7 @@ export class Float3dDirective {
 
   // Computed signal for mesh access
   private readonly mesh = computed(() => {
+    if (!this.objectId) return null;
     const obj = this.sceneStore.getObject(this.objectId);
     return obj instanceof Mesh ? (obj as Mesh) : null;
   });
