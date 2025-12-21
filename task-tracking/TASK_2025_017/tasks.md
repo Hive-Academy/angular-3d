@@ -1,6 +1,6 @@
 # Development Tasks - TASK_2025_017
 
-**Total Tasks**: 20 | **Batches**: 6 | **Status**: 0/6 complete
+**Total Tasks**: 20 | **Batches**: 6 | **Status**: 1/6 complete
 
 ---
 
@@ -34,7 +34,9 @@
 
 ---
 
-## Batch 1: P0 Critical Architecture Fixes (5 hours) - IMPLEMENTED
+## Batch 1: P0 Critical Architecture Fixes (5 hours) - ✅ COMPLETE
+
+**Commit**: `4830299` fix(angular-3d): make effect composer service component-scoped
 
 **Developer**: backend-developer
 **Tasks**: 4 | **Dependencies**: None
@@ -140,12 +142,12 @@
 
 ---
 
-## Batch 2: P1 Particle Text - Instanced & Smoke (12 hours) - PENDING
+## Batch 2: P1 Particle Text - Instanced & Smoke (12 hours) - 🔄 IMPLEMENTED
 
 **Developer**: backend-developer
 **Tasks**: 3 | **Dependencies**: Batch 1
 
-### Task 2.1: Create InstancedParticleTextComponent - PENDING
+### Task 2.1: Create InstancedParticleTextComponent - 🔄 IMPLEMENTED
 
 **File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\particle-text\instanced-particle-text.component.ts
 **Spec Reference**: implementation-plan.md:308-415
@@ -179,7 +181,7 @@
 
 ---
 
-### Task 2.2: Create SmokeParticleTextComponent - PENDING
+### Task 2.2: Create SmokeParticleTextComponent - 🔄 IMPLEMENTED
 
 **File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\particle-text\smoke-particle-text.component.ts
 **Spec Reference**: implementation-plan.md:418-502
@@ -205,7 +207,7 @@
 
 ---
 
-### Task 2.3: Update Library Public API - Export Particle Text Components - PENDING
+### Task 2.3: Update Library Public API - Export Particle Text Components - 🔄 IMPLEMENTED
 
 **File**: D:\projects\angular-3d\src\index.ts
 **Dependencies**: Task 2.1, Task 2.2

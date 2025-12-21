@@ -21,3 +21,7 @@ export * from './lights/directional-light.component';
 export * from './lights/point-light.component';
 export * from './lights/scene-lighting.component';
 export * from './lights/spot-light.component';
+
+// Particle text components
+export * from './particle-text/instanced-particle-text.component';
+export * from './particle-text/smoke-particle-text.component';
