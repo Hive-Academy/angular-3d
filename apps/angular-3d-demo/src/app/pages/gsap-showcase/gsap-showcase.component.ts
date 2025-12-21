@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChromadbSectionComponent } from './sections/chromadb-section.component';
+import { Neo4jSectionComponent } from './sections/neo4j-section.component';
 
 @Component({
   selector: 'app-gsap-showcase',
-  imports: [],
+  imports: [ChromadbSectionComponent, Neo4jSectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- GSAP Hero -->
@@ -17,35 +19,11 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
       </div>
     </section>
 
-    <!-- TODO: TASK_2025_012 - Add GSAP components here -->
-    <!-- Placeholder sections - will be replaced with actual GSAP components -->
+    <!-- ChromaDB Section -->
+    <app-chromadb-section />
 
-    <section class="py-16x bg-background-light">
-      <div class="max-w-container mx-auto px-4x text-center">
-        <h2 class="text-display-lg mb-8x font-bold">
-          <span class="text-primary-500">Coming Soon:</span> GSAP Showcase
-        </h2>
-        <p class="text-headline-md text-text-secondary mb-8x">
-          This page will showcase GSAP animations when TASK_2025_012 completes
-          migration
-        </p>
-
-        <div
-          class="bg-white rounded-card shadow-card p-8x max-w-content mx-auto"
-        >
-          <h3 class="text-headline-lg font-bold mb-4x">
-            Components to be added:
-          </h3>
-          <ul class="text-left space-y-2x text-body-lg text-text-secondary">
-            <li>✓ ScrollAnimationDirective demos</li>
-            <li>✓ HijackedScrollTimeline component</li>
-            <li>✓ ChromaDB section with scroll animations</li>
-            <li>✓ Neo4j section with graph animations</li>
-            <li>✓ Problem-Solution timeline</li>
-          </ul>
-        </div>
-      </div>
-    </section>
+    <!-- Neo4j Section -->
+    <app-neo4j-section />
 
     <!-- CTA Section -->
     <section class="bg-background-dark text-white py-20x text-center">
