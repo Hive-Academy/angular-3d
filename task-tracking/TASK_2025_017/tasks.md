@@ -1,6 +1,6 @@
 # Development Tasks - TASK_2025_017
 
-**Total Tasks**: 20 | **Batches**: 6 | **Status**: 3/6 complete
+**Total Tasks**: 20 | **Batches**: 6 | **Status**: 5/6 complete
 
 ---
 
@@ -387,7 +387,9 @@
 
 ---
 
-## Batch 4: P2 Background Components & Glow Directive (8 hours) - 🔄 IMPLEMENTED
+## Batch 4: P2 Background Components & Glow Directive (8 hours) - ✅ COMPLETE
+
+**Commit**: `eb27d12` feat(angular-3d): add background components and glow directive
 
 **Developer**: backend-developer
 **Tasks**: 5 | **Dependencies**: None (independent)
@@ -522,12 +524,12 @@
 
 ---
 
-## Batch 5: P2 Animation Directives (4 hours) - PENDING
+## Batch 5: P2 Animation Directives (4 hours) - IMPLEMENTED
 
 **Developer**: backend-developer
 **Tasks**: 2 | **Dependencies**: None
 
-### Task 5.1: Create SpaceFlight3dDirective - PENDING
+### Task 5.1: Create SpaceFlight3dDirective - IMPLEMENTED
 
 **File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\directives\space-flight-3d.directive.ts
 **Spec Reference**: implementation-plan.md:994-1075
@@ -557,7 +559,7 @@
 
 ---
 
-### Task 5.2: Update Library Public API - Export SpaceFlight - PENDING
+### Task 5.2: Update Library Public API - Export SpaceFlight - IMPLEMENTED
 
 **File**: D:\projects\angular-3d\src\index.ts
 **Dependencies**: Task 5.1

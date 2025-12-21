@@ -30,3 +30,6 @@ export * from './lights/spot-light.directive';
 
 // Effect directives
 export * from './glow-3d.directive';
+
+// Animation directives
+export * from './space-flight-3d.directive';
