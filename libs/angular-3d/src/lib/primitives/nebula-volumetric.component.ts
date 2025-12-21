@@ -1,7 +1,6 @@
 import {
   Component,
   ChangeDetectionStrategy,
-  OnDestroy,
   inject,
   input,
   effect,
@@ -60,7 +59,7 @@ import { RenderLoopService } from '../render-loop/render-loop.service';
     },
   ],
 })
-export class NebulaVolumetricComponent implements OnDestroy {
+export class NebulaVolumetricComponent {
   // Signal inputs
   readonly position = input<[number, number, number]>([0, 0, 0]);
   readonly width = input<number>(120);
@@ -371,8 +370,4 @@ export class NebulaVolumetricComponent implements OnDestroy {
       gl_FragColor = vec4(color, alpha);
     }
   `;
-
-  ngOnDestroy(): void {
-    // Cleanup handled by DestroyRef
-  }
 }

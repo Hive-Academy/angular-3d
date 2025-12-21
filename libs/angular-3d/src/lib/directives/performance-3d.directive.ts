@@ -31,6 +31,7 @@ import {
   DestroyRef,
   afterNextRender,
   input,
+  isDevMode,
 } from '@angular/core';
 import { AdvancedPerformanceOptimizerService } from '../services/advanced-performance-optimizer.service';
 import { SceneGraphStore } from '../store/scene-graph.store';
@@ -76,9 +77,13 @@ export class Performance3dDirective {
       }
 
       if (!this.objectId) {
-        console.warn(
-          '[Performance3dDirective] No OBJECT_ID found - cannot register for optimization'
-        );
+        const message =
+          '[Performance3dDirective] Requires OBJECT_ID token. Add to component providers: { provide: OBJECT_ID, useFactory: () => `id-${crypto.randomUUID()}` }';
+        if (isDevMode()) {
+          throw new Error(message);
+        } else {
+          console.error(message);
+        }
         return;
       }
 

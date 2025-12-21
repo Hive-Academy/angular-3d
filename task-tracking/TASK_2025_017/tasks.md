@@ -720,9 +720,852 @@
 
 ---
 
+## Batch 7: QA Review Fixes (18 hours) - ⏸️ PENDING
+
+**Developer**: backend-developer
+**Tasks**: 21 grouped into 4 priority sub-batches | **Dependencies**: Batch 1-6 complete
+
+**QA Review Sources**:
+
+- Code Style Review: D:\projects\angular-3d-workspace\task-tracking\TASK_2025_017\code-style-review.md
+- Code Logic Review: D:\projects\angular-3d-workspace\task-tracking\TASK_2025_017\code-logic-review.md
+
+---
+
+### Sub-Batch 7.1: P0 BLOCKING Issues (2 hours) - 🔄 IMPLEMENTED
+
+**Must fix before release - blocks core functionality**
+
+#### Task 7.1.1: Create Missing SphereGeometryDirective - ✅ VERIFIED (Already Exists)
+
+**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\directives\geometries\sphere-geometry.directive.ts
+**Spec Reference**: code-style-review.md:137-152
+**Pattern to Follow**: libs/angular-3d/src/lib/directives/geometries/box-geometry.directive.ts
+
+**Issue**: FloatingSphereComponent imports SphereGeometryDirective but it doesn't exist. Component fails at runtime with dependency injection error.
+
+**Quality Requirements**:
+
+- Follow BoxGeometryDirective pattern exactly
+- Signal input: args = input<[number, number, number]>([1, 32, 16]) // [radius, widthSegments, heightSegments]
+- Provide GEOMETRY_SIGNAL token
+- Proper cleanup in DestroyRef.onDestroy()
+
+**Implementation Details**:
+
+- Selector: [a3dSphereGeometry]
+- Create THREE.SphereGeometry(radius, widthSegments, heightSegments)
+- Effect-based reactivity for args changes
+- Dispose old geometry before creating new
+
+**Estimated Time**: 45 minutes
+
+---
+
+#### Task 7.1.2: Fix NebulaVolumetricComponent OnDestroy Interface Violation - 🔄 IMPLEMENTED
+
+**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\nebula-volumetric.component.ts
+**Spec Reference**: code-style-review.md:154-168
+
+**Issue**: Component declares `implements OnDestroy` but has no ngOnDestroy() method. Violates TypeScript interface contract.
+
+**Quality Requirements**:
+
+- Remove `implements OnDestroy` from component declaration (line 63)
+- Keep existing DestroyRef.onDestroy() cleanup logic
+- No other changes needed
+
+**Implementation Details**:
+
+- Change: `export class NebulaVolumetricComponent implements OnDestroy {`
+- To: `export class NebulaVolumetricComponent {`
+
+**Estimated Time**: 15 minutes
+
+---
+
+#### Task 7.1.3: Add OBJECT_ID Validation in Performance3dDirective - 🔄 IMPLEMENTED
+
+**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\directives\performance-3d.directive.ts
+**Spec Reference**: code-style-review.md:170-191, code-logic-review.md:295-323
+
+**Issue**: Directive injects OBJECT_ID optionally, then silently fails with warning if missing. No runtime error, making debugging difficult.
+
+**Quality Requirements**:
+
+- Throw error in development mode if OBJECT_ID missing
+- Warn and degrade gracefully in production
+- Document requirement in JSDoc
+
+**Implementation Details**:
+
+```typescript
+afterNextRender(() => {
+  if (!this.objectId) {
+    const message = '[Performance3dDirective] Requires OBJECT_ID token. Add to component providers: { provide: OBJECT_ID, useFactory: () => `id-${crypto.randomUUID()}` }';
+    if (isDevMode()) {
+      throw new Error(message);
+    } else {
+      console.error(message);
+    }
+    return;
+  }
+  // ... rest of logic
+});
+```
+
+**Estimated Time**: 30 minutes
+
+---
+
+### Sub-Batch 7.2: P1 CRITICAL Logic Issues (6 hours) - ⏸️ PENDING
+
+**High-impact failures that cause silent bugs or memory leaks**
+
+#### Task 7.2.1: Fix InstancedParticleText Camera Access Race Condition - ⏸️ PENDING
+
+**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\particle-text\instanced-particle-text.component.ts
+**Spec Reference**: code-logic-review.md:508-543
+
+**Issue**: Camera accessed from sceneService.camera() may be null during initialization. Billboarding silently fails with no visual feedback.
+
+**Quality Requirements**:
+
+- Add billboardingActive signal to track state
+- Log when billboarding enables/disables
+- Provide user-visible indication of initialization state
+
+**Implementation Details**:
+
+```typescript
+private billboardingActive = signal(false);
+
+const cleanup = this.renderLoop.registerUpdateCallback(() => {
+  const camera = this.sceneService.camera();
+  if (camera) {
+    if (!this.billboardingActive()) {
+      this.billboardingActive.set(true);
+      console.log('[InstancedParticleText] Billboarding enabled');
+    }
+    this.animateParticles(camera);
+  } else if (this.billboardingActive()) {
+    console.warn('[InstancedParticleText] Camera lost - billboarding disabled');
+    this.billboardingActive.set(false);
+  }
+});
+```
+
+**Estimated Time**: 45 minutes
+
+---
+
+#### Task 7.2.2: Merge Material Directive Double-Effect Anti-Pattern - ⏸️ PENDING
+
+**Files**:
+
+- D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\directives\materials\lambert-material.directive.ts
+- D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\directives\materials\physical-material.directive.ts
+  **Spec Reference**: code-logic-review.md:547-600
+
+**Issue**: Two separate effects update same material. Effect 1 creates material, Effect 2 updates properties. Runs 2x on every input change, potential race conditions with store.update().
+
+**Quality Requirements**:
+
+- Merge into single effect
+- Material creation on first run, updates on subsequent runs
+- Eliminate redundant material.needsUpdate calls
+
+**Implementation Details**:
+
+```typescript
+effect(() => {
+  const color = this.color();
+  const emissive = this.emissive();
+  const transparent = this.transparent();
+  const opacity = this.opacity();
+
+  if (!this.material) {
+    // First run: create
+    this.material = new THREE.MeshLambertMaterial({ color, emissive, transparent, opacity });
+    this.materialSignal.set(this.material);
+  } else {
+    // Subsequent runs: update
+    this.material.color = new THREE.Color(color);
+    this.material.emissive = new THREE.Color(emissive);
+    this.material.transparent = transparent;
+    this.material.opacity = opacity;
+    this.material.needsUpdate = true;
+  }
+
+  // Store update (every run if objectId exists)
+  if (this.objectId) {
+    this.store.update(this.objectId, undefined, { color, transparent, opacity });
+  }
+});
+```
+
+**Estimated Time**: 1.5 hours (apply to both directives)
+
+---
+
+#### Task 7.2.3: Fix NebulaVolumetric Render Loop Memory Leak - ⏸️ PENDING
+
+**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\nebula-volumetric.component.ts
+**Spec Reference**: code-logic-review.md:602-645
+
+**Issue**: renderLoopCleanup is undefined if enableFlow() is false at construction. If component destroyed, cleanup never runs. Memory leak if flow enabled late.
+
+**Quality Requirements**:
+
+- Always register cleanup function, even if flow disabled
+- Conditionally execute animation based on enableFlow() signal
+- Cleanup always called in DestroyRef.onDestroy()
+
+**Implementation Details**:
+
+```typescript
+this.renderLoopCleanup = this.renderLoop.registerUpdateCallback((delta) => {
+  if (this.enableFlow()) {
+    this.layerUniforms.forEach((uniforms) => {
+      uniforms['uTime'].value += delta * this.flowSpeed();
+    });
+  }
+});
+
+this.destroyRef.onDestroy(() => {
+  this.renderLoopCleanup(); // Always safe to call
+  this.clearLayers();
+});
+```
+
+**Estimated Time**: 30 minutes
+
+---
+
+#### Task 7.2.4: Implement Frustum Culling in AdvancedPerformanceOptimizer - ⏸️ PENDING
+
+**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\services\advanced-performance-optimizer.service.ts
+**Spec Reference**: code-logic-review.md:647-682
+
+**Issue**: isInFrustum() always returns true. Frustum culling documented and exposed but completely non-functional.
+
+**Quality Requirements**:
+
+- Implement bounding sphere frustum intersection test
+- Warn in development if culling not implemented
+- Consider margin parameter for off-screen culling
+
+**Implementation Details**:
+
+```typescript
+private isInFrustum(object: THREE.Object3D, frustum: THREE.Frustum, margin: number): boolean {
+  if (!object.geometry?.boundingSphere) {
+    object.geometry?.computeBoundingSphere();
+  }
+
+  if (!object.geometry?.boundingSphere) {
+    // Fallback: assume visible if no bounding sphere
+    return true;
+  }
+
+  const boundingSphere = new THREE.Sphere();
+  boundingSphere.copy(object.geometry.boundingSphere).applyMatrix4(object.matrixWorld);
+
+  // Expand sphere by margin for early visibility
+  boundingSphere.radius += margin;
+
+  return frustum.intersectsSphere(boundingSphere);
+}
+```
+
+**Estimated Time**: 1.5 hours
+
+---
+
+#### Task 7.2.5: Fix ScrollZoomCoordinator Event Handler After Destroy - ⏸️ PENDING
+
+**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\directives\scroll-zoom-coordinator.directive.ts
+**Spec Reference**: code-logic-review.md:684-725
+
+**Issue**: Event handler may run after component destroyed. Memory leak, potential crashes accessing destroyed state.
+
+**Quality Requirements**:
+
+- Add destroyed flag
+- Early exit from event handler if destroyed
+- Set flag before removeEventListener in cleanup
+
+**Implementation Details**:
+
+```typescript
+private destroyed = false;
+
+this.destroyRef.onDestroy(() => {
+  this.destroyed = true;
+  window.removeEventListener('wheel', this.handleWheel);
+});
+
+private handleWheel = (event: WheelEvent): void => {
+  if (this.destroyed) return; // Early exit if destroyed
+
+  const camera = this.sceneService.camera();
+  if (!camera) return;
+  // ... rest of handler
+};
+```
+
+**Estimated Time**: 30 minutes
+
+---
+
+### Sub-Batch 7.3: P2 SERIOUS Issues (7 hours) - ⏸️ PENDING
+
+**Significant technical debt, code duplication, performance issues**
+
+#### Task 7.3.1: Extract TextSamplingService to Eliminate Duplication - ⏸️ PENDING
+
+**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\services\text-sampling.service.ts (NEW)
+**Spec Reference**: code-style-review.md:193-205
+
+**Issue**: ~450 lines of duplicated text sampling code across 3 particle text components (canvas operations, pixel sampling).
+
+**Quality Requirements**:
+
+- Create shared service for text sampling logic
+- Canvas pooling/reuse strategy
+- Update all 3 particle text components to use service
+- No behavioral changes to existing components
+
+**Implementation Details**:
+
+```typescript
+@Injectable({ providedIn: 'root' })
+export class TextSamplingService {
+  private canvasPool = new Map<string, HTMLCanvasElement>();
+
+  sampleTextPositions(text: string, fontSize: number): [number, number][] {
+    const canvas = this.getOrCreateCanvas(text, fontSize);
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return [];
+
+    // Clear and setup
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = `bold ${fontSize}px Arial`;
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+    // Sample pixels
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const positions: [number, number][] = [];
+    // ... sampling logic
+    return positions;
+  }
+
+  private getOrCreateCanvas(text: string, fontSize: number): HTMLCanvasElement {
+    const key = `${text}-${fontSize}`;
+    if (!this.canvasPool.has(key)) {
+      const canvas = document.createElement('canvas');
+      // ... setup canvas dimensions
+      this.canvasPool.set(key, canvas);
+    }
+    return this.canvasPool.get(key)!;
+  }
+}
+```
+
+**Estimated Time**: 2.5 hours (create service + update 3 components)
+
+---
+
+#### Task 7.3.2: Remove Unused Inputs from FloatingSphereComponent - ⏸️ PENDING
+
+**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\floating-sphere.component.ts
+**Spec Reference**: code-style-review.md:227-241
+
+**Issue**: Component has radius, widthSegments, heightSegments inputs but never uses them. Only args is forwarded to SphereGeometryDirective. Confusing API.
+
+**Quality Requirements**:
+
+- Remove individual unused inputs (radius, widthSegments, heightSegments)
+- Keep only args input
+- Update JSDoc to clarify args format: [radius, widthSegments, heightSegments]
+- No breaking changes to existing usage (if args was already used)
+
+**Implementation Details**:
+
+```typescript
+// REMOVE these inputs:
+// public readonly radius = input<number>(1);
+// public readonly widthSegments = input<number>(32);
+// public readonly heightSegments = input<number>(16);
+
+// KEEP only:
+public readonly args = input<[number, number, number]>([1, 32, 16], {
+  alias: 'args'
+});
+
+// ADD JSDoc:
+/**
+ * Sphere geometry parameters: [radius, widthSegments, heightSegments]
+ * @default [1, 32, 16]
+ */
+```
+
+**Estimated Time**: 30 minutes
+
+---
+
+#### Task 7.3.3: Make NebulaVolumetric enableFlow Reactive - ⏸️ PENDING
+
+**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\nebula-volumetric.component.ts
+**Spec Reference**: code-style-review.md:243-248
+
+**Issue**: enableFlow() check is in constructor, not reactive. If input changes after initialization, animation doesn't start/stop.
+
+**Quality Requirements**:
+
+- Use effect to reactively manage render loop subscription
+- Animation starts when enableFlow changes to true
+- Animation stops when enableFlow changes to false
+- No memory leaks
+
+**Implementation Details**:
+
+- Already addressed in Task 7.2.3 (render loop always registered, conditionally executes)
+- This task is DUPLICATE - mark as covered by Task 7.2.3
+
+**Estimated Time**: 0 minutes (covered by 7.2.3)
+
+---
+
+#### Task 7.3.4: Fix Glow3dDirective Scale Updates to Use mesh.scale - ⏸️ PENDING
+
+**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\directives\glow-3d.directive.ts
+**Spec Reference**: code-style-review.md:250-255, code-logic-review.md:825-872
+
+**Issue**: updateGlowScale() recreates entire geometry on every scale change. Massive GC pressure if scale animates. Should use mesh.scale instead.
+
+**Quality Requirements**:
+
+- Create geometry once with base size (no scale multiplier)
+- Update mesh.scale reactively in effect
+- No geometry recreation on scale changes
+- Proper initial size calculation
+
+**Implementation Details**:
+
+```typescript
+// Create geometry once with base size
+private createGlowEffect(): void {
+  // ... existing bounding sphere calculation
+  const baseGlowRadius = baseRadius; // NO scale multiplier here
+  this.glowGeometry = new THREE.SphereGeometry(baseGlowRadius, segments, segments);
+  this.glowMesh = new THREE.Mesh(this.glowGeometry, this.glowMaterial);
+  this.targetObject.add(this.glowMesh);
+}
+
+// Update scale reactively without recreating geometry
+effect(() => {
+  if (this.glowMesh) {
+    const scale = this.glowScale();
+    this.glowMesh.scale.setScalar(scale);
+  }
+});
+```
+
+**Estimated Time**: 1 hour
+
+---
+
+#### Task 7.3.5: Add Zone Distribution JSDoc to BackgroundCubesComponent - ⏸️ PENDING
+
+**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\background-cubes.component.ts
+**Spec Reference**: code-style-review.md:263-269
+
+**Issue**: Zone distribution logic (lines 156-181) has minimal comments. No visual explanation of coordinate system. Future maintainers will struggle.
+
+**Quality Requirements**:
+
+- Add comprehensive JSDoc with ASCII diagram showing 4 zones
+- Explain coordinate system and exclusion zone
+- Document why 4 zones specifically
+- Explain cube distribution algorithm
+
+**Implementation Details**:
+
+```typescript
+/**
+ * Generate cube configurations distributed across 4 zones.
+ *
+ * Zone Layout (Top View):
+ *
+ *     ┌─────────────────────────────┐
+ *     │          TOP ZONE           │
+ *     ├───────┬───────────┬─────────┤
+ *     │       │           │         │
+ *     │ LEFT  │ EXCLUSION │  RIGHT  │
+ *     │ ZONE  │   ZONE    │  ZONE   │
+ *     │       │ (content) │         │
+ *     ├───────┴───────────┴─────────┤
+ *     │        BOTTOM ZONE          │
+ *     └─────────────────────────────┘
+ *
+ * Cubes are distributed evenly across 4 zones (top, bottom, left, right).
+ * Exclusion zone prevents overlap with foreground content.
+ * Each zone gets floor(count/4) cubes, with remainder distributed to first zones.
+ *
+ * @returns Array of cube configurations with random positions within zones
+ */
+private generateCubes(): CubeConfig[] {
+  // ...
+}
+```
+
+**Estimated Time**: 45 minutes
+
+---
+
+#### Task 7.3.6: Add Loading/Error State Signals to GltfModelComponent - ⏸️ PENDING
+
+**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\gltf-model.component.ts
+**Spec Reference**: code-logic-review.md:731-762
+
+**Issue**: Model loading takes 2+ seconds but no loading state signal. User can't show loading spinner. Model appears broken until it pops in.
+
+**Quality Requirements**:
+
+- Add isLoading signal
+- Add loadError signal
+- Expose signals as public API for template binding
+- Update on loading start, success, error
+
+**Implementation Details**:
+
+```typescript
+public readonly isLoading = signal(false);
+public readonly loadError = signal<string | null>(null);
+
+effect((onCleanup) => {
+  this.isLoading.set(true);
+  this.loadError.set(null);
+
+  const result = this.gltfLoader.load(path, { useDraco });
+  const data = result.data();
+
+  if (data) {
+    this.isLoading.set(false);
+    // ... existing logic
+  }
+
+  // Handle error state from loader
+  if (result.error?.()) {
+    this.isLoading.set(false);
+    this.loadError.set(result.error());
+  }
+});
+```
+
+**Estimated Time**: 1 hour
+
+---
+
+#### Task 7.3.7: Add Division by Zero Guard to SpaceFlight3dDirective - ⏸️ PENDING
+
+**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\directives\space-flight-3d.directive.ts
+**Spec Reference**: code-logic-review.md:873-900
+
+**Issue**: getTotalDuration() returns 0 if flight path has zero-duration waypoints or empty path. Causes division by zero in rotation calculation, NaN in transform matrix.
+
+**Quality Requirements**:
+
+- Guard against zero/invalid duration
+- Warn when using fallback duration
+- Ensure rotation calculations always produce valid numbers
+
+**Implementation Details**:
+
+```typescript
+private getTotalDuration(): number {
+  const duration = this.flightPath().reduce((sum, wp) => sum + wp.duration, 0);
+  if (duration <= 0) {
+    console.warn('[SpaceFlight3d] Invalid total duration (zero or negative), using default 1s');
+    return 1;
+  }
+  return duration;
+}
+```
+
+**Estimated Time**: 30 minutes
+
+---
+
+#### Task 7.3.8: Add Zone Validation to BackgroundCubesComponent - ⏸️ PENDING
+
+**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\background-cubes.component.ts
+**Spec Reference**: code-logic-review.md:902-953
+
+**Issue**: No validation if exclusionZone larger than viewportBounds. Zones have inverted ranges (min > max), cubes generate in wrong positions.
+
+**Quality Requirements**:
+
+- Validate exclusion zone against viewport bounds
+- Clamp exclusion to max 90% of viewport
+- Warn user if clamping applied
+- Validate zone ranges after creation
+
+**Implementation Details**:
+
+```typescript
+private generateCubes(): CubeConfig[] {
+  const exclusion = this.exclusionZone();
+  const bounds = this.viewportBounds();
+
+  // Validate and clamp exclusion
+  if (exclusion.x >= bounds.x || exclusion.y >= bounds.y) {
+    console.warn('[BackgroundCubes] Exclusion zone too large, clamping to 90% of viewport');
+  }
+
+  const clampedExclusion = {
+    x: Math.min(exclusion.x, bounds.x * 0.9),
+    y: Math.min(exclusion.y, bounds.y * 0.9),
+  };
+
+  // ... use clampedExclusion for zone calculations
+
+  // Validate zones after creation
+  zones.forEach((zone, index) => {
+    if (zone.x.min >= zone.x.max || zone.y.min >= zone.y.max) {
+      console.error(`[BackgroundCubes] Zone ${index} has invalid range - check exclusion zone size`);
+    }
+  });
+
+  // ...
+}
+```
+
+**Estimated Time**: 1 hour
+
+---
+
+#### Task 7.3.9: Fix EffectComposerService Enable Before Init Race - ⏸️ PENDING
+
+**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\postprocessing\effect-composer.service.ts
+**Spec Reference**: code-logic-review.md:955-1001
+
+**Issue**: BloomEffect may call enable() before Scene3d calls init(). updateRenderLoop() runs with this.composer === null, postprocessing silently fails.
+
+**Quality Requirements**:
+
+- Queue enable() calls that happen before init()
+- Apply queued enable when init() completes
+- Warn when enable requested before init
+
+**Implementation Details**:
+
+```typescript
+private pendingEnable = false;
+
+public enable(): void {
+  if (this._isEnabled()) return;
+  this._isEnabled.set(true);
+
+  if (this.composer) {
+    this.updateRenderLoop();
+  } else {
+    this.pendingEnable = true;
+    console.warn('[EffectComposer] Enable requested before init, will activate after init');
+  }
+}
+
+public init(renderer, scene, camera): void {
+  // ... existing init
+
+  if (this.pendingEnable) {
+    this.pendingEnable = false;
+    this.updateRenderLoop();
+  }
+}
+```
+
+**Estimated Time**: 45 minutes
+
+---
+
+### Sub-Batch 7.4: P3 MODERATE Issues (3 hours) - ⏸️ PENDING
+
+**Lower-priority issues: validation, console logging, edge cases**
+
+#### Task 7.4.1: Add Particle Count Limits to All Particle Text Components - ⏸️ PENDING
+
+**Files**:
+
+- instanced-particle-text.component.ts
+- smoke-particle-text.component.ts
+- glow-particle-text.component.ts
+  **Spec Reference**: code-logic-review.md:1095-1120
+
+**Issue**: No limits on particle count. User can set fontSize=200, particleDensity=100 and freeze browser with 50,000+ particles.
+
+**Quality Requirements**:
+
+- Add MAX_PARTICLES constant (10,000)
+- Warn when particle count exceeds limit
+- Suggest reducing fontSize or particleDensity
+- Optionally truncate to max
+
+**Implementation Details**:
+
+```typescript
+private readonly MAX_PARTICLES = 10000;
+
+private updateParticles(): void {
+  // ... existing particle generation
+
+  if (this.particles.length > this.MAX_PARTICLES) {
+    console.warn(
+      `[InstancedParticleText] Generated ${this.particles.length} particles (max ${this.MAX_PARTICLES}). ` +
+      `Consider reducing fontSize or particleDensity for better performance.`
+    );
+
+    // Optionally: Truncate to max
+    this.particles = this.particles.slice(0, this.MAX_PARTICLES);
+  }
+}
+```
+
+**Estimated Time**: 45 minutes (apply to all 3 components)
+
+---
+
+#### Task 7.4.2: Add IOR Validation to PhysicalMaterialDirective - ⏸️ PENDING
+
+**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\directives\materials\physical-material.directive.ts
+**Spec Reference**: code-logic-review.md:1067-1091
+
+**Issue**: User can set ior=0 or negative value. Physically impossible refraction, visual glitches.
+
+**Quality Requirements**:
+
+- Clamp IOR to valid range (>= 1)
+- Warn when clamping
+- Inform about common IOR values (glass=1.5, diamond=2.42)
+
+**Implementation Details**:
+
+```typescript
+public readonly ior = input<number>(1.5, {
+  transform: (value: number) => {
+    if (value < 1) {
+      console.warn(`[PhysicalMaterial] IOR must be >= 1, clamping from ${value} to 1`);
+      return 1;
+    }
+    if (value > 3) {
+      console.warn(`[PhysicalMaterial] IOR > 3 is unusual (diamond=2.42), using ${value}`);
+    }
+    return value;
+  }
+});
+```
+
+**Estimated Time**: 30 minutes
+
+---
+
+#### Task 7.4.3: Remove Console Logging in Production Code - ⏸️ PENDING
+
+**Files**:
+
+- advanced-performance-optimizer.service.ts (lines 156, 293, 299, 388)
+- glow-3d.directive.ts (line 112)
+- performance-3d.directive.ts (lines 79, 88)
+  **Spec Reference**: code-style-review.md:295-301
+
+**Issue**: Direct console.log/warn calls in production library code. Should use logging service with configurable levels or remove debug logs.
+
+**Quality Requirements**:
+
+- Wrap console calls with isDevMode() check
+- OR remove debug logs entirely
+- Keep error/warning logs for critical issues
+
+**Implementation Details**:
+
+```typescript
+// Option 1: Conditional logging
+if (isDevMode()) {
+  console.log('[AdvancedPerformanceOptimizer] Applying optimization');
+}
+
+// Option 2: Remove debug logs
+// console.log(...); // REMOVE
+
+// Keep critical warnings:
+console.error('[Performance3dDirective] OBJECT_ID required but not provided');
+```
+
+**Estimated Time**: 1 hour (review and clean up across files)
+
+---
+
+#### Task 7.4.4: Add Empty Text Handling to InstancedParticleTextComponent - ⏸️ PENDING
+
+**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\particle-text\instanced-particle-text.component.ts
+**Spec Reference**: code-logic-review.md:1036-1064
+
+**Issue**: User sets text="" (empty string). InstancedMesh created with count=0, WebGL warnings, wasted memory.
+
+**Quality Requirements**:
+
+- Skip mesh creation for empty text
+- Clean up existing mesh if present
+- No WebGL errors or warnings
+
+**Implementation Details**:
+
+```typescript
+private refreshText(text: string, fontSize: number): void {
+  if (!text || text.trim().length === 0) {
+    // Clean up existing mesh if present
+    if (this.instancedMesh) {
+      const parent = this.parent();
+      if (parent) {
+        parent.remove(this.instancedMesh);
+      }
+      this.instancedMesh.geometry.dispose();
+      (this.instancedMesh.material as THREE.Material).dispose();
+      this.instancedMesh = undefined;
+    }
+    return;
+  }
+
+  this.sampleTextCoordinates(text, fontSize);
+  this.updateParticles();
+  this.recreateInstancedMesh();
+}
+```
+
+**Estimated Time**: 45 minutes
+
+---
+
+**Batch 7 Verification**:
+
+- All files modified successfully
+- Build passes: `npx nx build @hive-academy/angular-3d`
+- Lint passes: `npx nx lint @hive-academy/angular-3d`
+- Typecheck passes: `npx nx typecheck @hive-academy/angular-3d`
+- No console errors in demo app
+- Memory leaks fixed (verify with Chrome DevTools)
+- Performance improvements measurable (frustum culling, glow scale)
+- All edge cases handled gracefully
+
+---
+
 ## Final Verification Checklist
 
-After ALL batches complete:
+After ALL batches complete (including Batch 7):
 
 - [ ] Build: `npx nx build @hive-academy/angular-3d` succeeds with 0 errors/warnings
 - [ ] Lint: `npx nx lint @hive-academy/angular-3d` succeeds with 0 errors/warnings
@@ -732,4 +1575,6 @@ After ALL batches complete:
 - [ ] Memory: No memory leaks (Chrome DevTools heap snapshots)
 - [ ] Multi-scene: 2 scenes render independently with separate services
 - [ ] Public API: All new components/directives/services exported in index.ts
+- [ ] QA Issues: All blocking, critical, and serious issues from reviews addressed
+- [ ] Edge Cases: Empty text, null camera, missing OBJECT_ID all handled gracefully
 - [ ] Unit tests: Basic instantiation tests exist for all components (stretch goal)
