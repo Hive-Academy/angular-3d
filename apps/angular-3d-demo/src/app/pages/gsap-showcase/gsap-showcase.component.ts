@@ -1,10 +1,17 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ChromadbSectionComponent } from './sections/chromadb-section.component';
 import { Neo4jSectionComponent } from './sections/neo4j-section.component';
+import { ProblemSolutionSectionComponent } from './sections/problem-solution-section.component';
+import { ValuePropositionsSectionComponent } from './sections/value-propositions-section.component';
 
 @Component({
   selector: 'app-gsap-showcase',
-  imports: [ChromadbSectionComponent, Neo4jSectionComponent],
+  imports: [
+    ChromadbSectionComponent,
+    Neo4jSectionComponent,
+    ProblemSolutionSectionComponent,
+    ValuePropositionsSectionComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- GSAP Hero -->
@@ -19,11 +26,17 @@ import { Neo4jSectionComponent } from './sections/neo4j-section.component';
       </div>
     </section>
 
+    <!-- Problem/Solution Section -->
+    <app-problem-solution-section />
+
     <!-- ChromaDB Section -->
     <app-chromadb-section />
 
     <!-- Neo4j Section -->
     <app-neo4j-section />
+
+    <!-- Value Propositions Section -->
+    <app-value-propositions-section />
 
     <!-- CTA Section -->
     <section class="bg-background-dark text-white py-20x text-center">
