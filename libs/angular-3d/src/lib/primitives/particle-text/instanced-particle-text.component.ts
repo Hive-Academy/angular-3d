@@ -6,6 +6,8 @@ import {
   input,
   effect,
   DestroyRef,
+  signal,
+  isDevMode,
 } from '@angular/core';
 import * as THREE from 'three';
 import { random } from 'maath';
@@ -125,6 +127,9 @@ export class InstancedParticleTextComponent implements OnDestroy {
     hScene: 0,
   };
 
+  // Billboarding state tracking
+  private billboardingActive = signal(false);
+
   constructor() {
     // Initialize canvas for text rendering
     this.textCanvas = document.createElement('canvas');
@@ -160,7 +165,20 @@ export class InstancedParticleTextComponent implements OnDestroy {
     const cleanup = this.renderLoop.registerUpdateCallback(() => {
       const camera = this.sceneService.camera();
       if (camera) {
+        // Camera is available - enable billboarding if not already active
+        if (!this.billboardingActive()) {
+          this.billboardingActive.set(true);
+          if (isDevMode()) {
+            console.log('[InstancedParticleText] Billboarding enabled');
+          }
+        }
         this.animateParticles(camera);
+      } else if (this.billboardingActive()) {
+        // Camera lost - disable billboarding
+        console.warn(
+          '[InstancedParticleText] Camera lost - billboarding disabled'
+        );
+        this.billboardingActive.set(false);
       }
     });
 

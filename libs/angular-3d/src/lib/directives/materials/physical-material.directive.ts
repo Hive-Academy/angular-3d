@@ -107,7 +107,8 @@ export class PhysicalMaterialDirective {
   private material: THREE.MeshPhysicalMaterial | null = null;
 
   public constructor() {
-    // Effect 1: Create material once and set signal
+    // Single effect: Create material on first run, update on subsequent runs
+    // This eliminates the double-effect anti-pattern and redundant runs
     effect(() => {
       const color = this.color();
       const wireframe = this.wireframe();
@@ -119,6 +120,7 @@ export class PhysicalMaterialDirective {
       const ior = this.ior();
 
       if (!this.material) {
+        // First run: create material and set signal
         this.material = new THREE.MeshPhysicalMaterial({
           color,
           wireframe,
@@ -130,33 +132,25 @@ export class PhysicalMaterialDirective {
           ior,
         });
         this.materialSignal.set(this.material);
-      }
-    });
-
-    // Effect 2: Update material properties reactively
-    // This effect runs whenever inputs change
-    // Uses store.update() to ensure proper material.needsUpdate handling
-    effect(() => {
-      if (this.material) {
-        const color = this.color();
-        const wireframe = this.wireframe();
-
-        // Update via store if OBJECT_ID available
-        if (this.objectId) {
-          this.store.update(this.objectId, undefined, {
-            color,
-            wireframe,
-          });
-        }
-
-        // Update physical material properties directly
-        this.material.metalness = this.metalness();
-        this.material.roughness = this.roughness();
-        this.material.clearcoat = this.clearcoat();
-        this.material.clearcoatRoughness = this.clearcoatRoughness();
-        this.material.transmission = this.transmission();
-        this.material.ior = this.ior();
+      } else {
+        // Subsequent runs: update existing material properties
+        this.material.color = new THREE.Color(color);
+        this.material.wireframe = wireframe;
+        this.material.metalness = metalness;
+        this.material.roughness = roughness;
+        this.material.clearcoat = clearcoat;
+        this.material.clearcoatRoughness = clearcoatRoughness;
+        this.material.transmission = transmission;
+        this.material.ior = ior;
         this.material.needsUpdate = true;
+      }
+
+      // Update via store if OBJECT_ID available (every run)
+      if (this.objectId) {
+        this.store.update(this.objectId, undefined, {
+          color,
+          wireframe,
+        });
       }
     });
 

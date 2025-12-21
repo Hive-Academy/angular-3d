@@ -19,7 +19,7 @@ import {
   inject,
   DestroyRef,
 } from '@angular/core';
-import type * as THREE from 'three';
+import * as THREE from 'three';
 import { SceneGraphStore } from '../store/scene-graph.store';
 
 // ============================================================================
@@ -257,16 +257,42 @@ export class AdvancedPerformanceOptimizerService {
 
   /**
    * Check if object is within camera frustum
+   * Uses bounding sphere intersection test with margin
    */
   private isInFrustum(
     object: THREE.Object3D,
     frustum: THREE.Frustum,
     margin: number
   ): boolean {
-    // Simple sphere check using bounding sphere
-    // In production, would compute bounding sphere and test against frustum
-    // For now, return true (no culling) to avoid breaking existing scenes
-    return true;
+    // Ensure object has geometry with bounding sphere
+    if (!(object as any).geometry) {
+      // No geometry - assume visible (e.g., lights, groups)
+      return true;
+    }
+
+    const geometry = (object as any).geometry;
+
+    // Compute bounding sphere if not already computed
+    if (!geometry.boundingSphere) {
+      geometry.computeBoundingSphere();
+    }
+
+    // Still no bounding sphere - assume visible as fallback
+    if (!geometry.boundingSphere) {
+      return true;
+    }
+
+    // Create world-space bounding sphere
+    const boundingSphere = new THREE.Sphere();
+    boundingSphere
+      .copy(geometry.boundingSphere)
+      .applyMatrix4(object.matrixWorld);
+
+    // Expand sphere radius by margin for early visibility
+    boundingSphere.radius *= margin;
+
+    // Test intersection with frustum
+    return frustum.intersectsSphere(boundingSphere);
   }
 
   /**

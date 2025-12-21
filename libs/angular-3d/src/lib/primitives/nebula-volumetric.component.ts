@@ -83,7 +83,7 @@ export class NebulaVolumetricComponent {
   private readonly nebulaLayers: THREE.Mesh[] = [];
   private readonly layerUniforms: Array<{ [uniform: string]: THREE.IUniform }> =
     [];
-  private renderLoopCleanup?: () => void;
+  private renderLoopCleanup!: () => void;
 
   constructor() {
     // Effect: Add group to parent
@@ -121,22 +121,20 @@ export class NebulaVolumetricComponent {
       });
     });
 
-    // Animation loop
-    if (this.enableFlow()) {
-      this.renderLoopCleanup = this.renderLoop.registerUpdateCallback(
-        (delta) => {
-          this.layerUniforms.forEach((uniforms) => {
-            uniforms['uTime'].value += delta * this.flowSpeed();
-          });
-        }
-      );
-    }
+    // Animation loop - always register, conditionally execute
+    // This prevents memory leak if enableFlow changes after construction
+    this.renderLoopCleanup = this.renderLoop.registerUpdateCallback((delta) => {
+      if (this.enableFlow()) {
+        this.layerUniforms.forEach((uniforms) => {
+          uniforms['uTime'].value += delta * this.flowSpeed();
+        });
+      }
+    });
 
     // Cleanup
     this.destroyRef.onDestroy(() => {
-      if (this.renderLoopCleanup) {
-        this.renderLoopCleanup();
-      }
+      // Cleanup always called now since renderLoopCleanup is always defined
+      this.renderLoopCleanup();
       const parent = this.parent();
       if (parent) {
         parent.remove(this.group);

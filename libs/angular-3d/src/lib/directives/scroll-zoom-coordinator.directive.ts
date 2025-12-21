@@ -122,6 +122,7 @@ export class ScrollZoomCoordinatorDirective {
 
   private currentState: ScrollZoomState = 'zoom';
   private isZoomEnabled = true;
+  private destroyed = false;
 
   constructor() {
     // Initialize after next render (browser-only)
@@ -133,6 +134,7 @@ export class ScrollZoomCoordinatorDirective {
 
     // Cleanup on destroy
     this.destroyRef.onDestroy(() => {
+      this.destroyed = true;
       window.removeEventListener('wheel', this.handleWheel);
     });
   }
@@ -146,6 +148,9 @@ export class ScrollZoomCoordinatorDirective {
    * Runs outside Angular zone for performance
    */
   private handleWheel = (event: WheelEvent): void => {
+    // Early exit if destroyed to prevent accessing destroyed state
+    if (this.destroyed) return;
+
     const camera = this.sceneService.camera();
     if (!camera) return;
 

@@ -86,7 +86,8 @@ export class LambertMaterialDirective {
   private material: THREE.MeshLambertMaterial | null = null;
 
   public constructor() {
-    // Effect 1: Create material once and set signal
+    // Single effect: Create material on first run, update on subsequent runs
+    // This eliminates the double-effect anti-pattern and redundant runs
     effect(() => {
       const color = this.color();
       const emissive = this.emissive();
@@ -95,6 +96,7 @@ export class LambertMaterialDirective {
       const opacity = this.opacity();
 
       if (!this.material) {
+        // First run: create material and set signal
         this.material = new THREE.MeshLambertMaterial({
           color,
           emissive,
@@ -103,39 +105,26 @@ export class LambertMaterialDirective {
           opacity,
         });
         this.materialSignal.set(this.material);
-      }
-    });
-
-    // Effect 2: Update material properties reactively
-    // This effect runs whenever any material input changes
-    // Uses store.update() to ensure proper material.needsUpdate handling
-    effect(() => {
-      if (this.material) {
-        const color = this.color();
-        const emissive = this.emissive();
-        const emissiveIntensity = this.emissiveIntensity();
-        const transparent = this.transparent();
-        const opacity = this.opacity();
-
-        // Update material properties directly
+      } else {
+        // Subsequent runs: update existing material properties
         this.material.color = new THREE.Color(color);
         this.material.emissive = new THREE.Color(emissive);
         this.material.emissiveIntensity = emissiveIntensity;
         this.material.transparent = transparent;
         this.material.opacity = opacity;
         this.material.needsUpdate = true;
+      }
 
-        // Update via store if objectId is available (only color, transparent, opacity supported)
-        if (this.objectId) {
-          this.store.update(this.objectId, undefined, {
-            color:
-              typeof color === 'number' || typeof color === 'string'
-                ? color
-                : color.getHex(),
-            transparent,
-            opacity,
-          });
-        }
+      // Update via store if objectId is available (every run)
+      if (this.objectId) {
+        this.store.update(this.objectId, undefined, {
+          color:
+            typeof color === 'number' || typeof color === 'string'
+              ? color
+              : color.getHex(),
+          transparent,
+          opacity,
+        });
       }
     });
 
