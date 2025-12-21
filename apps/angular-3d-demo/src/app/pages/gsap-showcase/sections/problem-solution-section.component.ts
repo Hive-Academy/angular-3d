@@ -4,7 +4,7 @@ import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
 
 /**
  * Problem/Solution Section - Enhanced Visual Design
- * Establishes pain points TypeScript developers face when building AI applications
+ * Establishes pain points developers face when building 3D and animated Angular apps
  * Positions solution with 4 proof metrics using enhanced visual components
  */
 @Component({
@@ -51,15 +51,15 @@ import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
           <h2
             class="text-4xl md:text-5xl font-bold text-text-headline mb-6 leading-tight"
           >
-            The Problem
+            The Challenge
           </h2>
           <p
             class="text-xl md:text-2xl text-text-secondary max-w-4xl mx-auto leading-relaxed mb-8"
           >
-            TypeScript developers building AI applications face a painful
-            choice: use Python-style frameworks like LangGraph (pattern
-            mismatch), stitch together raw SDKs (integration hell), or spend
-            months building production infrastructure.
+            Angular developers want immersive 3D experiences and scroll-driven
+            animations without the steep learning curve of Three.js and GSAP.
+            Existing wrappers are outdated, lack proper typing, or don't follow
+            Angular patterns.
           </p>
 
           <!-- Problem bullets - minimal style -->
@@ -68,15 +68,15 @@ import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
           >
             <span class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-accent-danger"></span>
-              Pattern mismatch
+              Complex Three.js setup
             </span>
             <span class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-accent-danger"></span>
-              Integration hell
+              Manual lifecycle management
             </span>
             <span class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-accent-danger"></span>
-              Infrastructure overhead
+              No Angular patterns
             </span>
           </div>
         </div>
@@ -119,25 +119,27 @@ import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
             Our Solution
           </h2>
           <h3 class="text-4xl md:text-5xl font-bold text-text-headline mb-6">
-            NestJS Patterns for AI/ML
+            Angular-First 3D & Animation Libraries
           </h3>
           <p
             class="text-xl md:text-2xl text-text-primary max-w-4xl mx-auto leading-relaxed mb-8"
           >
-            Apply familiar NestJS patterns to AI/ML operations. ChromaDB and
-            Neo4j get TypeORM-style repositories. LangGraph workflows become
-            declarative classes. Enterprise features work out-of-the-box.
+            Declarative components for Three.js and GSAP that feel native to
+            Angular. Signal-based reactivity, OnPush change detection, SSR-safe,
+            and full TypeScript support out of the box.
           </p>
 
           <!-- Tech stack - minimal badges -->
           <div
             class="flex flex-wrap justify-center gap-4 text-base font-medium"
           >
-            <span class="text-accent-primary">ChromaDB</span>
+            <span class="text-accent-primary">@hive-academy/angular-3d</span>
             <span class="text-text-secondary">•</span>
-            <span class="text-accent-secondary">Neo4j</span>
+            <span class="text-accent-secondary"
+              >@hive-academy/angular-gsap</span
+            >
             <span class="text-text-secondary">•</span>
-            <span class="text-accent-success">LangGraph</span>
+            <span class="text-accent-success">Angular 20+</span>
           </div>
         </div>
 
@@ -185,24 +187,24 @@ import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
 export class ProblemSolutionSectionComponent {
   public readonly metrics = [
     {
-      value: '90%',
-      label: 'Code Reduction',
-      description: 'Vector operations: 50 lines → 5 lines',
+      value: '10+',
+      label: '3D Primitives',
+      description: 'Box, Sphere, Torus, GLTF, StarField & more',
     },
     {
-      value: '60%',
-      label: 'Less Approval Overhead',
-      description: 'ML confidence scoring auto-approves high-confidence tasks',
+      value: '10+',
+      label: 'Animations',
+      description: 'Fade, slide, scale, parallax, hijacked scroll',
     },
     {
-      value: '75+',
-      label: 'Lines → 1 Line',
-      description: 'WorkflowStreamingOrchestrator one-liner execution',
+      value: '100%',
+      label: 'Type Safe',
+      description: 'Full TypeScript support with IntelliSense',
     },
     {
-      value: '$262K',
-      label: 'ROI Savings',
-      description: '11 weeks infrastructure development eliminated',
+      value: 'SSR',
+      label: 'Safe',
+      description: 'Works with Angular Universal out of the box',
     },
   ];
 }

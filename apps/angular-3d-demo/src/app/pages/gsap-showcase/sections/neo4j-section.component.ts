@@ -322,12 +322,12 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
                   >
                     @if (step.language === 'image') {
                     <!-- AI-Generated Business Value Image -->
-                    <div class="relative group pt-5">
+                    <div class="relative group pt-5 aspect-video">
                       <img
                         [ngSrc]="step.code"
                         [alt]="step.title"
-                        class="w-full h-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]"
-                        loading="lazy"
+                        fill
+                        class="object-contain transition-transform duration-300 group-hover:scale-[1.02]"
                       />
                     </div>
                     }
