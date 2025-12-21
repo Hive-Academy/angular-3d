@@ -22,6 +22,7 @@ import * as THREE from 'three';
 import { SceneService } from './scene.service';
 import { RenderLoopService } from '../render-loop/render-loop.service';
 import { SceneGraphStore } from '../store/scene-graph.store';
+import { EffectComposerService } from '../postprocessing/effect-composer.service';
 import { NG_3D_PARENT } from '../types/tokens';
 
 /**
@@ -73,6 +74,9 @@ export interface RendererConfig {
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     SceneService,
+    SceneGraphStore, // Per-scene instance for isolated scene graphs
+    RenderLoopService, // Per-scene instance for independent render loops
+    EffectComposerService, // Per-scene instance for independent post-processing
     {
       provide: NG_3D_PARENT,
       useFactory: (sceneService: SceneService) => () => sceneService.scene(),

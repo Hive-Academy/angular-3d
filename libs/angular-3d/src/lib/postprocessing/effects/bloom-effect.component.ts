@@ -80,6 +80,17 @@ export class BloomEffectComponent implements OnDestroy {
         this.pass.radius = this.radius();
       }
     });
+
+    // React to renderer size changes (CRITICAL for multi-scene support)
+    effect(() => {
+      const renderer = this.sceneService.renderer();
+      const pass = this.pass;
+      if (!renderer || !pass) return;
+
+      const size = new THREE.Vector2();
+      renderer.getSize(size);
+      pass.resolution.set(size.x, size.y);
+    });
   }
 
   public ngOnDestroy(): void {

@@ -5,7 +5,8 @@ import {
   inject,
   input,
   effect,
-  afterNextRender,
+  signal,
+  DestroyRef,
 } from '@angular/core';
 import * as THREE from 'three';
 import { NG_3D_PARENT } from '../types/tokens';
@@ -34,72 +35,77 @@ export class GltfModelComponent implements OnDestroy {
 
   private readonly gltfLoader = inject(GltfLoaderService);
   private readonly parentFn = inject(NG_3D_PARENT, { optional: true });
+  private readonly destroyRef = inject(DestroyRef);
   private group: THREE.Group | null = null;
 
+  // Track if model has been added to scene (for browser-only operations)
+  private readonly isInitialized = signal(false);
+
   public constructor() {
-    // Model Loading Effect
-    afterNextRender(() => {
-      effect((onCleanup) => {
-        const path = this.modelPath();
-        const useDraco = this.useDraco();
+    // Model Loading Effect - runs in injection context (constructor)
+    // This effect will react to modelPath/useDraco changes and load the model
+    effect((onCleanup) => {
+      const path = this.modelPath();
+      const useDraco = this.useDraco();
 
-        // Initiate load
-        const result = this.gltfLoader.load(path, {
-          useDraco: useDraco,
-        });
+      // Initiate load
+      const result = this.gltfLoader.load(path, {
+        useDraco: useDraco,
+      });
 
-        // Handle loading completion
-        // Since result.data is a signal, we can just watch it!
-        // But we are inside an effect already.
-        // Ideally we would trigger side effect when data becomes available.
-        // We can create a computed or just poll inside an effect? No, polling is bad.
-        // If result.data is a signal, we can read it here.
-        // If it's undefined, we do nothing. When it updates, this effect re-runs.
-        const data = result.data();
+      // Handle loading completion
+      // Since result.data is a signal, reading it here creates a dependency
+      // When data updates, this effect re-runs
+      const data = result.data();
 
-        // Clean up previous model if specific to this run?
-        // Actually onCleanup handles the "previous effect run" cleanup.
-        // So if 'path' changes, onCleanup runs, extracting old model.
-        // If 'data' changes (loaded), onCleanup runs, extracting old model (if any), then we add new.
+      if (data) {
+        // Clone to allow multiple instances
+        this.group = data.scene.clone();
 
-        if (data) {
-          // Clone to allow multiple instances
-          this.group = data.scene.clone();
+        // Apply transforms immediately
+        this.group.position.set(...this.position());
+        this.group.rotation.set(...this.rotation());
+        const s = this.scale();
+        const scale: [number, number, number] =
+          typeof s === 'number' ? [s, s, s] : s;
+        this.group.scale.set(...scale);
 
-          // Apply transforms immediately
-          this.group.position.set(...this.position());
-          this.group.rotation.set(...this.rotation());
-          const s = this.scale();
-          const scale: [number, number, number] =
-            typeof s === 'number' ? [s, s, s] : s;
-          this.group.scale.set(...scale);
+        // Apply material overrides
+        this.applyMaterialOverrides(this.group);
 
-          // Apply material overrides
-          this.applyMaterialOverrides(this.group);
-
-          // Add to parent
-          if (this.parentFn) {
-            const parent = this.parentFn();
-            if (parent) {
-              parent.add(this.group);
-            } else {
-              console.warn('GltfModelComponent: Parent not ready');
-            }
+        // Add to parent
+        if (this.parentFn) {
+          const parent = this.parentFn();
+          if (parent) {
+            parent.add(this.group);
+            this.isInitialized.set(true);
           } else {
-            console.warn('GltfModelComponent: No parent found');
+            console.warn('GltfModelComponent: Parent not ready');
           }
+        } else {
+          console.warn('GltfModelComponent: No parent found');
         }
+      }
 
-        onCleanup(() => {
-          if (this.group && this.parentFn) {
-            const parent = this.parentFn();
-            parent?.remove(this.group);
-          }
-          // Dispose clone if needed? The original is cached in service.
-          // We might want to dispose locally cloned materials if we modified them?
-          // But we only modified properties, not replaced materials.
-          this.group = null;
-        });
+      onCleanup(() => {
+        if (this.group && this.parentFn) {
+          const parent = this.parentFn();
+          parent?.remove(this.group);
+
+          // Dispose all resources to prevent memory leaks
+          this.group.traverse((child) => {
+            if (child instanceof THREE.Mesh) {
+              child.geometry?.dispose();
+              if (Array.isArray(child.material)) {
+                child.material.forEach((m) => m.dispose());
+              } else {
+                child.material?.dispose();
+              }
+            }
+          });
+        }
+        this.group = null;
+        this.isInitialized.set(false);
       });
     });
 
@@ -131,6 +137,14 @@ export class GltfModelComponent implements OnDestroy {
         this.metalness();
         this.roughness();
         this.applyMaterialOverrides(this.group);
+      }
+    });
+
+    // Cleanup on destroy
+    this.destroyRef.onDestroy(() => {
+      if (this.parentFn && this.group) {
+        const parent = this.parentFn();
+        parent?.remove(this.group);
       }
     });
   }

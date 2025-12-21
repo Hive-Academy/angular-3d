@@ -15,8 +15,11 @@ import { RenderLoopService } from '../render-loop/render-loop.service';
  *
  * Wraps `three-stdlib` EffectComposer.
  * Replaces the default `RenderLoopService` render function with `composer.render()`.
+ *
+ * CRITICAL: Component-scoped service (NOT singleton).
+ * Provided by Scene3dComponent for per-scene post-processing isolation.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class EffectComposerService implements OnDestroy {
   private readonly renderLoop = inject(RenderLoopService);
 
