@@ -30,3 +30,6 @@ export * from './lib/directives';
 
 // Services - AnimationService, etc.
 export * from './lib/services';
+
+// Positioning - Viewport positioning utilities
+export * from './lib/positioning';
