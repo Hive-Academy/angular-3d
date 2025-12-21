@@ -19,6 +19,7 @@ export * from './geometries/polyhedron-geometry.directive';
 // Material directives
 export * from './materials/standard-material.directive';
 export * from './materials/physical-material.directive';
+export * from './materials/lambert-material.directive';
 
 // Light directives
 export * from './light.directive';
@@ -26,3 +27,6 @@ export * from './lights/ambient-light.directive';
 export * from './lights/point-light.directive';
 export * from './lights/directional-light.directive';
 export * from './lights/spot-light.directive';
+
+// Effect directives
+export * from './glow-3d.directive';

@@ -32,3 +32,7 @@ export * from './nebula-volumetric.component';
 
 // Physical material primitives
 export * from './floating-sphere.component';
+
+// Background decoration components
+export * from './background-cube.component';
+export * from './background-cubes.component';
