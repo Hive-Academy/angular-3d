@@ -26,6 +26,7 @@ export const SCENE_COLORS = {
   magenta: 0xd946ef,
   mintGreen: 0x4fffdf,
   hotPink: 0xff6bd4,
+  purple: 0x8b5cf6,
 } as const;
 
 /**
@@ -35,6 +36,9 @@ export const SCENE_COLOR_STRINGS = {
   skyBlue: '#0088ff',
   neonGreen: '#a1ff4f',
   white: '#ffffff',
+  purple: '#8b5cf6',
+  hotPink: '#ff6bd4',
+  cyan: '#06b6d4',
 } as const;
 
 export type SceneColor = (typeof SCENE_COLORS)[keyof typeof SCENE_COLORS];

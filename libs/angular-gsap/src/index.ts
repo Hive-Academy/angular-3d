@@ -19,6 +19,17 @@ export {
   type ParallaxSplitItemConfig,
   type SplitLayout,
 } from './lib/directives/parallax-split-item.directive';
+export {
+  LenisSmoothScrollDirective,
+  type LenisSmoothScrollConfig,
+} from './lib/directives/lenis-smooth-scroll.directive';
+
+// Services
+export {
+  LenisSmoothScrollService,
+  type LenisServiceOptions,
+  type LenisScrollEvent,
+} from './lib/services/lenis-smooth-scroll.service';
 
 // Components
 export { HijackedScrollTimelineComponent } from './lib/components/hijacked-scroll-timeline.component';

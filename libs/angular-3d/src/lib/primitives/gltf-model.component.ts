@@ -11,12 +11,20 @@ import {
 import * as THREE from 'three';
 import { NG_3D_PARENT } from '../types/tokens';
 import { GltfLoaderService } from '../loaders/gltf-loader.service';
+import { OBJECT_ID } from '../tokens/object-id.token';
+import { SceneGraphStore } from '../store/scene-graph.store';
 
 @Component({
   selector: 'a3d-gltf-model',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: '',
+  template: '<ng-content />',
+  providers: [
+    {
+      provide: OBJECT_ID,
+      useFactory: () => `gltf-model-${crypto.randomUUID()}`,
+    },
+  ],
 })
 export class GltfModelComponent implements OnDestroy {
   // Transform inputs (pattern: box.component.ts:21-30)
@@ -36,6 +44,8 @@ export class GltfModelComponent implements OnDestroy {
   private readonly gltfLoader = inject(GltfLoaderService);
   private readonly parentFn = inject(NG_3D_PARENT, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
+  private readonly sceneStore = inject(SceneGraphStore);
+  private readonly objectId = inject(OBJECT_ID);
   private group: THREE.Group | null = null;
 
   // Track if model has been added to scene (for browser-only operations)
@@ -105,6 +115,9 @@ export class GltfModelComponent implements OnDestroy {
           if (parent) {
             parent.add(this.group);
             this.isInitialized.set(true);
+
+            // Register with SceneGraphStore for directive support (rotate3d, spaceFlight3d, etc.)
+            this.sceneStore.register(this.objectId, this.group, 'group');
           } else {
             console.warn('GltfModelComponent: Parent not ready');
           }
@@ -118,6 +131,9 @@ export class GltfModelComponent implements OnDestroy {
         if (this.group && this.parentFn) {
           const parent = this.parentFn();
           parent?.remove(this.group);
+
+          // Unregister from SceneGraphStore
+          this.sceneStore.remove(this.objectId);
 
           // Dispose all resources to prevent memory leaks
           this.group.traverse((child) => {
@@ -205,6 +221,8 @@ export class GltfModelComponent implements OnDestroy {
     if (this.parentFn && this.group) {
       const parent = this.parentFn();
       parent?.remove(this.group);
+      // Unregister from SceneGraphStore
+      this.sceneStore.remove(this.objectId);
     }
   }
 }

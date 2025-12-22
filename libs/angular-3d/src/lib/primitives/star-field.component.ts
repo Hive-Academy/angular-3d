@@ -164,20 +164,20 @@ export class StarFieldComponent implements OnDestroy {
 
       if (this.multiSize()) {
         // Size distribution: 80% tiny, 15% small, 4% medium, 1% large
-        // Note: sizes are much smaller for realistic star appearance
+        // Sizes match temp/star-field-enhanced.component.ts for proper glow appearance
         const rand = Math.random();
 
         if (rand < 0.8) {
-          starSize = 0.01 + Math.random() * 0.01; // tiny: 0.01-0.02
+          starSize = 0.05 + Math.random() * 0.05; // tiny: 0.05-0.10
           brightness = 0.4 + Math.random() * 0.3;
         } else if (rand < 0.95) {
-          starSize = 0.02 + Math.random() * 0.015; // small: 0.02-0.035
+          starSize = 0.1 + Math.random() * 0.1; // small: 0.10-0.20
           brightness = 0.6 + Math.random() * 0.3;
         } else if (rand < 0.99) {
-          starSize = 0.035 + Math.random() * 0.02; // medium: 0.035-0.055
+          starSize = 0.2 + Math.random() * 0.15; // medium: 0.20-0.35
           brightness = 0.8 + Math.random() * 0.2;
         } else {
-          starSize = 0.055 + Math.random() * 0.025; // large: 0.055-0.08
+          starSize = 0.35 + Math.random() * 0.25; // large: 0.35-0.60
           brightness = 0.9 + Math.random() * 0.1;
         }
       } else {
