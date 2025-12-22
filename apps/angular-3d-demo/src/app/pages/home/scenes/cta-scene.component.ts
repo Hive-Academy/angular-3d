@@ -5,6 +5,7 @@ import {
   AmbientLightComponent,
   DirectionalLightComponent,
   Float3dDirective,
+  ViewportPositionDirective,
 } from '@hive-academy/angular-3d';
 
 @Component({
@@ -15,6 +16,7 @@ import {
     AmbientLightComponent,
     DirectionalLightComponent,
     Float3dDirective,
+    ViewportPositionDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -24,9 +26,11 @@ import {
       <a3d-directional-light [position]="[5, 5, 5]" [intensity]="0.8" />
 
       <!-- Floating Polyhedrons -->
+      <!-- Z-DEPTH: Midground (-2 to -4) for floating background elements -->
       <a3d-polyhedron
         [type]="'icosahedron'"
-        [position]="[-3, 1, -2]"
+        viewportPosition="left"
+        [viewportOffset]="{ offsetX: -3, offsetY: 1, offsetZ: -2 }"
         [color]="'#6366F1'"
         float3d
         [floatConfig]="{ height: 0.5, speed: 4500 }"
@@ -34,7 +38,8 @@ import {
 
       <a3d-polyhedron
         [type]="'octahedron'"
-        [position]="[3, -1, -2]"
+        viewportPosition="right"
+        [viewportOffset]="{ offsetX: 3, offsetY: -1, offsetZ: -2 }"
         [color]="'#A1FF4F'"
         float3d
         [floatConfig]="{ height: 0.4, speed: 5000 }"
@@ -42,7 +47,8 @@ import {
 
       <a3d-polyhedron
         [type]="'dodecahedron'"
-        [position]="[0, 0, -4]"
+        viewportPosition="center"
+        [viewportOffset]="{ offsetZ: -4 }"
         [color]="'#6366F1'"
         float3d
         [floatConfig]="{ height: 0.6, speed: 4000 }"

@@ -8,6 +8,7 @@ import {
   AmbientLightComponent,
   DirectionalLightComponent,
   Rotate3dDirective,
+  ViewportPositionDirective,
 } from '@hive-academy/angular-3d';
 
 @Component({
@@ -21,88 +22,107 @@ import {
     AmbientLightComponent,
     DirectionalLightComponent,
     Rotate3dDirective,
+    ViewportPositionDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="relative min-h-screen bg-background-dark overflow-hidden">
       <a3d-scene-3d [cameraPosition]="[0, 0, 15]" [cameraFov]="60">
+        <!--
+          Z-DEPTH LAYERING CONVENTION:
+          - Foreground (0 to -5): UI elements, text
+          - Midground (-5 to -15): Logos, secondary elements
+          - Background (-15+): Nebula, distant objects
+        -->
+
         <!-- Lights -->
         <a3d-ambient-light [intensity]="0.6" />
         <a3d-directional-light [position]="[5, 5, 5]" [intensity]="0.8" />
 
         <!-- 11 Rotating Geometries representing library features -->
-        <!-- Row 1 -->
+        <!-- Row 1: Top row with 5 geometries (foreground layer) -->
         <a3d-box
-          [position]="[-8, 4, 0]"
+          viewportPosition="top-left"
+          [viewportOffset]="{ offsetX: -8, offsetY: 4, offsetZ: 0 }"
           [color]="'#6366F1'"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 10 }"
         />
         <a3d-polyhedron
           [type]="'dodecahedron'"
-          [position]="[-4, 4, 0]"
+          viewportPosition="top-left"
+          [viewportOffset]="{ offsetX: -4, offsetY: 4, offsetZ: 0 }"
           [color]="'#A1FF4F'"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 12 }"
         />
         <a3d-torus
-          [position]="[0, 4, 0]"
+          viewportPosition="top-center"
+          [viewportOffset]="{ offsetY: 4, offsetZ: 0 }"
           [color]="'#EC4899'"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 8 }"
         />
         <a3d-cylinder
-          [position]="[4, 4, 0]"
+          viewportPosition="top-right"
+          [viewportOffset]="{ offsetX: 4, offsetY: 4, offsetZ: 0 }"
           [color]="'#F59E0B'"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 10 }"
         />
         <a3d-polyhedron
           [type]="'icosahedron'"
-          [position]="[8, 4, 0]"
+          viewportPosition="top-right"
+          [viewportOffset]="{ offsetX: 8, offsetY: 4, offsetZ: 0 }"
           [color]="'#10B981'"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 15 }"
         />
 
-        <!-- Row 2 -->
+        <!-- Row 2: Middle row with 4 geometries (foreground layer) -->
         <a3d-polyhedron
           [type]="'dodecahedron'"
-          [position]="[-6, 0, 0]"
+          viewportPosition="center-left"
+          [viewportOffset]="{ offsetX: -6, offsetZ: 0 }"
           [color]="'#8B5CF6'"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 12 }"
         />
         <a3d-polyhedron
           [type]="'octahedron'"
-          [position]="[-2, 0, 0]"
+          viewportPosition="center-left"
+          [viewportOffset]="{ offsetX: -2, offsetZ: 0 }"
           [color]="'#EF4444'"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 14 }"
         />
         <a3d-box
-          [position]="[2, 0, 0]"
+          viewportPosition="center-right"
+          [viewportOffset]="{ offsetX: 2, offsetZ: 0 }"
           [color]="'#3B82F6'"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 10 }"
         />
         <a3d-polyhedron
           [type]="'tetrahedron'"
-          [position]="[6, 0, 0]"
+          viewportPosition="center-right"
+          [viewportOffset]="{ offsetX: 6, offsetZ: 0 }"
           [color]="'#14B8A6'"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 16 }"
         />
 
-        <!-- Row 3 -->
+        <!-- Row 3: Bottom row with 2 geometries (foreground layer) -->
         <a3d-torus
-          [position]="[-4, -4, 0]"
+          viewportPosition="bottom-left"
+          [viewportOffset]="{ offsetX: -4, offsetY: -4, offsetZ: 0 }"
           [color]="'#F97316'"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 12 }"
         />
         <a3d-cylinder
-          [position]="[0, -4, 0]"
+          viewportPosition="bottom-center"
+          [viewportOffset]="{ offsetY: -4, offsetZ: 0 }"
           [color]="'#06B6D4'"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 14 }"
