@@ -55,8 +55,8 @@ import {
   Injector,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { GsapCoreService } from '../services/gsap-core.service';
+import type { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 export type AnimationType =
   | 'fadeIn'
@@ -118,6 +118,7 @@ export class ScrollAnimationDirective implements OnDestroy {
   private readonly elementRef = inject(ElementRef);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly injector = inject(Injector);
+  private readonly gsapCore = inject(GsapCoreService);
   private scrollTrigger?: ScrollTrigger;
   private animation?: gsap.core.Tween | gsap.core.Timeline;
   private isInitialized = false;
@@ -131,11 +132,6 @@ export class ScrollAnimationDirective implements OnDestroy {
   });
 
   constructor() {
-    // Register ScrollTrigger only in browser
-    if (isPlatformBrowser(this.platformId)) {
-      gsap.registerPlugin(ScrollTrigger);
-    }
-
     // React to config changes
     effect(() => {
       const config = this.scrollConfig();
@@ -187,6 +183,16 @@ export class ScrollAnimationDirective implements OnDestroy {
     const animationProps = this.getAnimationProperties(config);
 
     // Create GSAP timeline (paused by default to prevent auto-play)
+    const gsap = this.gsapCore.gsap;
+    const ScrollTrigger = this.gsapCore.scrollTrigger;
+
+    if (!gsap || !ScrollTrigger) {
+      console.warn(
+        '[ScrollAnimation] GSAP not available (SSR or not initialized)'
+      );
+      return;
+    }
+
     const timeline = gsap.timeline({
       paused: true,
     });

@@ -50,8 +50,8 @@ import {
   type OnDestroy,
 } from '@angular/core';
 import { isPlatformBrowser, NgOptimizedImage, NgClass } from '@angular/common';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { GsapCoreService } from '../services/gsap-core.service';
+import type { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ParallaxSplitItemDirective } from '../directives/parallax-split-item.directive';
 
 @Component({
@@ -140,6 +140,7 @@ export class ParallaxSplitScrollComponent implements OnDestroy {
   private readonly elementRef = inject(ElementRef);
   private readonly injector = inject(Injector);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly gsapCore = inject(GsapCoreService);
   private scrollTrigger?: ScrollTrigger;
   private masterTimeline?: gsap.core.Timeline;
 
@@ -166,11 +167,6 @@ export class ParallaxSplitScrollComponent implements OnDestroy {
   readonly progressChange = output<number>();
 
   constructor() {
-    // Register ScrollTrigger only in browser
-    if (isPlatformBrowser(this.platformId)) {
-      gsap.registerPlugin(ScrollTrigger);
-    }
-
     // React to items changes
     effect(() => {
       const itemsList = this.items();
@@ -199,6 +195,16 @@ export class ParallaxSplitScrollComponent implements OnDestroy {
 
     if (totalSteps === 0) {
       console.warn('[ParallaxSplitScroll] No items found');
+      return;
+    }
+
+    const gsap = this.gsapCore.gsap;
+    const ScrollTrigger = this.gsapCore.scrollTrigger;
+
+    if (!gsap || !ScrollTrigger) {
+      console.warn(
+        '[ParallaxSplitScroll] GSAP not available (SSR or not initialized)'
+      );
       return;
     }
 

@@ -9,8 +9,7 @@ import {
 import { isPlatformBrowser } from '@angular/common';
 import type Lenis from 'lenis';
 import type { LenisOptions, ScrollToOptions } from 'lenis';
-import type { gsap as GsapType } from 'gsap';
-import type { ScrollTrigger as ScrollTriggerType } from 'gsap/ScrollTrigger';
+import { GsapCoreService } from './gsap-core.service';
 
 /**
  * Extended Lenis options with GSAP integration settings
@@ -69,14 +68,17 @@ export interface LenisScrollEvent {
 })
 export class LenisSmoothScrollService implements OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly gsapCore = inject(GsapCoreService);
 
   // Lenis instance
   private lenisInstance: Lenis | null = null;
 
-  // GSAP references
-  private gsap: typeof GsapType | null = null;
-  private ScrollTrigger: typeof ScrollTriggerType | null = null;
+  // GSAP ticker callback reference
   private gsapTickerCallback: ((time: number) => void) | null = null;
+
+  // Subscription cleanup
+  private scrollTriggerUnsubscribe?: () => void;
+  private signalScrollUnsubscribe?: () => void;
 
   // State signals
   private readonly _isInitialized = signal(false);
@@ -121,25 +123,13 @@ export class LenisSmoothScrollService implements OnDestroy {
     }
 
     try {
-      // Dynamic imports for SSR safety
-      const [LenisModule, gsapModule] = await Promise.all([
-        import('lenis'),
-        import('gsap'),
-      ]);
-
+      // Dynamic import for Lenis (SSR safety)
+      const LenisModule = await import('lenis');
       const LenisClass = LenisModule.default;
-      this.gsap = gsapModule.gsap;
 
-      // Try to import ScrollTrigger if available
-      try {
-        const scrollTriggerModule = await import('gsap/ScrollTrigger');
-        this.ScrollTrigger = scrollTriggerModule.ScrollTrigger;
-        this.gsap.registerPlugin(this.ScrollTrigger);
-      } catch {
-        console.warn(
-          'LenisSmoothScrollService: ScrollTrigger not available, skipping integration'
-        );
-      }
+      // Get GSAP references from centralized service
+      const gsap = this.gsapCore.gsap;
+      const ScrollTrigger = this.gsapCore.scrollTrigger;
 
       // Extract our custom option
       const { useGsapTicker = true, ...lenisOptions } = options;
@@ -153,25 +143,31 @@ export class LenisSmoothScrollService implements OnDestroy {
       });
 
       // Sync with GSAP ScrollTrigger
-      if (this.ScrollTrigger) {
-        this.lenisInstance.on('scroll', this.ScrollTrigger.update);
+      if (ScrollTrigger) {
+        this.scrollTriggerUnsubscribe = this.lenisInstance.on(
+          'scroll',
+          ScrollTrigger.update
+        );
       }
 
       // Setup RAF loop
-      if (useGsapTicker && this.gsap) {
-        this.setupGsapTicker();
+      if (useGsapTicker && gsap) {
+        this.setupGsapTicker(gsap);
       } else {
         this.setupNativeRaf();
       }
 
       // Subscribe to scroll events and update signals
-      this.lenisInstance.on('scroll', (lenis: Lenis) => {
-        this._scroll.set(lenis.scroll);
-        this._progress.set(lenis.progress);
-        this._velocity.set(lenis.velocity);
-        this._direction.set(lenis.direction);
-        this._isScrolling.set(lenis.isScrolling);
-      });
+      this.signalScrollUnsubscribe = this.lenisInstance.on(
+        'scroll',
+        (lenis: Lenis) => {
+          this._scroll.set(lenis.scroll);
+          this._progress.set(lenis.progress);
+          this._velocity.set(lenis.velocity);
+          this._direction.set(lenis.direction);
+          this._isScrolling.set(lenis.isScrolling);
+        }
+      );
 
       // Inject Lenis CSS
       this.injectStyles();
@@ -228,35 +224,44 @@ export class LenisSmoothScrollService implements OnDestroy {
    * Destroy the Lenis instance and cleanup
    */
   public destroy(): void {
+    // Unsubscribe from scroll events first
+    this.scrollTriggerUnsubscribe?.();
+    this.scrollTriggerUnsubscribe = undefined;
+    this.signalScrollUnsubscribe?.();
+    this.signalScrollUnsubscribe = undefined;
+
+    // Remove GSAP ticker callback
+    if (this.gsapTickerCallback) {
+      const gsap = this.gsapCore.gsap;
+      if (gsap) {
+        gsap.ticker.remove(this.gsapTickerCallback);
+      }
+      this.gsapTickerCallback = null;
+    }
+
+    // Destroy Lenis instance
     if (this.lenisInstance) {
       this.lenisInstance.destroy();
       this.lenisInstance = null;
     }
 
-    if (this.gsapTickerCallback && this.gsap) {
-      this.gsap.ticker.remove(this.gsapTickerCallback);
-      this.gsapTickerCallback = null;
-    }
-
     this._isInitialized.set(false);
-    this.gsap = null;
-    this.ScrollTrigger = null;
   }
 
   /**
    * Setup GSAP ticker for RAF loop (recommended)
    */
-  private setupGsapTicker(): void {
-    if (!this.gsap || !this.lenisInstance) return;
+  private setupGsapTicker(gsap: NonNullable<typeof this.gsapCore.gsap>): void {
+    if (!this.lenisInstance) return;
 
     this.gsapTickerCallback = (time: number) => {
       // GSAP ticker time is in seconds, Lenis expects milliseconds
       this.lenisInstance?.raf(time * 1000);
     };
 
-    this.gsap.ticker.add(this.gsapTickerCallback);
+    gsap.ticker.add(this.gsapTickerCallback);
     // Disable lag smoothing for butter-smooth animations
-    this.gsap.ticker.lagSmoothing(0);
+    gsap.ticker.lagSmoothing(0);
   }
 
   /**
