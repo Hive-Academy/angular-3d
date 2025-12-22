@@ -68,6 +68,16 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../shared/colors';
             [intensity]="0.3"
             [castShadow]="true"
           />
+
+          <!-- Central Planet -->
+          <a3d-gltf-model
+            [modelPath]="'/3d/planet_earth/scene.gltf'"
+            viewportPosition="center"
+            [viewportOffset]="{ offsetZ: -9 }"
+            [scale]="2.3"
+            rotate3d
+            [rotateConfig]="{ axis: 'y', speed: 60 }"
+          />
         </a3d-scene-3d>
       </div>
 
