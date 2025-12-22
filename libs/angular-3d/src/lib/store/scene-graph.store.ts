@@ -50,7 +50,12 @@ export interface MaterialProps {
 // SceneGraphStore
 // ============================================================================
 
-@Injectable({ providedIn: 'root' })
+/**
+ * IMPORTANT: This service is NOT provided at root.
+ * Each Scene3dComponent provides its own instance to ensure
+ * multi-scene isolation (objects register with the correct scene).
+ */
+@Injectable()
 export class SceneGraphStore {
   // Core Three.js objects (provided by Scene3dComponent)
   private readonly _scene = signal<Scene | null>(null);

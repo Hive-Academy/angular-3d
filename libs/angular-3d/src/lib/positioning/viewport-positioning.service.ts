@@ -62,7 +62,12 @@ import type {
 const DEFAULT_SSR_VIEWPORT_WIDTH = 1920;
 const DEFAULT_SSR_VIEWPORT_HEIGHT = 1080;
 
-@Injectable({ providedIn: 'root' })
+/**
+ * IMPORTANT: This service is NOT provided at root.
+ * Each Scene3dComponent provides its own instance to ensure
+ * multi-scene isolation (viewport calculations use correct camera).
+ */
+@Injectable()
 export class ViewportPositioningService {
   private readonly sceneStore = inject(SceneGraphStore);
   private readonly destroyRef = inject(DestroyRef);

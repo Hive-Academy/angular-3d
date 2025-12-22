@@ -24,6 +24,7 @@ import { RenderLoopService } from '../render-loop/render-loop.service';
 import { SceneGraphStore } from '../store/scene-graph.store';
 import { EffectComposerService } from '../postprocessing/effect-composer.service';
 import { AdvancedPerformanceOptimizerService } from '../services/advanced-performance-optimizer.service';
+import { ViewportPositioningService } from '../positioning/viewport-positioning.service';
 import { NG_3D_PARENT } from '../types/tokens';
 
 /**
@@ -76,6 +77,8 @@ export interface RendererConfig {
   providers: [
     SceneService,
     RenderLoopService, // Per-scene instance for independent render loops
+    SceneGraphStore, // Per-scene instance for multi-scene isolation
+    ViewportPositioningService, // Per-scene instance for correct camera reference
     EffectComposerService, // Per-scene instance for independent post-processing
     AdvancedPerformanceOptimizerService, // Per-scene instance for independent performance optimization
     {
