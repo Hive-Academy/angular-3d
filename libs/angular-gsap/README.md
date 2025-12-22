@@ -8,9 +8,10 @@ A modern Angular library providing declarative, scroll-triggered animations usin
 
 - 🎯 **Declarative API** - Configure animations via simple inputs
 - 📜 **Scroll Triggers** - Animate elements based on scroll position
+- 👁️ **Viewport Animations** - Trigger animations when elements become visible
 - 🎭 **Hijacked Scroll** - Create scroll-jacked step-by-step sequences
 - 🌐 **SSR Compatible** - Safely handles server-side rendering
-- 🎨 **10+ Built-in Animations** - Fade, slide, scale, parallax, and more
+- 🎨 **12+ Built-in Animations** - Fade, slide, scale, parallax, bounce, flip, and more
 - 🔧 **Fully Customizable** - Use GSAP TweenVars for complete control
 - 📦 **Tree-Shakeable** - Import only what you need
 - 🎓 **TypeScript First** - Full type safety and IntelliSense support
@@ -148,6 +149,108 @@ Applies GSAP-powered scroll-triggered animations to DOM elements.
   ease: 'back.out'
 }"
 ```
+
+---
+
+### ViewportAnimationDirective
+
+Triggers GSAP animations when elements enter the viewport using IntersectionObserver. Unlike `ScrollAnimationDirective` which links animations to scroll progress, this simply plays animations when elements become visible.
+
+**Selector**: `[viewportAnimation]`
+
+**Inputs**:
+
+- `viewportConfig?: ViewportAnimationConfig` - Animation configuration
+
+**Outputs**:
+
+- `viewportEnter: void` - Emits when element enters viewport
+- `viewportLeave: void` - Emits when element leaves viewport
+- `animationComplete: void` - Emits when animation completes
+
+**Public Methods**:
+
+- `replay(): void` - Replay animation
+- `reset(): void` - Reset element to initial hidden state
+
+**Built-in Animations**:
+
+- `fadeIn`, `fadeOut` - Opacity transitions
+- `slideUp`, `slideDown`, `slideLeft`, `slideRight` - Slide animations
+- `scaleIn`, `scaleOut` - Scale transitions
+- `rotateIn` - Rotation animation
+- `flipIn` - 3D flip animation
+- `bounceIn` - Elastic bounce effect
+- `custom` - Use custom `from`/`to` values
+
+**Example - Simple fade-in**:
+
+```typescript
+import { Component } from '@angular/core';
+import { ViewportAnimationDirective } from '@hive-academy/angular-gsap';
+
+@Component({
+  selector: 'app-hero',
+  standalone: true,
+  imports: [ViewportAnimationDirective],
+  template: ` <h1 viewportAnimation>I fade in when visible!</h1> `,
+})
+export class HeroComponent {}
+```
+
+**Example - Bounce-in effect**:
+
+```html
+<div
+  viewportAnimation
+  [viewportConfig]="{
+    animation: 'bounceIn',
+    duration: 0.8,
+    threshold: 0.3
+  }"
+>
+  ⚡ Bounces in when 30% visible
+</div>
+```
+
+**Example - Staggered children**:
+
+```html
+<ul viewportAnimation [viewportConfig]="{ stagger: 0.1, staggerTarget: 'li' }">
+  <li>Item 1 (appears first)</li>
+  <li>Item 2 (0.1s delay)</li>
+  <li>Item 3 (0.2s delay)</li>
+</ul>
+```
+
+**ViewportAnimationConfig**:
+
+```typescript
+interface ViewportAnimationConfig {
+  animation?: ViewportAnimationType; // 'fadeIn', 'slideUp', etc.
+  duration?: number; // Default: 0.6
+  delay?: number; // Default: 0
+  ease?: string; // Default: 'power2.out'
+  threshold?: number; // Visibility threshold 0-1, default: 0.1
+  rootMargin?: string; // IntersectionObserver margin, default: '0px'
+  once?: boolean; // Play once or reverse on leave, default: true
+  stagger?: number; // Stagger delay for children
+  staggerTarget?: string; // CSS selector for stagger targets
+  from?: gsap.TweenVars; // Custom starting values
+  to?: gsap.TweenVars; // Custom ending values
+  distance?: number; // Slide distance in px, default: 50
+  scale?: number; // Scale factor, default: 0.9
+  rotation?: number; // Rotation degrees, default: 15
+}
+```
+
+**When to use which directive**:
+
+| Use Case                                 | Directive                    |
+| ---------------------------------------- | ---------------------------- |
+| Simple "appear when visible" animations  | `ViewportAnimationDirective` |
+| Scroll-progress linked (parallax, scrub) | `ScrollAnimationDirective`   |
+| Pinned/hijacked scroll sequences         | `HijackedScrollDirective`    |
 
 ---
 

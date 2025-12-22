@@ -1,15 +1,21 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
+import {
+  ScrollAnimationDirective,
+  ViewportAnimationDirective,
+} from '@hive-academy/angular-gsap';
 
 /**
  * Problem/Solution Section - Enhanced Visual Design
  * Establishes pain points developers face when building 3D and animated Angular apps
  * Positions solution with 4 proof metrics using enhanced visual components
+ *
+ * Uses ViewportAnimationDirective for simple enter animations (fade/slide)
+ * and ScrollAnimationDirective for scroll-progress-linked animations (parallax)
  */
 @Component({
   selector: 'app-problem-solution-section',
-  imports: [CommonModule, ScrollAnimationDirective],
+  imports: [CommonModule, ScrollAnimationDirective, ViewportAnimationDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section
@@ -81,15 +87,14 @@ import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
           </div>
         </div>
 
-        <!-- Divider Line with Icon - appears between problem and solution -->
+        <!-- Divider Line with Icon - bounces in when visible -->
         <div
           class="flex items-center justify-center"
-          scrollAnimation
-          [scrollConfig]="{
-            animation: 'scaleIn',
-            start: 'top 60%',
+          viewportAnimation
+          [viewportConfig]="{
+            animation: 'bounceIn',
             duration: 0.8,
-            once: false
+            threshold: 0.3
           }"
         >
           <div
@@ -150,14 +155,13 @@ import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
           @for (metric of metrics; track $index) {
           <div
             class="text-center"
-            scrollAnimation
-            [scrollConfig]="{
+            viewportAnimation
+            [viewportConfig]="{
               animation: 'slideUp',
-              start: 'top 80%',
               duration: 0.6,
               delay: $index * 0.15,
-              ease: 'back.out',
-              once: false
+              ease: 'back.out(1.7)',
+              threshold: 0.2
             }"
           >
             <!-- Large number with gradient -->

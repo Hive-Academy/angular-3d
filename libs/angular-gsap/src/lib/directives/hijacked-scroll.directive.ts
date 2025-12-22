@@ -130,12 +130,7 @@ export class HijackedScrollDirective implements OnDestroy {
         isPlatformBrowser(this.platformId)
       ) {
         this.cleanup();
-        afterNextRender(
-          () => {
-            this.initializeHijackedScroll();
-          },
-          { injector: this.injector }
-        );
+        this.initializeHijackedScroll();
       }
     });
   }

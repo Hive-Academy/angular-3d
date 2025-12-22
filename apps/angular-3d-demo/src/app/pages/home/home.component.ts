@@ -1,9 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { Hero3dTeaserComponent } from './sections/hero-3d-teaser.component';
+import { Hero3dTeaserComponent } from './scenes/hero-3d-teaser.component';
 import { LibraryOverviewSectionComponent } from './sections/library-overview-section.component';
 import { CtaSectionComponent } from './sections/cta-section.component';
-import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
 
 /**
  * Home Page Component
@@ -16,11 +14,9 @@ import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
 @Component({
   selector: 'app-home',
   imports: [
-    RouterLink,
     Hero3dTeaserComponent,
     LibraryOverviewSectionComponent,
     CtaSectionComponent,
-    ScrollAnimationDirective,
   ],
   template: `
     <!-- Hero Section with 3D Background -->
@@ -33,11 +29,15 @@ import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
       </div>
     </section>
 
-    <!-- Combined Library Overview Section (Hijacked Scroll) -->
-    <app-library-overview-section />
+    <section class="min-h-screen">
+      <!-- CTA Section -->
+      <app-cta-section />
+    </section>
 
-    <!-- CTA Section -->
-    <app-cta-section />
+    <section class="min-h-screen">
+      <!-- Combined Library Overview Section (Hijacked Scroll) -->
+      <app-library-overview-section />
+    </section>
   `,
   styles: [
     `

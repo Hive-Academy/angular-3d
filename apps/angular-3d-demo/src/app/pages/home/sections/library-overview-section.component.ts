@@ -48,7 +48,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section #sectionRef class="relative">
+    <section #sectionRef class="relative mt-30">
       <!-- Sticky Sidebar Navigation -->
       <nav
         class="fixed left-4 lg:left-8 top-1/2 -translate-y-1/2 z-50 hidden lg:flex flex-col gap-3 transition-all duration-500"
@@ -94,9 +94,9 @@ import { SCENE_COLORS } from '../../../shared/colors';
       <!-- Fullpage Scroll Timeline -->
       <agsp-hijacked-scroll-timeline
         #scrollTimeline
-        [scrollHeightPerStep]="2000"
+        [scrollHeightPerStep]="1200"
         [start]="'top top'"
-        [animationDuration]="1"
+        [animationDuration]="0.7"
         [ease]="'power2.inOut'"
         [scrub]="0.5"
         (currentStepChange)="onStepChange($event)"
@@ -143,8 +143,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
                               [floatConfig]="{ height: 0.2, speed: 2 }"
                             />
                         </a3d-scene-3d>
-                        <div class="absolute inset-0 bg-gradient-to-t from-background-dark/80 via-transparent to-transparent pointer-events-none"></div>
-                    </div>
+                     </div>
                  } @else if (section.id === 'angular-gsap') {
                      <!-- GSAP Visual (Animation Demos) -->
                      <div class="relative w-full max-w-2xl aspect-square rounded-2xl overflow-hidden border border-primary-500/20 bg-background-dark/50 backdrop-blur-sm shadow-card p-8 flex flex-col justify-center">

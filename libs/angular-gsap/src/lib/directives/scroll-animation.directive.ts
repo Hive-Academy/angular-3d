@@ -49,7 +49,6 @@ import {
   input,
   type OnDestroy,
   inject,
-  effect,
   PLATFORM_ID,
   afterNextRender,
   Injector,
@@ -131,25 +130,7 @@ export class ScrollAnimationDirective implements OnDestroy {
     ease: 'power2.out',
   });
 
-  constructor() {
-    // React to config changes
-    effect(() => {
-      const config = this.scrollConfig();
-      if (!config) {
-        console.warn(
-          '[ScrollAnimation] Config is undefined, skipping animation'
-        );
-        return;
-      }
-
-      if (this.isInitialized && isPlatformBrowser(this.platformId)) {
-        this.cleanup();
-        afterNextRender(() => this.initializeAnimation(config), {
-          injector: this.injector,
-        });
-      }
-    });
-
+  public constructor() {
     // Initialize after render (browser only)
     if (isPlatformBrowser(this.platformId)) {
       afterNextRender(

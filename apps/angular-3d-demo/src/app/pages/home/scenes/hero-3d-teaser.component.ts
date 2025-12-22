@@ -15,6 +15,7 @@ import {
   BloomEffectComponent,
   FloatingSphereComponent,
   InstancedParticleTextComponent,
+  ScrollZoomCoordinatorDirective,
   type SpaceFlightWaypoint,
 } from '@hive-academy/angular-3d';
 import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
@@ -24,6 +25,12 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
  *
  * Demonstrates ViewportPositioningService (reactive CSS-like positioning),
  * multi-layer star fields, instanced particle text, volumetric effects.
+ *
+ * **Scroll Behavior:**
+ * - Initial scroll zooms the camera out (9 → 25 units)
+ * - Description text appears as camera zooms out (positioned at z=22)
+ * - Once zoom is complete, page scroll resumes normally
+ * - Scrolling back up re-engages camera zoom
  *
  * Z-depth: Foreground (0 to -5), Midground (-5 to -15), Background (-15+)
  * @see libs/angular-3d/docs/POSITIONING_GUIDE.md for positioning patterns
@@ -47,6 +54,7 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
     BloomEffectComponent,
     FloatingSphereComponent,
     InstancedParticleTextComponent,
+    ScrollZoomCoordinatorDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -56,6 +64,12 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
       aria-label="Interactive 3D space scene with rotating Earth, twinkling stars, and camera controls"
     >
       <a3d-scene-3d [cameraPosition]="[0, 0, 20]" [cameraFov]="75">
+        <!-- Scroll-Zoom Coordinator (observes zoom state, coordinates page scroll) -->
+        <ng-container
+          a3dScrollZoomCoordinator
+          [maxDistance]="25"
+          [scrollThreshold]="2"
+        />
         <!-- ================================ -->
         <!-- LIGHTING SETUP -->
         <!-- ================================ -->
@@ -124,13 +138,13 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <!-- ================================ -->
         <!-- LEFT-SIDE DESCRIPTION - 3D Particle Text -->
         <!-- ================================ -->
-        <!-- Description Line 1 -->
+        <!-- Description Lines - Positioned BEHIND camera (z=22) to reveal on scroll -->
         <a3d-instanced-particle-text
           text="Discover a powerful Angular library that seamlessly integrates"
-          [position]="[-10.91, -6.0, 0]"
+          [position]="[-10.91, -6.0, 22]"
           [fontSize]="20"
           [particleColor]="colors.softGray"
-          [opacity]="0.3"
+          [opacity]="0.4"
           [maxParticleScale]="0.15"
           [particlesPerPixel]="2"
           [skipInitialGrowth]="true"
@@ -138,10 +152,10 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <!-- Description Line 2 -->
         <a3d-instanced-particle-text
           text="Three.js for stunning 3D graphics and GSAP for smooth animations."
-          [position]="[-10.91, -8.0, 0]"
+          [position]="[-10.91, -8.0, 22]"
           [fontSize]="20"
           [particleColor]="colors.softGray"
-          [opacity]="0.3"
+          [opacity]="0.4"
           [maxParticleScale]="0.15"
           [particlesPerPixel]="2"
           [skipInitialGrowth]="true"
@@ -295,8 +309,8 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [enableDamping]="true"
           [dampingFactor]="0.05"
           [enableZoom]="true"
-          [minDistance]="8"
-          [maxDistance]="40"
+          [minDistance]="9"
+          [maxDistance]="25"
           [rotateSpeed]="0.5"
           [enablePan]="false"
         />

@@ -173,15 +173,15 @@ export class ParallaxSplitScrollComponent implements OnDestroy {
 
       if (itemsList.length > 0 && isPlatformBrowser(this.platformId)) {
         this.cleanup();
-
-        afterNextRender(
-          () => {
-            this.initializeParallaxScroll();
-          },
-          { injector: this.injector }
-        );
       }
     });
+
+    afterNextRender(
+      () => {
+        this.initializeParallaxScroll();
+      },
+      { injector: this.injector }
+    );
   }
 
   ngOnDestroy(): void {

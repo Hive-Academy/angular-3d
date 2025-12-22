@@ -5,6 +5,11 @@ export {
   type AnimationType,
 } from './lib/directives/scroll-animation.directive';
 export {
+  ViewportAnimationDirective,
+  type ViewportAnimationConfig,
+  type ViewportAnimationType,
+} from './lib/directives/viewport-animation.directive';
+export {
   HijackedScrollDirective,
   type HijackedScrollConfig,
 } from './lib/directives/hijacked-scroll.directive';

@@ -1,30 +1,37 @@
 /**
- * ScrollZoomCoordinatorDirective - Bridge 3D camera zoom and page scrolling
+ * ScrollZoomCoordinatorDirective - Coordinate 3D zoom and page scrolling
  *
- * Provides smooth transitions between camera zoom and page scroll:
- * - When zooming in/out, prevents page scroll
- * - At zoom limits, enables page scroll
- * - Configurable thresholds and sensitivity
+ * IMPORTANT: This directive works WITH OrbitControls, not instead of it.
+ * Place this directive inside a a3d-scene-3d that has OrbitControls.
+ *
+ * Behavior:
+ * - OrbitControls handles the actual zoom (mouse wheel)
+ * - This directive monitors camera distance and:
+ *   - Blocks page scroll while camera is zooming (between min/max)
+ *   - Allows page scroll when camera reaches maxDistance and user scrolls down
+ *   - Re-engages zoom mode when user scrolls up (zooming back in)
  *
  * Features:
+ * - Works transparently with OrbitControls
  * - NgZone.runOutsideAngular for performance
- * - Delta time-aware for consistent behavior
- * - Signal-based configuration
- * - Lifecycle events (stateChange, scrollTransition)
+ * - Signal-based state tracking
+ * - Emits events for zoom progress and completion
  *
  * @example
  * ```html
- * <!-- Basic usage -->
- * <a3d-scene-3d a3dScrollZoomCoordinator>
- *   <a3d-orbit-controls />
- * </a3d-scene-3d>
+ * <a3d-scene-3d>
+ *   <!-- Coordinator observes zoom state -->
+ *   <ng-container
+ *     a3dScrollZoomCoordinator
+ *     [maxDistance]="40"
+ *     [scrollThreshold]="1"
+ *     (zoomComplete)="onZoomComplete()" />
  *
- * <!-- With configuration -->
- * <a3d-scene-3d
- *   a3dScrollZoomCoordinator
- *   [minZoom]="0.5"
- *   [maxZoom]="2.0"
- *   [scrollSensitivity]="0.001">
+ *   <!-- OrbitControls handles actual zooming -->
+ *   <a3d-orbit-controls
+ *     [enableZoom]="true"
+ *     [minDistance]="8"
+ *     [maxDistance]="40" />
  * </a3d-scene-3d>
  * ```
  */
@@ -37,27 +44,35 @@ import {
   afterNextRender,
   input,
   output,
+  signal,
+  computed,
+  PLATFORM_ID,
 } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { SceneService } from '../canvas/scene.service';
 
 /**
  * Scroll/zoom state
  */
-type ScrollZoomState = 'zoom' | 'scroll';
+export type ScrollZoomState = 'zooming' | 'complete' | 'idle';
 
 /**
- * Scroll transition event
+ * Zoom progress event with detailed state
  */
-export interface ScrollTransitionEvent {
-  from: 'zoom';
-  to: 'scroll';
+export interface ZoomProgressEvent {
+  /** Current camera distance from origin */
+  currentDistance: number;
+  /** Progress from 0 (closest) to 1 (furthest) */
+  progress: number;
+  /** Current state of the zoom coordinator */
+  state: ScrollZoomState;
 }
 
 /**
  * ScrollZoomCoordinatorDirective
  *
- * Coordinates between camera zoom (OrbitControls) and page scrolling.
- * Provides smooth transitions at zoom limits.
+ * Coordinates between OrbitControls zoom and page scrolling.
+ * Monitors camera distance and controls scroll pass-through.
  */
 @Directive({
   selector: '[a3dScrollZoomCoordinator]',
@@ -68,75 +83,123 @@ export class ScrollZoomCoordinatorDirective {
   private readonly sceneService = inject(SceneService);
   private readonly ngZone = inject(NgZone);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly platformId = inject(PLATFORM_ID);
 
   // ============================================================================
   // Configuration Inputs
   // ============================================================================
 
   /**
-   * Minimum zoom level (camera.position.z)
-   * When reached, enables page scroll
+   * Maximum camera distance (should match OrbitControls maxDistance)
+   * When reached, zoom is complete and page scrolling resumes
+   * @default 40
    */
-  public readonly minZoom = input<number>(0.5);
+  public readonly maxDistance = input<number>(40);
 
   /**
-   * Maximum zoom level (camera.position.z)
-   * When reached, enables page scroll
+   * Threshold distance from max to consider zoom "complete"
+   * Accounts for damping/floating point precision
+   * @default 1
    */
-  public readonly maxZoom = input<number>(2.0);
-
-  /**
-   * Scroll sensitivity multiplier
-   * Higher = more sensitive to wheel events
-   */
-  public readonly scrollSensitivity = input<number>(0.001);
-
-  /**
-   * Threshold for zoom limit detection
-   * Distance from limit to trigger scroll transition
-   */
-  public readonly zoomThreshold = input<number>(0.01);
+  public readonly scrollThreshold = input<number>(1);
 
   // ============================================================================
   // Outputs
   // ============================================================================
 
   /**
-   * Emitted when state changes between 'zoom' and 'scroll'
+   * Emitted when zoom state changes
    */
   public readonly stateChange = output<ScrollZoomState>();
 
   /**
-   * Emitted when transitioning from zoom to scroll
+   * Emitted continuously during zoom with progress info
    */
-  public readonly scrollTransition = output<ScrollTransitionEvent>();
+  public readonly zoomProgress = output<ZoomProgressEvent>();
 
   /**
-   * Emitted when zoom enabled/disabled
+   * Emitted once when camera reaches maxDistance
    */
-  public readonly zoomEnabledChange = output<boolean>();
+  public readonly zoomComplete = output<void>();
 
   // ============================================================================
-  // Internal State
+  // Internal State (Signals)
   // ============================================================================
 
-  private currentState: ScrollZoomState = 'zoom';
-  private isZoomEnabled = true;
+  private readonly _currentDistance = signal<number>(0);
+  private readonly _state = signal<ScrollZoomState>('idle');
+  private readonly _zoomCompleted = signal<boolean>(false);
+
+  /** Whether zoom is currently active (blocking page scroll) */
+  public readonly isZooming = computed(() => this._state() === 'zooming');
+
+  /** Whether zoom is complete (at max distance) */
+  public readonly isComplete = computed(() => this._zoomCompleted());
+
+  // ============================================================================
+  // Private State
+  // ============================================================================
+
   private destroyed = false;
+  private wheelHandler: ((e: WheelEvent) => void) | null = null;
+  private canvasElement: HTMLCanvasElement | null = null;
 
-  constructor() {
+  public constructor() {
     // Initialize after next render (browser-only)
     afterNextRender(() => {
-      this.ngZone.runOutsideAngular(() => {
-        window.addEventListener('wheel', this.handleWheel, { passive: false });
-      });
+      if (isPlatformBrowser(this.platformId)) {
+        this.initializeCoordinator();
+      }
     });
 
     // Cleanup on destroy
     this.destroyRef.onDestroy(() => {
       this.destroyed = true;
-      window.removeEventListener('wheel', this.handleWheel);
+      this.cleanup();
     });
+  }
+
+  // ============================================================================
+  // Initialization
+  // ============================================================================
+
+  private initializeCoordinator(): void {
+    // Get the canvas element from the scene service
+    this.canvasElement = this.sceneService.domElement;
+    if (!this.canvasElement) {
+      console.warn(
+        'ScrollZoomCoordinatorDirective: Canvas element not found. Coordination disabled.'
+      );
+      return;
+    }
+
+    // Initialize camera distance
+    const camera = this.sceneService.camera();
+    if (camera) {
+      this._currentDistance.set(camera.position.length());
+    }
+
+    // Create wheel handler
+    const handler = (event: WheelEvent): void => {
+      this.handleWheel(event);
+    };
+    this.wheelHandler = handler;
+
+    // Add wheel listener to canvas
+    // We capture the wheel event to decide if it should scroll the page or let OrbitControls zoom
+    this.ngZone.runOutsideAngular(() => {
+      this.canvasElement?.addEventListener('wheel', handler, {
+        passive: false,
+      });
+    });
+  }
+
+  private cleanup(): void {
+    if (this.wheelHandler && this.canvasElement) {
+      this.canvasElement.removeEventListener('wheel', this.wheelHandler);
+      this.wheelHandler = null;
+      this.canvasElement = null;
+    }
   }
 
   // ============================================================================
@@ -144,79 +207,101 @@ export class ScrollZoomCoordinatorDirective {
   // ============================================================================
 
   /**
-   * Handle wheel events for zoom/scroll coordination
-   * Runs outside Angular zone for performance
+   * Handle wheel events for scroll/zoom coordination.
+   *
+   * Logic:
+   * - OrbitControls will handle the actual zoom (we don't prevent that)
+   * - We check current camera distance to determine if page should scroll
+   * - At max distance + scrolling down → allow page scroll
+   * - Otherwise → block page scroll, let OrbitControls zoom
    */
-  private handleWheel = (event: WheelEvent): void => {
-    // Early exit if destroyed to prevent accessing destroyed state
+  private handleWheel(event: WheelEvent): void {
     if (this.destroyed) return;
 
     const camera = this.sceneService.camera();
     if (!camera) return;
 
-    const currentZoom = camera.position.z;
-    const delta = event.deltaY * this.scrollSensitivity();
-    const newZoom = currentZoom + delta;
+    // Get current camera distance from scene center
+    const currentDistance = camera.position.length();
+    this._currentDistance.set(currentDistance);
 
-    const min = this.minZoom();
-    const max = this.maxZoom();
-    const threshold = this.zoomThreshold();
+    const maxDist = this.maxDistance();
+    const threshold = this.scrollThreshold();
+    const isScrollingDown = event.deltaY > 0;
+    const isScrollingUp = event.deltaY < 0;
 
-    // Check if at zoom limits
-    const atMinLimit = newZoom <= min + threshold && delta < 0;
-    const atMaxLimit = newZoom >= max - threshold && delta > 0;
+    // Check if camera is at max distance (or very close)
+    const isAtMaxDistance = currentDistance >= maxDist - threshold;
 
-    if (atMinLimit || atMaxLimit) {
-      // At zoom limit - enable page scroll
-      if (this.currentState !== 'scroll') {
-        this.transitionToScroll();
-      }
-      // Allow default scroll behavior
+    // ========================================
+    // DECISION: Allow page scroll or block it?
+    // ========================================
+
+    // Case 1: Already completed zoom + scrolling down → SCROLL PAGE
+    if (this._zoomCompleted() && isScrollingDown) {
+      // Wheel event on canvas doesn't scroll the page naturally
+      window.scrollBy({
+        top: event.deltaY,
+        behavior: 'auto',
+      });
+      event.preventDefault();
       return;
     }
 
-    // Within zoom range - prevent page scroll and apply zoom
-    event.preventDefault();
-
-    if (this.currentState !== 'zoom') {
-      this.transitionToZoom();
+    // Case 2: At max distance + scrolling down → Complete zoom, SCROLL PAGE
+    if (isAtMaxDistance && isScrollingDown) {
+      if (!this._zoomCompleted()) {
+        this._zoomCompleted.set(true);
+        this.updateState('complete');
+        this.ngZone.run(() => {
+          this.zoomComplete.emit();
+        });
+      }
+      // Wheel event on canvas doesn't scroll the page naturally
+      // We need to programmatically scroll the page
+      window.scrollBy({
+        top: event.deltaY,
+        behavior: 'auto',
+      });
+      event.preventDefault(); // Prevent any OrbitControls zoom attempt
+      return;
     }
 
-    // Clamp zoom to limits
-    camera.position.z = Math.max(min, Math.min(max, newZoom));
-  };
+    // Case 3: Was completed but now scrolling up → Re-engage zoom mode
+    if (this._zoomCompleted() && isScrollingUp) {
+      this._zoomCompleted.set(false);
+      this.updateState('zooming');
+    }
 
-  // ============================================================================
-  // State Transitions
-  // ============================================================================
+    // Case 4: Not at max distance → BLOCK page scroll, let OrbitControls zoom
+    event.preventDefault();
 
-  /**
-   * Transition from zoom to scroll
-   */
-  private transitionToScroll(): void {
-    this.currentState = 'scroll';
-    this.isZoomEnabled = false;
+    // Update state to zooming if idle
+    if (this._state() === 'idle') {
+      this.updateState('zooming');
+    }
 
-    // Emit events inside Angular zone
+    // Emit progress
     this.ngZone.run(() => {
-      this.stateChange.emit('scroll');
-      this.scrollTransition.emit({ from: 'zoom', to: 'scroll' });
-      this.zoomEnabledChange.emit(false);
+      this.zoomProgress.emit({
+        currentDistance,
+        progress: Math.min(1, currentDistance / maxDist),
+        state: this._state(),
+      });
     });
   }
 
-  /**
-   * Transition from scroll to zoom
-   */
-  private transitionToZoom(): void {
-    this.currentState = 'zoom';
-    this.isZoomEnabled = true;
+  // ============================================================================
+  // State Management
+  // ============================================================================
 
-    // Emit events inside Angular zone
-    this.ngZone.run(() => {
-      this.stateChange.emit('zoom');
-      this.zoomEnabledChange.emit(true);
-    });
+  private updateState(newState: ScrollZoomState): void {
+    if (this._state() !== newState) {
+      this._state.set(newState);
+      this.ngZone.run(() => {
+        this.stateChange.emit(newState);
+      });
+    }
   }
 
   // ============================================================================
@@ -224,16 +309,17 @@ export class ScrollZoomCoordinatorDirective {
   // ============================================================================
 
   /**
-   * Get current state
+   * Get current scroll/zoom state
    */
   public getCurrentState(): ScrollZoomState {
-    return this.currentState;
+    return this._state();
   }
 
   /**
-   * Check if zoom is enabled
+   * Reset to initial state (re-engages zoom)
    */
-  public isZoomActive(): boolean {
-    return this.isZoomEnabled;
+  public reset(): void {
+    this._zoomCompleted.set(false);
+    this.updateState('idle');
   }
 }
