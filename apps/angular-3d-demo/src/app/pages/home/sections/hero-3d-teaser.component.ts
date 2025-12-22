@@ -122,6 +122,32 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         />
 
         <!-- ================================ -->
+        <!-- LEFT-SIDE DESCRIPTION - 3D Particle Text -->
+        <!-- ================================ -->
+        <!-- Description Line 1 -->
+        <a3d-instanced-particle-text
+          text="Discover a powerful Angular library that seamlessly integrates"
+          [position]="[-10.91, -6.0, 0]"
+          [fontSize]="20"
+          [particleColor]="colors.softGray"
+          [opacity]="0.3"
+          [maxParticleScale]="0.15"
+          [particlesPerPixel]="2"
+          [skipInitialGrowth]="true"
+        />
+        <!-- Description Line 2 -->
+        <a3d-instanced-particle-text
+          text="Three.js for stunning 3D graphics and GSAP for smooth animations."
+          [position]="[-10.91, -8.0, 0]"
+          [fontSize]="20"
+          [particleColor]="colors.softGray"
+          [opacity]="0.3"
+          [maxParticleScale]="0.15"
+          [particlesPerPixel]="2"
+          [skipInitialGrowth]="true"
+        />
+
+        <!-- ================================ -->
         <!-- FLYING ROBOTS (With SpaceFlight Animation) -->
         <!-- ================================ -->
         <!-- Mini Robot #1 - High altitude orbital path -->

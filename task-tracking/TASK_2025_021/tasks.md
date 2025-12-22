@@ -122,7 +122,7 @@
 
 **Developer**: frontend-developer
 **Tasks**: 3 | **Dependencies**: Batch 1 complete
-**Commit**: [PENDING]
+**Commit**: 8240ff3
 
 ### Task 2.1: Create Heading Line 1 - "Build " (White Particle Text) ✅ COMPLETE
 
@@ -267,12 +267,12 @@
 
 ---
 
-## Batch 3: Left-Side Description Text (MEDIUM Risk) ⏸️ PENDING
+## Batch 3: Left-Side Description Text (MEDIUM Risk) 🔄 IN PROGRESS
 
 **Developer**: frontend-developer
 **Tasks**: 2 | **Dependencies**: Batch 2 complete
 
-### Task 3.1: Create Description Line 1 (Soft Gray Particle Text) ⏸️ PENDING
+### Task 3.1: Create Description Line 1 (Soft Gray Particle Text) 🔄 IMPLEMENTED
 
 **File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\home\sections\hero-3d-teaser.component.ts
 **Spec Reference**: implementation-plan.md:323-381
@@ -317,7 +317,7 @@
 
 ---
 
-### Task 3.2: Create Description Line 2 (Soft Gray Particle Text) ⏸️ PENDING
+### Task 3.2: Create Description Line 2 (Soft Gray Particle Text) 🔄 IMPLEMENTED
 
 **File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\home\sections\hero-3d-teaser.component.ts
 **Dependencies**: Task 3.1
