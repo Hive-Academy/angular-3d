@@ -75,7 +75,6 @@ export interface RendererConfig {
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     SceneService,
-    SceneGraphStore, // Per-scene instance for isolated scene graphs
     RenderLoopService, // Per-scene instance for independent render loops
     EffectComposerService, // Per-scene instance for independent post-processing
     AdvancedPerformanceOptimizerService, // Per-scene instance for independent performance optimization

@@ -50,7 +50,7 @@ export interface MaterialProps {
 // SceneGraphStore
 // ============================================================================
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class SceneGraphStore {
   // Core Three.js objects (provided by Scene3dComponent)
   private readonly _scene = signal<Scene | null>(null);
