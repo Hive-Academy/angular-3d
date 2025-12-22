@@ -73,8 +73,10 @@ import { SCENE_COLORS } from '../../../shared/colors';
         <!-- Volumetric Nebula (atmospheric depth in top-right background) -->
         <a3d-nebula-volumetric
           [position]="[15, 10, -20]"
-          [scale]="[8, 8, 8]"
-          [color]="'#4a0080'"
+          [width]="80"
+          [height]="40"
+          [primaryColor]="'#4a0080'"
+          [secondaryColor]="'#2a0050'"
           [opacity]="0.3"
         />
 
@@ -82,11 +84,11 @@ import { SCENE_COLORS } from '../../../shared/colors';
         <a3d-planet
           [position]="[-8, 3, -5]"
           [radius]="1.2"
-          [color]="0xaaaaaa"
-          [emissive]="0x222222"
+          [color]="'#aaaaaa'"
+          [emissive]="'#222222'"
           [emissiveIntensity]="0.1"
           [glowIntensity]="0.5"
-          [glowColor]="0xccccff"
+          [glowColor]="'#ccccff'"
         />
 
         <!-- Earth Model -->
