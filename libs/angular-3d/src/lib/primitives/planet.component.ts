@@ -30,9 +30,44 @@ export class PlanetComponent implements OnDestroy {
   public readonly metalness = input<number>(0.3);
   public readonly roughness = input<number>(0.7);
 
+  // Emissive properties (for self-illumination)
+  /**
+   * Emissive color - makes the planet glow from within
+   * Default: 0x000000 (black, no emissive)
+   */
+  public readonly emissive = input<string | number>(0x000000);
+
+  /**
+   * Emissive intensity - strength of self-illumination
+   * Default: 0.2 (subtle glow)
+   */
+  public readonly emissiveIntensity = input<number>(0.2);
+
+  // Transform properties
+  /**
+   * Scale multiplier - allows easy size adjustment without changing radius
+   * Default: 1 (no scaling)
+   */
+  public readonly scale = input<number>(1);
+
   // Glow inputs
-  public readonly glowIntensity = input<number>(0);
+  /**
+   * Glow intensity - strength of point light halo effect
+   * Default: 0.8 (visible atmosphere/aura effect)
+   */
+  public readonly glowIntensity = input<number>(0.8);
+
+  /**
+   * Glow color - color of the point light halo
+   * Default: 0xffffff (white)
+   */
   public readonly glowColor = input<string | number>(0xffffff);
+
+  /**
+   * Glow distance - range of the point light effect
+   * Default: 15 (was hardcoded, now configurable)
+   */
+  public readonly glowDistance = input<number>(15);
 
   private readonly parentFn = inject(NG_3D_PARENT, { optional: true });
 
@@ -63,8 +98,12 @@ export class PlanetComponent implements OnDestroy {
       const color = this.color();
       const metalness = this.metalness();
       const roughness = this.roughness();
+      const emissive = this.emissive();
+      const emissiveIntensity = this.emissiveIntensity();
+      const scale = this.scale();
       const glowIntensity = this.glowIntensity();
       const glowColor = this.glowColor();
+      const glowDistance = this.glowDistance();
 
       // Texture dependency
       // Access  data signal directly from the resource object
@@ -76,8 +115,12 @@ export class PlanetComponent implements OnDestroy {
         color,
         metalness,
         roughness,
+        emissive,
+        emissiveIntensity,
+        scale,
         glowIntensity,
         glowColor,
+        glowDistance,
         textureData
       );
 
@@ -104,8 +147,12 @@ export class PlanetComponent implements OnDestroy {
     color: string | number,
     metalness: number,
     roughness: number,
+    emissive: string | number,
+    emissiveIntensity: number,
+    scale: number,
     glowIntensity: number,
     glowColor: string | number,
+    glowDistance: number,
     texture: THREE.Texture | null
   ): void {
     // Dispose old
@@ -121,23 +168,35 @@ export class PlanetComponent implements OnDestroy {
     // Geometry
     this.geometry = new THREE.SphereGeometry(radius, segments, segments);
 
-    // Material
+    // Material with conditional properties and bump mapping
+    // When texture exists: less metallic (0.1), more rough (0.9) for realistic appearance
+    // When no texture: use input values for metalness/roughness
     this.material = new THREE.MeshStandardMaterial({
       color: color,
       map: texture,
-      metalness: metalness,
-      roughness: roughness,
+      bumpMap: texture, // Use texture as bump map for surface detail
+      bumpScale: texture ? 1 : 0, // Only apply bump when texture exists
+      emissive: emissive, // Self-illumination color
+      emissiveIntensity: emissiveIntensity, // Self-illumination strength
+      metalness: texture ? 0.1 : metalness, // Conditional: textured planets less metallic
+      roughness: texture ? 0.9 : roughness, // Conditional: textured planets rougher
     });
 
     // Mesh
     this.mesh = new THREE.Mesh(this.geometry, this.material);
     this.mesh.position.set(...this.position());
+    this.mesh.scale.set(scale, scale, scale); // Apply scale multiplier
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
 
-    // Glow Light
+    // Glow Light with configurable distance
     if (glowIntensity > 0) {
-      this.light = new THREE.PointLight(glowColor, glowIntensity, 15, 2);
+      this.light = new THREE.PointLight(
+        glowColor,
+        glowIntensity,
+        glowDistance,
+        2
+      );
       this.light.position.set(...this.position());
     } else {
       this.light = null;

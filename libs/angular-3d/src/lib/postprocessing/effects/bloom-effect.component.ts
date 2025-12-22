@@ -46,9 +46,27 @@ export class BloomEffectComponent implements OnDestroy {
   // Reference: temp/angular-3d/components/effects/bloom-effect.component.ts
   // Temp used: NgtpBloom (angular-three-postprocessing).
   // We are using three-stdlib directly to avoid dependencies as per architecture.
+  //
+  // NOTE: UnrealBloomPass does NOT support kernelSize parameter (API verified).
+  // The temp folder used NgtpBloom wrapper which had extra features.
+  // Only threshold, strength, and radius are supported by UnrealBloomPass core API.
 
-  public readonly threshold = input<number>(0);
-  public readonly strength = input<number>(1.5);
+  /**
+   * Bloom threshold - only objects with luminance > threshold will bloom
+   * Default: 0.3 (only bright objects glow, not all objects)
+   */
+  public readonly threshold = input<number>(0.3);
+
+  /**
+   * Bloom strength - intensity of the glow effect
+   * Default: 1.8 (noticeable but not overwhelming glow)
+   */
+  public readonly strength = input<number>(1.8);
+
+  /**
+   * Bloom radius - spread of the glow effect
+   * Default: 0.4 (balanced spread)
+   */
   public readonly radius = input<number>(0.4);
 
   private pass: UnrealBloomPass | null = null;

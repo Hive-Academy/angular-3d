@@ -94,11 +94,13 @@ export class StarFieldComponent implements OnDestroy {
   public readonly size = input<number>(0.02);
   public readonly opacity = input<number>(0.8);
 
-  // Enhancement inputs (default to false for backwards compatibility)
+  // Enhancement inputs
+  // NOTE: multiSize and stellarColors now default to true for better visual quality
+  // Stars will have varied sizes and colors by default (like real night sky)
   public readonly enableTwinkle = input<boolean>(false);
   public readonly enableGlow = input<boolean>(false);
-  public readonly multiSize = input<boolean>(false);
-  public readonly stellarColors = input<boolean>(false);
+  public readonly multiSize = input<boolean>(true);
+  public readonly stellarColors = input<boolean>(true);
 
   private readonly parentFn = inject(NG_3D_PARENT, { optional: true });
   private readonly renderLoop = inject(RenderLoopService);
@@ -107,12 +109,13 @@ export class StarFieldComponent implements OnDestroy {
   private object3d: THREE.Points | THREE.Group | null = null;
   private geometry: THREE.BufferGeometry | null = null;
   private material: THREE.PointsMaterial | THREE.SpriteMaterial | null = null;
-  private glowTexture: THREE.CanvasTexture | null = null;
+  private glowTexture: THREE.CanvasTexture | null = null; // For sprite mode
+  private pointsGlowTexture: THREE.CanvasTexture | null = null; // For Points mode
   private starDataArray: StarData[] = [];
   private twinkleCleanup: (() => void) | null = null;
 
   /**
-   * Generate procedural star glow texture
+   * Generate procedural star glow texture for sprite mode
    * Creates a radial gradient with soft falloff
    */
   private readonly createGlowTexture = computed(() => {
@@ -151,6 +154,43 @@ export class StarFieldComponent implements OnDestroy {
 
     return texture;
   });
+
+  /**
+   * Generate simpler glow texture for Points mode
+   * Smaller texture for better performance with Points rendering
+   * Makes stars appear as soft glowing circles instead of flat squares
+   */
+  private generatePointsGlowTexture(): THREE.CanvasTexture {
+    const canvas = document.createElement('canvas');
+    const canvasSize = 64; // Smaller than sprite version for performance
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
+    const ctx = canvas.getContext('2d')!;
+
+    // Create radial gradient (center to edge)
+    const gradient = ctx.createRadialGradient(
+      canvasSize / 2,
+      canvasSize / 2,
+      0,
+      canvasSize / 2,
+      canvasSize / 2,
+      canvasSize / 2
+    );
+
+    // Soft glow with transparent edges (simpler than sprite version)
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
+    gradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.6)');
+    gradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.2)');
+    gradient.addColorStop(1.0, 'rgba(255, 255, 255, 0)');
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvasSize, canvasSize);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+
+    return texture;
+  }
 
   /**
    * Generate per-star data for multi-size and color features
@@ -303,6 +343,9 @@ export class StarFieldComponent implements OnDestroy {
 
   /**
    * Build simple star field using THREE.Points (high performance)
+   *
+   * CRITICAL FIX: Adds glow texture to Points mode to fix "flat square stars" visual bug.
+   * Stars now appear as soft glowing circles instead of flat pixel squares.
    */
   private buildSimpleStars(
     color: string | number,
@@ -311,6 +354,9 @@ export class StarFieldComponent implements OnDestroy {
     multiSize: boolean,
     stellarColors: boolean
   ): void {
+    // Generate glow texture for Points mode (fixes flat square appearance)
+    this.pointsGlowTexture = this.generatePointsGlowTexture();
+
     // If multi-size or stellar colors, we need per-star attributes
     if (multiSize || stellarColors) {
       const count = this.starDataArray.length;
@@ -334,21 +380,27 @@ export class StarFieldComponent implements OnDestroy {
 
       this.material = new THREE.PointsMaterial({
         size: avgSize, // Use average size since PointsMaterial doesn't support per-vertex sizes
+        map: this.pointsGlowTexture, // Add glow texture for round appearance
+        alphaMap: this.pointsGlowTexture, // Use as alpha for smooth edges
         sizeAttenuation: true,
         transparent: true,
         opacity: starOpacity,
         depthWrite: false,
         vertexColors: true, // Use per-vertex colors
+        blending: THREE.AdditiveBlending, // Additive blending for glow effect
       });
     } else {
       // Simple uniform stars
       this.material = new THREE.PointsMaterial({
         color: color,
         size: starSize,
+        map: this.pointsGlowTexture, // Add glow texture for round appearance
+        alphaMap: this.pointsGlowTexture, // Use as alpha for smooth edges
         sizeAttenuation: true,
         transparent: true,
         opacity: starOpacity,
         depthWrite: false,
+        blending: THREE.AdditiveBlending, // Additive blending for glow effect
       });
     }
 
@@ -488,10 +540,14 @@ export class StarFieldComponent implements OnDestroy {
       });
     }
 
-    // Dispose glow texture
+    // Dispose glow textures
     if (this.glowTexture) {
       this.glowTexture.dispose();
       this.glowTexture = null;
+    }
+    if (this.pointsGlowTexture) {
+      this.pointsGlowTexture.dispose();
+      this.pointsGlowTexture = null;
     }
 
     // Clear star data
