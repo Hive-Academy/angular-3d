@@ -10,7 +10,6 @@ import {
   SpaceFlight3dDirective,
   GltfModelComponent,
   StarFieldComponent,
-  InstancedParticleTextComponent,
   NebulaVolumetricComponent,
   OrbitControlsComponent,
   BloomEffectComponent,
@@ -42,7 +41,6 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
     SpaceFlight3dDirective,
     GltfModelComponent,
     StarFieldComponent,
-    InstancedParticleTextComponent,
     NebulaVolumetricComponent,
     OrbitControlsComponent,
     BloomEffectComponent,
@@ -78,7 +76,7 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <!-- ================================ -->
         <a3d-gltf-model
           [modelPath]="'3d/planet_earth/scene.gltf'"
-          viewportPosition="center"
+          [viewportPosition]="{ x: '70%', y: '50%' }"
           [viewportOffset]="{ offsetZ: -9 }"
           [scale]="2.3"
           rotate3d
@@ -200,18 +198,6 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [radius]="35"
           [enableTwinkle]="true"
           [stellarColors]="true"
-        />
-
-        <!-- ================================ -->
-        <!-- PARTICLE TEXT -->
-        <!-- Position: centered horizontally, ~25% from top (camera FOV 75°, Z=20) -->
-        <!-- ================================ -->
-        <a3d-instanced-particle-text
-          text="Angular 3D Library"
-          [position]="[0, 7.5, 0]"
-          [fontSize]="25"
-          [particleColor]="colors.softGray"
-          [opacity]="0.35"
         />
 
         <!-- ================================ -->
