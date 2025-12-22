@@ -142,7 +142,7 @@ import {
           text="Angular 3D Library"
           [position]="topTextPosition()"
           [fontSize]="25"
-          [particleColor]="'#9CA3AF'"
+          [particleColor]="10265519"
           [opacity]="0.35"
         />
 
@@ -172,7 +172,7 @@ import {
         />
 
         <!-- BLOOM POST-PROCESSING: Subtle glow effect -->
-        <a3d-bloom-effect [intensity]="0.5" [luminanceThreshold]="0.8" />
+        <a3d-bloom-effect [threshold]="0.8" [strength]="0.5" [radius]="0.4" />
       </a3d-scene-3d>
     </div>
   `,

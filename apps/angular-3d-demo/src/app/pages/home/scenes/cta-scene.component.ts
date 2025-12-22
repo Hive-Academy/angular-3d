@@ -29,7 +29,7 @@ import {
       <!-- Z-DEPTH: Midground (-2 to -4) for floating background elements -->
       <a3d-polyhedron
         [type]="'icosahedron'"
-        viewportPosition="left"
+        viewportPosition="middle-left"
         [viewportOffset]="{ offsetX: -3, offsetY: 1, offsetZ: -2 }"
         [color]="'#6366F1'"
         float3d
@@ -38,7 +38,7 @@ import {
 
       <a3d-polyhedron
         [type]="'octahedron'"
-        viewportPosition="right"
+        viewportPosition="middle-right"
         [viewportOffset]="{ offsetX: 3, offsetY: -1, offsetZ: -2 }"
         [color]="'#A1FF4F'"
         float3d

@@ -82,7 +82,7 @@ import {
         <!-- Row 2: Middle row with 4 geometries (foreground layer) -->
         <a3d-polyhedron
           [type]="'dodecahedron'"
-          viewportPosition="center-left"
+          viewportPosition="middle-left"
           [viewportOffset]="{ offsetX: -6, offsetZ: 0 }"
           [color]="'#8B5CF6'"
           rotate3d
@@ -90,14 +90,14 @@ import {
         />
         <a3d-polyhedron
           [type]="'octahedron'"
-          viewportPosition="center-left"
+          viewportPosition="middle-left"
           [viewportOffset]="{ offsetX: -2, offsetZ: 0 }"
           [color]="'#EF4444'"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 14 }"
         />
         <a3d-box
-          viewportPosition="center-right"
+          viewportPosition="middle-right"
           [viewportOffset]="{ offsetX: 2, offsetZ: 0 }"
           [color]="'#3B82F6'"
           rotate3d
@@ -105,7 +105,7 @@ import {
         />
         <a3d-polyhedron
           [type]="'tetrahedron'"
-          viewportPosition="center-right"
+          viewportPosition="middle-right"
           [viewportOffset]="{ offsetX: 6, offsetZ: 0 }"
           [color]="'#14B8A6'"
           rotate3d
