@@ -8,7 +8,9 @@ import {
   GltfModelComponent,
   OrbitControlsComponent,
   BloomEffectComponent,
+  ViewportPositionDirective,
 } from '@hive-academy/angular-3d';
+import { SCENE_COLORS } from '../../../shared/colors';
 
 @Component({
   selector: 'app-hero-space-scene',
@@ -21,6 +23,7 @@ import {
     GltfModelComponent,
     OrbitControlsComponent,
     BloomEffectComponent,
+    ViewportPositionDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -31,16 +34,16 @@ import {
         <a3d-directional-light
           [position]="[10, 10, 5]"
           [intensity]="1"
-          [color]="'#A1FF4F'"
+          [color]="colors.neonGreen"
         />
 
         <!-- Star Field -->
-        <a3d-star-field [starCount]="3000" [color]="'#FFFFFF'" />
+        <a3d-star-field [starCount]="3000" [color]="colors.white" />
 
         <!-- Earth Model -->
         <a3d-gltf-model
           [modelPath]="'/3d/planet_earth/scene.gltf'"
-          [position]="[0, 0, 0]"
+          viewportPosition="center"
           [scale]="2.5"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 60 }"
@@ -70,4 +73,6 @@ import {
     </div>
   `,
 })
-export class HeroSpaceSceneComponent {}
+export class HeroSpaceSceneComponent {
+  public readonly colors = SCENE_COLORS;
+}

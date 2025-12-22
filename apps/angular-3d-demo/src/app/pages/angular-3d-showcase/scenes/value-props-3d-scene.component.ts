@@ -10,6 +10,7 @@ import {
   Rotate3dDirective,
   ViewportPositionDirective,
 } from '@hive-academy/angular-3d';
+import { SCENE_COLORS } from '../../../shared/colors';
 
 @Component({
   selector: 'app-value-props-3d-scene',
@@ -39,12 +40,11 @@ import {
         <a3d-ambient-light [intensity]="0.6" />
         <a3d-directional-light [position]="[5, 5, 5]" [intensity]="0.8" />
 
-        <!-- 11 Rotating Geometries representing library features -->
-        <!-- Row 1: Top row with 5 geometries (foreground layer) -->
+        <!-- 11 Rotating Geometries: Row 1 (top) -->
         <a3d-box
           viewportPosition="top-left"
           [viewportOffset]="{ offsetX: -8, offsetY: 4, offsetZ: 0 }"
-          [color]="'#6366F1'"
+          [color]="colors.indigo"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 10 }"
         />
@@ -52,21 +52,21 @@ import {
           [type]="'dodecahedron'"
           viewportPosition="top-left"
           [viewportOffset]="{ offsetX: -4, offsetY: 4, offsetZ: 0 }"
-          [color]="'#A1FF4F'"
+          [color]="colors.neonGreen"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 12 }"
         />
         <a3d-torus
           viewportPosition="top-center"
           [viewportOffset]="{ offsetY: 4, offsetZ: 0 }"
-          [color]="'#EC4899'"
+          [color]="colors.pink"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 8 }"
         />
         <a3d-cylinder
           viewportPosition="top-right"
           [viewportOffset]="{ offsetX: 4, offsetY: 4, offsetZ: 0 }"
-          [color]="'#F59E0B'"
+          [color]="colors.amber"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 10 }"
         />
@@ -74,17 +74,17 @@ import {
           [type]="'icosahedron'"
           viewportPosition="top-right"
           [viewportOffset]="{ offsetX: 8, offsetY: 4, offsetZ: 0 }"
-          [color]="'#10B981'"
+          [color]="colors.emerald"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 15 }"
         />
 
-        <!-- Row 2: Middle row with 4 geometries (foreground layer) -->
+        <!-- Row 2 (middle) -->
         <a3d-polyhedron
           [type]="'dodecahedron'"
           viewportPosition="middle-left"
           [viewportOffset]="{ offsetX: -6, offsetZ: 0 }"
-          [color]="'#8B5CF6'"
+          [color]="colors.violet"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 12 }"
         />
@@ -92,14 +92,14 @@ import {
           [type]="'octahedron'"
           viewportPosition="middle-left"
           [viewportOffset]="{ offsetX: -2, offsetZ: 0 }"
-          [color]="'#EF4444'"
+          [color]="colors.red"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 14 }"
         />
         <a3d-box
           viewportPosition="middle-right"
           [viewportOffset]="{ offsetX: 2, offsetZ: 0 }"
-          [color]="'#3B82F6'"
+          [color]="colors.blue"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 10 }"
         />
@@ -107,23 +107,23 @@ import {
           [type]="'tetrahedron'"
           viewportPosition="middle-right"
           [viewportOffset]="{ offsetX: 6, offsetZ: 0 }"
-          [color]="'#14B8A6'"
+          [color]="colors.teal"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 16 }"
         />
 
-        <!-- Row 3: Bottom row with 2 geometries (foreground layer) -->
+        <!-- Row 3 (bottom) -->
         <a3d-torus
           viewportPosition="bottom-left"
           [viewportOffset]="{ offsetX: -4, offsetY: -4, offsetZ: 0 }"
-          [color]="'#F97316'"
+          [color]="colors.orange"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 12 }"
         />
         <a3d-cylinder
           viewportPosition="bottom-center"
           [viewportOffset]="{ offsetY: -4, offsetZ: 0 }"
-          [color]="'#06B6D4'"
+          [color]="colors.cyan"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 14 }"
         />
@@ -145,4 +145,6 @@ import {
     </div>
   `,
 })
-export class ValueProps3dSceneComponent {}
+export class ValueProps3dSceneComponent {
+  public readonly colors = SCENE_COLORS;
+}

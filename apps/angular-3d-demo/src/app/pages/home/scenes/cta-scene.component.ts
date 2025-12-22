@@ -7,6 +7,7 @@ import {
   Float3dDirective,
   ViewportPositionDirective,
 } from '@hive-academy/angular-3d';
+import { SCENE_COLORS } from '../../../shared/colors';
 
 @Component({
   selector: 'app-cta-scene',
@@ -25,13 +26,12 @@ import {
       <a3d-ambient-light [intensity]="0.6" />
       <a3d-directional-light [position]="[5, 5, 5]" [intensity]="0.8" />
 
-      <!-- Floating Polyhedrons -->
-      <!-- Z-DEPTH: Midground (-2 to -4) for floating background elements -->
+      <!-- Floating Polyhedrons: Midground (-2 to -4) -->
       <a3d-polyhedron
         [type]="'icosahedron'"
         viewportPosition="middle-left"
         [viewportOffset]="{ offsetX: -3, offsetY: 1, offsetZ: -2 }"
-        [color]="'#6366F1'"
+        [color]="colors.indigo"
         float3d
         [floatConfig]="{ height: 0.5, speed: 4500 }"
       />
@@ -40,7 +40,7 @@ import {
         [type]="'octahedron'"
         viewportPosition="middle-right"
         [viewportOffset]="{ offsetX: 3, offsetY: -1, offsetZ: -2 }"
-        [color]="'#A1FF4F'"
+        [color]="colors.neonGreen"
         float3d
         [floatConfig]="{ height: 0.4, speed: 5000 }"
       />
@@ -49,11 +49,13 @@ import {
         [type]="'dodecahedron'"
         viewportPosition="center"
         [viewportOffset]="{ offsetZ: -4 }"
-        [color]="'#6366F1'"
+        [color]="colors.indigo"
         float3d
         [floatConfig]="{ height: 0.6, speed: 4000 }"
       />
     </a3d-scene-3d>
   `,
 })
-export class CtaSceneComponent {}
+export class CtaSceneComponent {
+  public readonly colors = SCENE_COLORS;
+}

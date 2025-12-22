@@ -10,7 +10,9 @@ import {
   StarFieldComponent,
   Rotate3dDirective,
   Float3dDirective,
+  ViewportPositionDirective,
 } from '@hive-academy/angular-3d';
+import { SCENE_COLORS } from '../../../shared/colors';
 
 /**
  * Angular-3D Library Section Component
@@ -31,6 +33,7 @@ import {
     StarFieldComponent,
     Rotate3dDirective,
     Float3dDirective,
+    ViewportPositionDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -56,10 +59,10 @@ import {
               <a3d-directional-light
                 [position]="[5, 5, 5]"
                 [intensity]="1"
-                [color]="'#A1FF4F'"
+                [color]="colors.neonGreen"
               />
 
-              <!-- Enhanced Star Field with depth layers -->
+              <!-- Star field -->
               <a3d-star-field
                 [starCount]="2000"
                 [radius]="50"
@@ -68,21 +71,22 @@ import {
                 [multiSize]="true"
               />
 
-              <!-- Floating Geometric Shapes -->
+              <!-- Floating shapes with viewport positioning -->
               <a3d-polyhedron
                 [type]="'icosahedron'"
-                [position]="[0, 0, 0]"
+                viewportPosition="center"
                 [args]="[1, 0]"
-                [color]="'#6366F1'"
+                [color]="colors.indigo"
                 [wireframe]="true"
                 rotate3d
                 [rotateConfig]="{ axis: 'y', speed: 1.5 }"
               />
 
               <a3d-box
-                [position]="[-2.5, 1.5, -1]"
+                viewportPosition="middle-left"
+                [viewportOffset]="{ offsetX: -2.5, offsetY: 1.5, offsetZ: -1 }"
                 [args]="[0.8, 0.8, 0.8]"
-                [color]="'#A1FF4F'"
+                [color]="colors.neonGreen"
                 rotate3d
                 [rotateConfig]="{ axis: 'xyz', speed: 2 }"
                 float3d
@@ -90,26 +94,29 @@ import {
               />
 
               <a3d-torus
-                [position]="[2.5, -1, -1]"
+                viewportPosition="middle-right"
+                [viewportOffset]="{ offsetX: 2.5, offsetY: -1, offsetZ: -1 }"
                 [args]="[0.6, 0.2, 16, 100]"
-                [color]="'#D946EF'"
+                [color]="colors.magenta"
                 float3d
                 [floatConfig]="{ height: 0.4, speed: 4000 }"
               />
 
               <a3d-torus
-                [position]="[-1.5, -1.5, 0]"
+                viewportPosition="bottom-left"
+                [viewportOffset]="{ offsetX: -1.5, offsetY: -1.5, offsetZ: 0 }"
                 [args]="[0.5, 0.12, 16, 100]"
-                [color]="'#4FFFDF'"
+                [color]="colors.mintGreen"
                 rotate3d
                 [rotateConfig]="{ axis: 'x', speed: 1 }"
               />
 
               <a3d-polyhedron
                 [type]="'octahedron'"
-                [position]="[1.5, 1.5, -2]"
+                viewportPosition="top-right"
+                [viewportOffset]="{ offsetX: 1.5, offsetY: 1.5, offsetZ: -2 }"
                 [args]="[0.6, 0]"
-                [color]="'#FF6BD4'"
+                [color]="colors.hotPink"
                 [wireframe]="true"
                 rotate3d
                 [rotateConfig]="{ axis: 'z', speed: 1.2 }"
@@ -220,6 +227,8 @@ import {
   `,
 })
 export class Angular3dSectionComponent {
+  public readonly colors = SCENE_COLORS;
+
   public readonly capabilities = [
     '27+ Primitives',
     'GLTF Model Loading',

@@ -8,7 +8,9 @@ import {
   AmbientLightComponent,
   DirectionalLightComponent,
   Rotate3dDirective,
+  ViewportPositionDirective,
 } from '@hive-academy/angular-3d';
+import { SCENE_COLORS } from '../../../shared/colors';
 
 @Component({
   selector: 'app-primitives-showcase',
@@ -21,6 +23,7 @@ import {
     AmbientLightComponent,
     DirectionalLightComponent,
     Rotate3dDirective,
+    ViewportPositionDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -37,7 +40,8 @@ import {
               <a3d-ambient-light [intensity]="0.5" />
               <a3d-directional-light [position]="[2, 2, 2]" />
               <a3d-box
-                [color]="'#6366F1'"
+                viewportPosition="center"
+                [color]="colors.indigo"
                 rotate3d
                 [rotateConfig]="{ axis: 'y', speed: 10 }"
               />
@@ -56,7 +60,8 @@ import {
               <a3d-ambient-light [intensity]="0.5" />
               <a3d-directional-light [position]="[2, 2, 2]" />
               <a3d-cylinder
-                [color]="'#EC4899'"
+                viewportPosition="center"
+                [color]="colors.pink"
                 rotate3d
                 [rotateConfig]="{ axis: 'y', speed: 10 }"
               />
@@ -75,7 +80,8 @@ import {
               <a3d-ambient-light [intensity]="0.5" />
               <a3d-directional-light [position]="[2, 2, 2]" />
               <a3d-torus
-                [color]="'#F59E0B'"
+                viewportPosition="center"
+                [color]="colors.amber"
                 rotate3d
                 [rotateConfig]="{ axis: 'y', speed: 10 }"
               />
@@ -95,7 +101,8 @@ import {
               <a3d-directional-light [position]="[2, 2, 2]" />
               <a3d-polyhedron
                 [type]="'icosahedron'"
-                [color]="'#10B981'"
+                viewportPosition="center"
+                [color]="colors.emerald"
                 rotate3d
                 [rotateConfig]="{ axis: 'y', speed: 10 }"
               />
@@ -110,4 +117,6 @@ import {
     </div>
   `,
 })
-export class PrimitivesShowcaseComponent {}
+export class PrimitivesShowcaseComponent {
+  public readonly colors = SCENE_COLORS;
+}
