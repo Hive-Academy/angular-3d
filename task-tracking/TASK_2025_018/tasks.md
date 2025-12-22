@@ -35,7 +35,7 @@
 
 **Developer**: frontend-developer
 **Tasks**: 3 | **Dependencies**: None
-**Commit**: Pending (awaiting code-logic-reviewer)
+**Commit**: f2004ef
 
 ### Task 1.1: Verify Required Assets Exist ✅ COMPLETE
 
@@ -155,7 +155,7 @@
 
 **Developer**: frontend-developer
 **Tasks**: 4 | **Dependencies**: Batch 1 complete
-**Commit**: Pending (awaiting code-logic-reviewer)
+**Commit**: f2004ef
 
 ### Task 2.1: Add Multi-Layer Star Fields ✅ COMPLETE
 
@@ -323,7 +323,7 @@
 
 **Developer**: frontend-developer
 **Tasks**: 3 | **Dependencies**: Batch 2 complete
-**Commit**: Pending (awaiting code-logic-reviewer)
+**Commit**: f2004ef
 
 ### Task 3.1: Migrate cta-scene.component.ts Positioning ✅ COMPLETE
 
@@ -548,7 +548,7 @@
 
 **Developer**: frontend-developer
 **Tasks**: 3 | **Dependencies**: Batch 3 complete (Batch 4 SKIPPED - core features complete)
-**Commit**: Pending (awaiting team-leader MODE 3 verification)
+**Commit**: f2004ef
 
 ### Task 5.1: Implement Comprehensive Resource Cleanup ✅ COMPLETE
 
