@@ -14,6 +14,7 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
+    "typeRoots": ["./node_modules/@types", "./types"],
     "paths": {
       "@hive-academy/angular-3d": ["libs/angular-3d/src/index.ts"],
       "@hive-academy/angular-gsap": ["libs/angular-gsap/src/index.ts"]

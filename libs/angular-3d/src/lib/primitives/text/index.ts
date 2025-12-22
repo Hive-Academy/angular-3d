@@ -1,13 +1,13 @@
 /**
  * Text rendering components using troika-three-text
  *
- * This barrel file will export all text-related components as they are implemented.
+ * This barrel file exports all text-related components.
+ * Implemented components:
+ * - TroikaTextComponent (Batch 2)
+ *
  * Components to be added in subsequent batches:
- * - TroikaTextComponent
- * - ResponsiveTroikaTextComponent
- * - GlowTroikaTextComponent
+ * - ResponsiveTroikaTextComponent (Batch 3)
+ * - GlowTroikaTextComponent (Batch 4)
  */
 
-// Exports will be added as components are implemented
-// Empty export to make this a valid module
-export {};
+export * from './troika-text.component';
