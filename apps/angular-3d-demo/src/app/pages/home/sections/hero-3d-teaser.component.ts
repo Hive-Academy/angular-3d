@@ -14,6 +14,7 @@ import {
   OrbitControlsComponent,
   BloomEffectComponent,
   FloatingSphereComponent,
+  InstancedParticleTextComponent,
   type SpaceFlightWaypoint,
 } from '@hive-academy/angular-3d';
 import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
@@ -45,6 +46,7 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
     OrbitControlsComponent,
     BloomEffectComponent,
     FloatingSphereComponent,
+    InstancedParticleTextComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -81,6 +83,42 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [scale]="2.3"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 120, direction: 1 }"
+        />
+
+        <!-- ================================ -->
+        <!-- LEFT-SIDE HEADING - 3D Particle Text -->
+        <!-- ================================ -->
+        <!-- Line 1: "Build " + "Stunning" -->
+        <a3d-instanced-particle-text
+          text="Build "
+          [position]="[-11, 3, 0]"
+          [fontSize]="45"
+          [particleColor]="colors.white"
+          [opacity]="0.5"
+          [maxParticleScale]="0.25"
+          [particlesPerPixel]="3"
+          [skipInitialGrowth]="true"
+        />
+        <a3d-instanced-particle-text
+          text="Stunning"
+          [position]="[1, 3, 0]"
+          [fontSize]="45"
+          [particleColor]="colors.neonGreen"
+          [opacity]="0.5"
+          [maxParticleScale]="0.25"
+          [particlesPerPixel]="3"
+          [skipInitialGrowth]="true"
+        />
+        <!-- Line 2: "Angular Experiences" -->
+        <a3d-instanced-particle-text
+          text="Angular Experiences"
+          [position]="[-11, -2.5, 0]"
+          [fontSize]="45"
+          [particleColor]="colors.white"
+          [opacity]="0.5"
+          [maxParticleScale]="0.25"
+          [particlesPerPixel]="3"
+          [skipInitialGrowth]="true"
         />
 
         <!-- ================================ -->

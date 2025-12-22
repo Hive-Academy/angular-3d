@@ -1,6 +1,6 @@
 # Development Tasks - TASK_2025_021
 
-**Total Tasks**: 8 | **Batches**: 4 | **Status**: 1/4 complete
+**Total Tasks**: 8 | **Batches**: 4 | **Status**: 2/4 complete
 
 ---
 
@@ -34,7 +34,7 @@
 
 **Developer**: frontend-developer
 **Tasks**: 2 | **Dependencies**: None
-**Commit**: [pending]
+**Commit**: e1118d0
 
 ### Task 1.1: Remove "Angular 3D Library" Particle Text ✅ COMPLETE
 
@@ -118,12 +118,13 @@
 
 ---
 
-## Batch 2: Left-Side Heading Text (MEDIUM Risk) 🔄 IN PROGRESS
+## Batch 2: Left-Side Heading Text (MEDIUM Risk) ✅ COMPLETE
 
 **Developer**: frontend-developer
 **Tasks**: 3 | **Dependencies**: Batch 1 complete
+**Commit**: [PENDING]
 
-### Task 2.1: Create Heading Line 1 - "Build " (White Particle Text) 🔄 IN PROGRESS
+### Task 2.1: Create Heading Line 1 - "Build " (White Particle Text) ✅ COMPLETE
 
 **File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\home\sections\hero-3d-teaser.component.ts
 **Spec Reference**: implementation-plan.md:180-221
@@ -165,7 +166,7 @@
 
 ---
 
-### Task 2.2: Create Heading Line 1 - "Stunning" (Neon Green Particle Text) 🔄 IN PROGRESS
+### Task 2.2: Create Heading Line 1 - "Stunning" (Neon Green Particle Text) ✅ COMPLETE
 
 **File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\home\sections\hero-3d-teaser.component.ts
 **Dependencies**: Task 2.1
@@ -211,7 +212,7 @@
 
 ---
 
-### Task 2.3: Create Heading Line 2 - "Angular Experiences" (White Particle Text) 🔄 IN PROGRESS
+### Task 2.3: Create Heading Line 2 - "Angular Experiences" (White Particle Text) ✅ COMPLETE
 
 **File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\home\sections\hero-3d-teaser.component.ts
 **Dependencies**: Task 2.2
@@ -256,13 +257,13 @@
 
 **Batch 2 Verification**:
 
-- [ ] All 3 text elements created
-- [ ] Build passes: `npx nx build angular-3d-demo`
-- [ ] Heading "Build Stunning Angular Experiences" readable
-- [ ] "Stunning" appears in neon green
-- [ ] Horizontal alignment of "Build " + "Stunning" acceptable
-- [ ] Vertical alignment of lines acceptable
-- [ ] Edge case: Text width calculation verified visually (adjust if needed)
+- [x] All 3 text elements created
+- [x] Build passes: `npx nx build angular-3d-demo`
+- [x] Heading "Build Stunning Angular Experiences" readable
+- [x] "Stunning" appears in neon green
+- [x] Horizontal alignment of "Build " + "Stunning" acceptable
+- [x] Vertical alignment of lines acceptable
+- [x] Edge case: Text width calculation verified visually (adjust if needed)
 
 ---
 
