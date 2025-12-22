@@ -1,15 +1,9 @@
-import {
-  Component,
-  ChangeDetectionStrategy,
-  inject,
-  computed,
-} from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import {
   Scene3dComponent,
   AmbientLightComponent,
   DirectionalLightComponent,
   PointLightComponent,
-  ViewportPositioningService,
   ViewportPositionDirective,
   Rotate3dDirective,
   Float3dDirective,
@@ -84,7 +78,8 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <!-- ================================ -->
         <a3d-gltf-model
           [modelPath]="'3d/planet_earth/scene.gltf'"
-          [position]="earthPosition()"
+          viewportPosition="center"
+          [viewportOffset]="{ offsetZ: -9 }"
           [scale]="2.3"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 120, direction: 1 }"
@@ -209,10 +204,11 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
 
         <!-- ================================ -->
         <!-- PARTICLE TEXT -->
+        <!-- Position: centered horizontally, ~25% from top (camera FOV 75°, Z=20) -->
         <!-- ================================ -->
         <a3d-instanced-particle-text
           text="Angular 3D Library"
-          [position]="topTextPosition()"
+          [position]="[0, 7.5, 0]"
           [fontSize]="25"
           [particleColor]="colors.softGray"
           [opacity]="0.35"
@@ -273,27 +269,8 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
   ],
 })
 export class Hero3dTeaserComponent {
-  private readonly positioning = inject(ViewportPositioningService);
-
   public readonly colors = SCENE_COLORS;
   public readonly colorStrings = SCENE_COLOR_STRINGS;
-
-  /** Position for particle text via service (percentage-based positioning) */
-  public readonly topTextPosition = computed(() => {
-    // Hide text off-screen until camera is ready to prevent position flash
-    if (!this.positioning.isCameraReady()) {
-      return [0, 100, 0] as [number, number, number];
-    }
-    return this.positioning.getPosition({ x: '50%', y: '25%' })();
-  });
-
-  /** Position for Earth model - centered in viewport with Z offset */
-  public readonly earthPosition = computed(() => {
-    if (!this.positioning.isCameraReady()) {
-      return [0, 0, -9] as [number, number, number];
-    }
-    return this.positioning.getPosition({ x: '50%', y: '50%' }, { offsetZ: -9 })();
-  });
 
   /**
    * Robot 1 (Mini Robot) - HIGH ALTITUDE PATH
