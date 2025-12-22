@@ -1,20 +1,51 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
-import { ChromadbSectionComponent } from './sections/chromadb-section.component';
-import { Neo4jSectionComponent } from './sections/neo4j-section.component';
+import {
+  Scene3dComponent,
+  AmbientLightComponent,
+  DirectionalLightComponent,
+  ViewportPositioningService,
+  ViewportPositionDirective,
+  Rotate3dDirective,
+  PlanetComponent,
+  StarFieldComponent,
+  InstancedParticleTextComponent,
+  NebulaVolumetricComponent,
+  OrbitControlsComponent,
+  BloomEffectComponent,
+  GltfModelComponent,
+  SpaceFlight3dDirective,
+  type SpaceFlightWaypoint,
+} from '@hive-academy/angular-3d';
+import { Angular3dSectionComponent } from './sections/angular-3d-section.component';
+import { AngularGsapSectionComponent } from './sections/angular-gsap-section.component';
 import { ProblemSolutionSectionComponent } from './sections/problem-solution-section.component';
 import { ValuePropositionsSectionComponent } from './sections/value-propositions-section.component';
+import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../shared/colors';
 
 @Component({
   selector: 'app-gsap-showcase',
   imports: [
     NgOptimizedImage,
     ScrollAnimationDirective,
-    ChromadbSectionComponent,
-    Neo4jSectionComponent,
+    Angular3dSectionComponent,
+    AngularGsapSectionComponent,
     ProblemSolutionSectionComponent,
     ValuePropositionsSectionComponent,
+    Scene3dComponent,
+    AmbientLightComponent,
+    DirectionalLightComponent,
+    ViewportPositionDirective,
+    Rotate3dDirective,
+    PlanetComponent,
+    StarFieldComponent,
+    InstancedParticleTextComponent,
+    NebulaVolumetricComponent,
+    OrbitControlsComponent,
+    BloomEffectComponent,
+    GltfModelComponent,
+    SpaceFlight3dDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -22,54 +53,42 @@ import { ValuePropositionsSectionComponent } from './sections/value-propositions
     <section
       class="relative min-h-screen flex items-center justify-center overflow-hidden"
     >
-      <!-- Background Layer 1 - Slow Parallax (Back) -->
+      <!-- 3D Scene Background -->
       <div
-        class="absolute inset-0 w-full h-full"
-        scrollAnimation
-        [scrollConfig]="{
-          animation: 'parallax',
-          speed: 0.3,
-          scrub: true,
-          start: 'top top',
-          end: 'bottom top'
-        }"
+        class="absolute inset-0 w-full h-full min-h-screen"
+        role="img"
+        aria-label="Interactive 3D space scene with rotating Earth, flying robots, twinkling stars, and camera controls"
       >
-        <img
-          ngSrc="images/showcase/hero-bg-back.png"
-          alt=""
-          fill
-          priority
-          class="object-cover scale-110"
-        />
-      </div>
-
-      <!-- Background Layer 2 - Fast Parallax (Front) -->
-      <div
-        class="absolute inset-0 w-full h-full"
-        scrollAnimation
-        [scrollConfig]="{
-          animation: 'parallax',
-          speed: 0.6,
-          scrub: true,
-          start: 'top top',
-          end: 'bottom top'
-        }"
-      >
-        <img
-          ngSrc="images/showcase/hero-bg-front.png"
-          alt=""
-          fill
-          class="object-cover mix-blend-screen opacity-70"
-        />
+        <a3d-scene-3d [cameraPosition]="[0, 0, 20]" [cameraFov]="75">
+          <!-- Lighting -->
+          <a3d-ambient-light [color]="colors.white" [intensity]="0.05" />
+          <a3d-directional-light
+            [position]="[30, 15, 25]"
+            [color]="colors.white"
+            [intensity]="0.3"
+            [castShadow]="true"
+          />
+        </a3d-scene-3d>
       </div>
 
       <!-- Gradient Overlay -->
       <div
-        class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background-dark/80"
+        class="absolute inset-0 bg-gradient-to-b from-background-dark/100 via-transparent to-background-dark/100"
       ></div>
 
-      <!-- Hero Content -->
-      <div class="relative z-10 text-center text-white px-8">
+      <!-- Hero Content - Scroll Up & Fade Effect -->
+      <div
+        class="relative z-10 text-center text-white px-4 sm:px-6 md:px-8 max-w-5xl mx-auto mt-20 hero-content"
+        scrollAnimation
+        [scrollConfig]="{
+          animation: 'custom',
+          start: 'top top',
+          end: 'bottom top',
+          scrub: 1.2,
+          from: { opacity: 1, y: 0 },
+          to: { opacity: 0, y: -150 }
+        }"
+      >
         <!-- Badge -->
         <div
           scrollAnimation
@@ -78,36 +97,51 @@ import { ValuePropositionsSectionComponent } from './sections/value-propositions
             duration: 1,
             delay: 0.2
           }"
+          class="pt-8"
         >
           <span
-            class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium mb-6 border border-white/20"
+            class="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 bg-white/5 backdrop-blur-md rounded-full text-xs sm:text-sm font-medium border border-white/10 shadow-lg"
           >
-            <span
-              class="w-2 h-2 rounded-full bg-neon-green animate-pulse"
-            ></span>
-            Angular + GSAP ScrollTrigger
+            <span class="relative flex h-2 w-2 sm:h-3 sm:w-3">
+              <span
+                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-neon-green opacity-75"
+              ></span>
+              <span
+                class="relative inline-flex rounded-full h-2 w-2 sm:h-3 sm:w-3 bg-neon-green"
+              ></span>
+            </span>
+            <span class="text-white/90">Angular + GSAP ScrollTrigger</span>
           </span>
         </div>
 
-        <!-- Main Title with Scale Animation -->
+        <!-- Main Title - Reduced by 2 scale steps with responsive sizing -->
         <h1
-          class="text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent"
+          class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 sm:mb-8 leading-none tracking-tight"
           scrollAnimation
           [scrollConfig]="{
             animation: 'custom',
             start: 'top 80%',
             end: 'top 20%',
             scrub: 0.5,
-            from: { opacity: 0, scale: 0.8, y: 50 },
+            from: { opacity: 0, scale: 0.9, y: 60 },
             to: { opacity: 1, scale: 1, y: 0 }
           }"
         >
-          Angular GSAP
+          <span
+            class="block bg-gradient-to-r p-4 from-white via-white to-white/80 bg-clip-text text-transparent drop-shadow-2xl"
+          >
+            Angular
+          </span>
+          <span
+            class="block bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent"
+          >
+            GSAP
+          </span>
         </h1>
 
-        <!-- Subtitle -->
+        <!-- Subtitle - Reduced by 2 scale steps -->
         <p
-          class="text-xl md:text-2xl text-white/80 max-w-2xl mx-auto mb-8"
+          class="text-base font-medium sm:text-lg md:text-xl text-white/70 max-w-3xl mx-auto mb-4 sm:mb-6 leading-relaxed font-light"
           scrollAnimation
           [scrollConfig]="{
             animation: 'slideUp',
@@ -116,14 +150,38 @@ import { ValuePropositionsSectionComponent } from './sections/value-propositions
           }"
         >
           Create stunning scroll-driven animations with declarative directives.
-          <span class="block mt-2 text-cyan-300 font-semibold">
-            10+ built-in effects • SSR-safe • TypeScript-first
-          </span>
         </p>
 
-        <!-- CTA Buttons -->
+        <!-- Feature Pills - Responsive sizing -->
         <div
-          class="flex flex-wrap gap-4 justify-center"
+          class="flex flex-wrap gap-2 sm:gap-3 justify-center mb-8 sm:mb-12"
+          scrollAnimation
+          [scrollConfig]="{
+            animation: 'fadeIn',
+            duration: 0.6,
+            delay: 0.5
+          }"
+        >
+          <span
+            class="px-3 sm:px-4 py-1.5 sm:py-2 bg-cyan-500/20 text-cyan-300 rounded-full text-xs sm:text-sm font-semibold border border-cyan-500/30"
+          >
+            10+ Built-in Effects
+          </span>
+          <span
+            class="px-3 sm:px-4 py-1.5 sm:py-2 bg-purple-500/20 text-purple-300 rounded-full text-xs sm:text-sm font-semibold border border-purple-500/30"
+          >
+            SSR-Safe
+          </span>
+          <span
+            class="px-3 sm:px-4 py-1.5 sm:py-2 bg-pink-500/20 text-pink-300 rounded-full text-xs sm:text-sm font-semibold border border-pink-500/30"
+          >
+            TypeScript-First
+          </span>
+        </div>
+
+        <!-- CTA Buttons - Responsive sizing -->
+        <div
+          class="flex flex-wrap gap-4 sm:gap-6 justify-center mb-12 sm:mb-16"
           scrollAnimation
           [scrollConfig]="{
             animation: 'fadeIn',
@@ -132,46 +190,43 @@ import { ValuePropositionsSectionComponent } from './sections/value-propositions
           }"
         >
           <button
-            class="px-8 py-4 bg-neon-green text-background-dark rounded-full font-semibold hover:scale-105 transition-transform shadow-lg shadow-neon-green/20"
+            class="group relative px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-gradient-to-r from-neon-green to-emerald-400 text-background-dark rounded-full font-bold text-sm sm:text-base md:text-lg hover:scale-105 transition-all duration-300 shadow-xl shadow-neon-green/30"
           >
-            Get Started
+            <span class="relative z-10">Get Started</span>
+            <div
+              class="absolute inset-0 rounded-full bg-gradient-to-r from-neon-green to-emerald-400 blur-xl opacity-50 group-hover:opacity-75 transition-opacity"
+            ></div>
           </button>
           <a
             href="#features"
-            class="px-8 py-4 border-2 border-white/30 text-white rounded-full font-semibold hover:bg-white/10 transition-all backdrop-blur-sm"
+            class="px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-white/5 backdrop-blur-md text-white rounded-full font-bold text-sm sm:text-base md:text-lg border border-white/20 hover:bg-white/10 hover:border-white/40 transition-all duration-300"
           >
             See Examples
           </a>
         </div>
 
-        <!-- Scroll Indicator -->
+        <!-- Scroll Indicator - Enhanced fade out -->
         <div
-          class="absolute bottom-8 left-1/2 -translate-x-1/2"
+          class="flex flex-col items-center gap-2 sm:gap-3 text-white/50"
           scrollAnimation
           [scrollConfig]="{
             animation: 'custom',
             start: 'top top',
-            end: 'top -100',
-            scrub: true,
+            end: 'top -150',
+            scrub: 1,
             from: { opacity: 1, y: 0 },
-            to: { opacity: 0, y: 20 }
+            to: { opacity: 0, y: 30 }
           }"
         >
-          <div class="flex flex-col items-center gap-2 text-white/60">
-            <span class="text-sm">Scroll to explore</span>
-            <svg
-              class="w-6 h-6 animate-bounce"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 14l-7 7m0 0l-7-7m7 7V3"
-              />
-            </svg>
+          <span class="text-xs sm:text-sm font-medium tracking-widest uppercase"
+            >Scroll to explore</span
+          >
+          <div
+            class="w-5 h-8 sm:w-6 sm:h-10 border-2 border-white/30 rounded-full flex justify-center pt-1.5 sm:pt-2"
+          >
+            <div
+              class="w-1 h-2.5 sm:w-1.5 sm:h-3 bg-white/50 rounded-full animate-bounce"
+            ></div>
           </div>
         </div>
       </div>
@@ -180,11 +235,11 @@ import { ValuePropositionsSectionComponent } from './sections/value-propositions
     <!-- Problem/Solution Section -->
     <app-problem-solution-section />
 
-    <!-- ChromaDB Section (Angular 3D) -->
-    <app-chromadb-section />
+    <!-- Angular 3D Section (Option A - Dark Theme + Oversized Images) -->
+    <app-angular-3d-section />
 
-    <!-- Neo4j Section (Angular GSAP) -->
-    <app-neo4j-section />
+    <!-- Angular GSAP Section (Option C - Parallax Split-Screen) -->
+    <app-angular-gsap-section />
 
     <!-- Value Propositions Section -->
     <app-value-propositions-section />
@@ -279,4 +334,7 @@ import { ValuePropositionsSectionComponent } from './sections/value-propositions
     `,
   ],
 })
-export class GsapShowcaseComponent {}
+export class GsapShowcaseComponent {
+  public readonly colors = SCENE_COLORS;
+  public readonly colorStrings = SCENE_COLOR_STRINGS;
+}
