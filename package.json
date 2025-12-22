@@ -23,6 +23,7 @@
     "rxjs": "~7.8.0",
     "three": "^0.182.0",
     "three-stdlib": "^2.36.1",
+    "troika-three-text": "^0.49.1",
     "zone.js": "~0.15.0"
   },
   "devDependencies": {

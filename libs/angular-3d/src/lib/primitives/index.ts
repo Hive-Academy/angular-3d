@@ -27,6 +27,9 @@ export * from './particle-text/instanced-particle-text.component';
 export * from './particle-text/smoke-particle-text.component';
 export * from './particle-text/glow-particle-text.component';
 
+// Troika text components (SDF-based high-quality text)
+export * from './text';
+
 // Volumetric components
 export * from './nebula-volumetric.component';
 
