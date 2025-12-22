@@ -99,4 +99,4 @@ export function provideLenis(
 }
 
 // Re-export types for convenience
-export { LenisServiceOptions } from '../services/lenis-smooth-scroll.service';
+export type { LenisServiceOptions } from '../services/lenis-smooth-scroll.service';
