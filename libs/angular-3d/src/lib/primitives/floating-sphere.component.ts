@@ -60,6 +60,7 @@ import { PhysicalMaterialDirective } from '../directives/materials/physical-mate
         'clearcoatRoughness',
         'transmission',
         'ior',
+        'thickness',
         'wireframe',
       ],
     },
@@ -74,21 +75,32 @@ export class FloatingSphereComponent {
   /**
    * Sphere geometry parameters forwarded to SphereGeometryDirective
    * @param args - Tuple of [radius, widthSegments, heightSegments]
-   * @default [1, 32, 16] - Unit sphere with 32x16 segments
+   * @default [1, 32, 32] - Unit sphere with 32x32 segments (smoother curvature vs 32x16)
    * @example
    * ```html
    * <a3d-floating-sphere [args]="[2.5, 64, 32]" />
    * ```
    */
-  public readonly args = input<[number, number, number]>([1, 32, 16]);
+  public readonly args = input<[number, number, number]>([1, 32, 32]);
 
   // Material inputs - forwarded to PhysicalMaterialDirective
   public readonly color = input<number | string>(0xff6b6b);
   public readonly metalness = input<number>(0.8);
   public readonly roughness = input<number>(0.2);
   public readonly clearcoat = input<number>(1.0);
-  public readonly clearcoatRoughness = input<number>(0.0);
+  /**
+   * Clearcoat roughness (0 = mirror-like, 1 = rough)
+   * Default: 0.1 (slight roughness for more realistic appearance vs 0.0 perfect mirror)
+   */
+  public readonly clearcoatRoughness = input<number>(0.1);
   public readonly transmission = input<number>(0.1);
   public readonly ior = input<number>(1.5);
+  /**
+   * Thickness of the volume beneath the surface (for transmission materials)
+   * Controls subsurface scattering depth - higher values make light penetrate deeper
+   * Only affects materials with transmission > 0
+   * Default: 0.5
+   */
+  public readonly thickness = input<number>(0.5);
   public readonly wireframe = input<boolean>(false);
 }

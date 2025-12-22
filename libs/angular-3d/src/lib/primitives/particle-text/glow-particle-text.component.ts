@@ -69,13 +69,23 @@ export class GlowParticleTextComponent implements OnDestroy {
   // Signal inputs
   readonly text = input.required<string>();
   readonly position = input<[number, number, number]>([0, 0, 0]);
-  readonly fontSize = input<number>(80); // Canvas font size
+  /**
+   * Canvas font size for text sampling
+   * Default: 100 (25% larger than previous default for improved readability)
+   */
+  readonly fontSize = input<number>(100); // Canvas font size
   readonly particleDensity = input<number>(70); // Particles per 100 pixels (high for tight clustering)
   readonly glowColor = input<number>(0x00d4ff); // Cyan glow
   readonly baseParticleSize = input<number>(0.025);
   readonly glowIntensity = input<number>(3.0); // Brightness multiplier for bloom
   readonly pulseSpeed = input<number>(2.0); // Global pulse speed
   readonly flowSpeed = input<number>(1.0); // Flow animation speed
+  /**
+   * Pulse amount controls breathing intensity
+   * 0 = no pulse, 0.3 = default breathing effect, 0.5+ = strong pulse
+   * Default: 0.3
+   */
+  readonly pulseAmount = input<number>(0.3);
 
   // DI
   private readonly parent = inject(NG_3D_PARENT);
@@ -258,7 +268,8 @@ export class GlowParticleTextComponent implements OnDestroy {
     ] as THREE.BufferAttribute;
 
     // Global pulse effect (all particles breathe together)
-    const globalPulse = Math.sin(this.time * this.pulseSpeed()) * 0.3 + 1.0; // 0.7 to 1.3
+    const globalPulse =
+      Math.sin(this.time * this.pulseSpeed()) * this.pulseAmount() + 1.0; // Configurable pulse intensity
 
     this.particles.forEach((particle, i) => {
       // Flow animation: wave traveling along text path

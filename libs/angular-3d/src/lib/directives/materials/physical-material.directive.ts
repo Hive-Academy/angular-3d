@@ -117,6 +117,14 @@ export class PhysicalMaterialDirective {
   });
 
   /**
+   * Thickness of the volume beneath the surface (for transmission materials)
+   * Controls subsurface scattering depth - higher values make light penetrate deeper
+   * Only affects materials with transmission > 0
+   * Default: 0
+   */
+  public readonly thickness = input<number>(0);
+
+  /**
    * Render geometry as wireframe
    * Default: false
    */
@@ -137,6 +145,7 @@ export class PhysicalMaterialDirective {
       const clearcoatRoughness = this.clearcoatRoughness();
       const transmission = this.transmission();
       const ior = this.ior();
+      const thickness = this.thickness();
 
       if (!this.material) {
         // First run: create material and set signal
@@ -149,6 +158,7 @@ export class PhysicalMaterialDirective {
           clearcoatRoughness,
           transmission,
           ior,
+          thickness,
         });
         this.materialSignal.set(this.material);
       } else {
@@ -161,6 +171,7 @@ export class PhysicalMaterialDirective {
         this.material.clearcoatRoughness = clearcoatRoughness;
         this.material.transmission = transmission;
         this.material.ior = ior;
+        this.material.thickness = thickness;
         this.material.needsUpdate = true;
       }
 
