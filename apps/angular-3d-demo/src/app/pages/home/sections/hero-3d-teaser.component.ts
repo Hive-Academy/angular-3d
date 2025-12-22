@@ -1,4 +1,9 @@
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  inject,
+  computed,
+} from '@angular/core';
 import {
   Scene3dComponent,
   AmbientLightComponent,
@@ -136,8 +141,11 @@ export class Hero3dTeaserComponent {
   public readonly colorStrings = SCENE_COLOR_STRINGS;
 
   /** Position for particle text via service (percentage-based positioning) */
-  public readonly topTextPosition = this.positioning.getPosition({
-    x: '50%',
-    y: '25%',
+  public readonly topTextPosition = computed(() => {
+    // Hide text off-screen until camera is ready to prevent position flash
+    if (!this.positioning.isCameraReady()) {
+      return [0, 100, 0] as [number, number, number];
+    }
+    return this.positioning.getPosition({ x: '50%', y: '25%' })();
   });
 }
