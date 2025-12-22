@@ -97,6 +97,7 @@ Create comprehensive README documentation for the `@hive-academy/angular-3d` lib
 - SSR considerations (Angular Universal)
 - Custom geometries and materials
 - Integration with @hive-academy/angular-gsap
+- **Multi-Scene Architecture** (CRITICAL - see Batch 9.1 below)
 
 **10. Migration Guide**:
 
@@ -489,3 +490,125 @@ export class AnimatedModelComponent {}
 - **Review & Polish**: 1 hour
 
 **Total**: 6-8 hours
+
+---
+
+## Batch 9.1: Multi-Scene Architecture Documentation
+
+**Added**: 2025-12-22
+**Priority**: HIGH
+**Reason**: Bug fix revealed critical architectural pattern that MUST be documented
+
+### Background
+
+A multi-scene bug was discovered and fixed (commit `b70923e`) where 3D objects were registering with the wrong scene when multiple `<a3d-scene-3d>` components existed on the same page. The root cause was services using `providedIn: 'root'` instead of per-scene providers.
+
+### Documentation Requirements
+
+**1. Multi-Scene Support Section** (in Advanced Topics):
+
+````markdown
+## Multi-Scene Support
+
+@hive-academy/angular-3d fully supports multiple 3D scenes on the same page.
+Each `<a3d-scene-3d>` component creates isolated instances of:
+
+- `SceneService` - Scene, camera, renderer access
+- `RenderLoopService` - Independent render loops
+- `SceneGraphStore` - Object registry per scene
+- `ViewportPositioningService` - Camera-specific positioning
+- `EffectComposerService` - Per-scene postprocessing
+
+### Example: Two Independent Scenes
+
+```html
+<!-- Hero scene -->
+<a3d-scene-3d [cameraPosition]="[0, 0, 20]">
+  <a3d-star-field [starCount]="5000" />
+  <a3d-gltf-model [modelPath]="'/models/earth.glb'" />
+</a3d-scene-3d>
+
+<!-- CTA scene (completely independent) -->
+<a3d-scene-3d [cameraPosition]="[0, 5, 10]">
+  <a3d-box [position]="[0, 0, 0]" />
+</a3d-scene-3d>
+```
+````
+
+Each scene renders independently with its own camera, objects, and effects.
+
+````
+
+**2. Architecture Warning** (in State Management section):
+
+```markdown
+### Per-Scene vs Root Services
+
+**IMPORTANT**: The following services are intentionally NOT provided at root level:
+
+| Service | Scope | Why |
+|---------|-------|-----|
+| `SceneGraphStore` | Per-scene | Objects must register with correct scene |
+| `ViewportPositioningService` | Per-scene | Viewport calculations need correct camera |
+
+**Do NOT inject these services outside of `<a3d-scene-3d>` hierarchy.**
+They will throw `NullInjectorError` if injected at application level.
+
+```typescript
+// ❌ WRONG - Will fail with NullInjectorError
+@Component({ ... })
+class AppComponent {
+  private readonly store = inject(SceneGraphStore); // Error!
+}
+
+// ✅ CORRECT - Component is within scene hierarchy
+@Component({
+  template: `<a3d-scene-3d><my-3d-object /></a3d-scene-3d>`
+})
+class AppComponent { }
+
+// ✅ CORRECT - Component rendered inside scene
+@Component({ selector: 'my-3d-object' })
+class My3DObjectComponent {
+  private readonly store = inject(SceneGraphStore); // Works!
+}
+````
+
+````
+
+**3. Troubleshooting Entry**:
+
+```markdown
+### Objects Appearing in Wrong Scene
+
+**Symptom**: When using multiple `<a3d-scene-3d>` components, objects from one scene appear in another.
+
+**Cause**: This was a bug in versions prior to 1.x.x where `SceneGraphStore` was a root singleton.
+
+**Solution**: Update to latest version. If you're building a custom service that needs scene access, ensure it's provided at `Scene3dComponent` level, not root:
+
+```typescript
+// ❌ WRONG
+@Injectable({ providedIn: 'root' })
+export class MySceneService { }
+
+// ✅ CORRECT
+@Injectable() // No providedIn
+export class MySceneService { }
+
+// Then in Scene3dComponent providers or your component
+@Component({
+  providers: [MySceneService] // Per-scene instance
+})
+````
+
+```
+
+### Acceptance Criteria for Batch 9.1
+
+- [ ] Multi-scene support documented in Advanced Topics
+- [ ] Per-scene vs root service table in State Management
+- [ ] Troubleshooting entry for wrong-scene bug
+- [ ] Code examples showing correct injection patterns
+- [ ] Warning callout about NullInjectorError for root injection
+```

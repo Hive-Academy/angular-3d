@@ -4,7 +4,8 @@
  * Maps familiar CSS-like positioning to 3D world space coordinates.
  * Provides Angular-native reactive positioning that auto-syncs with camera and window changes.
  *
- * Features:
+ * ## Features
+ *
  * - Automatic reactivity (positions update on camera/window resize changes)
  * - Named positions (top-left, center, bottom-right, etc.)
  * - Percentage positions ('50%' or 0.5 for center)
@@ -13,11 +14,35 @@
  * - Responsive utilities (worldToPixels, pixelsToWorld)
  * - SSR-safe (window access guarded)
  *
+ * ## Multi-Scene Architecture
+ *
+ * **CRITICAL**: This service is NOT provided at root level (`providedIn: 'root'`).
+ * Instead, each `Scene3dComponent` provides its own instance via its `providers` array.
+ *
+ * ### Why Per-Scene Instances?
+ *
+ * This service depends on `SceneGraphStore` to access the camera. When multiple scenes
+ * exist on the same page, each scene has different camera configurations (FOV, position).
+ * Using a root singleton would cause viewport calculations to use the wrong camera.
+ *
+ * **Bug History (Fixed 2025-12-22)**:
+ * Previously, this was `providedIn: 'root'`, causing viewport positions to be calculated
+ * using whichever scene initialized last, not the scene the component belongs to.
+ *
+ * ### For Library Maintainers
+ *
+ * **DO NOT** add `providedIn: 'root'` to this service.
+ * **DO NOT** use this service directly in application code - inject via Scene3dComponent hierarchy.
+ *
+ * @see Scene3dComponent - Provides this service per-scene
+ * @see SceneGraphStore - Another per-scene service with same pattern
+ *
  * @example
  * ```typescript
  * import { effect, inject } from '@angular/core';
  * import { ViewportPositioningService } from '@hive-academy/angular-3d';
  *
+ * // Component must be within <a3d-scene-3d> hierarchy
  * class MyComponent {
  *   private readonly positioning = inject(ViewportPositioningService);
  *
@@ -63,9 +88,25 @@ const DEFAULT_SSR_VIEWPORT_WIDTH = 1920;
 const DEFAULT_SSR_VIEWPORT_HEIGHT = 1080;
 
 /**
- * IMPORTANT: This service is NOT provided at root.
- * Each Scene3dComponent provides its own instance to ensure
- * multi-scene isolation (viewport calculations use correct camera).
+ * Reactive viewport positioning service for CSS-like 3D placement.
+ *
+ * @remarks
+ * **ARCHITECTURE DECISION**: This service uses `@Injectable()` WITHOUT `providedIn: 'root'`.
+ * It is intentionally provided at the `Scene3dComponent` level to ensure multi-scene isolation.
+ *
+ * **DO NOT CHANGE** to `providedIn: 'root'` - this will break multi-scene viewport calculations.
+ *
+ * @example
+ * ```typescript
+ * // Correct: Inject within a3d-scene-3d hierarchy
+ * @Component({
+ *   template: `<a3d-scene-3d><my-component /></a3d-scene-3d>`
+ * })
+ * class MyComponent {
+ *   private readonly viewport = inject(ViewportPositioningService);
+ *   readonly centerPos = this.viewport.getNamedPosition('center');
+ * }
+ * ```
  */
 @Injectable()
 export class ViewportPositioningService {

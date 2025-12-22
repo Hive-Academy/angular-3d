@@ -3,6 +3,43 @@
  *
  * Uses Angular signals for reactive state management.
  * Pattern follows ComponentRegistryService signal patterns.
+ *
+ * ## Multi-Scene Architecture
+ *
+ * **CRITICAL**: This service is NOT provided at root level (`providedIn: 'root'`).
+ * Instead, each `Scene3dComponent` provides its own instance via its `providers` array.
+ *
+ * ### Why Per-Scene Instances?
+ *
+ * When multiple `<a3d-scene-3d>` components exist on the same page, each scene needs
+ * its own isolated registry to ensure 3D objects register with the correct scene.
+ *
+ * **Bug History (Fixed 2025-12-22)**:
+ * Previously, this service was `providedIn: 'root'`, causing a singleton where:
+ * 1. Scene A initializes → `_scene` signal set to Scene A
+ * 2. Scene B initializes → `_scene` signal OVERWRITTEN to Scene B
+ * 3. Scene A's child components register → Objects added to Scene B (WRONG!)
+ *
+ * ### How It Works Now
+ *
+ * ```typescript
+ * // Scene3dComponent provides per-scene instance:
+ * @Component({
+ *   providers: [
+ *     SceneGraphStore,  // Each scene gets its own store
+ *     // ...
+ *   ]
+ * })
+ * export class Scene3dComponent { }
+ * ```
+ *
+ * ### For Library Maintainers
+ *
+ * **DO NOT** add `providedIn: 'root'` to this service.
+ * **DO NOT** use this service directly in application code - inject via Scene3dComponent hierarchy.
+ *
+ * @see Scene3dComponent - Provides this service per-scene
+ * @see ViewportPositioningService - Another per-scene service with same pattern
  */
 
 import { Injectable, signal, computed } from '@angular/core';
@@ -51,9 +88,24 @@ export interface MaterialProps {
 // ============================================================================
 
 /**
- * IMPORTANT: This service is NOT provided at root.
- * Each Scene3dComponent provides its own instance to ensure
- * multi-scene isolation (objects register with the correct scene).
+ * Central registry for Three.js Object3D instances within a single scene.
+ *
+ * @remarks
+ * **ARCHITECTURE DECISION**: This service uses `@Injectable()` WITHOUT `providedIn: 'root'`.
+ * It is intentionally provided at the `Scene3dComponent` level to ensure multi-scene isolation.
+ *
+ * **DO NOT CHANGE** to `providedIn: 'root'` - this will break multi-scene support.
+ *
+ * @example
+ * ```typescript
+ * // Correct: Inject within a3d-scene-3d hierarchy
+ * @Component({
+ *   template: `<a3d-scene-3d><my-component /></a3d-scene-3d>`
+ * })
+ * class MyComponent {
+ *   private readonly store = inject(SceneGraphStore); // Gets scene-specific instance
+ * }
+ * ```
  */
 @Injectable()
 export class SceneGraphStore {
