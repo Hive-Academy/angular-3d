@@ -5,7 +5,6 @@ import {
   Scene3dComponent,
   AmbientLightComponent,
   DirectionalLightComponent,
-  ViewportPositioningService,
   ViewportPositionDirective,
   Rotate3dDirective,
   PlanetComponent,
@@ -77,6 +76,28 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../shared/colors';
             [scale]="2.3"
             rotate3d
             [rotateConfig]="{ axis: 'y', speed: 60 }"
+          />
+
+          <!-- Flying Robot 1 -->
+          <a3d-gltf-model
+            [modelPath]="'/3d/mini_robot.glb'"
+            [scale]="0.05"
+            a3dSpaceFlight3d
+            [flightPath]="robot1FlightPath"
+            [rotationsPerCycle]="8"
+            [loop]="true"
+            [autoStart]="true"
+          />
+
+          <!-- Flying Robot 2 -->
+          <a3d-gltf-model
+            [modelPath]="'/3d/robo_head/scene.gltf'"
+            [scale]="1.0"
+            a3dSpaceFlight3d
+            [flightPath]="robot2FlightPath"
+            [rotationsPerCycle]="6"
+            [loop]="true"
+            [autoStart]="true"
           />
         </a3d-scene-3d>
       </div>
@@ -347,4 +368,20 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../shared/colors';
 export class GsapShowcaseComponent {
   public readonly colors = SCENE_COLORS;
   public readonly colorStrings = SCENE_COLOR_STRINGS;
+
+  public readonly robot1FlightPath: SpaceFlightWaypoint[] = [
+    { position: [-12, 8, -8], duration: 10, easing: 'easeInOut' },
+    { position: [10, 12, -5], duration: 8, easing: 'easeInOut' },
+    { position: [-6, 4, 10], duration: 9, easing: 'easeIn' },
+    { position: [8, 10, -12], duration: 11, easing: 'easeOut' },
+    { position: [-12, 8, -8], duration: 8, easing: 'easeInOut' },
+  ];
+
+  public readonly robot2FlightPath: SpaceFlightWaypoint[] = [
+    { position: [4, -3, -8], duration: 9, easing: 'easeOut' },
+    { position: [-8, -5, -5], duration: 10, easing: 'easeInOut' },
+    { position: [12, -4, 16], duration: 8, easing: 'easeInOut' },
+    { position: [10, -6, -15], duration: 11, easing: 'easeIn' },
+    { position: [-6, -5, -10], duration: 9, easing: 'easeInOut' },
+  ];
 }
