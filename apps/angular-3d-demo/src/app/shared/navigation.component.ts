@@ -20,40 +20,61 @@ import { distinctUntilChanged, fromEvent, map } from 'rxjs';
       class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
       [class.nav-transparent]="!isSticky()"
       [class.nav-solid]="isSticky()"
+      [class.nav-compact]="isSticky()"
       [class.nav-hidden]="isHidden()"
     >
       <div
-        class="max-w-container mx-auto px-4x py-3x flex items-center justify-between"
+        class="nav-inner max-w-container mx-auto px-4 flex items-center justify-between transition-all duration-300"
+        [class.py-4]="!isSticky()"
+        [class.py-2]="isSticky()"
       >
-        <!-- Logo -->
+        <!-- Logo with smooth scale transition -->
         <a
           routerLink="/"
-          class="text-headline-md font-bold text-neon-green hover:animate-glow transition-all duration-250"
+          class="logo-wrapper text-headline-md font-bold text-neon-green hover:animate-glow transition-all duration-300"
+          [class.logo-compact]="isSticky()"
         >
-          <img ngSrc="/logo.png" alt="logo" width="160" height="56" priority />
+          <img
+            ngSrc="/logo.png"
+            alt="logo"
+            width="160"
+            height="56"
+            priority
+            class="transition-all duration-300"
+          />
         </a>
 
-        <!-- Nav Links -->
-        <div class="hidden md:flex items-center gap-8">
+        <!-- Nav Links with compact sizing -->
+        <div
+          class="hidden md:flex items-center transition-all duration-300"
+          [class.gap-8]="!isSticky()"
+          [class.gap-6]="isSticky()"
+        >
           <a
             routerLink="/"
             routerLinkActive="!text-neon-green"
             [routerLinkActiveOptions]="{ exact: true }"
-            class="text-base font-medium text-white/90 hover:text-neon-green transition-colors duration-250"
+            class="nav-link font-medium text-white/90 hover:text-neon-green transition-all duration-300"
+            [class.text-base]="!isSticky()"
+            [class.text-sm]="isSticky()"
           >
             Home
           </a>
           <a
             routerLink="/angular-3d"
             routerLinkActive="!text-neon-green"
-            class="text-base font-medium text-white/90 hover:text-neon-green transition-colors duration-250"
+            class="nav-link font-medium text-white/90 hover:text-neon-green transition-all duration-300"
+            [class.text-base]="!isSticky()"
+            [class.text-sm]="isSticky()"
           >
             Angular-3D
           </a>
           <a
             routerLink="/angular-gsap"
             routerLinkActive="!text-neon-green"
-            class="text-base font-medium text-white/90 hover:text-neon-green transition-colors duration-250"
+            class="nav-link font-medium text-white/90 hover:text-neon-green transition-all duration-300"
+            [class.text-base]="!isSticky()"
+            [class.text-sm]="isSticky()"
           >
             Angular-GSAP
           </a>
@@ -61,7 +82,9 @@ import { distinctUntilChanged, fromEvent, map } from 'rxjs';
             href="https://github.com/hive-academy"
             target="_blank"
             rel="noopener noreferrer"
-            class="text-base font-medium text-white/90 hover:text-neon-green transition-colors duration-250"
+            class="nav-link font-medium text-white/90 hover:text-neon-green transition-all duration-300"
+            [class.text-base]="!isSticky()"
+            [class.text-sm]="isSticky()"
           >
             GitHub
           </a>
@@ -70,7 +93,9 @@ import { distinctUntilChanged, fromEvent, map } from 'rxjs';
         <!-- Mobile Menu Button -->
         <button class="md:hidden text-neon-green" aria-label="Toggle menu">
           <svg
-            class="w-6 h-6"
+            class="w-6 h-6 transition-all duration-300"
+            [class.w-5]="isSticky()"
+            [class.h-5]="isSticky()"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -98,15 +123,31 @@ import { distinctUntilChanged, fromEvent, map } from 'rxjs';
       }
 
       .nav-solid {
-        background: rgba(10, 10, 10, 0.9);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border-bottom: 1px solid rgba(0, 255, 150, 0.1);
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        background: rgba(10, 10, 10, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(0, 255, 150, 0.15);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
       }
 
       .nav-hidden {
         transform: translateY(-100%);
+      }
+
+      /* Logo smooth scaling */
+      .logo-wrapper img {
+        transform-origin: left center;
+        transform: scale(1);
+      }
+
+      .logo-wrapper.logo-compact img {
+        transform: scale(0.7);
+        margin: -8px 0;
+      }
+
+      /* Nav link subtle glow on compact mode */
+      .nav-compact .nav-link {
+        letter-spacing: 0.02em;
       }
     `,
   ],
@@ -130,7 +171,7 @@ export class NavigationComponent {
           takeUntilDestroyed(this.destroyRef)
         )
         .subscribe((scrollPos) => {
-          // Show solid nav after scrolling 100px
+          // Show compact/solid nav after scrolling 100px
           this.isSticky.set(scrollPos > 100);
 
           // Hide nav when scrolling down past 400px, show when scrolling up

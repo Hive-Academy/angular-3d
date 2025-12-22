@@ -1,27 +1,10 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
-import {
-  Scene3dComponent,
-  AmbientLightComponent,
-  DirectionalLightComponent,
-  ViewportPositionDirective,
-  Rotate3dDirective,
-  PlanetComponent,
-  StarFieldComponent,
-  InstancedParticleTextComponent,
-  NebulaVolumetricComponent,
-  OrbitControlsComponent,
-  BloomEffectComponent,
-  GltfModelComponent,
-  SpaceFlight3dDirective,
-  type SpaceFlightWaypoint,
-} from '@hive-academy/angular-3d';
 import { Angular3dSectionComponent } from './sections/angular-3d-section.component';
 import { AngularGsapSectionComponent } from './sections/angular-gsap-section.component';
 import { ProblemSolutionSectionComponent } from './sections/problem-solution-section.component';
 import { ValuePropositionsSectionComponent } from './sections/value-propositions-section.component';
-import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../shared/colors';
 
 @Component({
   selector: 'app-gsap-showcase',
@@ -32,19 +15,6 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../shared/colors';
     AngularGsapSectionComponent,
     ProblemSolutionSectionComponent,
     ValuePropositionsSectionComponent,
-    Scene3dComponent,
-    AmbientLightComponent,
-    DirectionalLightComponent,
-    ViewportPositionDirective,
-    Rotate3dDirective,
-    PlanetComponent,
-    StarFieldComponent,
-    InstancedParticleTextComponent,
-    NebulaVolumetricComponent,
-    OrbitControlsComponent,
-    BloomEffectComponent,
-    GltfModelComponent,
-    SpaceFlight3dDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -52,54 +22,25 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../shared/colors';
     <section
       class="relative min-h-screen flex items-center justify-center overflow-hidden"
     >
-      <!-- 3D Scene Background -->
+      <!-- Background Layer 1 - Smooth Parallax (Back) -->
       <div
         class="absolute inset-0 w-full h-full min-h-screen"
-        role="img"
-        aria-label="Interactive 3D space scene with rotating Earth, flying robots, twinkling stars, and camera controls"
+        scrollAnimation
+        [scrollConfig]="{
+          animation: 'parallax',
+          speed: 0.3,
+          scrub: 1.5,
+          start: '-10% top',
+          end: 'bottom top'
+        }"
       >
-        <a3d-scene-3d [cameraPosition]="[0, 0, 20]" [cameraFov]="75">
-          <!-- Lighting -->
-          <a3d-ambient-light [color]="colors.white" [intensity]="0.05" />
-          <a3d-directional-light
-            [position]="[30, 15, 25]"
-            [color]="colors.white"
-            [intensity]="0.3"
-            [castShadow]="true"
-          />
-
-          <!-- Central Planet -->
-          <a3d-gltf-model
-            [modelPath]="'/3d/planet_earth/scene.gltf'"
-            viewportPosition="center"
-            [viewportOffset]="{ offsetZ: -9 }"
-            [scale]="2.3"
-            rotate3d
-            [rotateConfig]="{ axis: 'y', speed: 60 }"
-          />
-
-          <!-- Flying Robot 1 -->
-          <a3d-gltf-model
-            [modelPath]="'/3d/mini_robot.glb'"
-            [scale]="0.05"
-            a3dSpaceFlight3d
-            [flightPath]="robot1FlightPath"
-            [rotationsPerCycle]="8"
-            [loop]="true"
-            [autoStart]="true"
-          />
-
-          <!-- Flying Robot 2 -->
-          <a3d-gltf-model
-            [modelPath]="'/3d/robo_head/scene.gltf'"
-            [scale]="1.0"
-            a3dSpaceFlight3d
-            [flightPath]="robot2FlightPath"
-            [rotationsPerCycle]="6"
-            [loop]="true"
-            [autoStart]="true"
-          />
-        </a3d-scene-3d>
+        <img
+          ngSrc="images/showcase/hero-bg-back.png"
+          alt=""
+          fill
+          priority
+          class="object-cover scale-110"
+        />
       </div>
 
       <!-- Gradient Overlay -->
@@ -365,23 +306,4 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../shared/colors';
     `,
   ],
 })
-export class GsapShowcaseComponent {
-  public readonly colors = SCENE_COLORS;
-  public readonly colorStrings = SCENE_COLOR_STRINGS;
-
-  public readonly robot1FlightPath: SpaceFlightWaypoint[] = [
-    { position: [-12, 8, -8], duration: 10, easing: 'easeInOut' },
-    { position: [10, 12, -5], duration: 8, easing: 'easeInOut' },
-    { position: [-6, 4, 10], duration: 9, easing: 'easeIn' },
-    { position: [8, 10, -12], duration: 11, easing: 'easeOut' },
-    { position: [-12, 8, -8], duration: 8, easing: 'easeInOut' },
-  ];
-
-  public readonly robot2FlightPath: SpaceFlightWaypoint[] = [
-    { position: [4, -3, -8], duration: 9, easing: 'easeOut' },
-    { position: [-8, -5, -5], duration: 10, easing: 'easeInOut' },
-    { position: [12, -4, 16], duration: 8, easing: 'easeInOut' },
-    { position: [10, -6, -15], duration: 11, easing: 'easeIn' },
-    { position: [-6, -5, -10], duration: 9, easing: 'easeInOut' },
-  ];
-}
+export class GsapShowcaseComponent {}
