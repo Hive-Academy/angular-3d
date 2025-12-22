@@ -24,7 +24,16 @@ export {
   type LenisSmoothScrollConfig,
 } from './lib/directives/lenis-smooth-scroll.directive';
 
+// Providers (NEW - Modern Angular pattern)
+export {
+  provideGsap,
+  GSAP_CONFIG,
+  type GsapConfig,
+} from './lib/providers/gsap.provider';
+export { provideLenis, LENIS_CONFIG } from './lib/providers/lenis.provider';
+
 // Services
+export { GsapCoreService } from './lib/services/gsap-core.service';
 export {
   LenisSmoothScrollService,
   type LenisServiceOptions,
