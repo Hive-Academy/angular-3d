@@ -9,6 +9,9 @@
 | TASK_2025_012 | Demo App - GSAP Showcase Migration  | 🔄 Requirements Complete | 2025-12-18 |
 | TASK_2025_014 | Comprehensive Library Documentation | 📋 PENDING               | 2025-12-18 |
 | TASK_2025_020 | Library Quality Audit (Temp vs Lib) | 🔄 IN PROGRESS           | 2025-12-22 |
+| TASK_2025_021 | Hero Section 3D Text Redesign       | ⏸️ PAUSED (pivot)        | 2025-12-22 |
+| TASK_2025_022 | GSAP Service Centralization         | 🔄 Execution (Batch 1)   | 2025-12-22 |
+| TASK_2025_023 | Troika-Three-Text Implementation    | 🔄 IN PROGRESS           | 2025-12-22 |
 
 ## Task Dependencies
 

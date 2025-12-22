@@ -6,7 +6,7 @@ import { CtaSceneComponent } from '../scenes/cta-scene.component';
   imports: [CtaSceneComponent],
   template: `
     <section
-      class="relative w-full py-20x px-4x bg-background-dark overflow-hidden"
+      class="relative w-full py-20x px-4x bg-background-dark overflow-hidden min-h-screen py-24"
     >
       <!-- 3D Background -->
       <app-cta-scene class="absolute inset-0 opacity-40" />

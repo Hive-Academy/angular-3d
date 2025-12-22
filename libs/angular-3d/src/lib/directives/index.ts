@@ -37,3 +37,4 @@ export * from './space-flight-3d.directive';
 // Performance directives
 export * from './performance-3d.directive';
 export * from './scroll-zoom-coordinator.directive';
+export * from './mouse-tracking-3d.directive';

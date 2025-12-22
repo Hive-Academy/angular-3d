@@ -26,7 +26,7 @@ import { distinctUntilChanged, fromEvent, map } from 'rxjs';
       <div
         class="nav-inner max-w-container mx-auto px-4 flex items-center justify-between transition-all duration-300"
         [class.py-4]="!isSticky()"
-        [class.py-2]="isSticky()"
+        [class.py-1]="isSticky()"
       >
         <!-- Logo with smooth scale transition -->
         <a
@@ -67,7 +67,7 @@ import { distinctUntilChanged, fromEvent, map } from 'rxjs';
             [class.text-base]="!isSticky()"
             [class.text-sm]="isSticky()"
           >
-            Angular-3D
+            Angular 3D
           </a>
           <a
             routerLink="/angular-gsap"
@@ -76,7 +76,7 @@ import { distinctUntilChanged, fromEvent, map } from 'rxjs';
             [class.text-base]="!isSticky()"
             [class.text-sm]="isSticky()"
           >
-            Angular-GSAP
+            Angular GSAP
           </a>
           <a
             href="https://github.com/hive-academy"

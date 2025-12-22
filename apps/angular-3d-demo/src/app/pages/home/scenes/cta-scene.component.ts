@@ -21,10 +21,10 @@ import { SCENE_COLORS } from '../../../shared/colors';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <a3d-scene-3d [cameraPosition]="[0, 0, 6]" [cameraFov]="50">
+    <a3d-scene-3d [cameraPosition]="[0, 0, 25]" [cameraFov]="50">
       <!-- Lights -->
       <a3d-ambient-light [intensity]="0.6" />
-      <a3d-directional-light [position]="[5, 5, 5]" [intensity]="0.8" />
+      <a3d-directional-light [position]="[10, 10, 5]" [intensity]="0.8" />
 
       <!-- Floating Polyhedrons: Midground (-2 to -4) -->
       <a3d-polyhedron

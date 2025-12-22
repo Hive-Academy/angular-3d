@@ -6,11 +6,13 @@ import {
   ElementRef,
   afterNextRender,
   DestroyRef,
+  viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   HijackedScrollTimelineComponent,
   HijackedScrollItemDirective,
+  HijackedScrollDirective,
 } from '@hive-academy/angular-gsap';
 
 /**
@@ -80,10 +82,13 @@ import {
 
       <!-- Fullpage Scroll Timeline -->
       <agsp-hijacked-scroll-timeline
-        [scrollHeightPerStep]="200"
+        #scrollTimeline
+        [scrollHeightPerStep]="400"
         [start]="'top top'"
         [animationDuration]="0.8"
         [ease]="'power3.inOut'"
+        [scrub]="1.5"
+        [stepHold]="0.9"
         (currentStepChange)="onStepChange($event)"
         (progressChange)="onProgressChange($event)"
       >
@@ -229,6 +234,11 @@ export class ValuePropositionsSectionComponent {
   private readonly elementRef = inject(ElementRef);
   private readonly destroyRef = inject(DestroyRef);
 
+  // ViewChild to access the hijacked scroll directive for programmatic control
+  private readonly scrollTimeline =
+    viewChild<HijackedScrollTimelineComponent>('scrollTimeline');
+  private readonly hijackedScrollDirective = viewChild(HijackedScrollDirective);
+
   // Section visibility state
   private readonly sectionInView = signal(false);
 
@@ -299,11 +309,14 @@ export class ValuePropositionsSectionComponent {
   }
 
   /**
-   * Scroll to specific section
+   * Scroll to specific section using the hijacked scroll directive
    */
   public scrollToSection(index: number): void {
-    const element = document.getElementById(`section-${index}`);
-    element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Use the HijackedScrollDirective's jumpToStep method for proper navigation
+    const directive = this.hijackedScrollDirective();
+    if (directive) {
+      directive.jumpToStep(index);
+    }
   }
 
   /**

@@ -1,14 +1,6 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  afterNextRender,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
-import {
-  ScrollAnimationDirective,
-  LenisSmoothScrollService,
-} from '@hive-academy/angular-gsap';
+import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
 import { Angular3dSectionComponent } from './sections/angular-3d-section.component';
 import { AngularGsapSectionComponent } from './sections/angular-gsap-section.component';
 import { ProblemSolutionSectionComponent } from './sections/problem-solution-section.component';
@@ -314,19 +306,4 @@ import { ValuePropositionsSectionComponent } from './sections/value-propositions
     `,
   ],
 })
-export class GsapShowcaseComponent {
-  private readonly lenis = inject(LenisSmoothScrollService);
-
-  public constructor() {
-    // afterNextRender runs only in browser after first render
-    // This is the Angular 19+ pattern for browser-only initialization
-    afterNextRender(() => {
-      void this.lenis.initialize({
-        lerp: 0.08, // Lower = heavier/smoother
-        wheelMultiplier: 0.7, // Reduced scroll speed
-        smoothWheel: true,
-        useGsapTicker: true,
-      });
-    });
-  }
-}
+export class GsapShowcaseComponent {}

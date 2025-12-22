@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Hero3dTeaserComponent } from './sections/hero-3d-teaser.component';
-import { Angular3dSectionComponent } from './sections/angular-3d-section.component';
-import { AngularGsapSectionComponent } from './sections/angular-gsap-section.component';
+import { LibraryOverviewSectionComponent } from './sections/library-overview-section.component';
 import { CtaSectionComponent } from './sections/cta-section.component';
 import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
 
@@ -11,8 +10,7 @@ import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
  *
  * Landing page with:
  * - Hero section with 3D background, GLTF robot, and parallax scroll animations
- * - Full-width Angular-3D library section
- * - Full-width Angular-GSAP library section
+ * - Combined Library Overview (Hijacked Scroll)
  * - CTA section with 3D background
  */
 @Component({
@@ -20,8 +18,7 @@ import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
   imports: [
     RouterLink,
     Hero3dTeaserComponent,
-    Angular3dSectionComponent,
-    AngularGsapSectionComponent,
+    LibraryOverviewSectionComponent,
     CtaSectionComponent,
     ScrollAnimationDirective,
   ],
@@ -35,10 +32,10 @@ import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
         <app-hero-3d-teaser />
       </div>
 
-      <!-- Gradient Overlay for text readability -->
+      <!-- Gradient Overlay for text readability 
       <div
         class="absolute inset-0 z-10 bg-gradient-to-r from-background-dark/95 via-background-dark/70 to-transparent"
-      ></div>
+      ></div>-->
 
       <!-- Hero Content with Parallax Scroll Animations -->
       <div
@@ -213,11 +210,8 @@ import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
       </div>
     </section>
 
-    <!-- Angular-3D Library Section (Full-Width) -->
-    <app-angular-3d-section />
-
-    <!-- Angular-GSAP Library Section (Full-Width) -->
-    <app-angular-gsap-section />
+    <!-- Combined Library Overview Section (Hijacked Scroll) -->
+    <app-library-overview-section />
 
     <!-- CTA Section -->
     <app-cta-section />

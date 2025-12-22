@@ -72,6 +72,7 @@ export function provideGsap(config?: GsapConfig): EnvironmentProviders {
         const gsapCore = inject(GsapCoreService);
         return () => {
           // Access gsap property to trigger lazy initialization
+          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           gsapCore.gsap;
         };
       },
@@ -81,4 +82,5 @@ export function provideGsap(config?: GsapConfig): EnvironmentProviders {
 }
 
 // Re-export types for convenience
-export { GSAP_CONFIG, GsapConfig } from '../services/gsap-core.service';
+export { GSAP_CONFIG } from '../services/gsap-core.service';
+export type { GsapConfig } from '../services/gsap-core.service';
