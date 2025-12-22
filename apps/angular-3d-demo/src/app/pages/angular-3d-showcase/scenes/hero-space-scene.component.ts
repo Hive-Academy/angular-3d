@@ -4,6 +4,8 @@ import {
   AmbientLightComponent,
   DirectionalLightComponent,
   StarFieldComponent,
+  NebulaVolumetricComponent,
+  PlanetComponent,
   Rotate3dDirective,
   GltfModelComponent,
   OrbitControlsComponent,
@@ -19,6 +21,8 @@ import { SCENE_COLORS } from '../../../shared/colors';
     AmbientLightComponent,
     DirectionalLightComponent,
     StarFieldComponent,
+    NebulaVolumetricComponent,
+    PlanetComponent,
     Rotate3dDirective,
     GltfModelComponent,
     OrbitControlsComponent,
@@ -28,7 +32,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="relative min-h-screen bg-background-dark overflow-hidden">
-      <a3d-scene-3d [cameraPosition]="[0, 0, 10]" [cameraFov]="75">
+      <a3d-scene-3d [cameraPosition]="[0, 0, 20]" [cameraFov]="75">
         <!-- Lights -->
         <a3d-ambient-light [intensity]="0.5" />
         <a3d-directional-light
@@ -37,8 +41,53 @@ import { SCENE_COLORS } from '../../../shared/colors';
           [color]="colors.neonGreen"
         />
 
-        <!-- Star Field -->
-        <a3d-star-field [starCount]="3000" [color]="colors.white" />
+        <!-- Multi-Layer Star Fields (creates depth parallax effect) -->
+        <!-- Layer 1: Close stars (larger, brighter) -->
+        <a3d-star-field
+          [starCount]="3000"
+          [radius]="35"
+          [size]="0.03"
+          [multiSize]="true"
+          [stellarColors]="true"
+        />
+
+        <!-- Layer 2: Mid-range stars -->
+        <a3d-star-field
+          [starCount]="2000"
+          [radius]="45"
+          [size]="0.02"
+          [multiSize]="true"
+          [stellarColors]="true"
+        />
+
+        <!-- Layer 3: Distant stars (smaller, dimmer) -->
+        <a3d-star-field
+          [starCount]="2500"
+          [radius]="60"
+          [size]="0.015"
+          [opacity]="0.6"
+          [multiSize]="true"
+          [stellarColors]="true"
+        />
+
+        <!-- Volumetric Nebula (atmospheric depth in top-right background) -->
+        <a3d-nebula-volumetric
+          [position]="[15, 10, -20]"
+          [scale]="[8, 8, 8]"
+          [color]="'#4a0080'"
+          [opacity]="0.3"
+        />
+
+        <!-- Moon (showcases PlanetComponent with glow and emissive features) -->
+        <a3d-planet
+          [position]="[-8, 3, -5]"
+          [radius]="1.2"
+          [color]="0xaaaaaa"
+          [emissive]="0x222222"
+          [emissiveIntensity]="0.1"
+          [glowIntensity]="0.5"
+          [glowColor]="0xccccff"
+        />
 
         <!-- Earth Model -->
         <a3d-gltf-model
@@ -60,7 +109,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
         />
 
         <!-- Effects -->
-        <a3d-bloom-effect [threshold]="0.9" [strength]="0.8" [radius]="0.4" />
+        <a3d-bloom-effect [threshold]="0.8" [strength]="0.8" [radius]="0.4" />
       </a3d-scene-3d>
 
       <!-- Overlay Text -->
