@@ -305,15 +305,25 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <!-- ================================ -->
         <!-- NEBULA EFFECTS -->
         <!-- ================================ -->
-        <!-- Primary nebula - top right -->
+        <!-- Primary nebula - top right (enhanced with all quality settings) -->
         <a3d-nebula-volumetric
           viewportPosition="top-right"
           [viewportOffset]="{ offsetZ: -15 }"
-          [width]="70"
-          [height]="25"
-          [layers]="3"
-          [opacity]="0.95"
+          [width]="60"
+          [height]="20"
+          [layers]="2"
+          [opacity]="0.9"
           [primaryColor]="colorStrings.skyBlue"
+          [secondaryColor]="colorStrings.cyan"
+          [tertiaryColor]="colorStrings.hotPink"
+          [enableFlow]="false"
+          [flowSpeed]="0.8"
+          [noiseScale]="0.03"
+          [density]="1.2"
+          [edgeSoftness]="0.5"
+          [contrast]="1.0"
+          [glowIntensity]="20"
+          [colorIntensity]="2"
         />
         <!-- Secondary nebula - bottom left for balance -->
         <a3d-nebula-volumetric
@@ -322,8 +332,18 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [width]="50"
           [height]="18"
           [layers]="2"
-          [opacity]="0.8"
+          [opacity]="0.85"
           [primaryColor]="colorStrings.purple"
+          [secondaryColor]="colorStrings.cyan"
+          [tertiaryColor]="colorStrings.hotPink"
+          [enableFlow]="false"
+          [flowSpeed]="0.6"
+          [noiseScale]="0.03"
+          [density]="1.2"
+          [edgeSoftness]="0.5"
+          [contrast]="1.0"
+          [glowIntensity]="15"
+          [colorIntensity]="2"
         />
 
         <a3d-orbit-controls
