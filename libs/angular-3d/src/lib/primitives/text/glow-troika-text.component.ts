@@ -13,6 +13,7 @@ import { NG_3D_PARENT } from '../../types/tokens';
 import { OBJECT_ID } from '../../tokens/object-id.token';
 import { RenderLoopService } from '../../render-loop/render-loop.service';
 import { SceneService } from '../../canvas/scene.service';
+import { SceneGraphStore } from '../../store/scene-graph.store';
 
 /**
  * Glow-enabled 3D text component for bloom post-processing effects.
@@ -281,6 +282,8 @@ export class GlowTroikaTextComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly renderLoop = inject(RenderLoopService);
   private readonly sceneService = inject(SceneService);
+  private readonly sceneStore = inject(SceneGraphStore);
+  private readonly objectId = inject(OBJECT_ID);
 
   // ========================================
   // STATE SIGNALS
@@ -326,6 +329,7 @@ export class GlowTroikaTextComponent {
         this.textObject.sync(() => {
           if (this.textObject && parent) {
             parent.add(this.textObject);
+            this.sceneStore.register(this.objectId, this.textObject, 'mesh');
             this.isLoading.set(false);
           }
         });
@@ -339,6 +343,7 @@ export class GlowTroikaTextComponent {
       onCleanup(() => {
         if (this.textObject && parent) {
           parent.remove(this.textObject);
+          this.sceneStore.remove(this.objectId);
           this.textObject.dispose();
           this.textObject = undefined;
         }
@@ -425,6 +430,7 @@ export class GlowTroikaTextComponent {
     this.destroyRef.onDestroy(() => {
       this.cleanupRenderLoop?.();
       this.cleanupPulseLoop?.();
+      this.sceneStore.remove(this.objectId);
       if (this.textObject) {
         this.textObject.dispose();
       }

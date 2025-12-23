@@ -13,6 +13,7 @@ import { NG_3D_PARENT } from '../../types/tokens';
 import { OBJECT_ID } from '../../tokens/object-id.token';
 import { RenderLoopService } from '../../render-loop/render-loop.service';
 import { SceneService } from '../../canvas/scene.service';
+import { SceneGraphStore } from '../../store/scene-graph.store';
 
 /**
  * Smoke-effect 3D text component using shader-based atmospheric rendering.
@@ -320,6 +321,8 @@ export class SmokeTroikaTextComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly renderLoop = inject(RenderLoopService);
   private readonly sceneService = inject(SceneService);
+  private readonly sceneStore = inject(SceneGraphStore);
+  private readonly objectId = inject(OBJECT_ID);
 
   // ========================================
   // STATE SIGNALS
@@ -370,6 +373,7 @@ export class SmokeTroikaTextComponent {
         this.textObject.sync(() => {
           if (this.textObject && parent) {
             parent.add(this.textObject);
+            this.sceneStore.register(this.objectId, this.textObject, 'mesh');
             this.isLoading.set(false);
           }
         });
@@ -383,6 +387,7 @@ export class SmokeTroikaTextComponent {
       onCleanup(() => {
         if (this.textObject && parent) {
           parent.remove(this.textObject);
+          this.sceneStore.remove(this.objectId);
           this.textObject.dispose();
           this.textObject = undefined;
         }
@@ -405,27 +410,13 @@ export class SmokeTroikaTextComponent {
     });
 
     // Effect: Animate smoke flow
-    effect(() => {
-      if (!this.enableFlow()) {
-        // Flow disabled - cleanup if active
-        if (this.cleanupRenderLoop) {
-          this.cleanupRenderLoop();
-          this.cleanupRenderLoop = undefined;
-        }
-        return;
+    // MEMORY LEAK FIX: Register callback ONCE (not inside effect)
+    // Callback executes conditionally based on enableFlow() signal
+    this.cleanupRenderLoop = this.renderLoop.registerUpdateCallback((delta) => {
+      // Execute conditionally based on signal
+      if (this.enableFlow() && this.smokeMaterial) {
+        this.smokeMaterial.uniforms['uTime'].value += delta * this.flowSpeed();
       }
-
-      if (!this.smokeMaterial) return;
-
-      // Flow enabled - register render loop callback
-      this.cleanupRenderLoop = this.renderLoop.registerUpdateCallback(
-        (delta) => {
-          if (this.smokeMaterial) {
-            this.smokeMaterial.uniforms['uTime'].value +=
-              delta * this.flowSpeed();
-          }
-        }
-      );
     });
 
     // Effect: Billboard rotation (optional)
@@ -454,6 +445,7 @@ export class SmokeTroikaTextComponent {
     this.destroyRef.onDestroy(() => {
       this.cleanupRenderLoop?.();
       this.cleanupBillboard?.();
+      this.sceneStore.remove(this.objectId);
       if (this.smokeMaterial) {
         this.smokeMaterial.dispose();
       }
