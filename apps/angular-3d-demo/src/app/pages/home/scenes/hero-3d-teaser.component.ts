@@ -14,7 +14,8 @@ import {
   OrbitControlsComponent,
   BloomEffectComponent,
   FloatingSphereComponent,
-  InstancedParticleTextComponent,
+  TroikaTextComponent,
+  GlowTroikaTextComponent,
   ScrollZoomCoordinatorDirective,
   type SpaceFlightWaypoint,
 } from '@hive-academy/angular-3d';
@@ -53,7 +54,8 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
     OrbitControlsComponent,
     BloomEffectComponent,
     FloatingSphereComponent,
-    InstancedParticleTextComponent,
+    TroikaTextComponent,
+    GlowTroikaTextComponent,
     ScrollZoomCoordinatorDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -100,65 +102,63 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         />
 
         <!-- ================================ -->
-        <!-- LEFT-SIDE HEADING - 3D Particle Text -->
+        <!-- LEFT-SIDE HEADING - Troika Glow Text -->
         <!-- ================================ -->
         <!-- Line 1: "Build " + "Stunning" -->
-        <a3d-instanced-particle-text
+        <a3d-glow-troika-text
           text="Build "
+          [fontSize]="1.2"
           [position]="[-11, 3, 0]"
-          [fontSize]="45"
-          [particleColor]="colors.white"
-          [opacity]="0.5"
-          [maxParticleScale]="0.25"
-          [particlesPerPixel]="3"
-          [skipInitialGrowth]="true"
+          anchorX="left"
+          anchorY="middle"
+          [glowColor]="colors.white"
+          [glowIntensity]="1.5"
+          [pulseSpeed]="0"
         />
-        <a3d-instanced-particle-text
+        <a3d-glow-troika-text
           text="Stunning"
-          [position]="[1, 3, 0]"
-          [fontSize]="45"
-          [particleColor]="colors.neonGreen"
-          [opacity]="0.5"
-          [maxParticleScale]="0.25"
-          [particlesPerPixel]="3"
-          [skipInitialGrowth]="true"
+          [fontSize]="1.2"
+          [position]="[-7, 3, 0]"
+          anchorX="left"
+          anchorY="middle"
+          [glowColor]="colors.neonGreen"
+          [glowIntensity]="2.0"
+          [pulseSpeed]="0.3"
         />
+
         <!-- Line 2: "Angular Experiences" -->
-        <a3d-instanced-particle-text
+        <a3d-glow-troika-text
           text="Angular Experiences"
-          [position]="[-11, -2.5, 0]"
-          [fontSize]="45"
-          [particleColor]="colors.white"
-          [opacity]="0.5"
-          [maxParticleScale]="0.25"
-          [particlesPerPixel]="3"
-          [skipInitialGrowth]="true"
+          [fontSize]="1.2"
+          [position]="[-11, 1, 0]"
+          anchorX="left"
+          anchorY="middle"
+          [glowColor]="colors.white"
+          [glowIntensity]="1.5"
+          [pulseSpeed]="0"
         />
 
         <!-- ================================ -->
-        <!-- LEFT-SIDE DESCRIPTION - 3D Particle Text -->
+        <!-- LEFT-SIDE DESCRIPTION - Troika Text -->
         <!-- ================================ -->
         <!-- Description Lines - Positioned BEHIND camera (z=22) to reveal on scroll -->
-        <a3d-instanced-particle-text
+        <a3d-troika-text
           text="Discover a powerful Angular library that seamlessly integrates"
-          [position]="[-10.91, -6.0, 22]"
-          [fontSize]="20"
-          [particleColor]="colors.softGray"
-          [opacity]="0.4"
-          [maxParticleScale]="0.15"
-          [particlesPerPixel]="2"
-          [skipInitialGrowth]="true"
+          [fontSize]="0.5"
+          [position]="[-10.91, -1.5, 22]"
+          anchorX="left"
+          anchorY="middle"
+          [color]="colors.softGray"
+          [fillOpacity]="0.8"
         />
-        <!-- Description Line 2 -->
-        <a3d-instanced-particle-text
+        <a3d-troika-text
           text="Three.js for stunning 3D graphics and GSAP for smooth animations."
-          [position]="[-10.91, -8.0, 22]"
-          [fontSize]="20"
-          [particleColor]="colors.softGray"
-          [opacity]="0.4"
-          [maxParticleScale]="0.15"
-          [particlesPerPixel]="2"
-          [skipInitialGrowth]="true"
+          [fontSize]="0.5"
+          [position]="[-10.91, -2.5, 22]"
+          anchorX="left"
+          anchorY="middle"
+          [color]="colors.softGray"
+          [fillOpacity]="0.8"
         />
 
         <!-- ================================ -->
