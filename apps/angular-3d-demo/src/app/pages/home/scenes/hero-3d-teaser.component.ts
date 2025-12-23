@@ -3,6 +3,7 @@ import {
   AmbientLightComponent,
   BloomEffectComponent,
   DirectionalLightComponent,
+  EffectComposerComponent,
   Float3dDirective,
   FloatingSphereComponent,
   GlowTroikaTextComponent,
@@ -54,6 +55,7 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
     StarFieldComponent,
     NebulaVolumetricComponent,
     OrbitControlsComponent,
+    EffectComposerComponent,
     BloomEffectComponent,
     FloatingSphereComponent,
     TroikaTextComponent,
@@ -74,7 +76,7 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <!-- ================================ -->
         <!-- LIGHTING SETUP -->
         <!-- ================================ -->
-        <a3d-ambient-light [color]="colors.white" [intensity]="0.08" />
+        <a3d-ambient-light [color]="colors.white" [intensity]="0.3" />
         <a3d-directional-light
           [position]="[30, 15, 25]"
           [color]="colors.white"
@@ -306,21 +308,21 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <!-- Primary nebula - top right -->
         <a3d-nebula-volumetric
           viewportPosition="top-right"
-          [viewportOffset]="{ offsetZ: -25 }"
+          [viewportOffset]="{ offsetZ: -15 }"
           [width]="70"
           [height]="25"
           [layers]="3"
-          [opacity]="0.85"
+          [opacity]="0.95"
           [primaryColor]="colorStrings.skyBlue"
         />
         <!-- Secondary nebula - bottom left for balance -->
         <a3d-nebula-volumetric
           viewportPosition="bottom-left"
-          [viewportOffset]="{ offsetZ: -30 }"
+          [viewportOffset]="{ offsetZ: -18 }"
           [width]="50"
           [height]="18"
           [layers]="2"
-          [opacity]="0.6"
+          [opacity]="0.8"
           [primaryColor]="colorStrings.purple"
         />
 
@@ -343,7 +345,9 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <!-- ================================ -->
         <!-- POST-PROCESSING -->
         <!-- ================================ -->
-        <a3d-bloom-effect [threshold]="0.7" [strength]="0.6" [radius]="0.5" />
+        <a3d-effect-composer [enabled]="true">
+          <a3d-bloom-effect [threshold]="0.3" [strength]="0.6" [radius]="0.5" />
+        </a3d-effect-composer>
       </a3d-scene-3d>
     </div>
   `,
