@@ -61,6 +61,7 @@ import { HijackedScrollDirective } from '../directives/hijacked-scroll.directive
         'end',
         'scrub',
         'stepHold',
+        'showFirstStepImmediately',
       ],
       outputs: ['currentStepChange', 'progressChange'],
     },
@@ -88,6 +89,7 @@ export class HijackedScrollTimelineComponent {
   readonly end = input<string | undefined>(undefined); // ScrollTrigger end point
   readonly scrub = input<number>(1); // ScrollTrigger scrub value
   readonly stepHold = input<number>(0); // Multiplier of animation duration to hold after each step
+  readonly showFirstStepImmediately = input<boolean>(true); // Show first step visible before scrolling
 
   // Event outputs (pass-through via hostDirectives)
   readonly currentStepChange = output<number>();

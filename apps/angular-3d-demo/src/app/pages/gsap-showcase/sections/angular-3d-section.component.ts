@@ -2,6 +2,7 @@ import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import {
   ScrollAnimationDirective,
+  ViewportAnimationDirective,
   HijackedScrollTimelineComponent,
   HijackedScrollItemDirective,
 } from '@hive-academy/angular-gsap';
@@ -35,6 +36,7 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
     CodeSnippetComponent,
     DecorativePatternComponent,
     ScrollAnimationDirective,
+    ViewportAnimationDirective,
     NgOptimizedImage,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -235,22 +237,22 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
               <!-- Content -->
               <div class="container mx-auto px-8 relative z-10 mt-24">
                 <div class="grid lg:grid-cols-2 gap-8 items-center">
-                  <!-- Content Side -->
+                  <!-- Content Side - Use viewportAnimation since scroll doesn't work inside pinned container -->
                   <div
                     [class.lg:order-1]="step.layout === 'left'"
                     [class.lg:order-2]="step.layout === 'right'"
-                    scrollAnimation
-                    [scrollConfig]="{
+                    viewportAnimation
+                    [viewportConfig]="{
                       animation: 'custom',
-                      start: 'top 80%',
-                      end: 'top 30%',
-                      scrub: 1,
                       from: {
                         opacity: 0,
                         x: step.layout === 'left' ? -60 : 60,
                         y: 20
                       },
-                      to: { opacity: 1, x: 0, y: 0 }
+                      to: { opacity: 1, x: 0, y: 0 },
+                      duration: 0.8,
+                      ease: 'power2.out',
+                      threshold: 0.1
                     }"
                   >
                     <!-- Step Number Badge -->
@@ -265,46 +267,46 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
                       ></div>
                     </div>
 
-                    <!-- Title with animation -->
+                    <!-- Title with viewport animation -->
                     <h3
                       class="text-4xl font-bold text-white mb-4 leading-tight"
-                      scrollAnimation
-                      [scrollConfig]="{
+                      viewportAnimation
+                      [viewportConfig]="{
                         animation: 'slideUp',
-                        start: 'top 85%',
                         duration: 0.6,
-                        delay: 0.1
+                        delay: 0.1,
+                        threshold: 0.1
                       }"
                     >
                       {{ step.title }}
                     </h3>
 
-                    <!-- Description with animation -->
+                    <!-- Description with viewport animation -->
                     <p
                       class="text-lg text-gray-300 leading-relaxed mb-6"
-                      scrollAnimation
-                      [scrollConfig]="{
+                      viewportAnimation
+                      [viewportConfig]="{
                         animation: 'fadeIn',
-                        start: 'top 80%',
                         duration: 0.8,
-                        delay: 0.2
+                        delay: 0.2,
+                        threshold: 0.1
                       }"
                     >
                       {{ step.description }}
                     </p>
 
-                    <!-- Notes with staggered animation -->
+                    <!-- Notes with staggered viewport animation -->
                     @if (step.notes && step.notes.length > 0) {
                     <div class="space-y-3">
                       @for (note of step.notes; track $index) {
                       <div
                         class="flex items-start gap-3"
-                        scrollAnimation
-                        [scrollConfig]="{
+                        viewportAnimation
+                        [viewportConfig]="{
                           animation: 'slideUp',
-                          start: 'top 85%',
                           duration: 0.5,
-                          delay: 0.3 + $index * 0.1
+                          delay: 0.3 + $index * 0.1,
+                          threshold: 0.1
                         }"
                       >
                         <svg
@@ -327,22 +329,23 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
                     }
                   </div>
 
-                  <!-- Visual Side - OVERSIZED IMAGE with glow -->
+                  <!-- Visual Side - OVERSIZED IMAGE with glow, using viewportAnimation -->
                   <div
                     [class.lg:order-2]="step.layout === 'left'"
                     [class.lg:order-1]="step.layout === 'right'"
-                    scrollAnimation
-                    [scrollConfig]="{
+                    viewportAnimation
+                    [viewportConfig]="{
                       animation: 'custom',
-                      start: 'top 75%',
-                      end: 'top 25%',
-                      scrub: 1,
                       from: {
                         opacity: 0,
                         x: step.layout === 'left' ? 80 : -80,
                         scale: 0.9
                       },
-                      to: { opacity: 1, x: 0, scale: 1 }
+                      to: { opacity: 1, x: 0, scale: 1 },
+                      duration: 0.8,
+                      delay: 0.2,
+                      ease: 'power2.out',
+                      threshold: 0.1
                     }"
                   >
                     @if (step.language === 'image') {

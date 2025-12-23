@@ -117,38 +117,38 @@ export class TroikaTextComponent {
    * Supports multi-line text using newline characters (\n).
    * @required
    */
-  readonly text = input.required<string>();
+  public readonly text = input.required<string>();
 
   /**
    * Font size in 3D world units.
    * @default 0.1
    */
-  readonly fontSize = input<number>(0.1);
+  public readonly fontSize = input<number>(0.1);
 
   /**
    * Text color as CSS string or numeric hex value.
    * @default '#ffffff'
    */
-  readonly color = input<string | number>('#ffffff');
+  public readonly color = input<string | number>('#ffffff');
 
   /**
    * URL or path to custom font file (TTF, OTF, WOFF).
    * If null, uses the default font.
    * @default null
    */
-  readonly font = input<string | null>(null);
+  public readonly font = input<string | null>(null);
 
   /**
    * Font style: 'normal' or 'italic'.
    * @default 'normal'
    */
-  readonly fontStyle = input<'normal' | 'italic'>('normal');
+  public readonly fontStyle = input<'normal' | 'italic'>('normal');
 
   /**
    * Font weight: 'normal', 'bold', or numeric (100-900).
    * @default 'normal'
    */
-  readonly fontWeight = input<string | number>('normal');
+  public readonly fontWeight = input<string | number>('normal');
 
   // ========================================
   // TRANSFORM PROPERTIES
@@ -158,19 +158,19 @@ export class TroikaTextComponent {
    * Position in 3D space [x, y, z].
    * @default [0, 0, 0]
    */
-  readonly position = input<[number, number, number]>([0, 0, 0]);
+  public readonly position = input<[number, number, number]>([0, 0, 0]);
 
   /**
    * Rotation in radians [x, y, z].
    * @default [0, 0, 0]
    */
-  readonly rotation = input<[number, number, number]>([0, 0, 0]);
+  public readonly rotation = input<[number, number, number]>([0, 0, 0]);
 
   /**
    * Scale factor. Can be uniform (number) or per-axis [x, y, z].
    * @default 1
    */
-  readonly scale = input<number | [number, number, number]>(1);
+  public readonly scale = input<number | [number, number, number]>(1);
 
   // ========================================
   // LAYOUT PROPERTIES
@@ -181,52 +181,54 @@ export class TroikaTextComponent {
    * Text will wrap to multiple lines if it exceeds this width.
    * @default Infinity (no wrapping)
    */
-  readonly maxWidth = input<number>(Infinity);
+  public readonly maxWidth = input<number>(Infinity);
 
   /**
    * Horizontal text alignment within the maxWidth.
    * @default 'left'
    */
-  readonly textAlign = input<'left' | 'right' | 'center' | 'justify'>('left');
+  public readonly textAlign = input<'left' | 'right' | 'center' | 'justify'>(
+    'left'
+  );
 
   /**
    * Horizontal anchor point as percentage string ('left', 'center', 'right')
    * or numeric value (0 = left edge, 0.5 = center, 1 = right edge).
    * @default 'left'
    */
-  readonly anchorX = input<number | string>('left');
+  public readonly anchorX = input<number | string>('left');
 
   /**
    * Vertical anchor point as percentage string ('top', 'middle', 'bottom')
    * or numeric value (0 = top edge, 0.5 = middle, 1 = bottom edge).
    * @default 'top'
    */
-  readonly anchorY = input<number | string>('top');
+  public readonly anchorY = input<number | string>('top');
 
   /**
    * Line height as multiple of fontSize (number) or absolute value (string with units).
    * @default 1.2
    */
-  readonly lineHeight = input<number | string>(1.2);
+  public readonly lineHeight = input<number | string>(1.2);
 
   /**
    * Letter spacing adjustment in world units.
    * Positive values increase spacing, negative values decrease.
    * @default 0
    */
-  readonly letterSpacing = input<number>(0);
+  public readonly letterSpacing = input<number>(0);
 
   /**
    * CSS white-space behavior: 'normal' or 'nowrap'.
    * @default 'normal'
    */
-  readonly whiteSpace = input<'normal' | 'nowrap'>('normal');
+  public readonly whiteSpace = input<'normal' | 'nowrap'>('normal');
 
   /**
    * CSS overflow-wrap behavior: 'normal' or 'break-word'.
    * @default 'normal'
    */
-  readonly overflowWrap = input<'normal' | 'break-word'>('normal');
+  public readonly overflowWrap = input<'normal' | 'break-word'>('normal');
 
   // ========================================
   // VISUAL STYLING PROPERTIES
@@ -236,32 +238,32 @@ export class TroikaTextComponent {
    * Fill opacity (0 = transparent, 1 = opaque).
    * @default 1
    */
-  readonly fillOpacity = input<number>(1);
+  public readonly fillOpacity = input<number>(1);
 
   /**
    * Outline/stroke width in world units (number) or as percentage string.
    * Set to 0 to disable outline.
    * @default 0
    */
-  readonly outlineWidth = input<number | string>(0);
+  public readonly outlineWidth = input<number | string>(0);
 
   /**
    * Outline color as CSS string or numeric hex value.
    * @default '#000000'
    */
-  readonly outlineColor = input<string | number>('#000000');
+  public readonly outlineColor = input<string | number>('#000000');
 
   /**
    * Outline blur radius in world units (number) or as percentage string.
    * @default 0 (sharp outline)
    */
-  readonly outlineBlur = input<number | string>(0);
+  public readonly outlineBlur = input<number | string>(0);
 
   /**
    * Outline opacity (0 = transparent, 1 = opaque).
    * @default 1
    */
-  readonly outlineOpacity = input<number>(1);
+  public readonly outlineOpacity = input<number>(1);
 
   // ========================================
   // ADVANCED RENDERING PROPERTIES
@@ -272,28 +274,28 @@ export class TroikaTextComponent {
    * Higher values = better quality but more memory.
    * @default 64
    */
-  readonly sdfGlyphSize = input<number>(64);
+  public readonly sdfGlyphSize = input<number>(64);
 
   /**
    * Level of detail for glyph geometry (1-4).
    * Higher values = smoother curves but more vertices.
    * @default 1
    */
-  readonly glyphGeometryDetail = input<number>(1);
+  public readonly glyphGeometryDetail = input<number>(1);
 
   /**
    * Enable GPU-accelerated SDF generation (requires WebGL2).
    * Falls back to CPU if unavailable.
    * @default true
    */
-  readonly gpuAccelerateSDF = input<boolean>(true);
+  public readonly gpuAccelerateSDF = input<boolean>(true);
 
   /**
    * Depth offset for depth testing.
    * Useful for preventing z-fighting.
    * @default 0
    */
-  readonly depthOffset = input<number>(0);
+  public readonly depthOffset = input<number>(0);
 
   // ========================================
   // BEHAVIOR PROPERTIES
@@ -304,14 +306,14 @@ export class TroikaTextComponent {
    * Useful for labels and UI elements in 3D space.
    * @default false
    */
-  readonly billboard = input<boolean>(false);
+  public readonly billboard = input<boolean>(false);
 
   /**
    * Custom Three.js material to override default material.
    * Useful for glow effects, bloom integration, or custom shaders.
    * @default null (uses troika's default material)
    */
-  readonly customMaterial = input<THREE.Material | null>(null);
+  public readonly customMaterial = input<THREE.Material | null>(null);
 
   // ========================================
   // DEPENDENCY INJECTION
@@ -321,7 +323,6 @@ export class TroikaTextComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly renderLoop = inject(RenderLoopService);
   private readonly sceneService = inject(SceneService);
-  private readonly objectId = inject(OBJECT_ID);
 
   // ========================================
   // STATE SIGNALS
@@ -331,13 +332,13 @@ export class TroikaTextComponent {
    * Loading state signal - true while font is being loaded.
    * Useful for displaying loading indicators in UI.
    */
-  readonly isLoading = signal(false);
+  public readonly isLoading = signal(false);
 
   /**
    * Load error signal - contains error message if font loading failed.
    * Null if no error or font loaded successfully.
    */
-  readonly loadError = signal<string | null>(null);
+  public readonly loadError = signal<string | null>(null);
 
   // ========================================
   // INTERNAL STATE
@@ -346,7 +347,7 @@ export class TroikaTextComponent {
   private textObject?: Text;
   private cleanupRenderLoop?: () => void;
 
-  constructor() {
+  public constructor() {
     // Effect: Initialize and update text
     effect((onCleanup) => {
       const textContent = this.text();

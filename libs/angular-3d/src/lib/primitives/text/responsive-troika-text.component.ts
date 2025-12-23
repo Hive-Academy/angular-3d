@@ -95,108 +95,110 @@ export class ResponsiveTroikaTextComponent {
   // ========================================
 
   /** The text string to render. Supports multi-line text using newline characters (\n). */
-  readonly text = input.required<string>();
+  public readonly text = input.required<string>();
 
   /** Font size in 3D world units (baseline for distance mode). @default 0.1 */
-  readonly fontSize = input<number>(0.1);
+  public readonly fontSize = input<number>(0.1);
 
   /** Text color as CSS string or numeric hex value. @default '#ffffff' */
-  readonly color = input<string | number>('#ffffff');
+  public readonly color = input<string | number>('#ffffff');
 
   /** URL or path to custom font file (TTF, OTF, WOFF). @default null */
-  readonly font = input<string | null>(null);
+  public readonly font = input<string | null>(null);
 
   /** Font style: 'normal' or 'italic'. @default 'normal' */
-  readonly fontStyle = input<'normal' | 'italic'>('normal');
+  public readonly fontStyle = input<'normal' | 'italic'>('normal');
 
   /** Font weight: 'normal', 'bold', or numeric (100-900). @default 'normal' */
-  readonly fontWeight = input<string | number>('normal');
+  public readonly fontWeight = input<string | number>('normal');
 
   // ========================================
   // TRANSFORM PROPERTIES
   // ========================================
 
   /** Position in 3D space [x, y, z]. @default [0, 0, 0] */
-  readonly position = input<[number, number, number]>([0, 0, 0]);
+  public readonly position = input<[number, number, number]>([0, 0, 0]);
 
   /** Rotation in radians [x, y, z]. @default [0, 0, 0] */
-  readonly rotation = input<[number, number, number]>([0, 0, 0]);
+  public readonly rotation = input<[number, number, number]>([0, 0, 0]);
 
   /** Scale factor. Can be uniform (number) or per-axis [x, y, z]. @default 1 */
-  readonly scale = input<number | [number, number, number]>(1);
+  public readonly scale = input<number | [number, number, number]>(1);
 
   // ========================================
   // LAYOUT PROPERTIES
   // ========================================
 
   /** Maximum width for text wrapping in world units. @default Infinity */
-  readonly maxWidth = input<number>(Infinity);
+  public readonly maxWidth = input<number>(Infinity);
 
   /** Horizontal text alignment within the maxWidth. @default 'left' */
-  readonly textAlign = input<'left' | 'right' | 'center' | 'justify'>('left');
+  public readonly textAlign = input<'left' | 'right' | 'center' | 'justify'>(
+    'left'
+  );
 
   /** Horizontal anchor point. @default 'left' */
-  readonly anchorX = input<number | string>('left');
+  public readonly anchorX = input<number | string>('left');
 
   /** Vertical anchor point. @default 'top' */
-  readonly anchorY = input<number | string>('top');
+  public readonly anchorY = input<number | string>('top');
 
   /** Line height as multiple of fontSize. @default 1.2 */
-  readonly lineHeight = input<number | string>(1.2);
+  public readonly lineHeight = input<number | string>(1.2);
 
   /** Letter spacing adjustment in world units. @default 0 */
-  readonly letterSpacing = input<number>(0);
+  public readonly letterSpacing = input<number>(0);
 
   /** CSS white-space behavior. @default 'normal' */
-  readonly whiteSpace = input<'normal' | 'nowrap'>('normal');
+  public readonly whiteSpace = input<'normal' | 'nowrap'>('normal');
 
   /** CSS overflow-wrap behavior. @default 'normal' */
-  readonly overflowWrap = input<'normal' | 'break-word'>('normal');
+  public readonly overflowWrap = input<'normal' | 'break-word'>('normal');
 
   // ========================================
   // VISUAL STYLING PROPERTIES
   // ========================================
 
   /** Fill opacity (0 = transparent, 1 = opaque). @default 1 */
-  readonly fillOpacity = input<number>(1);
+  public readonly fillOpacity = input<number>(1);
 
   /** Outline/stroke width in world units. @default 0 */
-  readonly outlineWidth = input<number | string>(0);
+  public readonly outlineWidth = input<number | string>(0);
 
   /** Outline color. @default '#000000' */
-  readonly outlineColor = input<string | number>('#000000');
+  public readonly outlineColor = input<string | number>('#000000');
 
   /** Outline blur radius. @default 0 */
-  readonly outlineBlur = input<number | string>(0);
+  public readonly outlineBlur = input<number | string>(0);
 
   /** Outline opacity. @default 1 */
-  readonly outlineOpacity = input<number>(1);
+  public readonly outlineOpacity = input<number>(1);
 
   // ========================================
   // ADVANCED RENDERING PROPERTIES
   // ========================================
 
   /** Size of SDF glyph texture atlas in pixels. @default 64 */
-  readonly sdfGlyphSize = input<number>(64);
+  public readonly sdfGlyphSize = input<number>(64);
 
   /** Level of detail for glyph geometry (1-4). @default 1 */
-  readonly glyphGeometryDetail = input<number>(1);
+  public readonly glyphGeometryDetail = input<number>(1);
 
   /** Enable GPU-accelerated SDF generation. @default true */
-  readonly gpuAccelerateSDF = input<boolean>(true);
+  public readonly gpuAccelerateSDF = input<boolean>(true);
 
   /** Depth offset for depth testing. @default 0 */
-  readonly depthOffset = input<number>(0);
+  public readonly depthOffset = input<number>(0);
 
   // ========================================
   // BEHAVIOR PROPERTIES
   // ========================================
 
   /** Enable billboard mode - text always faces the camera. @default false */
-  readonly billboard = input<boolean>(false);
+  public readonly billboard = input<boolean>(false);
 
   /** Custom Three.js material to override default material. @default null */
-  readonly customMaterial = input<THREE.Material | null>(null);
+  public readonly customMaterial = input<THREE.Material | null>(null);
 
   // ========================================
   // RESPONSIVE-SPECIFIC PROPERTIES
@@ -208,28 +210,28 @@ export class ResponsiveTroikaTextComponent {
    * - 'distance': Font size scales with camera distance from text
    * @default 'viewport'
    */
-  readonly responsiveMode = input<'viewport' | 'distance'>('viewport');
+  public readonly responsiveMode = input<'viewport' | 'distance'>('viewport');
 
   /**
    * Viewport scale factor (viewport mode only).
    * Font size will be viewportScale * viewport width.
    * @default 0.05 (5% of viewport width)
    */
-  readonly viewportScale = input<number>(0.05);
+  public readonly viewportScale = input<number>(0.05);
 
   /**
    * Minimum font size constraint in world units.
    * Prevents text from becoming too small when camera is far.
    * @default 0.05
    */
-  readonly minFontSize = input<number>(0.05);
+  public readonly minFontSize = input<number>(0.05);
 
   /**
    * Maximum font size constraint in world units.
    * Prevents text from becoming too large when camera is close.
    * @default 2.0
    */
-  readonly maxFontSize = input<number>(2.0);
+  public readonly maxFontSize = input<number>(2.0);
 
   /**
    * Debounce delay in milliseconds before calling sync() after font size change.
@@ -237,7 +239,7 @@ export class ResponsiveTroikaTextComponent {
    * Lower values make sizing more responsive but increase CPU usage.
    * @default 100
    */
-  readonly syncDebounceMs = input<number>(100);
+  public readonly syncDebounceMs = input<number>(100);
 
   // ========================================
   // DEPENDENCY INJECTION
@@ -247,17 +249,16 @@ export class ResponsiveTroikaTextComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly renderLoop = inject(RenderLoopService);
   private readonly sceneService = inject(SceneService);
-  private readonly objectId = inject(OBJECT_ID);
 
   // ========================================
   // STATE SIGNALS
   // ========================================
 
   /** Loading state signal - true while font is being loaded. */
-  readonly isLoading = signal(false);
+  public readonly isLoading = signal(false);
 
   /** Load error signal - contains error message if font loading failed. */
-  readonly loadError = signal<string | null>(null);
+  public readonly loadError = signal<string | null>(null);
 
   // ========================================
   // INTERNAL STATE
@@ -266,8 +267,9 @@ export class ResponsiveTroikaTextComponent {
   private textObject?: Text;
   private cleanupBillboardLoop?: () => void;
   private cleanupResponsiveLoop?: () => void;
+  private debounceTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  constructor() {
+  public constructor() {
     // Effect: Initialize and update text
     effect((onCleanup) => {
       const textContent = this.text();
@@ -339,7 +341,6 @@ export class ResponsiveTroikaTextComponent {
       }
 
       let lastAppliedFontSize = this.fontSize();
-      let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
 
       this.cleanupResponsiveLoop = this.renderLoop.registerUpdateCallback(
         () => {
@@ -354,8 +355,8 @@ export class ResponsiveTroikaTextComponent {
 
           // Only update if changed significantly (>0.01)
           if (Math.abs(newFontSize - lastAppliedFontSize) > 0.01) {
-            if (debounceTimeout) clearTimeout(debounceTimeout);
-            debounceTimeout = setTimeout(() => {
+            if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
+            this.debounceTimeout = setTimeout(() => {
               if (this.textObject) {
                 this.textObject.fontSize = newFontSize;
                 this.textObject.sync();
@@ -369,6 +370,10 @@ export class ResponsiveTroikaTextComponent {
 
     // Cleanup
     this.destroyRef.onDestroy(() => {
+      if (this.debounceTimeout) {
+        clearTimeout(this.debounceTimeout);
+        this.debounceTimeout = null;
+      }
       this.cleanupBillboardLoop?.();
       this.cleanupResponsiveLoop?.();
       if (this.textObject) {
@@ -409,8 +414,10 @@ export class ResponsiveTroikaTextComponent {
     const distance = camera.position.distanceTo(this.textObject.position);
     const baseFontSize = this.fontSize();
 
-    // Scale based on distance (normalized to 10 units)
-    const fontSize = baseFontSize * (distance / 10);
+    // Reference distance of 10 world units - at this distance, fontSize equals baseFontSize
+    // Closer than 10 units = smaller text, farther = larger text
+    const REFERENCE_DISTANCE = 10;
+    const fontSize = baseFontSize * (distance / REFERENCE_DISTANCE);
 
     // Clamp to min/max constraints
     return this.clamp(fontSize, this.minFontSize(), this.maxFontSize());

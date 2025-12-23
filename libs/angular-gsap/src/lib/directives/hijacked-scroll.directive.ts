@@ -90,6 +90,7 @@ export class HijackedScrollDirective implements OnDestroy {
   readonly end = input<string | undefined>(undefined); // ScrollTrigger end point (optional)
   readonly scrub = input<number>(1); // ScrollTrigger scrub value (default: 1)
   readonly stepHold = input<number>(0); // Multiplier of animation duration to hold after each step
+  readonly showFirstStepImmediately = input<boolean>(true); // Show first step visible before scrolling
 
   // Event outputs
   readonly currentStepChange = output<number>();
@@ -122,6 +123,7 @@ export class HijackedScrollDirective implements OnDestroy {
       this.markers();
       this.scrub();
       this.stepHold();
+      this.showFirstStepImmediately();
 
       // Re-initialize if already initialized and has items
       if (
@@ -172,6 +174,7 @@ export class HijackedScrollDirective implements OnDestroy {
     // Track accumulated time for variable holds
     let currentTime = 0;
     const holdDuration = this.stepHold();
+    const showFirstImmediately = this.showFirstStepImmediately();
 
     // Animate each step
     items.forEach((item, index) => {
@@ -223,17 +226,32 @@ export class HijackedScrollDirective implements OnDestroy {
         ease: this.ease(),
       };
 
-      // Set initial state for ALL steps (including first one)
-      this.masterTimeline?.set(element, fromState, 0);
+      // For the first step with showFirstStepImmediately, show it already visible
+      if (index === 0 && showFirstImmediately) {
+        // First step starts visible (no animation needed for entrance)
+        this.masterTimeline?.set(
+          element,
+          {
+            opacity: 1,
+            x: 0,
+            y: 0,
+            scale: 1,
+          },
+          0
+        );
+      } else {
+        // Set initial state for other steps (or first step if not immediate)
+        this.masterTimeline?.set(element, fromState, 0);
+      }
 
       // Add fade in animation
       const stepStartTime = currentTime;
 
-      // For the first step, add a small delay before animating in
-      // This ensures it animates smoothly when the user first scrolls
-      if (index === 0) {
-        // First step fades in immediately at scroll start
-        this.masterTimeline?.to(element, toState, stepStartTime);
+      // For the first step with showFirstImmediately, skip the fade-in (already visible)
+      // Just let it exit when scrolling starts
+      if (index === 0 && showFirstImmediately) {
+        // First step is already visible, no need to animate in
+        // Timeline starts with first step visible, then transitions out
       } else {
         // Other steps fade in at their designated time
         this.masterTimeline?.to(element, toState, stepStartTime);

@@ -57,7 +57,7 @@ export class FontPreloadService {
    * @param options.sdfGlyphSize - Optional SDF glyph size (default: 64)
    * @returns Promise that resolves when font is loaded
    */
-  preload(options: {
+  public preload(options: {
     font: string;
     characters?: string;
     sdfGlyphSize?: number;
@@ -73,7 +73,7 @@ export class FontPreloadService {
    * @param fonts - Array of font configurations
    * @returns Promise that resolves when all fonts are loaded
    */
-  preloadMultiple(
+  public preloadMultiple(
     fonts: Array<{ font: string; characters?: string; sdfGlyphSize?: number }>
   ): Promise<void[]> {
     return Promise.all(fonts.map((f) => this.preload(f)));
