@@ -12,6 +12,7 @@
 | TASK_2025_021 | Hero Section 3D Text Redesign       | ⏸️ PAUSED (pivot)        | 2025-12-22 |
 | TASK_2025_022 | GSAP Service Centralization         | 🔄 Execution (Batch 1)   | 2025-12-22 |
 | TASK_2025_023 | Troika-Three-Text Implementation    | 🔄 IN PROGRESS           | 2025-12-22 |
+| TASK_2025_024 | Particle Text → Troika Refactor     | 🔄 IN PROGRESS           | 2025-12-23 |
 
 ## Task Dependencies
 

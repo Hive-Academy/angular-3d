@@ -49,7 +49,7 @@ import {
   PLATFORM_ID,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { GsapCoreService } from '../services/gsap-core.service';
+import { GsapCoreService } from '../../services/gsap-core.service';
 import type { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { HijackedScrollItemDirective } from './hijacked-scroll-item.directive';
 

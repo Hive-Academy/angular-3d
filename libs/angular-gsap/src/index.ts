@@ -1,23 +1,26 @@
-// Directives
+// Directives - Scroll related (from organized folder)
 export {
   ScrollAnimationDirective,
   type ScrollAnimationConfig,
   type AnimationType,
-} from './lib/directives/scroll-animation.directive';
+} from './lib/directives/scroll/scroll-animation.directive';
+export {
+  HijackedScrollDirective,
+  type HijackedScrollConfig,
+} from './lib/directives/scroll/hijacked-scroll.directive';
+export {
+  HijackedScrollItemDirective,
+  type HijackedScrollItemConfig,
+  type SlideDirection,
+} from './lib/directives/scroll/hijacked-scroll-item.directive';
+export { ScrollSectionPinDirective } from './lib/directives/scroll/scroll-section-pin.directive';
+
+// Directives - Other
 export {
   ViewportAnimationDirective,
   type ViewportAnimationConfig,
   type ViewportAnimationType,
 } from './lib/directives/viewport-animation.directive';
-export {
-  HijackedScrollDirective,
-  type HijackedScrollConfig,
-} from './lib/directives/hijacked-scroll.directive';
-export {
-  HijackedScrollItemDirective,
-  type HijackedScrollItemConfig,
-  type SlideDirection,
-} from './lib/directives/hijacked-scroll-item.directive';
 export { SectionStickyDirective } from './lib/directives/section-sticky.directive';
 export {
   ParallaxSplitItemDirective,
@@ -29,7 +32,7 @@ export {
   type LenisSmoothScrollConfig,
 } from './lib/directives/lenis-smooth-scroll.directive';
 
-// Providers (NEW - Modern Angular pattern)
+// Providers (Modern Angular pattern)
 export {
   provideGsap,
   GSAP_CONFIG,
@@ -45,6 +48,13 @@ export {
   type LenisScrollEvent,
 } from './lib/services/lenis-smooth-scroll.service';
 
-// Components
-export { HijackedScrollTimelineComponent } from './lib/components/hijacked-scroll-timeline.component';
+// Components - Scroll Timeline
+export {
+  HijackedScrollTimelineComponent,
+  ScrollTimelineComponent,
+  StepIndicatorComponent,
+  type StepData,
+} from './lib/components/scroll-timeline';
+
+// Components - Other
 export { ParallaxSplitScrollComponent } from './lib/components/parallax-split-scroll.component';

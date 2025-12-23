@@ -1,99 +1,55 @@
-# TASK_2025_024 - Angular-3D Provider Architecture & Configuration
+# Task Context - TASK_2025_024
 
 ## User Intent
 
-The user wants to implement a modern Angular provider pattern (`provideAngular3d()`) for the `@hive-academy/angular-3d` library, following the same architectural thinking applied in TASK_2025_022 for GSAP. This will centralize configuration and eliminate redundant per-scene settings in the demo application.
+Refactor particle text to Troika-based smoke/glow variants:
+
+1. **Remove** entire particle-text/ folder containing:
+
+   - InstancedParticleTextComponent (smoke cloud text using instanced meshes)
+   - GlowParticleTextComponent (neon tube glow particles)
+   - SmokeParticleTextComponent (dense smoke particles)
+
+2. **Create** new lightweight Troika-based components in text/ folder:
+   - SmokeTroikaTextComponent - Troika SDF text with smoke/atmospheric shader effect
+   - Enhance existing GlowTroikaTextComponent if needed
+
+**Goal**: Same visual effect as inspiration screenshot but lightweight, responsive, GPU-efficient like Troika.
 
 ## Conversation Summary
 
-The discussion began when the user asked to audit the angular-3d library for Three.js integration patterns, applying the same thinking from TASK_2025_022 (GSAP Service Centralization).
+- User showed inspiration screenshot (Enterprise AI SaaS landing with smokey text effects)
+- Current implementation uses particle-based approach (1000s of CPU-animated particles)
+- User wants Troika (SDF) as base for crispness + shader/material effects for smoke/glow
+- Text3DComponent already removed (unused extruded 3D text)
+- TroikaTextComponent, ResponsiveTroikaTextComponent, GlowTroikaTextComponent already exist
 
-### Key Findings from Audit
+## Technical Context
 
-**Current State (angular-3d):**
-- Per-scene services are correctly architected (SceneService, RenderLoopService, SceneGraphStore)
-- Comprehensive cleanup with SceneGraphStore and DestroyRef
-- Signal-based reactivity with modern Angular patterns
-- SSR safety via `afterNextRender` pattern
+- Branch: feature/TASK_2025_002-canvas-render-loop (current)
+- Created: 2025-12-23
+- Type: REFACTORING
+- Complexity: Medium
 
-**Gap Identified:**
-- No `provideAngular3d()` provider function for app-level configuration
-- Renderer/camera/shadow settings must be repeated on every `<a3d-scene-3d>` component
-- Asset paths (Draco decoder, model base paths) not configurable at app level
-- Pattern doesn't match modern Angular providers like `provideRouter()`, `provideGsap()`
+## Key Insight
 
-### Comparison: GSAP vs Three.js
+**Old approach**: Particles FORM the text (CPU-intensive, 1000s of points animated per frame)
+**New approach**: Troika renders crisp SDF text + shader/material creates smoke/glow effect (GPU-efficient)
 
-| Aspect | GSAP (Task 022) | Three.js (This Task) |
-|--------|-----------------|----------------------|
-| Problem | Redundant plugin registration (4 files) | Redundant configuration (per-scene) |
-| Solution | Centralized GsapCoreService | Centralized config token + provider |
-| Per-scene? | No (singleton GSAP) | Yes (per-scene services remain) |
-| Goal | Eliminate redundant init | Provide app-wide defaults |
+## Files to Remove
 
-## Scope
+- libs/angular-3d/src/lib/primitives/particle-text/instanced-particle-text.component.ts
+- libs/angular-3d/src/lib/primitives/particle-text/glow-particle-text.component.ts
+- libs/angular-3d/src/lib/primitives/particle-text/smoke-particle-text.component.ts
+- libs/angular-3d/src/lib/services/text-sampling.service.ts (if only used by particle-text)
 
-### In Scope
+## Files to Create/Modify
 
-1. **Create `provideAngular3d()` provider function**
-   - `Angular3dConfig` interface with TypeScript types
-   - `ANGULAR_3D_CONFIG` injection token
-   - Provider factory with `makeEnvironmentProviders()`
+- Create SmokeTroikaTextComponent in text/ folder
+- Potentially enhance GlowTroikaTextComponent
+- Update primitives/index.ts exports
+- Update demo app imports if any
 
-2. **Update Scene3dComponent to read config**
-   - Inject optional config token
-   - Priority: Component Input > App Config > Library Default
+## Execution Strategy
 
-3. **Configure asset loaders**
-   - GltfLoaderService reads base path from config
-   - Draco decoder path configurable
-
-4. **Simplify demo app scenes**
-   - Remove redundant renderer/shadow/camera settings
-   - Use centralized configuration
-   - Keep only scene-specific overrides
-
-5. **Document the pattern**
-   - JSDoc on provider function
-   - Usage examples in config interface
-
-### Out of Scope
-
-- Changing per-scene service architecture (already correct)
-- Adding new Three.js features
-- Performance optimizations beyond configuration
-
-## Files Affected
-
-### @hive-academy/angular-3d (Library)
-
-| File | Action | Description |
-|------|--------|-------------|
-| `src/lib/providers/angular-3d.provider.ts` | CREATE | Provider function + config interface |
-| `src/lib/canvas/scene-3d.component.ts` | MODIFY | Read config token, merge with inputs |
-| `src/lib/loaders/gltf-loader.service.ts` | MODIFY | Read asset config for paths |
-| `src/index.ts` | MODIFY | Export provider and types |
-
-### Demo App (Simplification)
-
-| File | Action | Description |
-|------|--------|-------------|
-| `apps/angular-3d-demo/src/app/app.config.ts` | MODIFY | Add `provideAngular3d()` |
-| `apps/angular-3d-demo/src/app/pages/home/scenes/*.ts` | MODIFY | Remove redundant config |
-| `apps/angular-3d-demo/src/app/pages/angular-3d-showcase/scenes/*.ts` | MODIFY | Remove redundant config |
-
-## Task Type
-
-- **Type**: FEATURE + REFACTORING
-- **Priority**: Medium (architectural improvement, DX enhancement)
-- **Scope**: `@hive-academy/angular-3d` library + demo app cleanup
-
-## Related Tasks
-
-- **TASK_2025_022**: GSAP Service Centralization (same pattern, different library)
-- **TASK_2025_002**: Core Infrastructure - Canvas & Render Loop (created Scene3dComponent)
-
-## Created
-
-- **Date**: 2025-12-22
-- **Source**: User request after angular-3d audit
+REFACTORING: software-architect -> USER VALIDATES -> team-leader (3 modes) -> USER CHOOSES QA -> modernization-detector

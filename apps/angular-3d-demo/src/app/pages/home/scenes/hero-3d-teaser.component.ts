@@ -1,24 +1,25 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
-  Scene3dComponent,
   AmbientLightComponent,
+  BloomEffectComponent,
   DirectionalLightComponent,
-  PointLightComponent,
-  ViewportPositionDirective,
-  Rotate3dDirective,
   Float3dDirective,
-  SpaceFlight3dDirective,
+  FloatingSphereComponent,
+  GlowTroikaTextComponent,
   GltfModelComponent,
-  StarFieldComponent,
   NebulaVolumetricComponent,
   OrbitControlsComponent,
-  BloomEffectComponent,
-  FloatingSphereComponent,
-  TroikaTextComponent,
-  GlowTroikaTextComponent,
+  PointLightComponent,
+  Rotate3dDirective,
+  Scene3dComponent,
   ScrollZoomCoordinatorDirective,
+  SpaceFlight3dDirective,
+  StarFieldComponent,
+  TroikaTextComponent,
+  ViewportPositionDirective,
   type SpaceFlightWaypoint,
 } from '@hive-academy/angular-3d';
+import { OrbitControls } from 'three-stdlib';
 import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
 
 /**
@@ -67,11 +68,7 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
     >
       <a3d-scene-3d [cameraPosition]="[0, 0, 20]" [cameraFov]="75">
         <!-- Scroll-Zoom Coordinator (observes zoom state, coordinates page scroll) -->
-        <ng-container
-          a3dScrollZoomCoordinator
-          [maxDistance]="25"
-          [scrollThreshold]="2"
-        />
+
         <!-- ================================ -->
         <!-- LIGHTING SETUP -->
         <!-- ================================ -->
@@ -304,7 +301,7 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
 
         <!-- ================================ -->
         <!-- CAMERA CONTROLS -->
-        <!-- ================================ -->
+        <!-- ================================ 
         <a3d-orbit-controls
           [enableDamping]="true"
           [dampingFactor]="0.05"
@@ -313,6 +310,24 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [maxDistance]="25"
           [rotateSpeed]="0.5"
           [enablePan]="false"
+          a3dScrollZoomCoordinator
+          [scrollThreshold]="2"
+        />-->
+
+        <a3d-orbit-controls
+          scrollZoomCoordinator
+          [orbitControls]="orbitControlsInstance"
+          [target]="[0, 0, 0]"
+          [enableDamping]="true"
+          [dampingFactor]="0.05"
+          [enableZoom]="isZoomEnabled"
+          [minDistance]="5"
+          [maxDistance]="50"
+          [rotateSpeed]="0.5"
+          [enablePan]="false"
+          [scrollThreshold]="0.5"
+          (controlsReady)="onControlsReady($event)"
+          (zoomEnabledChange)="onZoomEnabledChange($event)"
         />
 
         <!-- ================================ -->
@@ -335,6 +350,11 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
 export class Hero3dTeaserComponent {
   public readonly colors = SCENE_COLORS;
   public readonly colorStrings = SCENE_COLOR_STRINGS;
+  // ✅ Store orbit controls reference for scroll coordinator
+  public orbitControlsInstance?: OrbitControls;
+
+  // ✅ Reactive zoom enable/disable for scroll coordination
+  public isZoomEnabled = true;
 
   /**
    * Robot 1 (Mini Robot) - HIGH ALTITUDE PATH
@@ -360,4 +380,22 @@ export class Hero3dTeaserComponent {
     { position: [-6, -5, -10], duration: 9, easing: 'easeInOut' },
     { position: [4, -3, -8], duration: 8, easing: 'easeInOut' },
   ];
+
+  /**
+   * Handles zoom enable/disable changes from the scroll coordinator
+   * Updates the reactive property that's bound to [enableZoom]
+   */
+  public onZoomEnabledChange(enabled: boolean): void {
+    this.isZoomEnabled = enabled;
+    console.log(`🎮 Zoom ${enabled ? 'enabled' : 'disabled'} via binding`);
+  }
+
+  /**
+   * Captures the OrbitControls instance when controls are ready
+   * This is needed to pass it to the scroll coordinator directive
+   */
+  public onControlsReady(controls: OrbitControls): void {
+    this.orbitControlsInstance = controls;
+    console.log('✅ OrbitControls instance captured for scroll coordinator');
+  }
 }

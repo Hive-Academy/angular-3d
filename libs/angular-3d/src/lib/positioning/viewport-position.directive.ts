@@ -24,7 +24,7 @@
  * />
  *
  * <!-- Percentage position -->
- * <app-text-3d
+ * <a3d-troika-text
  *   [viewportPosition]="{ x: '50%', y: '38%' }"
  * />
  *

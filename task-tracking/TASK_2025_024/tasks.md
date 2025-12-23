@@ -1,6 +1,6 @@
 # Development Tasks - TASK_2025_024
 
-**Total Tasks**: 5 | **Batches**: 3 | **Status**: 0/3 complete
+**Total Tasks**: 5 | **Batches**: 3 | **Status**: 2/3 complete
 
 ---
 
@@ -25,18 +25,19 @@
 
 ### Edge Cases to Handle
 
-- [ ] Material override compatibility → Tested in Task 1.1
-- [ ] Shader uniform updates on signal changes → Handled in Task 1.1 with effect()
-- [ ] Cleanup order (shader material before Text object) → Handled in Task 1.1 DestroyRef
+- [x] Material override compatibility → Tested in Task 1.1 - WORKS
+- [x] Shader uniform updates on signal changes → Handled in Task 1.1 with effect()
+- [x] Cleanup order (shader material before Text object) → Handled in Task 1.1 DestroyRef
 
 ---
 
-## Batch 1: Create SmokeTroikaTextComponent with Shader Effect 🔄 IN PROGRESS
+## Batch 1: Create SmokeTroikaTextComponent with Shader Effect ✅ COMPLETE
 
 **Developer**: frontend-developer
 **Tasks**: 2 | **Dependencies**: None
+**Commit**: e2ca83b
 
-### Task 1.1: Create SmokeTroikaTextComponent with shader-based smoke effect 🔄 IMPLEMENTED
+### Task 1.1: Create SmokeTroikaTextComponent with shader-based smoke effect ✅ COMPLETE
 
 **File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\text\smoke-troika-text.component.ts
 **Spec Reference**: implementation-plan.md:100-281
@@ -100,7 +101,7 @@
 
 ---
 
-### Task 1.2: Add SmokeTroikaTextComponent to text barrel exports 🔄 IMPLEMENTED
+### Task 1.2: Add SmokeTroikaTextComponent to text barrel exports ✅ COMPLETE
 
 **File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\text\index.ts
 **Dependencies**: Task 1.1
@@ -134,12 +135,13 @@
 
 ---
 
-## Batch 2: Remove Particle-Text Components and Service ⏸️ PENDING
+## Batch 2: Remove Particle-Text Components and Service ✅ COMPLETE
 
 **Developer**: frontend-developer
 **Tasks**: 2 | **Dependencies**: Batch 1 complete
+**Commit**: f670e76
 
-### Task 2.1: Delete particle-text folder and TextSamplingService ⏸️ PENDING
+### Task 2.1: Delete particle-text folder and TextSamplingService ✅ COMPLETE
 
 **Files to DELETE**:
 
@@ -174,7 +176,7 @@
 
 ---
 
-### Task 2.2: Remove particle-text exports from primitives barrel ⏸️ PENDING
+### Task 2.2: Remove particle-text exports from primitives barrel ✅ COMPLETE
 
 **File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\index.ts
 **Dependencies**: Task 2.1
@@ -213,12 +215,12 @@
 
 ---
 
-## Batch 3: Verification and Demo App Update ⏸️ PENDING
+## Batch 3: Verification and Demo App Update 🔄 IN PROGRESS
 
 **Developer**: frontend-developer
 **Tasks**: 1 | **Dependencies**: Batch 2 complete
 
-### Task 3.1: Build verification and demo app import check ⏸️ PENDING
+### Task 3.1: Build verification and demo app import check 🔄 IMPLEMENTED
 
 **Files to CHECK**:
 

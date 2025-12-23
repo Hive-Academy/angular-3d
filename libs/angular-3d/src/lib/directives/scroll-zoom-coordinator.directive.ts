@@ -1,39 +1,50 @@
 /**
- * ScrollZoomCoordinatorDirective - Coordinate 3D zoom and page scrolling
+ * ScrollZoomCoordinatorDirective - Coordinates 3D Orbit Zoom with Page Scrolling
  *
- * IMPORTANT: This directive works WITH OrbitControls, not instead of it.
- * Place this directive inside a a3d-scene-3d that has OrbitControls.
- *
- * Behavior:
- * - OrbitControls handles the actual zoom (mouse wheel)
- * - This directive monitors camera distance and:
- *   - Blocks page scroll while camera is zooming (between min/max)
- *   - Allows page scroll when camera reaches maxDistance and user scrolls down
- *   - Re-engages zoom mode when user scrolls up (zooming back in)
+ * This directive bridges the gap between Three.js OrbitControls zoom and native page scrolling,
+ * creating a seamless parallax experience where:
+ * 1. Mouse wheel zooms the camera in 3D space (zoom in = closer to scene)
+ * 2. When max zoom distance is reached, additional scroll triggers page scroll down
+ * 3. When min zoom distance is reached while scrolling up, it scrolls page up
  *
  * Features:
- * - Works transparently with OrbitControls
- * - NgZone.runOutsideAngular for performance
- * - Signal-based state tracking
- * - Emits events for zoom progress and completion
+ * - Smooth transition between 3D zoom and page scroll
+ * - Prevents scroll conflicts when zoom limits are reached
+ * - Configurable thresholds and sensitivity
+ * - Works with Angular's zone and change detection
+ * - Emits events for zoom enable/disable state changes
  *
- * @example
+ * Usage (Applied to OrbitControls):
+ * ```html
+ * <a3d-orbit-controls
+ *   scrollZoomCoordinator
+ *   [orbitControls]="orbitControlsInstance"
+ *   [enableZoom]="isZoomEnabled"
+ *   [minDistance]="5"
+ *   [maxDistance]="50"
+ *   [scrollThreshold]="0.5"
+ *   (controlsChange)="onControlsChange($event)"
+ *   (zoomEnabledChange)="onZoomEnabledChange($event)"
+ * />
+ * ```
+ *
+ * Alternative Usage (As separate element):
  * ```html
  * <a3d-scene-3d>
- *   <!-- Coordinator observes zoom state -->
  *   <ng-container
  *     a3dScrollZoomCoordinator
  *     [maxDistance]="40"
  *     [scrollThreshold]="1"
  *     (zoomComplete)="onZoomComplete()" />
  *
- *   <!-- OrbitControls handles actual zooming -->
  *   <a3d-orbit-controls
  *     [enableZoom]="true"
  *     [minDistance]="8"
  *     [maxDistance]="40" />
  * </a3d-scene-3d>
  * ```
+ *
+ * @see https://threejs.org/docs/#examples/en/controls/OrbitControls
  */
 
 import {
@@ -47,14 +58,34 @@ import {
   signal,
   computed,
   PLATFORM_ID,
+  effect,
+  AfterViewInit,
+  OnDestroy,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { OrbitControls } from 'three-stdlib';
 import { SceneService } from '../canvas/scene.service';
 
 /**
- * Scroll/zoom state
+ * Scroll/zoom state (simple mode)
  */
 export type ScrollZoomState = 'zooming' | 'complete' | 'idle';
+
+/**
+ * Detailed scroll-zoom state (advanced mode with OrbitControls)
+ */
+export interface ScrollZoomDetailedState {
+  /** Current camera distance from target */
+  distance: number;
+  /** Whether at minimum zoom distance (closest) */
+  atMinDistance: boolean;
+  /** Whether at maximum zoom distance (farthest) */
+  atMaxDistance: boolean;
+  /** Whether page scroll should be enabled */
+  allowPageScroll: boolean;
+  /** Scroll direction: 1 = down/zoom out, -1 = up/zoom in, 0 = none */
+  scrollDirection: number;
+}
 
 /**
  * Zoom progress event with detailed state
@@ -73,12 +104,18 @@ export interface ZoomProgressEvent {
  *
  * Coordinates between OrbitControls zoom and page scrolling.
  * Monitors camera distance and controls scroll pass-through.
+ *
+ * Two usage modes:
+ * 1. Applied directly to a3d-orbit-controls with [orbitControls] input (advanced)
+ * 2. As separate element using SceneService (simple)
  */
 @Directive({
-  selector: '[a3dScrollZoomCoordinator]',
+  selector: '[a3dScrollZoomCoordinator], [scrollZoomCoordinator]',
   standalone: true,
 })
-export class ScrollZoomCoordinatorDirective {
+export class ScrollZoomCoordinatorDirective
+  implements AfterViewInit, OnDestroy
+{
   // Inject services
   private readonly sceneService = inject(SceneService);
   private readonly ngZone = inject(NgZone);
@@ -90,6 +127,13 @@ export class ScrollZoomCoordinatorDirective {
   // ============================================================================
 
   /**
+   * OrbitControls instance to monitor (advanced mode)
+   * When provided, directive will use controls.domElement for wheel events
+   * and controls.minDistance/maxDistance for thresholds
+   */
+  public readonly orbitControls = input<OrbitControls | undefined>(undefined);
+
+  /**
    * Maximum camera distance (should match OrbitControls maxDistance)
    * When reached, zoom is complete and page scrolling resumes
    * @default 40
@@ -97,20 +141,31 @@ export class ScrollZoomCoordinatorDirective {
   public readonly maxDistance = input<number>(40);
 
   /**
-   * Threshold distance from max to consider zoom "complete"
-   * Accounts for damping/floating point precision
-   * @default 1
+   * Threshold distance from min/max before triggering page scroll
+   * Value between 0-1, where 0.1 means trigger at 90% of limit
+   * @default 0.5
    */
-  public readonly scrollThreshold = input<number>(1);
+  public readonly scrollThreshold = input<number>(0.5);
+
+  /**
+   * Minimum time (ms) between scroll events to prevent jitter
+   * @default 16 (~60fps)
+   */
+  public readonly scrollDebounceMs = input<number>(16);
 
   // ============================================================================
   // Outputs
   // ============================================================================
 
   /**
-   * Emitted when zoom state changes
+   * Emitted when zoom state changes (simple mode)
    */
   public readonly stateChange = output<ScrollZoomState>();
+
+  /**
+   * Emitted when detailed scroll-zoom state changes (advanced mode)
+   */
+  public readonly detailedStateChange = output<ScrollZoomDetailedState>();
 
   /**
    * Emitted continuously during zoom with progress info
@@ -121,6 +176,17 @@ export class ScrollZoomCoordinatorDirective {
    * Emitted once when camera reaches maxDistance
    */
   public readonly zoomComplete = output<void>();
+
+  /**
+   * Emits when zoom should be enabled or disabled (advanced mode)
+   * Parent component should bind [enableZoom] to respond to this
+   */
+  public readonly zoomEnabledChange = output<boolean>();
+
+  /**
+   * Emits when transitioning from 3D zoom to page scroll
+   */
+  public readonly scrollTransition = output<{ direction: 'up' | 'down' }>();
 
   // ============================================================================
   // Internal State (Signals)
@@ -143,11 +209,27 @@ export class ScrollZoomCoordinatorDirective {
   private destroyed = false;
   private wheelHandler: ((e: WheelEvent) => void) | null = null;
   private canvasElement: HTMLCanvasElement | null = null;
+  private controls: OrbitControls | null = null;
+  private changeListener: (() => void) | null = null;
+  private lastWheelTime = 0;
+  private isPageScrolling = false;
+  private lastZoomEnabled = true;
+  private animationFrameId: number | null = null;
+  private initialized = false;
 
   public constructor() {
-    // Initialize after next render (browser-only)
+    // Watch for orbitControls input and initialize when available (advanced mode)
+    effect(() => {
+      const controls = this.orbitControls();
+      if (controls && !this.initialized && isPlatformBrowser(this.platformId)) {
+        this.controls = controls;
+        this.initializeWithControls();
+      }
+    });
+
+    // Initialize after next render (browser-only) - for simple mode
     afterNextRender(() => {
-      if (isPlatformBrowser(this.platformId)) {
+      if (isPlatformBrowser(this.platformId) && !this.initialized) {
         this.initializeCoordinator();
       }
     });
@@ -159,11 +241,43 @@ export class ScrollZoomCoordinatorDirective {
     });
   }
 
+  public ngAfterViewInit(): void {
+    // Handled by effect and afterNextRender
+  }
+
+  public ngOnDestroy(): void {
+    this.cleanup();
+  }
+
   // ============================================================================
   // Initialization
   // ============================================================================
 
+  /**
+   * Initialize in advanced mode (with OrbitControls instance)
+   * Uses controls.domElement for wheel events
+   */
+  private initializeWithControls(): void {
+    if (this.initialized || !this.controls) return;
+
+    this.initialized = true;
+
+    // Run outside Angular zone for performance
+    this.ngZone.runOutsideAngular(() => {
+      this.setupControlsWheelListener();
+      this.setupChangeListener();
+      this.startMonitoring();
+    });
+  }
+
+  /**
+   * Initialize in simple mode (using SceneService)
+   * Uses canvas element from SceneService
+   */
   private initializeCoordinator(): void {
+    // Skip if already initialized in advanced mode
+    if (this.initialized) return;
+
     // Get the canvas element from the scene service
     this.canvasElement = this.sceneService.domElement;
     if (!this.canvasElement) {
@@ -173,13 +287,15 @@ export class ScrollZoomCoordinatorDirective {
       return;
     }
 
+    this.initialized = true;
+
     // Initialize camera distance
     const camera = this.sceneService.camera();
     if (camera) {
       this._currentDistance.set(camera.position.length());
     }
 
-    // Create wheel handler
+    // Create wheel handler for simple mode
     const handler = (event: WheelEvent): void => {
       this.handleWheel(event);
     };
@@ -194,12 +310,124 @@ export class ScrollZoomCoordinatorDirective {
     });
   }
 
+  /**
+   * Setup wheel listener on OrbitControls domElement (advanced mode)
+   */
+  private setupControlsWheelListener(): void {
+    if (!this.controls) return;
+
+    this.wheelHandler = (event: WheelEvent): void => {
+      const now = Date.now();
+      const timeSinceLastWheel = now - this.lastWheelTime;
+
+      // Debounce rapid wheel events
+      if (timeSinceLastWheel < this.scrollDebounceMs()) {
+        return;
+      }
+
+      this.lastWheelTime = now;
+      const state = this.getDetailedState();
+
+      // Determine scroll direction (deltaY > 0 = scroll down/zoom out)
+      const direction = event.deltaY > 0 ? 1 : -1;
+
+      // Check if we should transition to page scroll
+      if (state.atMaxDistance && direction > 0) {
+        // At max zoom distance, scrolling down → disable zoom and allow page scroll
+        this.disableZoom();
+        this.transitionToPageScroll('down');
+        // DON'T prevent default - let the event bubble for page scroll
+      } else if (state.atMinDistance && direction < 0) {
+        // At min zoom distance, scrolling up → disable zoom and allow page scroll
+        this.disableZoom();
+        this.transitionToPageScroll('up');
+        // DON'T prevent default - let the event bubble for page scroll
+      } else {
+        // Normal 3D zoom behavior - re-enable zoom if it was disabled
+        this.enableZoom();
+        this.isPageScrolling = false;
+      }
+    };
+
+    // Attach wheel listener to the controls' DOM element
+    // Use capture phase to run BEFORE OrbitControls processes the event
+    this.controls.domElement?.addEventListener('wheel', this.wheelHandler, {
+      passive: true, // Passive since we're not preventing default
+      capture: true, // Run in capture phase before OrbitControls
+    });
+  }
+
+  /**
+   * Setup change listener on OrbitControls (advanced mode)
+   */
+  private setupChangeListener(): void {
+    if (!this.controls) return;
+
+    this.changeListener = (): void => {
+      // Emit state change whenever controls update
+      const state = this.getDetailedState();
+
+      // If we've moved away from limits, reset page scrolling flag and re-enable zoom
+      if (!state.atMaxDistance && !state.atMinDistance) {
+        if (this.isPageScrolling) {
+          this.isPageScrolling = false;
+        }
+        this.enableZoom();
+      }
+
+      this.ngZone.run(() => {
+        this.detailedStateChange.emit(state);
+      });
+    };
+
+    this.controls.addEventListener('change', this.changeListener);
+  }
+
+  /**
+   * Start monitoring in animation loop (advanced mode)
+   */
+  private startMonitoring(): void {
+    const monitor = (): void => {
+      if (this.controls && !this.destroyed) {
+        // Auto-enable zoom when not actively page scrolling
+        if (!this.isPageScrolling) {
+          this.enableZoom();
+        }
+      }
+
+      if (!this.destroyed) {
+        this.animationFrameId = requestAnimationFrame(monitor);
+      }
+    };
+
+    monitor();
+  }
+
   private cleanup(): void {
+    // Cleanup simple mode
     if (this.wheelHandler && this.canvasElement) {
       this.canvasElement.removeEventListener('wheel', this.wheelHandler);
-      this.wheelHandler = null;
       this.canvasElement = null;
     }
+
+    // Cleanup advanced mode
+    if (this.wheelHandler && this.controls) {
+      this.controls.domElement?.removeEventListener('wheel', this.wheelHandler);
+    }
+
+    if (this.changeListener && this.controls) {
+      this.controls.removeEventListener('change', this.changeListener);
+      this.changeListener = null;
+    }
+
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
+
+    this.wheelHandler = null;
+    this.controls = null;
+    this.initialized = false;
   }
 
   // ============================================================================
@@ -305,14 +533,127 @@ export class ScrollZoomCoordinatorDirective {
   }
 
   // ============================================================================
+  // State Calculation (Advanced Mode)
+  // ============================================================================
+
+  /**
+   * Get detailed state for advanced mode
+   */
+  private getDetailedState(): ScrollZoomDetailedState {
+    if (!this.controls) {
+      return this.getEmptyDetailedState();
+    }
+
+    // Calculate current distance from target
+    const distance = this.controls.object.position.distanceTo(
+      this.controls.target
+    );
+
+    const minDist = this.controls.minDistance;
+    const maxDist = this.controls.maxDistance;
+    const threshold = this.scrollThreshold();
+
+    // Check if at limits (with threshold tolerance)
+    const atMinDistance = distance <= minDist + threshold;
+    const atMaxDistance = distance >= maxDist - threshold;
+
+    return {
+      distance,
+      atMinDistance,
+      atMaxDistance,
+      allowPageScroll: atMinDistance || atMaxDistance,
+      scrollDirection: this.isPageScrolling ? 1 : 0,
+    };
+  }
+
+  private getEmptyDetailedState(): ScrollZoomDetailedState {
+    return {
+      distance: 0,
+      atMinDistance: false,
+      atMaxDistance: false,
+      allowPageScroll: false,
+      scrollDirection: 0,
+    };
+  }
+
+  // ============================================================================
+  // Zoom Control Helpers (Advanced Mode)
+  // ============================================================================
+
+  private disableZoom(): void {
+    if (!this.controls) return;
+
+    // Only emit if state changed
+    if (this.lastZoomEnabled !== false) {
+      this.lastZoomEnabled = false;
+      this.ngZone.run(() => {
+        this.zoomEnabledChange.emit(false);
+      });
+    }
+  }
+
+  private enableZoom(): void {
+    if (!this.controls) return;
+
+    // Only emit if state changed
+    if (this.lastZoomEnabled !== true) {
+      this.lastZoomEnabled = true;
+      this.ngZone.run(() => {
+        this.zoomEnabledChange.emit(true);
+      });
+    }
+  }
+
+  // ============================================================================
+  // Page Scroll Transition (Advanced Mode)
+  // ============================================================================
+
+  private transitionToPageScroll(direction: 'up' | 'down'): void {
+    if (!this.controls) return;
+
+    this.isPageScrolling = true;
+
+    // Emit transition event for analytics/UI feedback
+    this.ngZone.run(() => {
+      this.scrollTransition.emit({ direction });
+    });
+
+    // Emit zoom complete when scrolling down past max
+    if (direction === 'down' && !this._zoomCompleted()) {
+      this._zoomCompleted.set(true);
+      this.updateState('complete');
+      this.ngZone.run(() => {
+        this.zoomComplete.emit();
+      });
+    }
+  }
+
+  // ============================================================================
   // Public API
   // ============================================================================
 
   /**
-   * Get current scroll/zoom state
+   * Get current scroll/zoom state (simple mode)
    */
   public getCurrentState(): ScrollZoomState {
     return this._state();
+  }
+
+  /**
+   * Get detailed scroll-zoom state (advanced mode)
+   */
+  public getState(): ScrollZoomDetailedState {
+    return this.getDetailedState();
+  }
+
+  /**
+   * Enable/disable page scroll coordination
+   */
+  public setEnabled(enabled: boolean): void {
+    if (!enabled) {
+      this.isPageScrolling = false;
+      this.enableZoom();
+    }
   }
 
   /**
@@ -320,6 +661,8 @@ export class ScrollZoomCoordinatorDirective {
    */
   public reset(): void {
     this._zoomCompleted.set(false);
+    this.isPageScrolling = false;
+    this.enableZoom();
     this.updateState('idle');
   }
 }

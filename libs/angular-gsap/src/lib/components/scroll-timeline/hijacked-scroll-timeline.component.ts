@@ -42,7 +42,7 @@
  */
 
 import { Component, input, output } from '@angular/core';
-import { HijackedScrollDirective } from '../directives/hijacked-scroll.directive';
+import { HijackedScrollDirective } from '../../directives/scroll/hijacked-scroll.directive';
 
 @Component({
   selector: 'agsp-hijacked-scroll-timeline',

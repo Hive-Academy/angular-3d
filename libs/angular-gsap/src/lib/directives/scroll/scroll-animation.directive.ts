@@ -54,7 +54,7 @@ import {
   Injector,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { GsapCoreService } from '../services/gsap-core.service';
+import { GsapCoreService } from '../../services/gsap-core.service';
 import type { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 export type AnimationType =

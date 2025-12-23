@@ -2,9 +2,8 @@ import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import {
   ScrollAnimationDirective,
+  ScrollSectionPinDirective,
   ViewportAnimationDirective,
-  HijackedScrollTimelineComponent,
-  HijackedScrollItemDirective,
 } from '@hive-academy/angular-gsap';
 import { CodeSnippetComponent } from '../../../shared/components/code-snippet.component';
 import { DecorativePatternComponent } from '../../../shared/components/decorative-pattern.component';
@@ -19,23 +18,21 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
  * - 10+ 3D primitive components
  * - GSAP-powered animations
  *
- * Design Pattern: Option A - Dark Theme + Oversized Images
- * - Deep dark gradient background (slate-900 → indigo-950)
- * - Images break the grid, extending beyond containers
- * - Subtle glow effects behind images
- * - Premium, immersive feel
- *
- * Renamed from: chromadb-section.component.ts
+ * Design Pattern: Natural Scroll with Scroll-Linked Animations + Section Pinning
+ * - Each step is a full section that pins briefly during scroll
+ * - Content elements animate with individual staggered timing
+ * - Decoration patterns animate while scrolling
+ * - Uses scroll-linked parallax and entrance effects
+ * - Modern, premium feel with controlled pinning
  */
 @Component({
   selector: 'app-angular-3d-section',
   imports: [
     CommonModule,
-    HijackedScrollTimelineComponent,
-    HijackedScrollItemDirective,
     CodeSnippetComponent,
     DecorativePatternComponent,
     ScrollAnimationDirective,
+    ScrollSectionPinDirective,
     ViewportAnimationDirective,
     NgOptimizedImage,
   ],
@@ -59,17 +56,17 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
       <div class="container mx-auto px-8 py-12 relative z-10">
         <!-- Section Hero - Dark Theme -->
         <div class="relative text-center py-16 flex flex-col justify-center">
-          <!-- Decorative Pattern -->
+          <!-- Decorative Pattern with enhanced scroll animation -->
           <div
             class="absolute inset-0 flex items-center justify-end pointer-events-none"
             scrollAnimation
             [scrollConfig]="{
               animation: 'custom',
-              start: 'top 90%',
-              end: 'bottom 30%',
-              scrub: 0.5,
-              from: { scale: 0.6, opacity: 0, rotation: -20, y: 50 },
-              to: { scale: 1, opacity: 0.8, rotation: 0, y: -50 }
+              start: 'top 95%',
+              end: 'bottom 10%',
+              scrub: 0.3,
+              from: { scale: 0.5, opacity: 0, rotation: -30, y: 100 },
+              to: { scale: 1.1, opacity: 0.9, rotation: 10, y: -100 }
             }"
           >
             <div class="w-[800px] h-[800px] text-indigo-400/30 pt-18">
@@ -82,14 +79,11 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
             <!-- Layer Badge -->
             <div
               class="inline-block"
-              scrollAnimation
-              [scrollConfig]="{
-                animation: 'custom',
-                start: 'top 80%',
-                end: 'top 40%',
-                scrub: 0.8,
-                from: { opacity: 0, scale: 0.8 },
-                to: { opacity: 1, scale: 1 }
+              viewportAnimation
+              [viewportConfig]="{
+                animation: 'scaleIn',
+                duration: 0.6,
+                threshold: 0.3
               }"
             >
               <span
@@ -113,14 +107,12 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
             <!-- Main Headline -->
             <h2
               class="text-7xl font-bold text-white mb-6 leading-tight"
-              scrollAnimation
-              [scrollConfig]="{
-                animation: 'custom',
-                start: 'top 75%',
-                end: 'top 35%',
-                scrub: 1,
-                from: { opacity: 0, y: 50 },
-                to: { opacity: 1, y: 0 }
+              viewportAnimation
+              [viewportConfig]="{
+                animation: 'slideUp',
+                duration: 0.8,
+                delay: 0.1,
+                threshold: 0.2
               }"
             >
               <span
@@ -133,14 +125,12 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
             <!-- Subtitle -->
             <p
               class="text-2xl text-gray-300 leading-relaxed max-w-3xl mx-auto"
-              scrollAnimation
-              [scrollConfig]="{
-                animation: 'custom',
-                start: 'top 70%',
-                end: 'top 30%',
-                scrub: 1,
-                from: { opacity: 0, y: 30 },
-                to: { opacity: 1, y: 0 }
+              viewportAnimation
+              [viewportConfig]="{
+                animation: 'fadeIn',
+                duration: 0.8,
+                delay: 0.2,
+                threshold: 0.2
               }"
             >
               Pure Angular wrapper for Three.js with signal-based reactivity.
@@ -152,14 +142,12 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
             <!-- Floating Metrics -->
             <div
               class="flex justify-center gap-12 mt-12"
-              scrollAnimation
-              [scrollConfig]="{
-                animation: 'custom',
-                start: 'top 65%',
-                end: 'top 25%',
-                scrub: 0.8,
-                from: { opacity: 0, y: 40 },
-                to: { opacity: 1, y: 0 }
+              viewportAnimation
+              [viewportConfig]="{
+                animation: 'slideUp',
+                duration: 0.8,
+                delay: 0.3,
+                threshold: 0.2
               }"
             >
               <div class="text-center">
@@ -190,127 +178,261 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
           </div>
         </div>
 
-        <!-- Progressive Code Timeline -->
-        <agsp-hijacked-scroll-timeline
-          [scrollHeightPerStep]="900"
-          [start]="'top top'"
+        <!-- Feature Steps - Enhanced with Section Pinning & Staggered Content Animations -->
+        @for (step of codeTimeline(); track step.id; let i = $index) {
+        <section
+          class="relative min-h-[80vh] py-24 flex items-center"
+          scrollSectionPin
+          [pinDuration]="'400px'"
+          [start]="'top 15%'"
+          [anticipatePin]="1"
+          [pinSpacing]="true"
         >
-          @for (step of codeTimeline(); track step.id; let i = $index) {
-          <div hijackedScrollItem [slideDirection]="'none'">
-            <!-- Step Container -->
-            <div class="relative flex items-start">
-              <!-- Decorative patterns with reduced opacity for dark theme -->
-              @if (i === 0) {
-              <div
-                class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-96 pointer-events-none opacity-20"
-              >
-                <div class="w-full h-full text-purple-400">
-                  <app-decorative-pattern [pattern]="'data-flow'" />
-                </div>
-              </div>
-              } @if (i === 1) {
-              <div
-                class="absolute right-[-10%] top-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none opacity-20"
-              >
-                <div class="w-full h-full text-indigo-400">
-                  <app-decorative-pattern [pattern]="'network-nodes'" />
-                </div>
-              </div>
-              } @if (i === 2) {
-              <div
-                class="absolute left-[-5%] top-1/2 -translate-y-1/2 w-[500px] h-[500px] pointer-events-none opacity-20"
-              >
-                <div class="w-full h-full text-purple-300">
-                  <app-decorative-pattern [pattern]="'circuit-board'" />
-                </div>
-              </div>
-              } @if (i === 3) {
-              <div
-                class="absolute right-[-5%] top-1/2 -translate-y-1/2 w-[400px] h-[400px] pointer-events-none opacity-20"
-              >
-                <div class="w-full h-full text-indigo-300">
-                  <app-decorative-pattern [pattern]="'gradient-blob'" />
-                </div>
-              </div>
-              }
+          <!-- Decorative patterns with enhanced scroll-linked animations -->
+          @if (i === 0) {
+          <div
+            class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-96 pointer-events-none"
+            scrollAnimation
+            [scrollConfig]="{
+              animation: 'custom',
+              start: 'top 90%',
+              end: 'bottom 10%',
+              scrub: 0.3,
+              from: { opacity: 0, scale: 0.6, rotation: -20, y: 80 },
+              to: { opacity: 0.25, scale: 1.1, rotation: 5, y: -80 }
+            }"
+          >
+            <div class="w-full h-full text-purple-400">
+              <app-decorative-pattern [pattern]="'data-flow'" />
+            </div>
+          </div>
+          } @if (i === 1) {
+          <div
+            class="absolute right-[-10%] top-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none"
+            scrollAnimation
+            [scrollConfig]="{
+              animation: 'custom',
+              start: 'top 90%',
+              end: 'bottom 10%',
+              scrub: 0.3,
+              from: { opacity: 0, x: 150, rotation: 15, scale: 0.8 },
+              to: { opacity: 0.25, x: -30, rotation: -5, scale: 1.05 }
+            }"
+          >
+            <div class="w-full h-full text-indigo-400">
+              <app-decorative-pattern [pattern]="'network-nodes'" />
+            </div>
+          </div>
+          } @if (i === 2) {
+          <div
+            class="absolute left-[-5%] top-1/2 -translate-y-1/2 w-[500px] h-[500px] pointer-events-none"
+            scrollAnimation
+            [scrollConfig]="{
+              animation: 'custom',
+              start: 'top 90%',
+              end: 'bottom 10%',
+              scrub: 0.3,
+              from: { opacity: 0, x: -150, rotation: -15, scale: 0.8 },
+              to: { opacity: 0.25, x: 30, rotation: 5, scale: 1.05 }
+            }"
+          >
+            <div class="w-full h-full text-purple-300">
+              <app-decorative-pattern [pattern]="'circuit-board'" />
+            </div>
+          </div>
+          } @if (i === 3) {
+          <div
+            class="absolute right-[-5%] top-1/2 -translate-y-1/2 w-[400px] h-[400px] pointer-events-none"
+            scrollAnimation
+            [scrollConfig]="{
+              animation: 'custom',
+              start: 'top 90%',
+              end: 'bottom 10%',
+              scrub: 0.3,
+              from: { opacity: 0, scale: 1.4, rotation: 20 },
+              to: { opacity: 0.25, scale: 0.95, rotation: -10 }
+            }"
+          >
+            <div class="w-full h-full text-indigo-300">
+              <app-decorative-pattern [pattern]="'gradient-blob'" />
+            </div>
+          </div>
+          }
 
-              <!-- Content -->
-              <div class="container mx-auto px-8 relative z-10 mt-24">
-                <div class="grid lg:grid-cols-2 gap-8 items-center">
-                  <!-- Content Side - Use viewportAnimation since scroll doesn't work inside pinned container -->
-                  <div
-                    [class.lg:order-1]="step.layout === 'left'"
-                    [class.lg:order-2]="step.layout === 'right'"
-                    viewportAnimation
-                    [viewportConfig]="{
-                      animation: 'custom',
-                      from: {
-                        opacity: 0,
-                        x: step.layout === 'left' ? -60 : 60,
-                        y: 20
-                      },
-                      to: { opacity: 1, x: 0, y: 0 },
-                      duration: 0.8,
-                      ease: 'power2.out',
-                      threshold: 0.1
-                    }"
+          <!-- Content Grid -->
+          <div class="container mx-auto px-8 relative z-10">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+              <!-- Content Side with individual staggered scroll animations -->
+              <div
+                [class.lg:order-1]="step.layout === 'left'"
+                [class.lg:order-2]="step.layout === 'right'"
+                class="space-y-0"
+              >
+                <!-- Step Number Badge - First element to animate -->
+                <div
+                  class="inline-flex items-center gap-3 mb-6"
+                  scrollAnimation
+                  [scrollConfig]="{
+                    animation: 'custom',
+                    start: 'top 90%',
+                    end: 'top 55%',
+                    scrub: 0.5,
+                    from: {
+                      opacity: 0,
+                      x: step.layout === 'left' ? -60 : 60,
+                      scale: 0.8
+                    },
+                    to: { opacity: 1, x: 0, scale: 1 }
+                  }"
+                >
+                  <span
+                    class="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold text-xl shadow-lg shadow-indigo-500/30"
                   >
-                    <!-- Step Number Badge -->
-                    <div class="inline-flex items-center gap-3 mb-6">
-                      <span
-                        class="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold text-lg shadow-lg shadow-indigo-500/30"
-                      >
-                        {{ step.step }}
-                      </span>
-                      <div
-                        class="h-px flex-1 bg-gradient-to-r from-indigo-500/50 to-transparent max-w-[100px]"
-                      ></div>
-                    </div>
+                    {{ step.step }}
+                  </span>
+                  <div
+                    class="h-px flex-1 bg-gradient-to-r from-indigo-500/50 to-transparent max-w-[120px]"
+                  ></div>
+                </div>
 
-                    <!-- Title with viewport animation -->
-                    <h3
-                      class="text-4xl font-bold text-white mb-4 leading-tight"
-                      viewportAnimation
-                      [viewportConfig]="{
-                        animation: 'slideUp',
-                        duration: 0.6,
-                        delay: 0.1,
-                        threshold: 0.1
-                      }"
+                <!-- Title - Second element with slight delay -->
+                <h3
+                  class="text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight"
+                  scrollAnimation
+                  [scrollConfig]="{
+                    animation: 'custom',
+                    start: 'top 88%',
+                    end: 'top 50%',
+                    scrub: 0.5,
+                    from: {
+                      opacity: 0,
+                      x: step.layout === 'left' ? -80 : 80,
+                      y: 20
+                    },
+                    to: { opacity: 1, x: 0, y: 0 }
+                  }"
+                >
+                  {{ step.title }}
+                </h3>
+
+                <!-- Description - Third element with more delay -->
+                <p
+                  class="text-lg text-gray-300 leading-relaxed mb-8"
+                  scrollAnimation
+                  [scrollConfig]="{
+                    animation: 'custom',
+                    start: 'top 85%',
+                    end: 'top 45%',
+                    scrub: 0.5,
+                    from: {
+                      opacity: 0,
+                      x: step.layout === 'left' ? -60 : 60,
+                      y: 15
+                    },
+                    to: { opacity: 1, x: 0, y: 0 }
+                  }"
+                >
+                  {{ step.description }}
+                </p>
+
+                <!-- Notes - Fourth element with most delay, staggered list items -->
+                @if (step.notes && step.notes.length > 0) {
+                <div
+                  class="space-y-4"
+                  scrollAnimation
+                  [scrollConfig]="{
+                    animation: 'custom',
+                    start: 'top 82%',
+                    end: 'top 40%',
+                    scrub: 0.5,
+                    from: {
+                      opacity: 0,
+                      x: step.layout === 'left' ? -40 : 40,
+                      y: 10
+                    },
+                    to: { opacity: 1, x: 0, y: 0 }
+                  }"
+                >
+                  @for (note of step.notes; track $index) {
+                  <div class="flex items-start gap-3">
+                    <svg
+                      class="w-5 h-5 text-indigo-400 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      {{ step.title }}
-                    </h3>
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <p class="text-sm text-gray-400">{{ note }}</p>
+                  </div>
+                  }
+                </div>
+                }
+              </div>
 
-                    <!-- Description with viewport animation -->
-                    <p
-                      class="text-lg text-gray-300 leading-relaxed mb-6"
-                      viewportAnimation
-                      [viewportConfig]="{
-                        animation: 'fadeIn',
-                        duration: 0.8,
-                        delay: 0.2,
-                        threshold: 0.1
-                      }"
-                    >
-                      {{ step.description }}
-                    </p>
-
-                    <!-- Notes with staggered viewport animation -->
-                    @if (step.notes && step.notes.length > 0) {
-                    <div class="space-y-3">
-                      @for (note of step.notes; track $index) {
+              <!-- Visual Side with scroll-linked entrance from opposite direction -->
+              <div
+                [class.lg:order-2]="step.layout === 'left'"
+                [class.lg:order-1]="step.layout === 'right'"
+                scrollAnimation
+                [scrollConfig]="{
+                  animation: 'custom',
+                  start: 'top 90%',
+                  end: 'top 40%',
+                  scrub: 0.6,
+                  from: {
+                    opacity: 0,
+                    x: step.layout === 'left' ? 120 : -120,
+                    scale: 0.85,
+                    rotation: step.layout === 'left' ? 5 : -5
+                  },
+                  to: { opacity: 1, x: 0, scale: 1, rotation: 0 }
+                }"
+              >
+                @if (step.language === 'image') {
+                <!-- Oversized image with glow effect -->
+                <div class="relative group">
+                  <!-- Glow backdrop -->
+                  <div
+                    class="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-3xl blur-2xl scale-110 group-hover:scale-115 transition-transform duration-500"
+                  ></div>
+                  <!-- Image container -->
+                  <div
+                    class="relative aspect-[4/3] w-[110%] rounded-2xl overflow-hidden shadow-2xl shadow-indigo-500/20"
+                    [class.-ml-5]="step.layout === 'left'"
+                    [class.-mr-5]="step.layout === 'right'"
+                  >
+                    <img
+                      [ngSrc]="step.code"
+                      [alt]="step.title"
+                      fill
+                      class="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <!-- Subtle overlay gradient -->
+                    <div
+                      class="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent pointer-events-none"
+                    ></div>
+                  </div>
+                </div>
+                } @else if (!step.code || step.code === '') {
+                <!-- Placeholder -->
+                <div
+                  class="relative rounded-2xl overflow-hidden aspect-video bg-gradient-to-br from-indigo-900/50 to-purple-900/50 border border-indigo-500/20"
+                >
+                  <div
+                    class="absolute inset-0 flex items-center justify-center"
+                  >
+                    <div class="text-center p-8">
                       <div
-                        class="flex items-start gap-3"
-                        viewportAnimation
-                        [viewportConfig]="{
-                          animation: 'slideUp',
-                          duration: 0.5,
-                          delay: 0.3 + $index * 0.1,
-                          threshold: 0.1
-                        }"
+                        class="w-24 h-24 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center"
                       >
                         <svg
-                          class="w-5 h-5 text-indigo-400 mt-0.5 flex-shrink-0"
+                          class="w-12 h-12 text-white"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -319,188 +441,74 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                           />
                         </svg>
-                        <p class="text-sm text-gray-400">{{ note }}</p>
                       </div>
-                      }
-                    </div>
-                    }
-                  </div>
-
-                  <!-- Visual Side - OVERSIZED IMAGE with glow, using viewportAnimation -->
-                  <div
-                    [class.lg:order-2]="step.layout === 'left'"
-                    [class.lg:order-1]="step.layout === 'right'"
-                    viewportAnimation
-                    [viewportConfig]="{
-                      animation: 'custom',
-                      from: {
-                        opacity: 0,
-                        x: step.layout === 'left' ? 80 : -80,
-                        scale: 0.9
-                      },
-                      to: { opacity: 1, x: 0, scale: 1 },
-                      duration: 0.8,
-                      delay: 0.2,
-                      ease: 'power2.out',
-                      threshold: 0.1
-                    }"
-                  >
-                    @if (step.language === 'image') {
-                    <!-- OPTION A: Oversized image with glow effect -->
-                    <div class="relative group">
-                      <!-- Glow backdrop -->
-                      <div
-                        class="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-3xl blur-2xl scale-110 group-hover:scale-115 transition-transform duration-500"
-                      ></div>
-                      <!-- Image container - breaks grid with larger size -->
-                      <div
-                        class="relative aspect-[4/3] w-[120%] -ml-[10%] rounded-2xl overflow-hidden shadow-2xl shadow-indigo-500/20"
+                      <p
+                        class="text-sm font-semibold text-indigo-300 uppercase tracking-wide"
                       >
-                        <img
-                          [ngSrc]="step.code"
-                          [alt]="step.title"
-                          fill
-                          class="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                        <!-- Subtle overlay gradient -->
-                        <div
-                          class="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent pointer-events-none"
-                        ></div>
-                      </div>
+                        Visual Asset
+                      </p>
                     </div>
-                    } @else if (!step.code || step.code === '') {
-                    <!-- Placeholder -->
-                    <div
-                      class="relative rounded-2xl overflow-hidden aspect-video bg-gradient-to-br from-indigo-900/50 to-purple-900/50 border border-indigo-500/20"
-                    >
-                      <div
-                        class="absolute inset-0 flex items-center justify-center"
-                      >
-                        <div class="text-center p-8">
-                          <div
-                            class="w-24 h-24 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center"
-                          >
-                            <svg
-                              class="w-12 h-12 text-white"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                              />
-                            </svg>
-                          </div>
-                          <p
-                            class="text-sm font-semibold text-indigo-300 uppercase tracking-wide"
-                          >
-                            Visual Asset
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    } @else {
-                    <!-- Code Snippet -->
-                    <app-code-snippet
-                      [code]="step.code"
-                      [language]="step.language || 'typescript'"
-                    />
-                    }
                   </div>
                 </div>
+                } @else {
+                <!-- Code Snippet -->
+                <app-code-snippet
+                  [code]="step.code"
+                  [language]="step.language || 'typescript'"
+                />
+                }
               </div>
             </div>
           </div>
-          }
+        </section>
+        }
 
-          <!-- Integration Ecosystem -->
-          <div
-            class="fixed bottom-0 left-0 right-0 z-0 pointer-events-none"
-            [style.opacity]="ecosystemOpacity()"
-          >
+        <!-- Integration Ecosystem - Bottom Section -->
+        <div class="py-16">
+          <div class="max-w-5xl mx-auto">
             <div
-              class="container mx-auto px-8 relative z-10 pointer-events-auto"
+              class="grid grid-cols-1 md:grid-cols-3 gap-6"
+              viewportAnimation
+              [viewportConfig]="{
+                animation: 'slideUp',
+                duration: 0.6,
+                stagger: 0.1,
+                staggerTarget: '.integration-card',
+                threshold: 0.2
+              }"
             >
-              <div class="max-w-5xl mx-auto py-6">
-                <div class="grid grid-cols-3 gap-4">
-                  @for (integration of integrations(); track integration.name;
-                  let i = $index) {
-                  <div
-                    class="bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 border border-indigo-500/20 hover:border-indigo-500/40 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300 animate-fade-in-up"
-                    [style.animation-delay]="i * 100 + 'ms'"
-                  >
-                    <div class="text-3xl mb-2">{{ integration.icon }}</div>
-                    <h4 class="text-base font-bold text-white mb-1">
-                      {{ integration.name }}
-                    </h4>
-                    <p class="text-xs text-gray-400">
-                      {{ integration.description }}
-                    </p>
-                  </div>
-                  }
-                </div>
+              @for (integration of integrations(); track integration.name; let
+              idx = $index) {
+              <div
+                class="integration-card bg-slate-800/80 backdrop-blur-sm rounded-xl p-6 border border-indigo-500/20 hover:border-indigo-500/40 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300"
+              >
+                <div class="text-4xl mb-3">{{ integration.icon }}</div>
+                <h4 class="text-lg font-bold text-white mb-2">
+                  {{ integration.name }}
+                </h4>
+                <p class="text-sm text-gray-400">
+                  {{ integration.description }}
+                </p>
               </div>
+              }
             </div>
           </div>
-        </agsp-hijacked-scroll-timeline>
+        </div>
       </div>
     </div>
   `,
   styles: [
     `
-      @keyframes fade-in-up {
-        from {
-          opacity: 0;
-          transform: translateY(20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .animate-fade-in-up {
-        animation: fade-in-up 0.6s ease-out forwards;
-        opacity: 0;
+      :host {
+        display: block;
       }
     `,
   ],
 })
 export class Angular3dSectionComponent {
-  /**
-   * Computed opacity for ecosystem section based on scroll position
-   */
-  public readonly ecosystemOpacity = signal(0);
-
-  public constructor() {
-    // Fade in ecosystem section after component mounts
-    setTimeout(() => {
-      this.ecosystemOpacity.set(1);
-    }, 500);
-  }
-
-  /**
-   * Convert layout type to slide direction
-   */
-  public getSlideDirection(
-    layout: 'left' | 'right' | 'center'
-  ): 'left' | 'right' | 'none' {
-    switch (layout) {
-      case 'left':
-        return 'left';
-      case 'right':
-        return 'right';
-      default:
-        return 'none';
-    }
-  }
-
   /**
    * Angular 3D feature timeline
    * Based on @hive-academy/angular-3d library capabilities

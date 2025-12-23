@@ -1,18 +1,8 @@
-import {
-  Component,
-  signal,
-  ChangeDetectionStrategy,
-  inject,
-  ElementRef,
-  afterNextRender,
-  DestroyRef,
-  viewChild,
-} from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
-  HijackedScrollTimelineComponent,
+  ScrollTimelineComponent,
   HijackedScrollItemDirective,
-  HijackedScrollDirective,
 } from '@hive-academy/angular-gsap';
 
 /**
@@ -26,72 +16,21 @@ import {
  */
 @Component({
   selector: 'app-value-propositions-section',
-  imports: [
-    CommonModule,
-    HijackedScrollTimelineComponent,
-    HijackedScrollItemDirective,
-  ],
+  imports: [CommonModule, ScrollTimelineComponent, HijackedScrollItemDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <!-- Fullpage Hijacked Scroll Section -->
-    <section #sectionRef class="relative">
-      <!-- Sticky Sidebar Navigation -->
-      <nav
-        class="fixed left-4 lg:left-8 top-1/2 -translate-y-1/2 z-50 hidden lg:flex flex-col gap-3 transition-all duration-500"
-        [class.opacity-100]="sidebarVisible()"
-        [class.opacity-0]="!sidebarVisible()"
-        [class.pointer-events-none]="!sidebarVisible()"
-        [class.translate-x-0]="sidebarVisible()"
-        [class.-translate-x-12]="!sidebarVisible()"
-      >
-        @for (section of librarySections(); track section.id; let i = $index) {
-          <button
-            (click)="scrollToSection(i)"
-            class="group flex items-center gap-3 transition-all duration-300 hover:translate-x-1"
-          >
-            <!-- Number Badge -->
-            <div
-              class="relative flex items-center justify-center w-10 h-10 rounded-xl text-sm font-bold transition-all duration-300"
-              [class.bg-gradient-to-br]="currentStep() === i"
-              [class.from-indigo-500]="currentStep() === i"
-              [class.to-violet-600]="currentStep() === i"
-              [class.text-white]="currentStep() === i"
-              [class.shadow-lg]="currentStep() === i"
-              [class.shadow-indigo-500/40]="currentStep() === i"
-              [class.scale-110]="currentStep() === i"
-              [class.bg-slate-800/80]="currentStep() !== i"
-              [class.text-slate-400]="currentStep() !== i"
-            >
-              {{ (i + 1).toString().padStart(2, '0') }}
-              @if (currentStep() === i) {
-                <div class="absolute inset-0 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 opacity-40 blur-md -z-10"></div>
-              }
-            </div>
-            <!-- Active bar -->
-            <div
-              class="h-0.5 rounded-full transition-all duration-300"
-              [class.w-6]="currentStep() === i"
-              [class.bg-gradient-to-r]="currentStep() === i"
-              [class.from-indigo-500]="currentStep() === i"
-              [class.to-violet-500]="currentStep() === i"
-              [class.w-0]="currentStep() !== i"
-            ></div>
-          </button>
-        }
-      </nav>
-
-      <!-- Fullpage Scroll Timeline -->
-      <agsp-hijacked-scroll-timeline
-        #scrollTimeline
-        [scrollHeightPerStep]="900"
-        [start]="'top top'"
-        [animationDuration]="0.8"
-        [ease]="'power3.inOut'"
-        [scrub]="1.5"
-        [stepHold]="0.9"
-        (currentStepChange)="onStepChange($event)"
-        (progressChange)="onProgressChange($event)"
-      >
+    <!-- Fullpage Scroll Timeline with Built-in Step Indicator -->
+    <agsp-scroll-timeline
+      [scrollHeightPerStep]="900"
+      [start]="'top top'"
+      [animationDuration]="0.8"
+      [ease]="'power3.inOut'"
+      [scrub]="1.5"
+      [stepHold]="0.9"
+      [showStepIndicator]="true"
+      [stepIndicatorPosition]="'left'"
+      (currentStepChange)="onStepChange($event)"
+    >
         @for (section of librarySections(); track section.id; let i = $index) {
           <div
             hijackedScrollItem
@@ -154,7 +93,7 @@ import {
             </div>
           </div>
         }
-      </agsp-hijacked-scroll-timeline>
+      </agsp-scroll-timeline>
 
       <!-- Content Template -->
       <ng-template #contentTemplate let-section let-index="index">
@@ -220,7 +159,6 @@ import {
           </div>
         </div>
       </ng-template>
-    </section>
   `,
   styles: [
     `
@@ -231,92 +169,14 @@ import {
   ],
 })
 export class ValuePropositionsSectionComponent {
-  private readonly elementRef = inject(ElementRef);
-  private readonly destroyRef = inject(DestroyRef);
-
-  // ViewChild to access the hijacked scroll directive for programmatic control
-  private readonly scrollTimeline =
-    viewChild<HijackedScrollTimelineComponent>('scrollTimeline');
-  private readonly hijackedScrollDirective = viewChild(HijackedScrollDirective);
-
-  // Section visibility state
-  private readonly sectionInView = signal(false);
-
-  // Step tracking state
+  // Step tracking state (synced from ScrollTimelineComponent)
   public readonly currentStep = signal(0);
-  public readonly scrollProgress = signal(0);
-
-  // Sidebar visibility
-  public readonly sidebarVisible = signal(false);
-
-  private sectionObserver?: IntersectionObserver;
-
-  public constructor() {
-    // Setup IntersectionObserver after first render (Angular 19+ pattern)
-    afterNextRender(() => {
-      this.setupSectionObserver();
-    });
-
-    // Cleanup on destroy
-    this.destroyRef.onDestroy(() => {
-      this.sectionObserver?.disconnect();
-    });
-  }
 
   /**
-   * Setup IntersectionObserver to track when section is in viewport
-   */
-  private setupSectionObserver(): void {
-    const options: IntersectionObserverInit = {
-      root: null,
-      rootMargin: '0px',
-      threshold: [0, 0.1, 0.3, 0.5, 0.7, 1],
-    };
-
-    this.sectionObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        const isVisible = entry.isIntersecting && entry.intersectionRatio > 0.1;
-        this.sectionInView.set(isVisible);
-        this.updateSidebarVisibility();
-      });
-    }, options);
-
-    this.sectionObserver.observe(this.elementRef.nativeElement);
-  }
-
-  /**
-   * Update sidebar visibility
-   */
-  private updateSidebarVisibility(): void {
-    const inView = this.sectionInView();
-    const progress = this.scrollProgress();
-    this.sidebarVisible.set(inView && progress > 0.01 && progress < 0.99);
-  }
-
-  /**
-   * Handle step change from hijacked scroll
+   * Handle step change from scroll timeline
    */
   public onStepChange(step: number): void {
     this.currentStep.set(step);
-  }
-
-  /**
-   * Handle progress change
-   */
-  public onProgressChange(progress: number): void {
-    this.scrollProgress.set(progress);
-    this.updateSidebarVisibility();
-  }
-
-  /**
-   * Scroll to specific section using the hijacked scroll directive
-   */
-  public scrollToSection(index: number): void {
-    // Use the HijackedScrollDirective's jumpToStep method for proper navigation
-    const directive = this.hijackedScrollDirective();
-    if (directive) {
-      directive.jumpToStep(index);
-    }
   }
 
   /**
