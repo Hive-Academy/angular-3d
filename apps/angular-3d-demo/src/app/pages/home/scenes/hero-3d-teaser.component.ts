@@ -105,81 +105,70 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
 
         <!-- ================================ -->
         <!-- ATMOSPHERIC SMOKE TEXT (Background) -->
-        <!-- Enhanced with higher density and geometry detail for distorted look -->
         <!-- ================================ -->
         <a3d-smoke-troika-text
           text="3D Library"
-          [fontSize]="4.0"
-          viewportPosition="center"
-          [viewportOffset]="{ offsetX: -2, offsetY: 1, offsetZ: -5 }"
+          [fontSize]="3.5"
+          [position]="[0, 0, -5]"
           anchorX="center"
           anchorY="middle"
           [smokeColor]="colors.purple"
-          [smokeIntensity]="1.2"
-          [flowSpeed]="0.4"
-          [density]="1.5"
-          [edgeSoftness]="0.6"
-          [glyphGeometryDetail]="4"
+          [smokeIntensity]="0.8"
+          [flowSpeed]="0.3"
+          [density]="1.2"
+          [edgeSoftness]="0.5"
           [enableFlow]="true"
         />
 
         <!-- ================================ -->
-        <!-- CENTERED HEADING - Troika Glow Text -->
-        <!-- Properly stacked and aligned with enhanced glow effects -->
+        <!-- LEFT-SIDE HEADING - Troika Glow Text -->
         <!-- ================================ -->
-        <!-- Line 1: "Build" (white, smaller) -->
+        <!-- Line 1: "Build " + "Stunning" -->
         <a3d-glow-troika-text
-          text="Build"
-          [fontSize]="1.6"
-          viewportPosition="top-center"
-          [viewportOffset]="{ offsetX: -6.5, offsetY: -2.8, offsetZ: 0 }"
+          text="Build "
+          [fontSize]="1.8"
+          viewportPosition="top-left"
+          [viewportOffset]="{ offsetX: 2, offsetY: -3, offsetZ: 0 }"
           anchorX="left"
           anchorY="middle"
           [glowColor]="colors.white"
-          [glowIntensity]="3.0"
-          [glowOutlineWidth]="0.03"
-          [glyphGeometryDetail]="4"
+          [glowIntensity]="2.5"
           [pulseSpeed]="0"
         />
-        <!-- "Stunning" (neon green, larger, on same line) -->
         <a3d-glow-troika-text
           text="Stunning"
-          [fontSize]="2.4"
-          viewportPosition="top-center"
-          [viewportOffset]="{ offsetX: -2.8, offsetY: -2.5, offsetZ: 0 }"
+          [fontSize]="2.8"
+          viewportPosition="top-left"
+          [viewportOffset]="{ offsetX: 5.5, offsetY: -3, offsetZ: 0 }"
           anchorX="left"
           anchorY="middle"
           [glowColor]="colors.neonGreen"
-          [glowIntensity]="4.0"
-          [glowOutlineWidth]="0.04"
-          [glyphGeometryDetail]="4"
-          [pulseSpeed]="0.5"
+          [glowIntensity]="3.0"
+          [pulseSpeed]="0.4"
         />
 
-        <!-- Line 2: "Angular Experiences" (white, centered below) -->
+        <!-- Line 2: "Angular Experiences" -->
         <a3d-glow-troika-text
           text="Angular Experiences"
-          [fontSize]="2.4"
-          viewportPosition="top-center"
-          [viewportOffset]="{ offsetX: -6.5, offsetY: -4.2, offsetZ: 0 }"
+          [fontSize]="2.8"
+          viewportPosition="top-left"
+          [viewportOffset]="{ offsetX: 2, offsetY: -5.5, offsetZ: 0 }"
           anchorX="left"
           anchorY="middle"
           [glowColor]="colors.white"
-          [glowIntensity]="3.0"
-          [glowOutlineWidth]="0.03"
-          [glyphGeometryDetail]="4"
+          [glowIntensity]="2.5"
           [pulseSpeed]="0"
         />
 
         <!-- ================================ -->
-        <!-- CENTERED DESCRIPTION - Troika Text -->
+        <!-- LEFT-SIDE DESCRIPTION - Troika Text -->
         <!-- Positioned BEHIND camera (z=22) to reveal on scroll -->
         <!-- ================================ -->
         <a3d-troika-text
           text="Discover a powerful Angular library that seamlessly integrates"
           [fontSize]="0.5"
-          viewportPosition="center"
-          [viewportOffset]="{ offsetX: -6, offsetY: -1.5, offsetZ: 22 }"
+          viewportPosition="middle-left"
+          [viewportOffset]="{ offsetX: 2, offsetY: -1, offsetZ: 22 }"
           anchorX="left"
           anchorY="middle"
           [color]="colors.softGray"
@@ -188,8 +177,8 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <a3d-troika-text
           text="Three.js for stunning 3D graphics and GSAP for smooth animations."
           [fontSize]="0.5"
-          viewportPosition="center"
-          [viewportOffset]="{ offsetX: -6, offsetY: -2.5, offsetZ: 22 }"
+          viewportPosition="middle-left"
+          [viewportOffset]="{ offsetX: 2, offsetY: -2, offsetZ: 22 }"
           anchorX="left"
           anchorY="middle"
           [color]="colors.softGray"
@@ -316,7 +305,6 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <!-- ================================ -->
         <!-- NEBULA EFFECTS -->
         <!-- Rich cosmic colors - blue, purple, cyan, pink -->
-        <!-- LOW glow/intensity to prevent white blowout -->
         <!-- ================================ -->
         <!-- Primary nebula - blue/purple cosmic cloud -->
         <a3d-nebula-volumetric
@@ -325,18 +313,18 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [width]="90"
           [height]="50"
           [layers]="3"
-          [opacity]="0.4"
+          [opacity]="0.65"
           [primaryColor]="'#4488ff'"
           [secondaryColor]="'#8844ff'"
           [tertiaryColor]="'#ff44aa'"
           [enableFlow]="true"
           [flowSpeed]="0.2"
           [noiseScale]="0.025"
-          [density]="0.9"
+          [density]="1.0"
           [edgeSoftness]="0.4"
-          [contrast]="1.2"
-          [glowIntensity]="2.0"
-          [colorIntensity]="1.0"
+          [contrast]="1.3"
+          [glowIntensity]="3.0"
+          [colorIntensity]="1.2"
         />
         <!-- Secondary nebula - darker purple/blue for depth -->
         <a3d-nebula-volumetric
@@ -345,18 +333,18 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [width]="120"
           [height]="60"
           [layers]="2"
-          [opacity]="0.35"
+          [opacity]="0.55"
           [primaryColor]="'#6633cc'"
           [secondaryColor]="'#3366aa'"
           [tertiaryColor]="'#44aaff'"
           [enableFlow]="true"
           [flowSpeed]="0.15"
           [noiseScale]="0.02"
-          [density]="0.8"
-          [edgeSoftness]="0.5"
-          [contrast]="1.0"
-          [glowIntensity]="1.5"
-          [colorIntensity]="0.9"
+          [density]="0.95"
+          [edgeSoftness]="0.45"
+          [contrast]="1.2"
+          [glowIntensity]="2.5"
+          [colorIntensity]="1.1"
         />
         <!-- Accent nebula - cyan/teal wisps -->
         <a3d-nebula-volumetric
@@ -365,18 +353,18 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [width]="50"
           [height]="30"
           [layers]="2"
-          [opacity]="0.3"
+          [opacity]="0.5"
           [primaryColor]="'#00ccff'"
           [secondaryColor]="'#0088cc'"
           [tertiaryColor]="'#00ffcc'"
           [enableFlow]="true"
           [flowSpeed]="0.25"
           [noiseScale]="0.03"
-          [density]="0.85"
+          [density]="1.0"
           [edgeSoftness]="0.35"
-          [contrast]="1.3"
-          [glowIntensity]="2.5"
-          [colorIntensity]="1.1"
+          [contrast]="1.4"
+          [glowIntensity]="3.5"
+          [colorIntensity]="1.3"
         />
 
         <a3d-orbit-controls
