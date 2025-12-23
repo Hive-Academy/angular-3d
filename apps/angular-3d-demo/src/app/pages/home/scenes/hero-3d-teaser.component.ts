@@ -315,67 +315,68 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
 
         <!-- ================================ -->
         <!-- NEBULA EFFECTS -->
-        <!-- Multi-layer with distorted edges and varying density -->
+        <!-- Rich cosmic colors - blue, purple, cyan, pink -->
+        <!-- LOW glow/intensity to prevent white blowout -->
         <!-- ================================ -->
-        <!-- Primary nebula - behind planet (blue/cyan fog layer) -->
+        <!-- Primary nebula - blue/purple cosmic cloud -->
         <a3d-nebula-volumetric
           viewportPosition="center"
-          [viewportOffset]="{ offsetX: 3, offsetY: 0, offsetZ: -12 }"
-          [width]="80"
-          [height]="35"
+          [viewportOffset]="{ offsetX: 2, offsetY: 0, offsetZ: -15 }"
+          [width]="90"
+          [height]="50"
           [layers]="3"
-          [opacity]="0.75"
-          [primaryColor]="colorStrings.skyBlue"
-          [secondaryColor]="colorStrings.cyan"
-          [tertiaryColor]="colorStrings.hotPink"
-          [enableFlow]="true"
-          [flowSpeed]="0.3"
-          [noiseScale]="0.05"
-          [density]="1.4"
-          [edgeSoftness]="0.35"
-          [contrast]="1.8"
-          [glowIntensity]="12"
-          [colorIntensity]="1.8"
-        />
-        <!-- Secondary nebula - darker gray fog layer for depth -->
-        <a3d-nebula-volumetric
-          viewportPosition="center"
-          [viewportOffset]="{ offsetX: 0, offsetY: -1, offsetZ: -18 }"
-          [width]="100"
-          [height]="40"
-          [layers]="2"
-          [opacity]="0.6"
-          [primaryColor]="'#445566'"
-          [secondaryColor]="'#334455'"
-          [tertiaryColor]="colorStrings.skyBlue"
+          [opacity]="0.4"
+          [primaryColor]="'#4488ff'"
+          [secondaryColor]="'#8844ff'"
+          [tertiaryColor]="'#ff44aa'"
           [enableFlow]="true"
           [flowSpeed]="0.2"
-          [noiseScale]="0.04"
-          [density]="1.6"
+          [noiseScale]="0.025"
+          [density]="0.9"
           [edgeSoftness]="0.4"
-          [contrast]="2.0"
-          [glowIntensity]="8"
-          [colorIntensity]="1.5"
+          [contrast]="1.2"
+          [glowIntensity]="2.0"
+          [colorIntensity]="1.0"
         />
-        <!-- Accent nebula - small bright wisps -->
+        <!-- Secondary nebula - darker purple/blue for depth -->
         <a3d-nebula-volumetric
           viewportPosition="center"
-          [viewportOffset]="{ offsetX: 5, offsetY: 2, offsetZ: -8 }"
-          [width]="40"
-          [height]="20"
+          [viewportOffset]="{ offsetX: -3, offsetY: 1, offsetZ: -20 }"
+          [width]="120"
+          [height]="60"
           [layers]="2"
-          [opacity]="0.5"
-          [primaryColor]="colorStrings.cyan"
-          [secondaryColor]="colorStrings.skyBlue"
-          [tertiaryColor]="colorStrings.white"
+          [opacity]="0.35"
+          [primaryColor]="'#6633cc'"
+          [secondaryColor]="'#3366aa'"
+          [tertiaryColor]="'#44aaff'"
           [enableFlow]="true"
-          [flowSpeed]="0.4"
-          [noiseScale]="0.06"
-          [density]="1.3"
-          [edgeSoftness]="0.3"
-          [contrast]="2.2"
-          [glowIntensity]="15"
-          [colorIntensity]="2.0"
+          [flowSpeed]="0.15"
+          [noiseScale]="0.02"
+          [density]="0.8"
+          [edgeSoftness]="0.5"
+          [contrast]="1.0"
+          [glowIntensity]="1.5"
+          [colorIntensity]="0.9"
+        />
+        <!-- Accent nebula - cyan/teal wisps -->
+        <a3d-nebula-volumetric
+          viewportPosition="center"
+          [viewportOffset]="{ offsetX: 6, offsetY: -2, offsetZ: -12 }"
+          [width]="50"
+          [height]="30"
+          [layers]="2"
+          [opacity]="0.3"
+          [primaryColor]="'#00ccff'"
+          [secondaryColor]="'#0088cc'"
+          [tertiaryColor]="'#00ffcc'"
+          [enableFlow]="true"
+          [flowSpeed]="0.25"
+          [noiseScale]="0.03"
+          [density]="0.85"
+          [edgeSoftness]="0.35"
+          [contrast]="1.3"
+          [glowIntensity]="2.5"
+          [colorIntensity]="1.1"
         />
 
         <a3d-orbit-controls
@@ -398,7 +399,7 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <!-- POST-PROCESSING -->
         <!-- ================================ -->
         <a3d-effect-composer [enabled]="true">
-          <a3d-bloom-effect [threshold]="0.3" [strength]="0.6" [radius]="0.5" />
+          <a3d-bloom-effect [threshold]="0.6" [strength]="0.4" [radius]="0.4" />
         </a3d-effect-composer>
       </a3d-scene-3d>
     </div>
