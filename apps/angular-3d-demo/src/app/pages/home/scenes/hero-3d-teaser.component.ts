@@ -6,18 +6,17 @@ import {
   EffectComposerComponent,
   Float3dDirective,
   FloatingSphereComponent,
-  GlowTroikaTextComponent,
   GltfModelComponent,
+  NebulaComponent,
   NebulaVolumetricComponent,
   OrbitControlsComponent,
+  ParticleTextComponent,
   PointLightComponent,
   Rotate3dDirective,
   Scene3dComponent,
   ScrollZoomCoordinatorDirective,
-  SmokeTroikaTextComponent,
   SpaceFlight3dDirective,
   StarFieldComponent,
-  TroikaTextComponent,
   ViewportPositionDirective,
   type SpaceFlightWaypoint,
 } from '@hive-academy/angular-3d';
@@ -53,15 +52,14 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
     SpaceFlight3dDirective,
     GltfModelComponent,
     StarFieldComponent,
+    NebulaComponent,
     NebulaVolumetricComponent,
     OrbitControlsComponent,
     EffectComposerComponent,
     BloomEffectComponent,
     FloatingSphereComponent,
-    TroikaTextComponent,
-    GlowTroikaTextComponent,
-    SmokeTroikaTextComponent,
     ScrollZoomCoordinatorDirective,
+    ParticleTextComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -70,24 +68,24 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
       role="img"
       aria-label="Interactive 3D space scene with rotating Earth, twinkling stars, and camera controls"
     >
-      <a3d-scene-3d [cameraPosition]="[0, 0, 20]" [cameraFov]="75">
+      <a3d-scene-3d [cameraPosition]="[0, 0, 25]" [cameraFov]="75">
         <!-- Scroll-Zoom Coordinator (observes zoom state, coordinates page scroll) -->
 
         <!-- ================================ -->
-        <!-- LIGHTING SETUP -->
+        <!-- LIGHTING SETUP - Clean Space Scene -->
         <!-- ================================ -->
-        <a3d-ambient-light [color]="colors.white" [intensity]="0.3" />
+        <a3d-ambient-light [color]="colors.white" [intensity]="0.2" />
         <a3d-directional-light
           [position]="[30, 15, 25]"
           [color]="colors.white"
           [intensity]="0.4"
           [castShadow]="true"
         />
-        <!-- Accent light for atmosphere -->
+        <!-- Subtle blue accent for depth -->
         <a3d-point-light
-          [position]="[-15, 10, 15]"
+          [position]="[-10, 5, 10]"
           [color]="colors.cyan"
-          [intensity]="0.3"
+          [intensity]="0.2"
         />
 
         <!-- ================================ -->
@@ -103,86 +101,47 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [rotateConfig]="{ axis: 'y', speed: 120, direction: 1 }"
         />
 
-        <!-- ================================ -->
-        <!-- ATMOSPHERIC SMOKE TEXT (Background) -->
-        <!-- ================================ -->
-        <a3d-smoke-troika-text
-          text="3D Library"
-          [fontSize]="3.5"
-          [position]="[0, 0, -5]"
-          anchorX="center"
-          anchorY="middle"
-          [smokeColor]="colors.purple"
-          [smokeIntensity]="0.8"
-          [flowSpeed]="0.3"
-          [density]="1.2"
-          [edgeSoftness]="0.5"
-          [enableFlow]="true"
+        <!-- Hero Text - Left side, stacked vertically with proper spacing -->
+        <a3d-particle-text
+          text="Build Stunning"
+          [position]="[-12, 5, 0]"
+          [fontSize]="30"
+          [particleColor]="colors.white"
+          [opacity]="0.6"
+          [maxParticleScale]="0.06"
+          [particlesPerPixel]="3"
+          [blendMode]="'normal'"
+          [skipInitialGrowth]="true"
+          [particleGrowSpeed]="0.02"
+          [pulseSpeed]="0.005"
         />
 
-        <!-- ================================ -->
-        <!-- LEFT-SIDE HEADING - Troika Glow Text -->
-        <!-- ================================ -->
-        <!-- Line 1: "Build " + "Stunning" -->
-        <a3d-glow-troika-text
-          text="Build "
-          [fontSize]="1.8"
-          viewportPosition="top-left"
-          [viewportOffset]="{ offsetX: 2, offsetY: -3, offsetZ: 0 }"
-          anchorX="left"
-          anchorY="middle"
-          [glowColor]="colors.white"
-          [glowIntensity]="2.5"
-          [pulseSpeed]="0"
-        />
-        <a3d-glow-troika-text
-          text="Stunning"
-          [fontSize]="2.8"
-          viewportPosition="top-left"
-          [viewportOffset]="{ offsetX: 5.5, offsetY: -3, offsetZ: 0 }"
-          anchorX="left"
-          anchorY="middle"
-          [glowColor]="colors.neonGreen"
-          [glowIntensity]="3.0"
-          [pulseSpeed]="0.4"
+        <a3d-particle-text
+          text="Angular 3D Experiences"
+          [position]="[-12, 0, 0]"
+          [fontSize]="30"
+          [particleColor]="colors.white"
+          [opacity]="0.6"
+          [maxParticleScale]="0.06"
+          [particlesPerPixel]="3"
+          [blendMode]="'normal'"
+          [skipInitialGrowth]="true"
+          [particleGrowSpeed]="0.02"
+          [pulseSpeed]="0.005"
         />
 
-        <!-- Line 2: "Angular Experiences" -->
-        <a3d-glow-troika-text
-          text="Angular Experiences"
-          [fontSize]="2.8"
-          viewportPosition="top-left"
-          [viewportOffset]="{ offsetX: 2, offsetY: -5.5, offsetZ: 0 }"
-          anchorX="left"
-          anchorY="middle"
-          [glowColor]="colors.white"
-          [glowIntensity]="2.5"
-          [pulseSpeed]="0"
-        />
-
-        <!-- ================================ -->
-        <!-- LEFT-SIDE DESCRIPTION - Troika Text -->
-        <!-- Positioned BEHIND camera (z=22) to reveal on scroll -->
-        <!-- ================================ -->
-        <a3d-troika-text
-          text="Discover a powerful Angular library that seamlessly integrates"
-          [fontSize]="0.5"
-          viewportPosition="middle-left"
-          [viewportOffset]="{ offsetX: 2, offsetY: -1, offsetZ: 22 }"
-          anchorX="left"
-          anchorY="middle"
-          [color]="colors.softGray"
-          [fillOpacity]="0.85"
-        />
-        <a3d-troika-text
-          text="Three.js for stunning 3D graphics and GSAP for smooth animations."
-          [fontSize]="0.5"
-          viewportPosition="middle-left"
-          [viewportOffset]="{ offsetX: 2, offsetY: -2, offsetZ: 22 }"
-          anchorX="left"
-          anchorY="middle"
-          [color]="colors.softGray"
-          [fillOpacity]="0.85"
+        <a3d-particle-text
+          text="You Already Know"
+          [position]="[-12, -5, 0]"
+          [fontSize]="30"
+          [particleColor]="colors.white"
+          [opacity]="0.6"
+          [maxParticleScale]="0.06"
+          [particlesPerPixel]="3"
+          [blendMode]="'normal'"
+          [skipInitialGrowth]="true"
+          [particleGrowSpeed]="0.02"
+          [pulseSpeed]="0.005"
         />
 
         <!-- ================================ -->
@@ -303,68 +262,46 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         />
 
         <!-- ================================ -->
-        <!-- NEBULA EFFECTS -->
-        <!-- Rich cosmic colors - blue, purple, cyan, pink -->
+        <!-- NEBULA EFFECTS - Two-Layer Approach (Top-Right Position) -->
+        <!-- Layer 1: Sprite-based gray smoke (organic, fractal noise) -->
+        <!-- Layer 2: Volumetric blue glow (shader-based inner light) -->
+        <!-- Positioned at top-right to match temp scene configuration -->
         <!-- ================================ -->
-        <!-- Primary nebula - blue/purple cosmic cloud -->
-        <a3d-nebula-volumetric
-          viewportPosition="center"
-          [viewportOffset]="{ offsetX: 2, offsetY: 0, offsetZ: -15 }"
-          [width]="90"
-          [height]="50"
-          [layers]="3"
-          [opacity]="0.65"
-          [primaryColor]="'#4488ff'"
-          [secondaryColor]="'#8844ff'"
-          [tertiaryColor]="'#ff44aa'"
-          [enableFlow]="true"
-          [flowSpeed]="0.2"
-          [noiseScale]="0.025"
-          [density]="1.0"
-          [edgeSoftness]="0.4"
-          [contrast]="1.3"
-          [glowIntensity]="3.0"
-          [colorIntensity]="1.2"
+
+        <!-- Gray smoke cloud - soft, wispy, organic shapes -->
+        <!-- Position: top-right viewport (x: ~10, y: ~5) 
+        with z-offset for depth-->
+        <a3d-nebula
+          [position]="[70, 40, -60]"
+          [cloudCount]="10"
+          [radius]="30"
+          [colorPalette]="['#ffffff', '#414040ff']"
+          [minSize]="50"
+          [maxSize]="80"
+          [minOpacity]="0.05"
+          [maxOpacity]="0.15"
+          [enableFlow]="false"
         />
-        <!-- Secondary nebula - darker purple/blue for depth -->
+
+        <!-- Blue volumetric glow - inner illumination -->
+        <!-- Same top-right position, slightly forward for glow effect -->
         <a3d-nebula-volumetric
-          viewportPosition="center"
-          [viewportOffset]="{ offsetX: -3, offsetY: 1, offsetZ: -20 }"
-          [width]="120"
+          [position]="[90, 40, -60]"
+          [width]="100"
           [height]="60"
-          [layers]="2"
-          [opacity]="0.55"
-          [primaryColor]="'#6633cc'"
-          [secondaryColor]="'#3366aa'"
-          [tertiaryColor]="'#44aaff'"
-          [enableFlow]="true"
-          [flowSpeed]="0.15"
-          [noiseScale]="0.02"
-          [density]="0.95"
-          [edgeSoftness]="0.45"
-          [contrast]="1.2"
-          [glowIntensity]="2.5"
-          [colorIntensity]="1.1"
-        />
-        <!-- Accent nebula - cyan/teal wisps -->
-        <a3d-nebula-volumetric
-          viewportPosition="center"
-          [viewportOffset]="{ offsetX: 6, offsetY: -2, offsetZ: -12 }"
-          [width]="50"
-          [height]="30"
-          [layers]="2"
-          [opacity]="0.5"
-          [primaryColor]="'#00ccff'"
-          [secondaryColor]="'#0088cc'"
-          [tertiaryColor]="'#00ffcc'"
-          [enableFlow]="true"
-          [flowSpeed]="0.25"
+          [layers]="3"
+          [opacity]="0.9"
+          [primaryColor]="'#0088ff'"
+          [secondaryColor]="'#00d4ff'"
+          [tertiaryColor]="'#ff6bd4'"
+          [enableFlow]="false"
+          [flowSpeed]="0.8"
           [noiseScale]="0.03"
-          [density]="1.0"
-          [edgeSoftness]="0.35"
-          [contrast]="1.4"
-          [glowIntensity]="3.5"
-          [colorIntensity]="1.3"
+          [density]="1.2"
+          [edgeSoftness]="0.5"
+          [contrast]="1.0"
+          [glowIntensity]="20"
+          [colorIntensity]="2"
         />
 
         <a3d-orbit-controls
@@ -374,7 +311,7 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [enableDamping]="true"
           [dampingFactor]="0.05"
           [enableZoom]="isZoomEnabled"
-          [minDistance]="10"
+          [minDistance]="12"
           [maxDistance]="30"
           [rotateSpeed]="0.5"
           [enablePan]="false"
@@ -384,10 +321,10 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         />
 
         <!-- ================================ -->
-        <!-- POST-PROCESSING -->
+        <!-- POST-PROCESSING - Subtle Bloom for Smoke Effect -->
         <!-- ================================ -->
         <a3d-effect-composer [enabled]="true">
-          <a3d-bloom-effect [threshold]="0.6" [strength]="0.4" [radius]="0.4" />
+          <a3d-bloom-effect [threshold]="0.5" [strength]="0.5" [radius]="0.5" />
         </a3d-effect-composer>
       </a3d-scene-3d>
     </div>

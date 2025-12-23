@@ -312,6 +312,10 @@ export class ScrollZoomCoordinatorDirective
 
   /**
    * Setup wheel listener on OrbitControls domElement (advanced mode)
+   *
+   * CRITICAL: We must directly manipulate controls.enableZoom in the capture phase
+   * BEFORE OrbitControls processes the wheel event. Otherwise, OrbitControls will
+   * call preventDefault() and block page scrolling even at the distance limits.
    */
   private setupControlsWheelListener(): void {
     if (!this.controls) return;
@@ -333,27 +337,32 @@ export class ScrollZoomCoordinatorDirective
 
       // Check if we should transition to page scroll
       if (state.atMaxDistance && direction > 0) {
-        // At max zoom distance, scrolling down → disable zoom and allow page scroll
-        this.disableZoom();
+        // At max zoom distance, scrolling down → DIRECTLY disable zoom on controls
+        // This MUST happen before OrbitControls processes this event
+        this.controls!.enableZoom = false;
+        this.disableZoom(); // Emit for parent component state sync
         this.transitionToPageScroll('down');
-        // DON'T prevent default - let the event bubble for page scroll
+        // Wheel event will now bubble to page for native scrolling
       } else if (state.atMinDistance && direction < 0) {
-        // At min zoom distance, scrolling up → disable zoom and allow page scroll
+        // At min zoom distance, scrolling up → DIRECTLY disable zoom on controls
+        this.controls!.enableZoom = false;
         this.disableZoom();
         this.transitionToPageScroll('up');
-        // DON'T prevent default - let the event bubble for page scroll
+        // Wheel event will now bubble to page for native scrolling
       } else {
-        // Normal 3D zoom behavior - re-enable zoom if it was disabled
+        // Within zoom range - enable zoom for OrbitControls to handle
+        this.controls!.enableZoom = true;
         this.enableZoom();
         this.isPageScrolling = false;
       }
     };
 
     // Attach wheel listener to the controls' DOM element
-    // Use capture phase to run BEFORE OrbitControls processes the event
+    // CRITICAL: capture: true ensures we run BEFORE OrbitControls
+    // passive: true is fine - we don't need to preventDefault, we control zoom directly
     this.controls.domElement?.addEventListener('wheel', this.wheelHandler, {
-      passive: true, // Passive since we're not preventing default
-      capture: true, // Run in capture phase before OrbitControls
+      passive: true,
+      capture: true,
     });
   }
 
@@ -372,6 +381,8 @@ export class ScrollZoomCoordinatorDirective
         if (this.isPageScrolling) {
           this.isPageScrolling = false;
         }
+        // Directly re-enable zoom on controls
+        this.controls!.enableZoom = true;
         this.enableZoom();
       }
 
@@ -391,6 +402,8 @@ export class ScrollZoomCoordinatorDirective
       if (this.controls && !this.destroyed) {
         // Auto-enable zoom when not actively page scrolling
         if (!this.isPageScrolling) {
+          // Directly enable on controls to ensure sync
+          this.controls.enableZoom = true;
           this.enableZoom();
         }
       }

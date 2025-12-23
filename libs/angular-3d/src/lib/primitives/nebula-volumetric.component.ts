@@ -61,24 +61,24 @@ import { RenderLoopService } from '../render-loop/render-loop.service';
 })
 export class NebulaVolumetricComponent {
   // Signal inputs
-  readonly position = input<[number, number, number]>([0, 0, 0]);
-  readonly width = input<number>(120);
-  readonly height = input<number>(60);
-  readonly layers = input<number>(2); // Number of shader planes
-  readonly opacity = input<number>(0.6);
-  readonly primaryColor = input<string>('#0088ff'); // Bright blue
-  readonly secondaryColor = input<string>('#00d4ff'); // Cyan
-  readonly tertiaryColor = input<string>('#ff6bd4'); // Pink accent
-  readonly enableFlow = input<boolean>(true); // Animate noise over time
-  readonly flowSpeed = input<number>(0.5); // Time multiplier for animation
+  public readonly position = input<[number, number, number]>([0, 0, 0]);
+  public readonly width = input<number>(120);
+  public readonly height = input<number>(60);
+  public readonly layers = input<number>(2); // Number of shader planes
+  public readonly opacity = input<number>(0.6);
+  public readonly primaryColor = input<string>('#0088ff'); // Bright blue
+  public readonly secondaryColor = input<string>('#00d4ff'); // Cyan
+  public readonly tertiaryColor = input<string>('#ff6bd4'); // Pink accent
+  public readonly enableFlow = input<boolean>(true); // Animate noise over time
+  public readonly flowSpeed = input<number>(0.5); // Time multiplier for animation
 
   // Visual quality controls (matching temp/nebula-volumetric.component.ts)
-  readonly noiseScale = input<number>(0.01); // Smaller = larger features, bigger = more detail
-  readonly density = input<number>(1.1); // Overall cloud density (0.5 - 2.0)
-  readonly edgeSoftness = input<number>(0.3); // Edge fade softness (0.1 = hard, 0.5 = very soft)
-  readonly contrast = input<number>(1.0); // Bright/dim contrast (0.5 = low, 2.0 = high)
-  readonly glowIntensity = input<number>(3.0); // Glow strength in bright areas (1.0 - 5.0)
-  readonly colorIntensity = input<number>(1.8); // Color brightness multiplier (0.5 - 3.0)
+  public readonly noiseScale = input<number>(0.01); // Smaller = larger features, bigger = more detail
+  public readonly density = input<number>(1.1); // Overall cloud density (0.5 - 2.0)
+  public readonly edgeSoftness = input<number>(0.3); // Edge fade softness (0.1 = hard, 0.5 = very soft)
+  public readonly contrast = input<number>(1.0); // Bright/dim contrast (0.5 = low, 2.0 = high)
+  public readonly glowIntensity = input<number>(3.0); // Glow strength in bright areas (1.0 - 5.0)
+  public readonly colorIntensity = input<number>(1.8); // Color brightness multiplier (0.5 - 3.0)
 
   // DI
   private readonly parent = inject(NG_3D_PARENT);
@@ -92,14 +92,28 @@ export class NebulaVolumetricComponent {
     [];
   private renderLoopCleanup!: () => void;
 
-  constructor() {
-    // Effect: Add group to parent
+  private isAddedToScene = false;
+
+  public constructor() {
+    // Effect: Add group to parent when parent becomes available
+    // Using effect instead of afterNextRender for more reliable timing
     effect(() => {
       const parent = this.parent();
-      if (parent) {
+      if (parent && !this.isAddedToScene) {
         parent.add(this.group);
-        this.group.position.set(...this.position());
+        this.isAddedToScene = true;
+        console.log(
+          '✅ NebulaVolumetric added to scene, group children:',
+          this.group.children.length
+        );
       }
+    });
+
+    // Effect: Update position when it changes
+    effect(() => {
+      const pos = this.position();
+      this.group.position.set(...pos);
+      console.log(`🌫️ NebulaVolumetric position set to [${pos.join(', ')}]`);
     });
 
     // Effect: Create nebula layers when configuration changes
@@ -108,6 +122,10 @@ export class NebulaVolumetricComponent {
       const width = this.width();
       const height = this.height();
 
+      console.log(
+        `🌫️ NebulaVolumetric: Creating ${layerCount} layers (${width}x${height})`
+      );
+
       // Clear existing layers
       this.clearLayers();
 
@@ -115,25 +133,57 @@ export class NebulaVolumetricComponent {
       for (let i = 0; i < layerCount; i++) {
         this.createNebulaLayer(i, width, height, layerCount);
       }
+
+      console.log(
+        `🌫️ NebulaVolumetric: Created ${this.nebulaLayers.length} meshes, ${this.layerUniforms.length} uniforms`
+      );
     });
 
-    // Effect: Update colors reactively
+    // Single effect: Update all uniforms when inputs change
+    // This is more efficient than having separate effects for each uniform
     effect(() => {
+      if (this.layerUniforms.length === 0) return;
+
+      // Read all inputs (creates dependencies)
       const primary = new THREE.Color(this.primaryColor());
       const secondary = new THREE.Color(this.secondaryColor());
       const tertiary = new THREE.Color(this.tertiaryColor());
+      const opacity = this.opacity();
+      const flowSpeed = this.flowSpeed();
+      const noiseScale = this.noiseScale();
+      const density = this.density();
+      const edgeSoftness = this.edgeSoftness();
+      const contrast = this.contrast();
+      const glowIntensity = this.glowIntensity();
+      const colorIntensity = this.colorIntensity();
 
-      this.layerUniforms.forEach((uniforms) => {
+      // Update all layer uniforms
+      this.layerUniforms.forEach((uniforms, i) => {
+        // Layer-specific multipliers (matching temp implementation)
+        const opacityMult = i === 0 ? 0.5 : 0.4;
+        const flowMult = i === 0 ? 1.0 : -0.6;
+        const noiseMult = i === 0 ? 1.0 : 1.3;
+        const densityMult = i === 0 ? 1.0 : 0.9;
+
+        // Update uniforms
         uniforms['uPrimaryColor'].value = primary;
         uniforms['uSecondaryColor'].value = secondary;
         uniforms['uTertiaryColor'].value = tertiary;
+        uniforms['uOpacity'].value = opacity * opacityMult;
+        uniforms['uFlowSpeed'].value = flowSpeed * flowMult;
+        uniforms['uNoiseScale'].value = noiseScale * noiseMult;
+        uniforms['uDensity'].value = density * densityMult;
+        uniforms['uEdgeSoftness'].value = edgeSoftness;
+        uniforms['uContrast'].value = contrast;
+        uniforms['uGlowIntensity'].value = glowIntensity;
+        uniforms['uColorIntensity'].value = colorIntensity;
       });
     });
 
     // Animation loop - always register, conditionally execute
     // This prevents memory leak if enableFlow changes after construction
     this.renderLoopCleanup = this.renderLoop.registerUpdateCallback((delta) => {
-      if (this.enableFlow()) {
+      if (this.enableFlow() && this.layerUniforms.length > 0) {
         this.layerUniforms.forEach((uniforms) => {
           uniforms['uTime'].value += delta * this.flowSpeed();
         });
@@ -142,13 +192,19 @@ export class NebulaVolumetricComponent {
 
     // Cleanup
     this.destroyRef.onDestroy(() => {
-      // Cleanup always called now since renderLoopCleanup is always defined
-      this.renderLoopCleanup();
+      // Cleanup render loop callback
+      if (this.renderLoopCleanup) {
+        this.renderLoopCleanup();
+      }
+      // Remove from parent
       const parent = this.parent();
-      if (parent) {
+      if (parent && this.isAddedToScene) {
         parent.remove(this.group);
       }
+      this.isAddedToScene = false;
+      // Dispose Three.js resources
       this.clearLayers();
+      console.log('🧹 NebulaVolumetric cleaned up');
     });
   }
 
@@ -167,15 +223,17 @@ export class NebulaVolumetricComponent {
 
   /**
    * Create a single nebula layer with shader material
+   * Uses 1x1 base geometry with scaling (matching temp implementation)
    */
   private createNebulaLayer(
     layerIndex: number,
     width: number,
     height: number,
-    totalLayers: number
+    _totalLayers: number
   ): void {
-    // Create high-resolution plane geometry for smooth noise
-    const geometry = new THREE.PlaneGeometry(width, height, 256, 256);
+    // Create 1x1 plane geometry with high resolution for smooth noise
+    // Scale will be applied to mesh to get desired size (matching temp approach)
+    const geometry = new THREE.PlaneGeometry(1, 1, 256, 256);
 
     // Create uniforms for this layer (matching temp/nebula-volumetric.component.ts)
     const layerOpacityMultiplier = layerIndex === 0 ? 0.5 : 0.4;
@@ -208,31 +266,40 @@ export class NebulaVolumetricComponent {
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
-      depthTest: true, // CRITICAL: was missing
+      depthTest: true,
       side: THREE.DoubleSide,
-      fog: false, // CRITICAL: was missing
+      fog: false,
     });
+
+    // Check for shader compilation errors
+    material.needsUpdate = true;
 
     // Create mesh
     const mesh = new THREE.Mesh(geometry, material);
+
+    // Log mesh creation for debugging
+    console.log(
+      `🌫️ NebulaVolumetric Layer ${layerIndex}: mesh created at position [${mesh.position.x}, ${mesh.position.y}, ${mesh.position.z}]`
+    );
 
     // CRITICAL: Set renderOrder for proper transparent object rendering
     // Reference uses 997 for layer 1, 998 for layer 2
     mesh.renderOrder = 997 + layerIndex;
 
-    // Position layers with x/y/z offsets like reference implementation
+    // Position and scale layers (matching temp implementation)
     if (layerIndex === 0) {
+      // Layer 1: Full size at origin
       mesh.position.set(0, 0, 0);
+      mesh.scale.set(width, height, 1);
     } else {
-      // Layer 2+ offset: [8, -5, -8] from reference
-      const offsetScale = layerIndex;
-      mesh.position.set(8 * offsetScale, -5 * offsetScale, -8 * offsetScale);
-      // Scale down secondary layers
-      mesh.scale.set(0.85, 0.85, 1);
+      // Layer 2+: Offset and slightly smaller
+      mesh.position.set(8, -5, -8);
+      mesh.scale.set(width * 0.85, height * 0.85, 1);
     }
 
-    // Slight rotation variation for each layer
-    mesh.rotation.z = (layerIndex * Math.PI) / 8;
+    console.log(
+      `🌫️ Layer ${layerIndex}: scale [${mesh.scale.x}, ${mesh.scale.y}, ${mesh.scale.z}]`
+    );
 
     this.group.add(mesh);
     this.nebulaLayers.push(mesh);
@@ -417,35 +484,31 @@ export class NebulaVolumetricComponent {
 
       edgeFalloff *= 0.2 + edgeNoise * 0.8;
 
-      // Calculate base alpha
+      // Calculate base alpha - SIMPLIFIED for better visibility
       float alpha = smokeDensity * edgeFalloff;
 
       // Create BRIGHT and DIM areas (configurable contrast)
-      // Use thresholding to create intense bright spots
-      float brightAreas = smoothstep(0.55, 0.75, smokeDensity);
-      float dimAreas = smoothstep(0.2, 0.4, smokeDensity);
+      float brightAreas = smoothstep(0.45, 0.65, smokeDensity); // Lowered thresholds
+      float dimAreas = smoothstep(0.15, 0.35, smokeDensity); // Lowered thresholds
 
-      // Contrast control: either very bright or very dim
-      float intensityMask = brightAreas * (2.5 * uContrast) + dimAreas * (0.3 * uContrast);
+      // Contrast control with minimum floor to ensure visibility
+      float intensityMask = max(0.3, brightAreas * (2.5 * uContrast) + dimAreas * (0.5 * uContrast));
 
-      // Very soft alpha curves for gas-like appearance
-      alpha = pow(max(alpha, 0.0), 1.8);
+      // Softer alpha curves
+      alpha = pow(max(alpha, 0.0), 1.2); // Reduced from 1.8
       alpha = smoothstep(0.0, 1.0, alpha);
-      alpha = smoothstep(0.0, 1.0, alpha); // Double smoothstep for extra softness
 
       // Apply opacity with intensity variation
       alpha *= uOpacity * intensityMask;
 
-      // Discard nearly transparent pixels
-      if (alpha < 0.002) discard;
+      // More lenient discard threshold
+      if (alpha < 0.001) discard;
 
       // Color mixing with HIGH CONTRAST
-      // Bright areas = intense primary color
-      // Dim areas = very dark secondary color
-      float densityContrast = smoothstep(0.3, 0.7, smokeDensity);
+      float densityContrast = smoothstep(0.25, 0.65, smokeDensity);
 
       // Dark base color for dim areas
-      vec3 darkColor = uSecondaryColor * 0.15;
+      vec3 darkColor = uSecondaryColor * 0.2;
 
       // Bright color for intense areas (configurable)
       vec3 brightColor = uPrimaryColor * uColorIntensity;
@@ -461,12 +524,12 @@ export class NebulaVolumetricComponent {
       vec3 finalColor = mix(color2, uTertiaryColor * 1.5, brightAreas * 0.2);
 
       // Strong brightness variation for dramatic lighting
-      float brightness = 0.4 + smokeDensity * 1.2 + brightAreas * 1.5;
+      float brightness = 0.5 + smokeDensity * 1.0 + brightAreas * 1.2;
       finalColor *= brightness;
 
       // Configurable glow in VERY bright areas only
-      float strongGlow = pow(brightAreas, 3.0) * uGlowIntensity;
-      finalColor += strongGlow * uPrimaryColor * 2.0;
+      float strongGlow = pow(brightAreas, 2.0) * uGlowIntensity; // Reduced from 3.0
+      finalColor += strongGlow * uPrimaryColor * 1.5;
 
       gl_FragColor = vec4(finalColor, alpha);
     }

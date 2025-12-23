@@ -21,7 +21,7 @@ import { CtaSectionComponent } from './sections/cta-section.component';
   template: `
     <!-- Hero Section with 3D Background -->
     <section
-      class="mt-[72px] min-h-screen relative overflow-hidden bg-background-dark"
+      class="pt-30 min-h-screen relative overflow-hidden bg-background-dark"
     >
       <!-- 3D Scene Background -->
       <div class="absolute inset-0 z-0">

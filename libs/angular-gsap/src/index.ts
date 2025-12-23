@@ -56,5 +56,27 @@ export {
   type StepData,
 } from './lib/components/scroll-timeline';
 
+// Components - Feature Showcase
+export {
+  FeatureShowcaseTimelineComponent,
+  FeatureStepComponent,
+  FeatureBadgeDirective,
+  FeatureTitleDirective,
+  FeatureDescriptionDirective,
+  FeatureNotesDirective,
+  FeatureVisualDirective,
+  FeatureDecorationDirective,
+} from './lib/components/feature-showcase';
+
+// Components - Split Panel
+export {
+  SplitPanelSectionComponent,
+  SplitPanelImageDirective,
+  SplitPanelBadgeDirective,
+  SplitPanelTitleDirective,
+  SplitPanelDescriptionDirective,
+  SplitPanelFeaturesDirective,
+} from './lib/components/split-panel';
+
 // Components - Other
 export { ParallaxSplitScrollComponent } from './lib/components/parallax-split-scroll.component';
