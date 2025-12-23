@@ -13,6 +13,7 @@ import {
   Rotate3dDirective,
   Scene3dComponent,
   ScrollZoomCoordinatorDirective,
+  SmokeTroikaTextComponent,
   SpaceFlight3dDirective,
   StarFieldComponent,
   TroikaTextComponent,
@@ -57,6 +58,7 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
     FloatingSphereComponent,
     TroikaTextComponent,
     GlowTroikaTextComponent,
+    SmokeTroikaTextComponent,
     ScrollZoomCoordinatorDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -99,39 +101,57 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         />
 
         <!-- ================================ -->
-        <!-- LEFT-SIDE HEADING - Troika Glow Text -->
+        <!-- ATMOSPHERIC SMOKE TEXT (Background) -->
+        <!-- ================================ -->
+        <!-- Large "3D Library" smoke text behind main heading -->
+        <a3d-smoke-troika-text
+          text="3D Library"
+          [fontSize]="3.5"
+          [position]="[2, 0, -5]"
+          anchorX="center"
+          anchorY="middle"
+          [smokeColor]="colors.purple"
+          [smokeIntensity]="0.6"
+          [flowSpeed]="0.3"
+          [density]="1.0"
+          [edgeSoftness]="0.5"
+          [enableFlow]="true"
+        />
+
+        <!-- ================================ -->
+        <!-- LEFT-SIDE HEADING - Troika Glow Text (BOLD) -->
         <!-- ================================ -->
         <!-- Line 1: "Build " + "Stunning" -->
         <a3d-glow-troika-text
           text="Build "
-          [fontSize]="1.2"
-          [position]="[-11, 3, 0]"
+          [fontSize]="1.8"
+          [position]="[-11, 3.5, 0]"
           anchorX="left"
           anchorY="middle"
           [glowColor]="colors.white"
-          [glowIntensity]="1.5"
+          [glowIntensity]="2.0"
           [pulseSpeed]="0"
         />
         <a3d-glow-troika-text
           text="Stunning"
-          [fontSize]="1.2"
-          [position]="[-7, 3, 0]"
+          [fontSize]="1.8"
+          [position]="[-5.5, 3.5, 0]"
           anchorX="left"
           anchorY="middle"
           [glowColor]="colors.neonGreen"
-          [glowIntensity]="2.0"
-          [pulseSpeed]="0.3"
+          [glowIntensity]="2.5"
+          [pulseSpeed]="0.4"
         />
 
         <!-- Line 2: "Angular Experiences" -->
         <a3d-glow-troika-text
           text="Angular Experiences"
-          [fontSize]="1.2"
+          [fontSize]="1.8"
           [position]="[-11, 1, 0]"
           anchorX="left"
           anchorY="middle"
           [glowColor]="colors.white"
-          [glowIntensity]="1.5"
+          [glowIntensity]="2.0"
           [pulseSpeed]="0"
         />
 
