@@ -125,7 +125,8 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <a3d-glow-troika-text
           text="Build "
           [fontSize]="1.8"
-          [position]="[-11, 3.5, 0]"
+          viewportPosition="top-left"
+          [viewportOffset]="{ offsetX: 2, offsetY: -3, offsetZ: 0 }"
           anchorX="left"
           anchorY="middle"
           [glowColor]="colors.white"
@@ -134,8 +135,9 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         />
         <a3d-glow-troika-text
           text="Stunning"
-          [fontSize]="1.8"
-          [position]="[-5.5, 3.5, 0]"
+          [fontSize]="2.8"
+          viewportPosition="top-left"
+          [viewportOffset]="{ offsetX: 6, offsetY: -2.5, offsetZ: 0 }"
           anchorX="left"
           anchorY="middle"
           [glowColor]="colors.neonGreen"
@@ -146,8 +148,9 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <!-- Line 2: "Angular Experiences" -->
         <a3d-glow-troika-text
           text="Angular Experiences"
-          [fontSize]="1.8"
-          [position]="[-11, 1, 0]"
+          [fontSize]="2.8"
+          viewportPosition="top-left"
+          [viewportOffset]="{ offsetX: 2, offsetY: -4.5, offsetZ: 0 }"
           anchorX="left"
           anchorY="middle"
           [glowColor]="colors.white"
@@ -162,7 +165,8 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <a3d-troika-text
           text="Discover a powerful Angular library that seamlessly integrates"
           [fontSize]="0.5"
-          [position]="[-10.91, -1.5, 22]"
+          viewportPosition="middle-left"
+          [viewportOffset]="{ offsetX: 1, offsetY: -1, offsetZ: 22 }"
           anchorX="left"
           anchorY="middle"
           [color]="colors.softGray"
@@ -171,7 +175,8 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <a3d-troika-text
           text="Three.js for stunning 3D graphics and GSAP for smooth animations."
           [fontSize]="0.5"
-          [position]="[-10.91, -2.5, 22]"
+          viewportPosition="middle-left"
+          [viewportOffset]="{ offsetX: 1, offsetY: -2, offsetZ: 22 }"
           anchorX="left"
           anchorY="middle"
           [color]="colors.softGray"
@@ -319,21 +324,6 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [primaryColor]="colorStrings.purple"
         />
 
-        <!-- ================================ -->
-        <!-- CAMERA CONTROLS -->
-        <!-- ================================ 
-        <a3d-orbit-controls
-          [enableDamping]="true"
-          [dampingFactor]="0.05"
-          [enableZoom]="true"
-          [minDistance]="9"
-          [maxDistance]="25"
-          [rotateSpeed]="0.5"
-          [enablePan]="false"
-          a3dScrollZoomCoordinator
-          [scrollThreshold]="2"
-        />-->
-
         <a3d-orbit-controls
           scrollZoomCoordinator
           [orbitControls]="orbitControlsInstance"
@@ -341,8 +331,8 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [enableDamping]="true"
           [dampingFactor]="0.05"
           [enableZoom]="isZoomEnabled"
-          [minDistance]="5"
-          [maxDistance]="50"
+          [minDistance]="10"
+          [maxDistance]="30"
           [rotateSpeed]="0.5"
           [enablePan]="false"
           [scrollThreshold]="0.5"
