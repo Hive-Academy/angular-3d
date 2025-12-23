@@ -5,5 +5,4 @@
 export * from './advanced-performance-optimizer.service';
 
 // Text utilities
-export * from './text-sampling.service';
 export * from './font-preload.service';

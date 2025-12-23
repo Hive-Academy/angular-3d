@@ -1,5 +1,5 @@
 // @hive-academy/angular-3d - Primitives module
-// Planet, StarField, Nebula, Lights, ParticleText, GltfModel, etc.
+// Planet, StarField, Nebula, Lights, TroikaText, GltfModel, etc.
 
 export * from './box.component';
 export * from './cylinder.component';
@@ -12,7 +12,6 @@ export * from './planet.component';
 export * from './polyhedron.component';
 export * from './star-field.component';
 export * from './svg-icon.component';
-export * from './text-3d.component';
 export * from './torus.component';
 
 // Light components
@@ -21,11 +20,6 @@ export * from './lights/directional-light.component';
 export * from './lights/point-light.component';
 export * from './lights/scene-lighting.component';
 export * from './lights/spot-light.component';
-
-// Particle text components
-export * from './particle-text/instanced-particle-text.component';
-export * from './particle-text/smoke-particle-text.component';
-export * from './particle-text/glow-particle-text.component';
 
 // Troika text components (SDF-based high-quality text)
 export * from './text';
