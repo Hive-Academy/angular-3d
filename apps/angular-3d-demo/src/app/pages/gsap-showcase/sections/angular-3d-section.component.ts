@@ -56,18 +56,7 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
       <!-- Content Container -->
       <div class="container mx-auto px-8 py-12 relative z-10">
         <!-- Section Hero - Dark Theme -->
-        <div
-          class="relative text-center py-16 flex flex-col justify-center"
-          scrollAnimation
-          [scrollConfig]="{
-            animation: 'custom',
-            start: 'top top',
-            end: '+=4000',
-            scrub: 0.5,
-            from: { scale: 1, y: 0 },
-            to: { scale: 0.8, y: -20, opacity: 0.6 }
-          }"
-        >
+        <div class="relative text-center py-16 flex flex-col justify-center">
           <!-- Decorative Pattern -->
           <div
             class="absolute inset-0 flex items-center justify-end pointer-events-none"
@@ -78,7 +67,7 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
               end: 'bottom 30%',
               scrub: 0.5,
               from: { scale: 0.6, opacity: 0, rotation: -20, y: 50 },
-              to: { scale: 1, opacity: 0.4, rotation: 0, y: -50 }
+              to: { scale: 1, opacity: 0.8, rotation: 0, y: -50 }
             }"
           >
             <div class="w-[800px] h-[800px] text-indigo-400/30 pt-18">
@@ -201,7 +190,7 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
 
         <!-- Progressive Code Timeline -->
         <agsp-hijacked-scroll-timeline
-          [scrollHeightPerStep]="1000"
+          [scrollHeightPerStep]="900"
           [start]="'top top'"
         >
           @for (step of codeTimeline(); track step.id; let i = $index) {

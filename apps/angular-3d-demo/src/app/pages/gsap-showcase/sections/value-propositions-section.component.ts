@@ -83,7 +83,7 @@ import {
       <!-- Fullpage Scroll Timeline -->
       <agsp-hijacked-scroll-timeline
         #scrollTimeline
-        [scrollHeightPerStep]="400"
+        [scrollHeightPerStep]="900"
         [start]="'top top'"
         [animationDuration]="0.8"
         [ease]="'power3.inOut'"

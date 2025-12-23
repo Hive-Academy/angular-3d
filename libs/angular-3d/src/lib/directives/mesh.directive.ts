@@ -62,12 +62,6 @@ export class MeshDirective {
   private readonly materialSignal = inject(MATERIAL_SIGNAL);
   private readonly destroyRef = inject(DestroyRef);
 
-  // DEBUG: Log injection result
-  private readonly _debug = (() => {
-    console.log('[MeshDirective] OBJECT_ID injection result:', this.objectId);
-    return true;
-  })();
-
   /** Reference to created mesh (null until both geometry and material are ready) */
   public mesh: THREE.Mesh | null = null;
 
@@ -97,15 +91,7 @@ export class MeshDirective {
       try {
         // Create mesh and register with store
         this.mesh = new THREE.Mesh(geometry, material);
-        console.log(
-          '[MeshDirective] Creating and registering mesh:',
-          this.objectId
-        );
         this.store.register(this.objectId, this.mesh, 'mesh');
-        console.log(
-          '[MeshDirective] Mesh registered successfully:',
-          this.objectId
-        );
       } catch (error) {
         console.error(`[MeshDirective] Failed to create mesh:`, error);
       }

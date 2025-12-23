@@ -114,15 +114,6 @@ export class Rotate3dDirective {
   private readonly objectId = inject(OBJECT_ID, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
 
-  // DEBUG: Log injection result
-  private readonly _debug = (() => {
-    console.log(
-      '[Rotate3dDirective] OBJECT_ID injection result:',
-      this.objectId
-    );
-    return true;
-  })();
-
   /**
    * Rotation animation configuration
    *

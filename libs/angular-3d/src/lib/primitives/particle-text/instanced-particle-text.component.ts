@@ -1,21 +1,19 @@
 import {
-  Component,
   ChangeDetectionStrategy,
-  OnDestroy,
+  Component,
+  DestroyRef,
+  effect,
   inject,
   input,
-  effect,
-  DestroyRef,
   signal,
-  isDevMode,
 } from '@angular/core';
-import * as THREE from 'three';
 import { random } from 'maath';
-import { NG_3D_PARENT } from '../../types/tokens';
-import { OBJECT_ID } from '../../tokens/object-id.token';
-import { RenderLoopService } from '../../render-loop/render-loop.service';
+import * as THREE from 'three';
 import { SceneService } from '../../canvas/scene.service';
+import { RenderLoopService } from '../../render-loop/render-loop.service';
 import { TextSamplingService } from '../../services/text-sampling.service';
+import { OBJECT_ID } from '../../tokens/object-id.token';
+import { NG_3D_PARENT } from '../../types/tokens';
 
 /**
  * InstancedParticleTextComponent - Smoke Cloud Text using Instanced Meshes
@@ -87,21 +85,21 @@ interface ParticleData {
     },
   ],
 })
-export class InstancedParticleTextComponent implements OnDestroy {
+export class InstancedParticleTextComponent {
   // Signal inputs
-  readonly text = input.required<string>();
-  readonly position = input<[number, number, number]>([0, 0, 0]);
-  readonly fontSize = input<number>(60); // Canvas font size
-  readonly fontScaleFactor = input<number>(0.08); // Scale from canvas to 3D scene
-  readonly particleColor = input<number>(0x00d4ff);
-  readonly opacity = input<number>(0.15);
-  readonly maxParticleScale = input<number>(0.15);
-  readonly particlesPerPixel = input<number>(3);
-  readonly particleGrowSpeed = input<number>(0.03);
-  readonly pulseSpeed = input<number>(0.01);
-  readonly smokeIntensity = input<number>(1.0);
-  readonly skipInitialGrowth = input<boolean>(true);
-  readonly blendMode = input<'additive' | 'normal'>('additive');
+  public readonly text = input.required<string>();
+  public readonly position = input<[number, number, number]>([0, 0, 0]);
+  public readonly fontSize = input<number>(60); // Canvas font size
+  public readonly fontScaleFactor = input<number>(0.08); // Scale from canvas to 3D scene
+  public readonly particleColor = input<number>(0x00d4ff);
+  public readonly opacity = input<number>(0.15);
+  public readonly maxParticleScale = input<number>(0.15);
+  public readonly particlesPerPixel = input<number>(3);
+  public readonly particleGrowSpeed = input<number>(0.03);
+  public readonly pulseSpeed = input<number>(0.01);
+  public readonly smokeIntensity = input<number>(1.0);
+  public readonly skipInitialGrowth = input<boolean>(true);
+  public readonly blendMode = input<'additive' | 'normal'>('additive');
 
   // DI
   private readonly parent = inject(NG_3D_PARENT);
@@ -130,12 +128,12 @@ export class InstancedParticleTextComponent implements OnDestroy {
   };
 
   // Billboarding state tracking
-  private billboardingActive = signal(false);
+  private readonly billboardingActive = signal(false);
 
   // Particle count limit to prevent browser freezing
   private readonly MAX_PARTICLES = 10000;
 
-  constructor() {
+  public constructor() {
     // Initialize canvas for text rendering
     this.textCanvas = document.createElement('canvas');
     this.textCanvas.width = 0;
@@ -173,9 +171,6 @@ export class InstancedParticleTextComponent implements OnDestroy {
         // Camera is available - enable billboarding if not already active
         if (!this.billboardingActive()) {
           this.billboardingActive.set(true);
-          if (isDevMode()) {
-            console.log('[InstancedParticleText] Billboarding enabled');
-          }
         }
         this.animateParticles(camera);
       } else if (this.billboardingActive()) {
@@ -566,9 +561,5 @@ export class InstancedParticleTextComponent implements OnDestroy {
     texture.needsUpdate = true;
 
     return texture;
-  }
-
-  ngOnDestroy(): void {
-    // Cleanup handled by DestroyRef
   }
 }

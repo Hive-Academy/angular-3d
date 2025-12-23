@@ -65,7 +65,6 @@
 import {
   computed,
   DestroyRef,
-  effect,
   inject,
   Injectable,
   signal,
@@ -108,6 +107,7 @@ const DEFAULT_SSR_VIEWPORT_HEIGHT = 1080;
  * }
  * ```
  */
+// eslint-disable-next-line @angular-eslint/use-injectable-provided-in
 @Injectable()
 export class ViewportPositioningService {
   private readonly sceneStore = inject(SceneGraphStore);
@@ -200,7 +200,7 @@ export class ViewportPositioningService {
     );
   });
 
-  constructor() {
+  public constructor() {
     this.setupResizeListener();
   }
 

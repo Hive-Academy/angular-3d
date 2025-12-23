@@ -63,6 +63,8 @@ export interface OptimizationRecommendation {
  * Provided by Scene3dComponent to ensure per-scene optimization.
  * Each scene has independent performance management.
  */
+
+// eslint-disable-next-line @angular-eslint/use-injectable-provided-in
 @Injectable() // Component-scoped, NOT providedIn: 'root'
 export class AdvancedPerformanceOptimizerService {
   private readonly sceneStore = inject(SceneGraphStore);
@@ -110,7 +112,7 @@ export class AdvancedPerformanceOptimizerService {
    * Performance health score (0-100)
    * Based on FPS and frame time relative to targets
    */
-  readonly performanceHealthScore = computed(() => {
+  public readonly performanceHealthScore = computed(() => {
     const metrics = this.performanceMetrics();
     const target = this.performanceTarget();
 
@@ -131,7 +133,7 @@ export class AdvancedPerformanceOptimizerService {
    * Should optimization be applied?
    * True if adaptive scaling enabled and health score < 80
    */
-  readonly shouldOptimize = computed(() => {
+  public readonly shouldOptimize = computed(() => {
     const score = this.performanceHealthScore();
     return this.performanceTarget().adaptiveScaling && score < 80;
   });
@@ -140,7 +142,7 @@ export class AdvancedPerformanceOptimizerService {
   // Initialization
   // ============================================================================
 
-  constructor() {
+  public constructor() {
     // Setup cleanup on destroy
     this.destroyRef.onDestroy(() => {
       this.cleanup();
@@ -151,11 +153,14 @@ export class AdvancedPerformanceOptimizerService {
    * Initialize the optimizer with scene camera
    * Called by Scene3dComponent after camera is created
    */
-  initialize(camera?: THREE.Camera): void {
+  public initialize(camera?: THREE.Camera): void {
     // Store camera reference for frustum culling
     // Implementation would use camera.frustum for culling checks
     if (isDevMode()) {
-      console.log('[AdvancedPerformanceOptimizer] Initialized with camera');
+      console.log(
+        '[AdvancedPerformanceOptimizer] Initialized with camera',
+        camera
+      );
     }
   }
 
@@ -166,7 +171,7 @@ export class AdvancedPerformanceOptimizerService {
   /**
    * Register an object for performance optimization
    */
-  registerObject(id: string, object: THREE.Object3D): void {
+  public registerObject(id: string, object: THREE.Object3D): void {
     if (!object) {
       console.warn(
         `[AdvancedPerformanceOptimizer] Cannot register null object: ${id}`
@@ -180,21 +185,21 @@ export class AdvancedPerformanceOptimizerService {
   /**
    * Unregister an object from optimization
    */
-  unregisterObject(id: string): void {
+  public unregisterObject(id: string): void {
     this.registeredObjects.delete(id);
   }
 
   /**
    * Get registered object by ID
    */
-  getRegisteredObject(id: string): THREE.Object3D | undefined {
+  public getRegisteredObject(id: string): THREE.Object3D | undefined {
     return this.registeredObjects.get(id);
   }
 
   /**
    * Get count of registered objects
    */
-  getRegisteredObjectCount(): number {
+  public getRegisteredObjectCount(): number {
     return this.registeredObjects.size;
   }
 
@@ -206,7 +211,7 @@ export class AdvancedPerformanceOptimizerService {
    * Update performance metrics
    * Called each frame by render loop
    */
-  updateMetrics(delta: number, renderer?: any): void {
+  public updateMetrics(delta: number, renderer?: any): void {
     this.frameCount++;
     this.frameTimeAccumulator += delta * 1000; // Convert to ms
 
@@ -240,7 +245,10 @@ export class AdvancedPerformanceOptimizerService {
    * Perform frustum culling on registered objects
    * Called periodically based on updateFrequency
    */
-  performFrustumCulling(camera: THREE.Camera, frustum: THREE.Frustum): void {
+  public performFrustumCulling(
+    _camera: THREE.Camera,
+    frustum: THREE.Frustum
+  ): void {
     const config = this.frustumCullingConfig();
     if (!config.enabled) return;
 
@@ -301,7 +309,7 @@ export class AdvancedPerformanceOptimizerService {
   /**
    * Apply adaptive quality scaling based on performance
    */
-  applyAdaptiveScaling(): void {
+  public applyAdaptiveScaling(): void {
     const shouldOptimize = this.shouldOptimize();
 
     if (shouldOptimize) {
@@ -338,7 +346,7 @@ export class AdvancedPerformanceOptimizerService {
   /**
    * Get performance optimization recommendations
    */
-  getPerformanceRecommendations(): OptimizationRecommendation[] {
+  public getPerformanceRecommendations(): OptimizationRecommendation[] {
     const recommendations: OptimizationRecommendation[] = [];
     const metrics = this.performanceMetrics();
     const target = this.performanceTarget();
@@ -395,7 +403,9 @@ export class AdvancedPerformanceOptimizerService {
   /**
    * Update frustum culling configuration
    */
-  updateFrustumCullingConfig(config: Partial<FrustumCullingConfig>): void {
+  public updateFrustumCullingConfig(
+    config: Partial<FrustumCullingConfig>
+  ): void {
     this.frustumCullingConfig.update((current) => ({
       ...current,
       ...config,
@@ -405,7 +415,7 @@ export class AdvancedPerformanceOptimizerService {
   /**
    * Update performance target configuration
    */
-  updatePerformanceTarget(config: Partial<PerformanceTarget>): void {
+  public updatePerformanceTarget(config: Partial<PerformanceTarget>): void {
     this.performanceTarget.update((current) => ({
       ...current,
       ...config,

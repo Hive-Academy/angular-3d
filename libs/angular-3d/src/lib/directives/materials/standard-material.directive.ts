@@ -51,15 +51,6 @@ export class StandardMaterialDirective {
   private readonly objectId = inject(OBJECT_ID, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
 
-  // DEBUG: Log injection result
-  private readonly _debug = (() => {
-    console.log(
-      '[StandardMaterialDirective] OBJECT_ID injection result:',
-      this.objectId
-    );
-    return true;
-  })();
-
   /**
    * Material color (hex number or CSS color string)
    * Default: 0xffffff (white)
@@ -95,16 +86,6 @@ export class StandardMaterialDirective {
       const metalness = this.metalness();
       const roughness = this.roughness();
 
-      console.log(
-        '[StandardMaterialDirective] Effect1: Creating material with',
-        'color=',
-        color,
-        'wireframe=',
-        wireframe,
-        'id=',
-        this.objectId
-      );
-
       if (!this.material) {
         this.material = new THREE.MeshStandardMaterial({
           color,
@@ -113,9 +94,6 @@ export class StandardMaterialDirective {
           roughness,
         });
         this.materialSignal.set(this.material);
-        console.log(
-          '[StandardMaterialDirective] Effect1: Material created and signal set'
-        );
       }
     });
 
@@ -126,16 +104,6 @@ export class StandardMaterialDirective {
       if (this.material) {
         const color = this.color();
         const wireframe = this.wireframe();
-
-        console.log(
-          '[StandardMaterialDirective] Effect2: Updating material',
-          'color=',
-          color,
-          'wireframe=',
-          wireframe,
-          'id=',
-          this.objectId
-        );
 
         // DEBUG: Skip store update if no OBJECT_ID
         if (this.objectId) {

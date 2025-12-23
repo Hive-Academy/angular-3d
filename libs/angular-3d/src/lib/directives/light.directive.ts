@@ -45,12 +45,6 @@ export class LightDirective {
   // DEBUG: Make optional to trace injection issue
   protected readonly objectId = inject(OBJECT_ID, { optional: true });
 
-  // DEBUG: Log injection result
-  private readonly _debug = (() => {
-    console.log('[LightDirective] OBJECT_ID injection result:', this.objectId);
-    return true;
-  })();
-
   /**
    * Register a light with the SceneGraphStore
    * @param light - The THREE.Light instance to register

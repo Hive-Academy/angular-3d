@@ -52,15 +52,6 @@ export class AmbientLightDirective {
   private readonly objectId = inject(OBJECT_ID, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
 
-  // DEBUG: Log injection result
-  private readonly _debug = (() => {
-    console.log(
-      '[AmbientLightDirective] OBJECT_ID injection result:',
-      this.objectId
-    );
-    return true;
-  })();
-
   /** Light color (CSS color string or hex number) */
   public readonly color = input<string | number>('white');
 

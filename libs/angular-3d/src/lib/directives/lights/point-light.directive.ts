@@ -55,15 +55,6 @@ export class PointLightDirective {
   private readonly objectId = inject(OBJECT_ID, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
 
-  // DEBUG: Log injection result
-  private readonly _debug = (() => {
-    console.log(
-      '[PointLightDirective] OBJECT_ID injection result:',
-      this.objectId
-    );
-    return true;
-  })();
-
   /** Light color (CSS color string or hex number) */
   public readonly color = input<string | number>('white');
 

@@ -46,12 +46,6 @@ export class GroupDirective {
   private readonly objectId = inject(OBJECT_ID, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
 
-  // DEBUG: Log injection result
-  private readonly _debug = (() => {
-    console.log('[GroupDirective] OBJECT_ID injection result:', this.objectId);
-    return true;
-  })();
-
   /** Reference to created group (null until initialized) */
   public group: THREE.Group | null = null;
 

@@ -41,15 +41,6 @@ export class TransformDirective {
   // DEBUG: Make optional to trace injection issue
   private readonly objectId = inject(OBJECT_ID, { optional: true });
 
-  // DEBUG: Log injection result
-  private readonly _debug = (() => {
-    console.log(
-      '[TransformDirective] OBJECT_ID injection result:',
-      this.objectId
-    );
-    return true;
-  })();
-
   /**
    * Position in 3D space as [x, y, z] tuple
    * Default: [0, 0, 0] (origin)
@@ -74,38 +65,19 @@ export class TransformDirective {
     effect(() => {
       // DEBUG: Skip if no OBJECT_ID
       if (!this.objectId) {
-        console.log('[TransformDirective] Effect: No OBJECT_ID, skipping');
         return;
       }
 
       // Wait for object to be registered before updating
       const hasObject = this.store.hasObject(this.objectId);
-      console.log(
-        '[TransformDirective] Effect: hasObject=',
-        hasObject,
-        'id=',
-        this.objectId
-      );
 
       if (!hasObject) {
-        console.log(
-          '[TransformDirective] Effect: Object not registered yet, waiting...'
-        );
         return;
       }
 
       const pos = this.position();
       const rot = this.rotation();
       const scl = this.scale();
-      console.log(
-        '[TransformDirective] Effect: Applying transform',
-        'pos=',
-        JSON.stringify(pos),
-        'rot=',
-        JSON.stringify(rot),
-        'scl=',
-        JSON.stringify(scl)
-      );
 
       this.store.update(this.objectId, {
         position: pos,
