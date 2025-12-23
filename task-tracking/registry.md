@@ -11,8 +11,8 @@
 | TASK_2025_020 | Library Quality Audit (Temp vs Lib) | 🔄 IN PROGRESS           | 2025-12-22 |
 | TASK_2025_021 | Hero Section 3D Text Redesign       | ⏸️ PAUSED (pivot)        | 2025-12-22 |
 | TASK_2025_022 | GSAP Service Centralization         | 🔄 Execution (Batch 1)   | 2025-12-22 |
-| TASK_2025_023 | Troika-Three-Text Implementation    | 🔄 IN PROGRESS           | 2025-12-22 |
-| TASK_2025_024 | Particle Text → Troika Refactor     | 🔄 IN PROGRESS           | 2025-12-23 |
+| TASK_2025_023 | Troika-Three-Text Implementation    | ✅ COMPLETE              | 2025-12-22 |
+| TASK_2025_024 | Particle Text → Troika Refactor     | ✅ COMPLETE              | 2025-12-23 |
 
 ## Task Dependencies
 
@@ -50,3 +50,5 @@
 | TASK_2025_016 | Viewport 3D Positioning Feature            | COMPLETE | 2025-12-20 |
 | TASK_2025_017 | Angular-3D Component Completion & Fixes    | COMPLETE | 2025-12-21 |
 | TASK_2025_018 | Hero Section Enhancement                   | COMPLETE | 2025-12-21 |
+| TASK_2025_023 | Troika-Three-Text Implementation           | COMPLETE | 2025-12-22 |
+| TASK_2025_024 | Particle Text → Troika Refactor            | COMPLETE | 2025-12-23 |
