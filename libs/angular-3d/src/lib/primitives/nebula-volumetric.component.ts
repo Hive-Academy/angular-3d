@@ -200,7 +200,7 @@ export class NebulaVolumetricComponent {
 
     this.layerUniforms.push(uniforms);
 
-    // Create shader material
+    // Create shader material (matching temp/nebula-volumetric.component.ts)
     const material = new THREE.ShaderMaterial({
       vertexShader: this.vertexShader,
       fragmentShader: this.fragmentShader,
@@ -208,18 +208,31 @@ export class NebulaVolumetricComponent {
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
+      depthTest: true, // CRITICAL: was missing
       side: THREE.DoubleSide,
+      fog: false, // CRITICAL: was missing
     });
 
     // Create mesh
     const mesh = new THREE.Mesh(geometry, material);
 
-    // Position layer with slight depth offset
-    const depthSpacing = 2.0;
-    mesh.position.z = (layerIndex - (totalLayers - 1) / 2) * depthSpacing;
+    // CRITICAL: Set renderOrder for proper transparent object rendering
+    // Reference uses 997 for layer 1, 998 for layer 2
+    mesh.renderOrder = 997 + layerIndex;
+
+    // Position layers with x/y/z offsets like reference implementation
+    if (layerIndex === 0) {
+      mesh.position.set(0, 0, 0);
+    } else {
+      // Layer 2+ offset: [8, -5, -8] from reference
+      const offsetScale = layerIndex;
+      mesh.position.set(8 * offsetScale, -5 * offsetScale, -8 * offsetScale);
+      // Scale down secondary layers
+      mesh.scale.set(0.85, 0.85, 1);
+    }
 
     // Slight rotation variation for each layer
-    mesh.rotation.z = (layerIndex * Math.PI) / 6;
+    mesh.rotation.z = (layerIndex * Math.PI) / 8;
 
     this.group.add(mesh);
     this.nebulaLayers.push(mesh);
