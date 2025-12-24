@@ -33,3 +33,7 @@ export * from './floating-sphere.component';
 // Background decoration components
 export * from './background-cube.component';
 export * from './background-cubes.component';
+
+// Instancing and environment components
+export * from './instanced-mesh.component';
+export * from './environment.component';
