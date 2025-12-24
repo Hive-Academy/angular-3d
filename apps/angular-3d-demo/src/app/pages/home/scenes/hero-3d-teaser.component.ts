@@ -7,6 +7,7 @@ import {
   Float3dDirective,
   FloatingSphereComponent,
   GltfModelComponent,
+  GlowTroikaTextComponent,
   NebulaComponent,
   NebulaVolumetricComponent,
   OrbitControlsComponent,
@@ -60,6 +61,7 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
     FloatingSphereComponent,
     ScrollZoomCoordinatorDirective,
     ParticleTextComponent,
+    GlowTroikaTextComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -107,27 +109,25 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [position]="[-12, 5, 0]"
           [fontSize]="30"
           [particleColor]="colors.white"
-          [opacity]="0.6"
-          [maxParticleScale]="0.06"
+          [opacity]="0.3"
+          [maxParticleScale]="0.03"
           [particlesPerPixel]="3"
           [blendMode]="'normal'"
           [skipInitialGrowth]="true"
           [particleGrowSpeed]="0.02"
           [pulseSpeed]="0.005"
+          [texturePath]="'3d/textures/smoke.png'"
         />
 
-        <a3d-particle-text
+        <!-- Glowing Text - Angular 3D Experiences -->
+        <a3d-glow-troika-text
           text="Angular 3D Experiences"
           [position]="[-12, 0, 0]"
-          [fontSize]="30"
-          [particleColor]="colors.white"
-          [opacity]="0.6"
-          [maxParticleScale]="0.06"
-          [particlesPerPixel]="3"
-          [blendMode]="'normal'"
-          [skipInitialGrowth]="true"
-          [particleGrowSpeed]="0.02"
-          [pulseSpeed]="0.005"
+          [fontSize]="2.5"
+          [glowColor]="'#00d4ff'"
+          [glowIntensity]="2"
+          [neonMode]="true"
+          [neonCoreColor]="'#ffffff'"
         />
 
         <a3d-particle-text
@@ -135,13 +135,14 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [position]="[-12, -5, 0]"
           [fontSize]="30"
           [particleColor]="colors.white"
-          [opacity]="0.6"
-          [maxParticleScale]="0.06"
+          [opacity]="0.3"
+          [maxParticleScale]="0.03"
           [particlesPerPixel]="3"
           [blendMode]="'normal'"
           [skipInitialGrowth]="true"
           [particleGrowSpeed]="0.02"
           [pulseSpeed]="0.005"
+          [texturePath]="'3d/textures/smoke.png'"
         />
 
         <!-- ================================ -->
@@ -273,11 +274,11 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         with z-offset for depth-->
         <a3d-nebula
           [position]="[70, 40, -60]"
-          [cloudCount]="10"
+          [cloudCount]="3"
           [radius]="30"
-          [colorPalette]="['#ffffff', '#414040ff']"
-          [minSize]="50"
-          [maxSize]="80"
+          [colorPalette]="['#ffffff', '#a09b9bff']"
+          [minSize]="30"
+          [maxSize]="40"
           [minOpacity]="0.05"
           [maxOpacity]="0.15"
           [enableFlow]="false"
@@ -288,8 +289,8 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <a3d-nebula-volumetric
           [position]="[90, 40, -60]"
           [width]="100"
-          [height]="60"
-          [layers]="3"
+          [height]="30"
+          [layers]="2"
           [opacity]="0.9"
           [primaryColor]="'#0088ff'"
           [secondaryColor]="'#00d4ff'"
@@ -311,7 +312,7 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [enableDamping]="true"
           [dampingFactor]="0.05"
           [enableZoom]="isZoomEnabled"
-          [minDistance]="12"
+          [minDistance]="15"
           [maxDistance]="30"
           [rotateSpeed]="0.5"
           [enablePan]="false"
