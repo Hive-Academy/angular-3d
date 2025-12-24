@@ -14,3 +14,4 @@ export * from './responsive-troika-text.component';
 export * from './glow-troika-text.component';
 export * from './smoke-troika-text.component';
 export * from './particles-text.component';
+export * from './bubble-text.component';

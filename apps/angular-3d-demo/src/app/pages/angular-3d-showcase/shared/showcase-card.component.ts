@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  TemplateRef,
+} from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import {
   Scene3dComponent,
   AmbientLightComponent,
@@ -8,7 +14,10 @@ import { CodeSnippetComponent } from './code-snippet.component';
 
 /**
  * Reusable showcase card component for displaying 3D primitives/components with code examples.
- * Extracted from primitives-showcase.component.ts to eliminate duplication across showcase sections.
+ *
+ * Uses ngTemplateOutlet pattern to preserve Angular DI hierarchy.
+ * The sceneTemplate is instantiated INSIDE the Scene3dComponent context,
+ * so child components can inject NG_3D_PARENT, RenderLoopService, etc.
  *
  * @example
  * ```html
@@ -16,15 +25,18 @@ import { CodeSnippetComponent } from './code-snippet.component';
  *   componentName="Box"
  *   description="Basic 3D box primitive"
  *   codeExample="<a3d-box />"
- *   [cameraPosition]="[0, 0, 3]"
- * >
- *   <a3d-box sceneContent [color]="colors.indigo" rotate3d />
- * </app-showcase-card>
+ *   [sceneTemplate]="boxTemplate"
+ * />
+ *
+ * <ng-template #boxTemplate>
+ *   <a3d-box [color]="colors.indigo" rotate3d />
+ * </ng-template>
  * ```
  */
 @Component({
   selector: 'app-showcase-card',
   imports: [
+    NgTemplateOutlet,
     Scene3dComponent,
     AmbientLightComponent,
     DirectionalLightComponent,
@@ -46,8 +58,10 @@ import { CodeSnippetComponent } from './code-snippet.component';
           <a3d-ambient-light [intensity]="0.5" />
           <a3d-directional-light [position]="[2, 2, 2]" [intensity]="0.8" />
 
-          <!-- Content Projection for 3D Object -->
-          <ng-content select="[sceneContent]" />
+          <!-- Template Outlet for 3D Object (preserves injector hierarchy) -->
+          @if (sceneTemplate()) {
+          <ng-container *ngTemplateOutlet="sceneTemplate()" />
+          }
         </a3d-scene-3d>
       </div>
 
@@ -67,27 +81,33 @@ export class ShowcaseCardComponent {
   /**
    * Display name of the component being showcased
    */
-  readonly componentName = input.required<string>();
+  public readonly componentName = input.required<string>();
 
   /**
    * Optional description of the component's purpose or features
    */
-  readonly description = input<string>('');
+  public readonly description = input<string>('');
 
   /**
    * Code example showing basic usage (HTML format)
    */
-  readonly codeExample = input.required<string>();
+  public readonly codeExample = input.required<string>();
+
+  /**
+   * Template containing 3D components to render inside the scene.
+   * Using TemplateRef instead of ng-content preserves Angular DI hierarchy.
+   */
+  public readonly sceneTemplate = input<TemplateRef<unknown>>();
 
   /**
    * Camera position for 3D scene preview
    * @default [0, 0, 3]
    */
-  readonly cameraPosition = input<[number, number, number]>([0, 0, 3]);
+  public readonly cameraPosition = input<[number, number, number]>([0, 0, 3]);
 
   /**
    * Camera field of view for 3D scene preview
    * @default 75
    */
-  readonly cameraFov = input<number>(75);
+  public readonly cameraFov = input<number>(75);
 }

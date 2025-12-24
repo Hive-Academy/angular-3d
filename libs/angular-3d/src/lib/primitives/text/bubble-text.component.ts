@@ -71,7 +71,7 @@ export class BubbleTextComponent {
   public readonly position = input<[number, number, number]>([0, 0, 0]);
   public readonly fontSize = input<number>(60);
   public readonly fontScaleFactor = input<number>(0.08);
-  public readonly bubbleColor = input<string>('#00d4ff');
+  public readonly bubbleColor = input<number>(0xffffff);
   public readonly opacity = input<number>(0.5);
   public readonly maxBubbleScale = input<number>(0.18);
   public readonly bubblesPerPixel = input<number>(2);

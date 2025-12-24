@@ -10,10 +10,69 @@ export const appRoutes: Routes = [
   {
     path: 'angular-3d',
     loadComponent: () =>
-      import('./pages/angular-3d-showcase/angular-3d-showcase.component').then(
-        (m) => m.Angular3dShowcaseComponent
-      ),
+      import('./pages/angular-3d-showcase/angular-3d-layout.component'),
     title: 'Angular-3D Showcase | Hive Academy',
+    children: [
+      {
+        path: '',
+        redirectTo: 'primitives',
+        pathMatch: 'full',
+      },
+      {
+        path: 'primitives',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/sections/primitives-section.component'
+          ),
+        title: 'Primitives | Angular-3D',
+      },
+      {
+        path: 'space',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/sections/space-section.component'
+          ),
+        title: 'Space Elements | Angular-3D',
+      },
+      {
+        path: 'text',
+        loadComponent: () =>
+          import('./pages/angular-3d-showcase/sections/text-section.component'),
+        title: 'Text Rendering | Angular-3D',
+      },
+      {
+        path: 'lighting',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/sections/lighting-section.component'
+          ),
+        title: 'Lighting | Angular-3D',
+      },
+      {
+        path: 'directives',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/sections/directives-section.component'
+          ),
+        title: 'Directives | Angular-3D',
+      },
+      {
+        path: 'postprocessing',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/sections/postprocessing-section.component'
+          ),
+        title: 'Postprocessing | Angular-3D',
+      },
+      {
+        path: 'controls',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/sections/controls-section.component'
+          ),
+        title: 'Controls | Angular-3D',
+      },
+    ],
   },
   {
     path: 'angular-gsap',
