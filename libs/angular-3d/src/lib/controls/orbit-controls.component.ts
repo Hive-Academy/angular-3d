@@ -209,6 +209,10 @@ export class OrbitControlsComponent implements OnDestroy {
   private handleControlsChange = (): void => {
     if (!this.controls) return;
 
+    // Invalidate for demand-based rendering
+    // This ensures the scene re-renders during user interaction
+    this.sceneService.invalidate();
+
     const distance = this.controls.object.position.distanceTo(
       this.controls.target
     );

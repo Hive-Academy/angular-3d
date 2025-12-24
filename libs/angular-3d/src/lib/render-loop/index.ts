@@ -3,7 +3,11 @@
 
 export { RenderLoopService } from './render-loop.service';
 
-export type { UpdateCallback, FrameContext } from './render-loop.service';
+export type {
+  UpdateCallback,
+  FrameContext,
+  FrameloopMode,
+} from './render-loop.service';
 
 export { AnimationService } from './animation.service';
 

@@ -9,8 +9,9 @@
  * gets its own instance of this service.
  */
 
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import * as THREE from 'three';
+import { RenderLoopService } from '../render-loop/render-loop.service';
 
 /**
  * Injectable service for accessing the active Three.js scene context.
@@ -44,6 +45,9 @@ import * as THREE from 'three';
 // eslint-disable-next-line @angular-eslint/use-injectable-provided-in
 @Injectable()
 export class SceneService {
+  // Inject RenderLoopService for invalidate() proxy
+  private readonly renderLoop = inject(RenderLoopService);
+
   // Writable signals for internal updates
   private readonly _scene = signal<THREE.Scene | null>(null);
   private readonly _renderer = signal<THREE.WebGLRenderer | null>(null);
@@ -118,6 +122,37 @@ export class SceneService {
   public findByName(name: string): THREE.Object3D | undefined {
     const sceneInstance = this._scene();
     return sceneInstance?.getObjectByName(name);
+  }
+
+  /**
+   * Request a render frame in demand mode
+   *
+   * This is a convenience proxy to RenderLoopService.invalidate().
+   * Use this method when updating the scene programmatically to ensure
+   * the changes are rendered in demand mode.
+   *
+   * In 'always' mode, this is a no-op since rendering is continuous.
+   * In 'demand' mode, this triggers a render on the next frame.
+   *
+   * @example
+   * ```typescript
+   * // After updating object transforms
+   * mesh.position.set(x, y, z);
+   * this.sceneService.invalidate();
+   *
+   * // After loading a new model
+   * this.sceneService.addToScene(model);
+   * this.sceneService.invalidate();
+   *
+   * // In animation callbacks
+   * gsap.to(mesh.rotation, {
+   *   y: Math.PI * 2,
+   *   onUpdate: () => this.sceneService.invalidate()
+   * });
+   * ```
+   */
+  public invalidate(): void {
+    this.renderLoop.invalidate();
   }
 
   /**

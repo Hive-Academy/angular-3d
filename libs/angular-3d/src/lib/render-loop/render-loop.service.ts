@@ -3,6 +3,10 @@
  *
  * Manages requestAnimationFrame loop outside Angular zone.
  * Provides callback registration for per-frame updates.
+ *
+ * Supports two rendering modes:
+ * - 'always': Continuous rendering at 60fps (default, backward compatible)
+ * - 'demand': Only render when invalidate() is called, saving battery
  */
 
 import { Injectable, NgZone, OnDestroy, inject, signal } from '@angular/core';
@@ -23,10 +27,22 @@ export interface FrameContext {
 }
 
 /**
+ * Frame loop mode for rendering optimization
+ * - 'always': Continuous rendering at 60fps (default)
+ * - 'demand': Only render when scene changes (battery efficient)
+ */
+export type FrameloopMode = 'always' | 'demand';
+
+/**
  * Service for managing the Three.js render loop.
  *
  * Runs the animation frame loop outside Angular zone for optimal performance.
  * Components can register callbacks to be called each frame with delta time.
+ *
+ * Supports demand-based rendering for battery efficiency:
+ * - Set frameloop to 'demand' to only render when scene changes
+ * - Call invalidate() to request a render frame
+ * - GPU usage drops to 0% when idle in demand mode
  *
  * @example
  * ```typescript
@@ -44,6 +60,15 @@ export interface FrameContext {
  *   }
  * }
  * ```
+ *
+ * @example
+ * ```typescript
+ * // Demand-based rendering for static scenes
+ * this.renderLoop.setFrameloop('demand');
+ *
+ * // Request render when scene changes
+ * this.renderLoop.invalidate();
+ * ```
  */
 @Injectable()
 export class RenderLoopService implements OnDestroy {
@@ -58,10 +83,21 @@ export class RenderLoopService implements OnDestroy {
   private readonly _isPaused = signal<boolean>(false);
   private readonly _fps = signal<number>(0);
 
+  // Demand-based rendering state
+  private readonly _frameloop = signal<FrameloopMode>('always');
+  private readonly _needsRender = signal<boolean>(true);
+  private invalidateTimeout: ReturnType<typeof setTimeout> | null = null;
+
   // Public readonly signals
   public readonly isRunning = this._isRunning.asReadonly();
   public readonly isPaused = this._isPaused.asReadonly();
   public readonly fps = this._fps.asReadonly();
+
+  /** Current frameloop mode ('always' or 'demand') */
+  public readonly frameloop = this._frameloop.asReadonly();
+
+  /** Whether a render is pending in demand mode */
+  public readonly needsRender = this._needsRender.asReadonly();
 
   // Render function reference (set by Scene3dComponent)
   private renderFn: (() => void) | null = null;
@@ -69,6 +105,7 @@ export class RenderLoopService implements OnDestroy {
   // FPS calculation
   private frameCount = 0;
   private lastFpsUpdate = 0;
+  private renderCount = 0; // Actual renders for FPS in demand mode
 
   public constructor() {
     // Setup visibility change handler
@@ -185,8 +222,109 @@ export class RenderLoopService implements OnDestroy {
     return this.updateCallbacks.size;
   }
 
+  /**
+   * Set the frame loop mode
+   *
+   * @param mode - 'always' for continuous rendering, 'demand' for on-change only
+   *
+   * @example
+   * ```typescript
+   * // Enable demand-based rendering for battery efficiency
+   * renderLoop.setFrameloop('demand');
+   *
+   * // Switch back to continuous rendering
+   * renderLoop.setFrameloop('always');
+   * ```
+   */
+  public setFrameloop(mode: FrameloopMode): void {
+    this._frameloop.set(mode);
+
+    if (mode === 'always') {
+      // Always mode needs continuous rendering
+      this._needsRender.set(true);
+
+      // Clear any pending idle timeout
+      if (this.invalidateTimeout !== null) {
+        clearTimeout(this.invalidateTimeout);
+        this.invalidateTimeout = null;
+      }
+    }
+  }
+
+  /**
+   * Request a render frame in demand mode
+   *
+   * In 'always' mode, this is a no-op since rendering is continuous.
+   * In 'demand' mode, this marks the scene as needing a render and
+   * restarts the RAF loop if it was stopped.
+   *
+   * Call this method whenever the scene changes:
+   * - Object transforms updated
+   * - Camera moved (OrbitControls)
+   * - Animations running (GSAP)
+   * - Properties changed
+   *
+   * @example
+   * ```typescript
+   * // After updating object position
+   * mesh.position.set(x, y, z);
+   * this.renderLoop.invalidate();
+   *
+   * // In OrbitControls change handler
+   * controls.addEventListener('change', () => {
+   *   this.renderLoop.invalidate();
+   * });
+   * ```
+   */
+  public invalidate(): void {
+    // In 'always' mode, we're already rendering continuously
+    if (this._frameloop() === 'always') {
+      return;
+    }
+
+    // Mark that we need to render
+    this._needsRender.set(true);
+
+    // Clear existing idle timeout
+    if (this.invalidateTimeout !== null) {
+      clearTimeout(this.invalidateTimeout);
+      this.invalidateTimeout = null;
+    }
+
+    // Restart RAF loop if it was stopped
+    if (this._isRunning() && this.animationFrameId === null) {
+      this.ngZone.runOutsideAngular(() => {
+        this.loop();
+      });
+    }
+
+    // Set timeout to stop RAF after idle period (100ms)
+    this.invalidateTimeout = setTimeout(() => {
+      if (
+        this._frameloop() === 'demand' &&
+        !this._needsRender() &&
+        this.animationFrameId !== null
+      ) {
+        // Stop RAF loop when idle in demand mode
+        cancelAnimationFrame(this.animationFrameId);
+        this.animationFrameId = null;
+      }
+      this.invalidateTimeout = null;
+    }, 100);
+  }
+
   private loop = (): void => {
     if (!this._isRunning()) {
+      return;
+    }
+
+    // Check if we should render in demand mode
+    const shouldRender = this._frameloop() === 'always' || this._needsRender();
+
+    // In demand mode with no pending render, still schedule next check
+    // but don't render or call callbacks
+    if (!shouldRender) {
+      this.animationFrameId = requestAnimationFrame(this.loop);
       return;
     }
 
@@ -214,6 +352,14 @@ export class RenderLoopService implements OnDestroy {
       this.renderFn();
     }
 
+    // Track actual renders for FPS in demand mode
+    this.renderCount++;
+
+    // Reset needsRender flag after rendering in demand mode
+    if (this._frameloop() === 'demand') {
+      this._needsRender.set(false);
+    }
+
     // Update FPS
     this.updateFps();
   };
@@ -223,10 +369,16 @@ export class RenderLoopService implements OnDestroy {
     const now = performance.now();
 
     if (now - this.lastFpsUpdate >= 1000) {
+      // In demand mode, report actual render count (not RAF calls)
+      // This shows 0fps when idle, reflecting actual GPU usage
+      const actualFrames =
+        this._frameloop() === 'demand' ? this.renderCount : this.frameCount;
+
       this._fps.set(
-        Math.round((this.frameCount * 1000) / (now - this.lastFpsUpdate))
+        Math.round((actualFrames * 1000) / (now - this.lastFpsUpdate))
       );
       this.frameCount = 0;
+      this.renderCount = 0;
       this.lastFpsUpdate = now;
     }
   }
@@ -249,6 +401,12 @@ export class RenderLoopService implements OnDestroy {
   public ngOnDestroy(): void {
     this.stop();
     this.clearCallbacks();
+
+    // Clear idle timeout
+    if (this.invalidateTimeout !== null) {
+      clearTimeout(this.invalidateTimeout);
+      this.invalidateTimeout = null;
+    }
 
     if (typeof document !== 'undefined') {
       document.removeEventListener(

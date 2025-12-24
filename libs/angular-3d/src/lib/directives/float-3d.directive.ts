@@ -61,6 +61,7 @@ import {
 } from '@angular/core';
 import { Mesh } from 'three';
 import { SceneGraphStore } from '../store/scene-graph.store';
+import { SceneService } from '../canvas/scene.service';
 import { OBJECT_ID } from '../tokens/object-id.token';
 
 /**
@@ -95,6 +96,8 @@ export interface FloatConfig {
 export class Float3dDirective {
   // Inject SceneGraphStore and OBJECT_ID from host component
   private readonly sceneStore = inject(SceneGraphStore);
+  // SceneService for demand-based rendering invalidation
+  private readonly sceneService = inject(SceneService, { optional: true });
   // DEBUG: Try without skipSelf - directive should see component's providers
   private readonly objectId = inject(OBJECT_ID, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
@@ -185,6 +188,10 @@ export class Float3dDirective {
         y: y + height,
         duration: speed / 2000, // Half the total speed for up phase (convert ms to s)
         ease: ease,
+        onUpdate: () => {
+          // Invalidate for demand-based rendering
+          this.sceneService?.invalidate();
+        },
       });
 
       // Phase 2: Float DOWN (smooth acceleration and deceleration)
@@ -192,6 +199,10 @@ export class Float3dDirective {
         y: y,
         duration: speed / 2000, // Half the total speed for down phase
         ease: ease,
+        onUpdate: () => {
+          // Invalidate for demand-based rendering
+          this.sceneService?.invalidate();
+        },
       });
 
       // Store timeline reference for cleanup and control

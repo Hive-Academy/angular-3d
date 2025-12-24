@@ -20,7 +20,10 @@ import {
 } from '@angular/core';
 import * as THREE from 'three';
 import { SceneService } from './scene.service';
-import { RenderLoopService } from '../render-loop/render-loop.service';
+import {
+  RenderLoopService,
+  FrameloopMode,
+} from '../render-loop/render-loop.service';
 import { SceneGraphStore } from '../store/scene-graph.store';
 import { EffectComposerService } from '../postprocessing/effect-composer.service';
 import { AdvancedPerformanceOptimizerService } from '../services/advanced-performance-optimizer.service';
@@ -158,6 +161,27 @@ export class Scene3dComponent implements OnDestroy {
   public readonly backgroundColor = input<number | null>(null);
   public readonly enableShadows = input<boolean>(false);
 
+  /**
+   * Frame loop mode for rendering optimization
+   *
+   * - 'always' (default): Continuous rendering at 60fps
+   * - 'demand': Only render when scene changes (battery efficient)
+   *
+   * In demand mode, call sceneService.invalidate() when the scene changes
+   * to trigger a render. OrbitControls and animation directives automatically
+   * call invalidate() when they update.
+   *
+   * @example
+   * ```html
+   * <!-- Continuous rendering (default) -->
+   * <a3d-scene-3d>...</a3d-scene-3d>
+   *
+   * <!-- Demand-based rendering for static scenes -->
+   * <a3d-scene-3d [frameloop]="'demand'">...</a3d-scene-3d>
+   * ```
+   */
+  public readonly frameloop = input<FrameloopMode>('always');
+
   // Three.js objects
   private renderer!: THREE.WebGLRenderer;
   private readonly scene = new THREE.Scene();
@@ -184,6 +208,9 @@ export class Scene3dComponent implements OnDestroy {
 
         // Initialize scene graph store with core Three.js objects
         this.sceneStore.initScene(this.scene, this.camera, this.renderer);
+
+        // Set frameloop mode before starting render loop
+        this.renderLoop.setFrameloop(this.frameloop());
 
         // Start render loop delegating to RenderLoopService
         this.renderLoop.start(() => {

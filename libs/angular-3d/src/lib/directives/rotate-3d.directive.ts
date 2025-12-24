@@ -70,6 +70,7 @@ import {
 } from '@angular/core';
 import type { Object3D } from 'three';
 import { SceneGraphStore } from '../store/scene-graph.store';
+import { SceneService } from '../canvas/scene.service';
 import { OBJECT_ID } from '../tokens/object-id.token';
 
 /**
@@ -110,6 +111,8 @@ export interface RotateConfig {
 export class Rotate3dDirective {
   // Inject SceneGraphStore and OBJECT_ID from host component
   private readonly sceneStore = inject(SceneGraphStore);
+  // SceneService for demand-based rendering invalidation
+  private readonly sceneService = inject(SceneService, { optional: true });
   // DEBUG: Try without skipSelf - directive should see component's providers
   private readonly objectId = inject(OBJECT_ID, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
@@ -184,6 +187,10 @@ export class Rotate3dDirective {
           [axis]: `+=${fullRotation}`, // Relative rotation for seamless looping
           duration: speed,
           ease: ease,
+          onUpdate: () => {
+            // Invalidate for demand-based rendering
+            this.sceneService?.invalidate();
+          },
         });
       }
       // Multi-axis rotation (tumbling effect)
@@ -197,6 +204,10 @@ export class Rotate3dDirective {
             duration: xSpeed,
             ease: ease,
             repeat: -1,
+            onUpdate: () => {
+              // Invalidate for demand-based rendering
+              this.sceneService?.invalidate();
+            },
           },
           0
         ); // Start at time 0
@@ -208,6 +219,10 @@ export class Rotate3dDirective {
             duration: ySpeed,
             ease: ease,
             repeat: -1,
+            onUpdate: () => {
+              // Invalidate for demand-based rendering
+              this.sceneService?.invalidate();
+            },
           },
           0
         ); // Start at time 0
@@ -219,6 +234,10 @@ export class Rotate3dDirective {
             duration: zSpeed,
             ease: ease,
             repeat: -1,
+            onUpdate: () => {
+              // Invalidate for demand-based rendering
+              this.sceneService?.invalidate();
+            },
           },
           0
         ); // Start at time 0
