@@ -491,6 +491,10 @@ export class EnvironmentComponent {
    * Force reload the current environment.
    * Useful when the HDRI file has been updated on the server.
    *
+   * @remarks
+   * If a load is already in progress, this method will log a warning and return
+   * without starting a new load to prevent race conditions and resource leaks.
+   *
    * @example
    * ```typescript
    * // Reload after file update
@@ -498,6 +502,14 @@ export class EnvironmentComponent {
    * ```
    */
   public reload(): void {
+    // Prevent race conditions - don't start a new load while one is in progress
+    if (this.isLoading()) {
+      console.warn(
+        '[EnvironmentComponent] Reload called while already loading, ignoring'
+      );
+      return;
+    }
+
     const hdriPath = this.hdri();
     const presetName = this.preset();
     const renderer = this.sceneService.renderer();

@@ -127,8 +127,15 @@ export class InstancedMeshComponent {
 
   /**
    * Number of instances to render.
-   * This value is used to allocate the instance buffer and cannot be changed
-   * after mesh creation. To change count, destroy and recreate the component.
+   *
+   * **IMPORTANT: This value is immutable after mesh creation.**
+   * The instance count is used to allocate GPU buffers during mesh initialization.
+   * Changing this value after the mesh has been created will have NO effect.
+   * To change the instance count, you must destroy and recreate the component.
+   *
+   * @remarks
+   * The count must be a positive integer. Values <= 0 will result in an error
+   * and the mesh will not be created.
    */
   public readonly count = input.required<number>();
 
@@ -219,6 +226,9 @@ export class InstancedMeshComponent {
   /** Temporary color for update operations (reused to avoid GC pressure) */
   private readonly tempColor = new THREE.Color();
 
+  /** Stores the original count when mesh was created (for immutability warning) */
+  private createdWithCount: number | null = null;
+
   // ============================================================================
   // Constructor & Lifecycle
   // ============================================================================
@@ -233,12 +243,31 @@ export class InstancedMeshComponent {
       const material = this.materialSignal();
       const count = this.count();
 
-      // Wait for all required dependencies
-      if (!geometry || !material || !count || count <= 0) return;
+      // Validate count is a positive number
+      if (!count || count <= 0) {
+        console.error(
+          '[InstancedMeshComponent] count must be a positive number, got:',
+          count
+        );
+        return;
+      }
 
-      // Only create mesh once
-      if (this.instancedMesh) return;
+      // Wait for geometry and material
+      if (!geometry || !material) return;
 
+      // Only create mesh once - warn if count changed after creation
+      if (this.instancedMesh) {
+        if (this.createdWithCount !== null && count !== this.createdWithCount) {
+          console.warn(
+            '[InstancedMeshComponent] count cannot be changed after mesh creation. ' +
+              `Current count: ${this.createdWithCount}, attempted: ${count}. ` +
+              'To change count, destroy and recreate the component.'
+          );
+        }
+        return;
+      }
+
+      this.createdWithCount = count;
       this.createInstancedMesh(geometry, material, count);
     });
 

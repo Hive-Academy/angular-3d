@@ -12,7 +12,7 @@ import {
   input,
   inject,
   effect,
-  OnDestroy,
+  DestroyRef,
 } from '@angular/core';
 import * as THREE from 'three';
 import { SSAOPass } from 'three-stdlib';
@@ -27,12 +27,18 @@ import { SceneService } from '../../canvas/scene.service';
  *
  * Must be used inside `a3d-effect-composer`.
  *
+ * @remarks
+ * The SSAOPass from three-stdlib uses `kernelRadius` as the primary radius control.
+ * The `kernelRadius` input directly controls the sampling radius (in pixels) for
+ * occlusion calculation. Higher values create wider ambient shadows.
+ *
  * @example
  * ```html
  * <a3d-effect-composer>
  *   <a3d-ssao-effect
- *     [radius]="4"
- *     [intensity]="1"
+ *     [kernelRadius]="8"
+ *     [minDistance]="0.001"
+ *     [maxDistance]="0.1"
  *   />
  * </a3d-effect-composer>
  * ```
@@ -42,8 +48,6 @@ import { SceneService } from '../../canvas/scene.service';
  * <!-- Strong ambient occlusion for architectural visualization -->
  * <a3d-effect-composer>
  *   <a3d-ssao-effect
- *     [radius]="8"
- *     [intensity]="1.5"
  *     [kernelRadius]="16"
  *     [minDistance]="0.0005"
  *     [maxDistance]="0.15"
@@ -57,41 +61,29 @@ import { SceneService } from '../../canvas/scene.service';
   template: '',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SsaoEffectComponent implements OnDestroy {
+export class SsaoEffectComponent {
   private readonly composerService = inject(EffectComposerService);
   private readonly sceneService = inject(SceneService);
+  private readonly destroyRef = inject(DestroyRef);
 
   /**
-   * Sampling radius - affects the spread of ambient occlusion
-   * Larger values sample further from each point
-   * Default: 4
-   */
-  public readonly radius = input<number>(4);
-
-  /**
-   * Effect intensity - multiplier for the occlusion strength
-   * Higher values create darker shadows in occluded areas
-   * Default: 1
-   */
-  public readonly intensity = input<number>(1);
-
-  /**
-   * Kernel radius - number of samples used for occlusion calculation
-   * More samples = better quality but higher GPU cost
+   * Kernel radius - the sampling radius in pixels for occlusion calculation.
+   * This is the primary control for SSAO spread.
+   * Higher values = wider ambient shadows but more GPU cost.
    * Default: 8
    */
   public readonly kernelRadius = input<number>(8);
 
   /**
-   * Minimum distance threshold - prevents self-occlusion artifacts
-   * Objects closer than this distance won't occlude themselves
+   * Minimum distance threshold - prevents self-occlusion artifacts.
+   * Objects closer than this distance won't occlude themselves.
    * Default: 0.001
    */
   public readonly minDistance = input<number>(0.001);
 
   /**
-   * Maximum distance threshold - limits occlusion range
-   * Objects beyond this distance won't contribute to occlusion
+   * Maximum distance threshold - limits occlusion range.
+   * Objects beyond this distance won't contribute to occlusion.
    * Default: 0.1
    */
   public readonly maxDistance = input<number>(0.1);
@@ -138,12 +130,13 @@ export class SsaoEffectComponent implements OnDestroy {
       renderer.getSize(size);
       pass.setSize(size.x, size.y);
     });
-  }
 
-  public ngOnDestroy(): void {
-    if (this.pass) {
-      this.composerService.removePass(this.pass);
-      this.pass = null;
-    }
+    // Cleanup on destroy using DestroyRef pattern
+    this.destroyRef.onDestroy(() => {
+      if (this.pass) {
+        this.composerService.removePass(this.pass);
+        this.pass = null;
+      }
+    });
   }
 }

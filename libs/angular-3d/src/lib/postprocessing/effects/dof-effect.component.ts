@@ -12,7 +12,7 @@ import {
   input,
   inject,
   effect,
-  OnDestroy,
+  DestroyRef,
 } from '@angular/core';
 import * as THREE from 'three';
 import { BokehPass } from 'three-stdlib';
@@ -57,9 +57,10 @@ import { SceneService } from '../../canvas/scene.service';
   template: '',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DepthOfFieldEffectComponent implements OnDestroy {
+export class DepthOfFieldEffectComponent {
   private readonly composerService = inject(EffectComposerService);
   private readonly sceneService = inject(SceneService);
+  private readonly destroyRef = inject(DestroyRef);
 
   /**
    * Focus distance - distance at which objects are in sharp focus
@@ -83,6 +84,9 @@ export class DepthOfFieldEffectComponent implements OnDestroy {
   public readonly maxblur = input<number>(0.01);
 
   private pass: BokehPass | null = null;
+
+  /** Flag to prevent repeated aspect uniform warnings */
+  private aspectUniformWarned = false;
 
   public constructor() {
     // Create pass when renderer, scene, and camera are available
@@ -129,15 +133,22 @@ export class DepthOfFieldEffectComponent implements OnDestroy {
       const uniforms = pass.uniforms as Record<string, THREE.IUniform>;
       if (uniforms['aspect']) {
         uniforms['aspect'].value = size.x / size.y;
+      } else if (!this.aspectUniformWarned) {
+        // Warn once if aspect uniform is missing (may indicate three-stdlib version incompatibility)
+        console.warn(
+          '[DepthOfFieldEffectComponent] BokehPass missing expected aspect uniform - check three-stdlib version'
+        );
+        this.aspectUniformWarned = true;
       }
     });
-  }
 
-  public ngOnDestroy(): void {
-    if (this.pass) {
-      this.composerService.removePass(this.pass);
-      // BokehPass doesn't have explicit dispose method
-      this.pass = null;
-    }
+    // Cleanup on destroy using DestroyRef pattern
+    this.destroyRef.onDestroy(() => {
+      if (this.pass) {
+        this.composerService.removePass(this.pass);
+        // BokehPass doesn't have explicit dispose method
+        this.pass = null;
+      }
+    });
   }
 }

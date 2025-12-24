@@ -12,7 +12,7 @@ import {
   input,
   inject,
   effect,
-  OnDestroy,
+  DestroyRef,
 } from '@angular/core';
 import { ShaderPass } from 'three-stdlib';
 import { EffectComposerService } from '../effect-composer.service';
@@ -47,6 +47,8 @@ const ColorGradingShader = {
     }
   `,
   fragmentShader: /* glsl */ `
+    precision mediump float;
+
     uniform sampler2D tDiffuse;
     uniform float saturation;
     uniform float contrast;
@@ -103,6 +105,11 @@ const ColorGradingShader = {
  *
  * Must be used inside `a3d-effect-composer`.
  *
+ * @remarks
+ * LUT (Look-Up Table) support is planned for a future version. LUT textures
+ * enable complex color transformations by mapping input colors to output colors
+ * through a 3D texture lookup, allowing for film-grade color grading presets.
+ *
  * @example
  * ```html
  * <a3d-effect-composer>
@@ -148,9 +155,10 @@ const ColorGradingShader = {
   template: '',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ColorGradingEffectComponent implements OnDestroy {
+export class ColorGradingEffectComponent {
   private readonly composerService = inject(EffectComposerService);
   private readonly sceneService = inject(SceneService);
+  private readonly destroyRef = inject(DestroyRef);
 
   /**
    * Saturation level - controls color intensity
@@ -219,12 +227,13 @@ export class ColorGradingEffectComponent implements OnDestroy {
         this.sceneService.invalidate();
       }
     });
-  }
 
-  public ngOnDestroy(): void {
-    if (this.pass) {
-      this.composerService.removePass(this.pass);
-      this.pass = null;
-    }
+    // Cleanup on destroy using DestroyRef pattern
+    this.destroyRef.onDestroy(() => {
+      if (this.pass) {
+        this.composerService.removePass(this.pass);
+        this.pass = null;
+      }
+    });
   }
 }
