@@ -7,7 +7,6 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { random } from 'maath';
 import * as THREE from 'three';
 import { SceneService } from '../../canvas/scene.service';
 import { RenderLoopService } from '../../render-loop/render-loop.service';
@@ -100,11 +99,12 @@ export class ParticleTextComponent {
   public readonly smokeIntensity = input<number>(1.0);
   public readonly skipInitialGrowth = input<boolean>(true);
   public readonly blendMode = input<'additive' | 'normal'>('additive');
+  public readonly texturePath = input<string | undefined>(undefined); // Path to external smoke texture
 
   // DI
-  private readonly parent = inject(NG_3D_PARENT);
+  private readonly parent = inject(NG_3D_PARENT, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
-  private readonly renderLoop = inject(RenderLoopService);
+  private readonly renderLoop = inject(RenderLoopService, { optional: true });
   private readonly sceneService = inject(SceneService);
   private readonly textSampling = inject(TextSamplingService);
 
@@ -114,7 +114,8 @@ export class ParticleTextComponent {
   private particleGeometry?: THREE.PlaneGeometry;
   private particleMaterial?: THREE.MeshBasicMaterial;
   private instancedMesh?: THREE.InstancedMesh;
-  private smokeTexture?: THREE.CanvasTexture;
+  private smokeTexture?: THREE.Texture; // Can be CanvasTexture or loaded Texture
+  private readonly textureLoaded = signal(false);
   private dummy = new THREE.Object3D();
 
   private textureCoordinates: TextureCoordinate[] = [];
@@ -144,16 +145,51 @@ export class ParticleTextComponent {
 
     // Effect: Initialize particle system when text or settings change
     effect(() => {
-      const parent = this.parent();
+      const parent = this.parent?.();
       const text = this.text();
       const fontSize = this.fontSize();
+      const texturePath = this.texturePath();
 
       if (!parent || !text) return;
 
-      // Create smoke texture if needed
+      // Load external texture or create procedural one
       if (!this.smokeTexture) {
-        this.smokeTexture = this.createSmokeTexture();
+        if (texturePath) {
+          // Load external smoke texture
+          const loader = new THREE.TextureLoader();
+          loader.load(
+            texturePath,
+            (loadedTexture) => {
+              this.smokeTexture = loadedTexture;
+              this.smokeTexture.needsUpdate = true;
+              this.textureLoaded.set(true);
+              // Recreate particles with loaded texture
+              this.refreshText(text, fontSize);
+              if (this.instancedMesh && parent) {
+                parent.add(this.instancedMesh);
+              }
+            },
+            undefined,
+            (error) => {
+              console.warn(
+                `[ParticleText] Failed to load texture: ${texturePath}`,
+                error
+              );
+              // Fallback to procedural texture
+              this.smokeTexture = this.createSmokeTexture();
+              this.textureLoaded.set(true);
+            }
+          );
+          return; // Wait for texture to load
+        } else {
+          // Create procedural smoke texture
+          this.smokeTexture = this.createSmokeTexture();
+          this.textureLoaded.set(true);
+        }
       }
+
+      // Only proceed if texture is ready
+      if (!this.textureLoaded()) return;
 
       // Sample text and create particles
       this.refreshText(text, fontSize);
@@ -164,8 +200,8 @@ export class ParticleTextComponent {
       }
     });
 
-    // Frame loop animation using RenderLoopService
-    const cleanup = this.renderLoop.registerUpdateCallback(() => {
+    // Frame loop animation using RenderLoopService (skip if renderLoop not available)
+    const cleanup = this.renderLoop?.registerUpdateCallback(() => {
       const camera = this.sceneService.camera();
       if (camera) {
         // Camera is available - enable billboarding if not already active
@@ -184,8 +220,8 @@ export class ParticleTextComponent {
 
     // Cleanup
     this.destroyRef.onDestroy(() => {
-      cleanup();
-      const parent = this.parent();
+      cleanup?.();
+      const parent = this.parent?.();
       if (this.instancedMesh && parent) {
         parent.remove(this.instancedMesh);
         this.instancedMesh.geometry.dispose();
@@ -209,7 +245,7 @@ export class ParticleTextComponent {
   private refreshText(text: string, fontSize: number): void {
     // Handle empty text - skip mesh creation and clean up existing mesh
     if (!text || text.trim().length === 0) {
-      const parent = this.parent();
+      const parent = this.parent?.();
       if (this.instancedMesh && parent) {
         parent.remove(this.instancedMesh);
         this.instancedMesh.geometry.dispose();
@@ -363,30 +399,34 @@ export class ParticleTextComponent {
 
   /**
    * Create new particle with random properties
-   * Uses power distribution for more varied sizes (many small, few large)
+   * Uses pow(10) distribution scaled by maxParticleScale input
+   * Creates many small particles with occasional larger puffs
    */
   private createParticle(x: number, y: number): ParticleData {
-    // Power distribution: many small particles, few large ones
-    const sizeFactor = Math.pow(Math.random(), 3); // Cube for more small particles
-    const maxScale = 0.05 + this.maxParticleScale() * sizeFactor;
+    // pow(10) distribution: most particles small, few larger
+    // Scale by maxParticleScale() input for scene-appropriate sizing
+    // Base: 10% of max, Peak: 100% of max (rare due to pow(10))
+    const baseScale = this.maxParticleScale() * 0.3;
+    const maxRandom = this.maxParticleScale() * 0.7;
+    const maxScale = baseScale + maxRandom * Math.pow(Math.random(), 5);
     const skipGrowth = this.skipInitialGrowth();
 
-    // Smaller random offset for tighter, more readable text
-    const offsetRange = 0.15;
+    // Tight jitter for text readability
+    const jitter = 0.12;
 
     return {
-      x: x + offsetRange * (Math.random() - 0.5),
-      y: y + offsetRange * (Math.random() - 0.5),
-      z: (Math.random() - 0.5) * 0.05, // Very small z variation for flatter text
-      isGrowing: !skipGrowth, // Skip growth if configured
+      x: x + jitter * (Math.random() - 0.5),
+      y: y + jitter * (Math.random() - 0.5),
+      z: (Math.random() - 0.5) * 0.08,
+      isGrowing: !skipGrowth,
       toDelete: false,
-      scale: skipGrowth ? maxScale : 0, // Start at max scale if skipping growth
+      scale: skipGrowth ? maxScale : 0,
       maxScale: maxScale,
       deltaScale:
         this.particleGrowSpeed() + this.particleGrowSpeed() * Math.random(),
       age: Math.PI * Math.random(),
       ageDelta: this.pulseSpeed() + this.pulseSpeed() * 2 * Math.random(),
-      rotationZ: Math.random() * Math.PI * 2, // Full rotation range
+      rotationZ: Math.random() * Math.PI * 2,
       deltaRotation: 0.01 * (Math.random() - 0.5),
     };
   }
@@ -395,7 +435,7 @@ export class ParticleTextComponent {
    * Recreate instanced mesh with current particle count
    */
   private recreateInstancedMesh(): void {
-    const parent = this.parent();
+    const parent = this.parent?.();
 
     // Cleanup existing mesh
     if (this.instancedMesh && parent) {
@@ -494,59 +534,51 @@ export class ParticleTextComponent {
         p.deltaScale = 0;
       }
     } else {
-      // Pulsing phase
-      p.scale = p.maxScale + 0.2 * Math.sin(p.age);
+      // Gentle pulsing for subtle animation
+      p.scale = p.maxScale + 0.15 * Math.sin(p.age);
     }
   }
 
   /**
-   * Create smoke texture for particles using fractal noise
-   * Same approach as other particle effects for consistent wispy smoke appearance
+   * Create soft smoke/cloud texture with smooth falloff
+   * Uses Gaussian-like distribution for natural soft edges
    */
   private createSmokeTexture(): THREE.CanvasTexture {
     const canvas = document.createElement('canvas');
-    const size = 256; // High resolution for quality
+    const size = 128; // Smaller for softer appearance when scaled
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d')!;
     const imageData = ctx.createImageData(size, size);
     const data = imageData.data;
 
-    // Generate fractal noise texture
+    const center = size / 2;
+
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
-        // Normalize coordinates to -0.5 to 0.5
-        const nx = x / size - 0.5;
-        const ny = y / size - 0.5;
+        // Distance from center normalized to 0-1
+        const dx = (x - center) / center;
+        const dy = (y - center) / center;
+        const dist = Math.sqrt(dx * dx + dy * dy);
 
-        // Multi-octave fractal noise (4 octaves)
-        let noiseValue = 0;
-        let amplitude = 1.0;
-        let frequency = 2.0;
-        let maxValue = 0;
+        // Gaussian-like soft falloff
+        // exp(-dist^2 * factor) creates smooth bell curve
+        const gaussian = Math.exp(-dist * dist * 3);
 
-        for (let octave = 0; octave < 4; octave++) {
-          noiseValue +=
-            amplitude * random.noise.simplex2(nx * frequency, ny * frequency);
-          maxValue += amplitude;
-          amplitude *= 0.5; // Each octave contributes less
-          frequency *= 2.0; // Each octave has higher frequency
+        // Add subtle noise variation for organic look
+        const noise = 0.8 + Math.random() * 0.4;
+
+        // Combine gaussian with noise
+        let alpha = gaussian * noise;
+
+        // Ensure smooth falloff at edges
+        if (dist > 0.8) {
+          alpha *= 1 - (dist - 0.8) / 0.2;
         }
 
-        // Normalize to 0-1 range
-        noiseValue = (noiseValue / maxValue + 1.0) * 0.5;
+        // Clamp and apply
+        alpha = Math.max(0, Math.min(1, alpha));
 
-        // Apply radial falloff for cloud shape
-        const dist = Math.sqrt(nx * nx + ny * ny);
-        const radialMask = Math.max(0, 1.0 - dist * 2.0);
-
-        // Combine noise with radial mask for wispy cloud effect
-        let alpha = noiseValue * radialMask;
-
-        // Apply power curve for softer edges
-        alpha = Math.pow(alpha, 1.5);
-
-        // Write to image data
         const idx = (y * size + x) * 4;
         data[idx] = 255; // R
         data[idx + 1] = 255; // G

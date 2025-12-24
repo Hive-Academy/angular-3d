@@ -13,6 +13,7 @@
 | TASK_2025_022 | GSAP Service Centralization         | 🔄 Execution (Batch 1)   | 2025-12-22 |
 | TASK_2025_023 | Troika-Three-Text Implementation    | ✅ COMPLETE              | 2025-12-22 |
 | TASK_2025_024 | Particle Text → Troika Refactor     | ✅ COMPLETE              | 2025-12-23 |
+| TASK_2025_025 | Angular-3D Showcase Page Redesign   | 🔄 IN PROGRESS           | 2025-12-23 |
 
 ## Task Dependencies
 

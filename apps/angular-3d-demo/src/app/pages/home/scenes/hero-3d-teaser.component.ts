@@ -7,7 +7,6 @@ import {
   Float3dDirective,
   FloatingSphereComponent,
   GltfModelComponent,
-  GlowTroikaTextComponent,
   NebulaComponent,
   NebulaVolumetricComponent,
   OrbitControlsComponent,
@@ -61,7 +60,6 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
     FloatingSphereComponent,
     ScrollZoomCoordinatorDirective,
     ParticleTextComponent,
-    GlowTroikaTextComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -120,14 +118,19 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         />
 
         <!-- Glowing Text - Angular 3D Experiences -->
-        <a3d-glow-troika-text
+        <a3d-particle-text
           text="Angular 3D Experiences"
           [position]="[-12, 0, 0]"
-          [fontSize]="2.5"
-          [glowColor]="'#00d4ff'"
-          [glowIntensity]="2"
-          [neonMode]="true"
-          [neonCoreColor]="'#ffffff'"
+          [fontSize]="30"
+          [particleColor]="colors.neonGreen"
+          [opacity]="0.3"
+          [maxParticleScale]="0.03"
+          [particlesPerPixel]="3"
+          [blendMode]="'normal'"
+          [skipInitialGrowth]="true"
+          [particleGrowSpeed]="0.02"
+          [pulseSpeed]="0.005"
+          [texturePath]="'3d/textures/smoke.png'"
         />
 
         <a3d-particle-text
@@ -273,12 +276,12 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <!-- Position: top-right viewport (x: ~10, y: ~5) 
         with z-offset for depth-->
         <a3d-nebula
-          [position]="[70, 40, -60]"
-          [cloudCount]="3"
-          [radius]="30"
-          [colorPalette]="['#ffffff', '#a09b9bff']"
-          [minSize]="30"
-          [maxSize]="40"
+          [position]="[90, 40, -60]"
+          [cloudCount]="2"
+          [radius]="60"
+          [colorPalette]="['#ffffff', '#dfdbdb']"
+          [minSize]="40"
+          [maxSize]="60"
           [minOpacity]="0.05"
           [maxOpacity]="0.15"
           [enableFlow]="false"

@@ -262,43 +262,11 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
             <div
               class="integration-card bg-slate-800/80 backdrop-blur-sm rounded-xl p-6 border border-indigo-500/20 hover:border-indigo-500/40 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300"
             >
-              <div
-                class="text-4xl mb-3"
-                viewportAnimation
-                [viewportConfig]="{
-                  animation: 'slideUp',
-                  duration: 0.6,
-                  stagger: 0.1,
-                  staggerTarget: '.integration-card',
-                  threshold: 0.2
-                }"
-              >
-                {{ integration.icon }}
-              </div>
-              <h4
-                class="text-lg font-bold text-white mb-2"
-                viewportAnimation
-                [viewportConfig]="{
-                  animation: 'slideUp',
-                  duration: 0.6,
-                  stagger: 0.1,
-                  staggerTarget: '.integration-card',
-                  threshold: 0.2
-                }"
-              >
+              <div class="text-4xl mb-3">{{ integration.icon }}</div>
+              <h4 class="text-lg font-bold text-white mb-2">
                 {{ integration.name }}
               </h4>
-              <p
-                class="text-sm text-gray-400"
-                viewportAnimation
-                [viewportConfig]="{
-                  animation: 'slideUp',
-                  duration: 0.6,
-                  stagger: 0.1,
-                  staggerTarget: '.integration-card',
-                  threshold: 0.2
-                }"
-              >
+              <p class="text-sm text-gray-400">
                 {{ integration.description }}
               </p>
             </div>

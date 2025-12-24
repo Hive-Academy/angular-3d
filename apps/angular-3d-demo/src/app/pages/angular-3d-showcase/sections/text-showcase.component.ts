@@ -1,15 +1,14 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
-  TroikaTextComponent,
-  ResponsiveTroikaTextComponent,
   GlowTroikaTextComponent,
-  SmokeTroikaTextComponent,
   ParticleTextComponent,
-  BubbleTextComponent,
+  ResponsiveTroikaTextComponent,
+  SmokeTroikaTextComponent,
+  TroikaTextComponent,
 } from '@hive-academy/angular-3d';
 import { SCENE_COLORS } from '../../../shared/colors';
-import { ShowcaseCardComponent } from '../shared/showcase-card.component';
 import { SectionContainerComponent } from '../shared/section-container.component';
+import { ShowcaseCardComponent } from '../shared/showcase-card.component';
 
 /**
  * Text Showcase Component
@@ -38,7 +37,6 @@ import { SectionContainerComponent } from '../shared/section-container.component
     GlowTroikaTextComponent,
     SmokeTroikaTextComponent,
     ParticleTextComponent,
-    BubbleTextComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
@@ -141,7 +139,7 @@ import { SectionContainerComponent } from '../shared/section-container.component
           sceneContent
           text="Bubbles"
           [fontSize]="60"
-          [bubbleColor]="'#f59e0b'"
+          [bubbleColor]="colors.orange"
           viewportPosition="center"
         />
       </app-showcase-card>

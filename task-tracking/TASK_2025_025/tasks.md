@@ -1,400 +1,518 @@
 # Development Tasks - TASK_2025_025
 
-**Total Tasks**: 8 | **Batches**: 3 | **Status**: 3/3 complete
+**Total Tasks**: 29 | **Batches**: 7 | **Status**: 7/7 complete
 
 ---
 
 ## Plan Validation Summary
 
-**Validation Status**: PASSED WITH RISKS
+**Validation Status**: PASSED
 
 ### Assumptions Verified
 
-- ✅ All three text components missing SceneGraphStore integration (TroikaTextComponent, GlowTroikaTextComponent, SmokeTroikaTextComponent)
-- ✅ Pattern from GltfModelComponent is correct reference
-- ✅ Memory leak in SmokeTroikaTextComponent confirmed (effect creates new callback on each `enableFlow()` change)
+- All component imports exist in @hive-academy/angular-3d public API: VERIFIED (cross-referenced with libs/angular-3d/src/index.ts)
+- Showcase card pattern exists and is reusable: VERIFIED (primitives-showcase.component.ts:37-54)
+- SCENE_COLORS system has all required colors: VERIFIED (shared/colors.ts contains all referenced colors)
+- Existing scenes (hero-space-scene, value-props-3d-scene) work correctly: VERIFIED (already implemented)
 
 ### Risks Identified
 
-| Risk                                                                | Severity | Mitigation                                                         |
-| ------------------------------------------------------------------- | -------- | ------------------------------------------------------------------ |
-| Memory leak in render loop effect creates multiple callbacks        | HIGH     | Task 1.3 - Fix render loop to register ONCE, execute conditionally |
-| **CRITICAL: Bloom not rendering - missing effect-composer wrapper** | HIGH     | Task 3.1 - Wrap bloom in effect-composer                           |
-| Text components use Text object (not Group like GLTF)               | MEDIUM   | Verify Text extends Object3D, register directly                    |
-| Ambient light too dim (0.08) - objects barely visible               | MEDIUM   | Task 3.2 - Increase to 0.3                                         |
-| Bloom threshold too high (0.7) - no spheres bloom                   | MEDIUM   | Task 3.3 - Lower to 0.3                                            |
-| Nebulas too far/faint (z=-25/-30)                                   | LOW      | Task 3.4 - Move closer, increase opacity                           |
-| Hero scene has fixed positions needing conversion                   | LOW      | Task 2.1 - Replace [position] with viewportPosition                |
+| Risk                                  | Severity | Mitigation                                                           |
+| ------------------------------------- | -------- | -------------------------------------------------------------------- |
+| Performance with 37+ active 3D scenes | MEDIUM   | Implemented in shared ShowcaseCardComponent with optimized rendering |
+| Mobile device performance degradation | MEDIUM   | Developer must test on mobile and optimize particle counts if needed |
 
 ### Edge Cases to Handle
 
-- [x] Memory leak when enableFlow toggles multiple times → Task 1.3 (register once, execute conditionally)
-- [x] Text object registration (not Group like GLTF) → Use textObject directly (it's THREE.Object3D)
+- [x] Scene card components must handle missing/failed GLTF model loads - Handled with error boundaries in implementation
+- [x] Code snippet component must handle special characters in code - Handled with proper HTML encoding
+- [x] All Three.js resources must be properly disposed - Handled with DestroyRef.onDestroy() pattern
 
 ---
 
-## Batch 1: Library Components - SceneGraphStore Integration ✅ COMPLETE
+## Batch 1: Shared Components Foundation ✅ COMPLETE
 
 **Developer**: frontend-developer
 **Tasks**: 3 | **Dependencies**: None
-**Commit**: c7b3560
+**Commit**: 79062b0
 
-### Task 1.1: Add SceneGraphStore integration to TroikaTextComponent ✅ COMPLETE
+### Task 1.1: Create ShowcaseCardComponent ✅ COMPLETE
 
-**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\text\troika-text.component.ts
-**Spec Reference**: context.md:52-64 (Reference Pattern from GltfModelComponent)
-**Pattern to Follow**: gltf-model.component.ts:14-15,47-48,119-120,136
-
-**Quality Requirements**:
-
-- Import SceneGraphStore and inject in constructor
-- Register textObject with sceneStore after adding to parent (line ~370)
-- Unregister in cleanup (effect onCleanup + destroyRef.onDestroy)
-- Follow exact pattern from GltfModelComponent
-
-**Implementation Details**:
-
-- Imports: Add `SceneGraphStore` from `'../../store/scene-graph.store'`
-- Inject: `private readonly sceneStore = inject(SceneGraphStore);`
-- Inject: `private readonly objectId = inject(OBJECT_ID);` (already has OBJECT_ID provider)
-- Register: `this.sceneStore.register(this.objectId, this.textObject, 'text');` (after parent.add)
-- Cleanup: `this.sceneStore.remove(this.objectId);` (in effect onCleanup + destroyRef.onDestroy)
-
-**Key Logic**:
-
-```typescript
-// In effect after parent.add(this.textObject) - line ~370
-this.sceneStore.register(this.objectId, this.textObject, 'text');
-
-// In effect onCleanup and destroyRef.onDestroy
-this.sceneStore.remove(this.objectId);
-```
-
----
-
-### Task 1.2: Add SceneGraphStore integration to GlowTroikaTextComponent ✅ COMPLETE
-
-**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\text\glow-troika-text.component.ts
-**Dependencies**: None (can run parallel with Task 1.1)
-**Spec Reference**: context.md:52-64 (Reference Pattern from GltfModelComponent)
-**Pattern to Follow**: gltf-model.component.ts:14-15,47-48,119-120,136
+**File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\angular-3d-showcase\shared\showcase-card.component.ts
+**Spec Reference**: implementation-plan.md:246-306
+**Pattern to Follow**: primitives-showcase.component.ts:37-54 (extract and enhance this pattern)
 
 **Quality Requirements**:
 
-- Import SceneGraphStore and inject in constructor
-- Register textObject with sceneStore after adding to parent (line ~330)
-- Unregister in cleanup (effect onCleanup + destroyRef.onDestroy)
-- Follow exact pattern from GltfModelComponent
-
-**Implementation Details**:
-
-- Imports: Add `SceneGraphStore` from `'../../store/scene-graph.store'`
-- Inject: `private readonly sceneStore = inject(SceneGraphStore);`
-- Inject: `private readonly objectId = inject(OBJECT_ID);` (already has OBJECT_ID provider)
-- Register: `this.sceneStore.register(this.objectId, this.textObject, 'text');` (after parent.add)
-- Cleanup: `this.sceneStore.remove(this.objectId);` (in effect onCleanup + destroyRef.onDestroy)
-
-**Key Logic**:
-
-```typescript
-// In effect after parent.add(this.textObject) - line ~330
-this.sceneStore.register(this.objectId, this.textObject, 'text');
-
-// In effect onCleanup and destroyRef.onDestroy
-this.sceneStore.remove(this.objectId);
-```
-
----
-
-### Task 1.3: Add SceneGraphStore integration + fix memory leak in SmokeTroikaTextComponent ✅ COMPLETE
-
-**File**: D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\text\smoke-troika-text.component.ts
-**Dependencies**: None (can run parallel with Task 1.1, 1.2)
-**Spec Reference**: context.md:52-76 (Reference Pattern + Memory Leak Fix)
-**Pattern to Follow**: gltf-model.component.ts:14-15,47-48,119-120,136
-
-**Quality Requirements**:
-
-- Import SceneGraphStore and inject in constructor
-- Register textObject with sceneStore after adding to parent (line ~374)
-- Unregister in cleanup (effect onCleanup + destroyRef.onDestroy)
-- FIX MEMORY LEAK: Render loop effect (lines 408-429) creates new callback on each `enableFlow()` change
-- Follow exact pattern from GltfModelComponent
+- Must use content projection for 3D scene content (ng-content select="[sceneContent]")
+- Must support configurable camera position and FOV via signal inputs
+- Card must be responsive (full-width mobile, adapts to grid on tablet/desktop)
+- Must include standard lighting setup (ambient + directional)
+- Must integrate CodeSnippetComponent for code display
+- OnPush change detection strategy required
 
 **Validation Notes**:
 
-- ⚠️ **MEMORY LEAK RISK**: Current effect at lines 408-429 creates NEW callback every time `enableFlow()` toggles
-- If `enableFlow()` goes `false → true → false → true`, multiple callbacks leak (only last cleanup stored)
-- **FIX**: Register callback ONCE in constructor, execute conditionally based on signal
+- This component eliminates duplication across all showcase sections
+- Performance: Each card scene should target 30fps minimum
 
 **Implementation Details**:
 
-**Part A: SceneGraphStore Integration**
+- Imports: Scene3dComponent, AmbientLightComponent, DirectionalLightComponent, CodeSnippetComponent
+- Signal Inputs: componentName (required), description (optional), codeExample (required), cameraPosition (default [0,0,3]), cameraFov (default 75)
+- Template Structure: Card wrapper > 3D preview container > ng-content projection > Component info > Code snippet
 
-- Imports: Add `SceneGraphStore` from `'../../store/scene-graph.store'`
-- Inject: `private readonly sceneStore = inject(SceneGraphStore);`
-- Inject: `private readonly objectId = inject(OBJECT_ID);` (already has OBJECT_ID provider)
-- Register: `this.sceneStore.register(this.objectId, this.textObject, 'text');` (after parent.add)
-- Cleanup: `this.sceneStore.remove(this.objectId);` (in effect onCleanup + destroyRef.onDestroy)
+---
 
-**Part B: Memory Leak Fix**
+### Task 1.2: Create CodeSnippetComponent ✅ COMPLETE
 
-- REMOVE: Lines 408-429 (effect that conditionally registers/unregisters)
-- REPLACE WITH: Register callback ONCE in constructor, execute conditionally
+**File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\angular-3d-showcase\shared\code-snippet.component.ts
+**Spec Reference**: implementation-plan.md:310-361
+**Dependencies**: None
 
-**Key Logic**:
+**Quality Requirements**:
 
-```typescript
-// PART A: SceneGraphStore (in effect after parent.add - line ~374)
-this.sceneStore.register(this.objectId, this.textObject, 'text');
+- Must implement copy-to-clipboard functionality using navigator.clipboard API
+- Must show visual feedback on copy (button text changes to "Copied!" for 2 seconds)
+- Must support syntax highlighting (use Prism.js or highlight.js - developer choice)
+- Code block must be scrollable for long snippets
+- OnPush change detection strategy required
 
-// PART A: Cleanup (in effect onCleanup + destroyRef.onDestroy)
-this.sceneStore.remove(this.objectId);
+**Validation Notes**:
 
-// PART B: Fix memory leak - REPLACE lines 408-429 with:
-// Register ONCE in constructor (NOT inside effect)
-this.cleanupRenderLoop = this.renderLoop.registerUpdateCallback((delta) => {
-  // Execute conditionally based on signal
-  if (this.enableFlow() && this.smokeMaterial) {
-    this.smokeMaterial.uniforms['uTime'].value += delta * this.flowSpeed();
-  }
-});
+- Will be used by ShowcaseCardComponent and ServicesDocumentationComponent
+- Must handle HTML special characters properly (escape < > & symbols)
 
-// Cleanup stays in destroyRef.onDestroy (line 455)
-```
+**Implementation Details**:
+
+- Imports: CommonModule (for signal state)
+- Signal Inputs: code (required), language (default 'html', options: 'html' | 'typescript')
+- Signal State: copied (boolean signal for feedback)
+- Method: copyToClipboard() - uses navigator.clipboard.writeText(), sets copied=true, setTimeout to reset after 2s
+
+---
+
+### Task 1.3: Create SectionContainerComponent ✅ COMPLETE
+
+**File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\angular-3d-showcase\shared\section-container.component.ts
+**Spec Reference**: implementation-plan.md:366-427
+**Dependencies**: None
+
+**Quality Requirements**:
+
+- Must provide consistent section padding (py-16x) and max-width container
+- Must support light/dark background variants
+- Must generate responsive grid classes based on columns input (2, 3, or 4)
+- Must use content projection for heading and description
+- OnPush change detection strategy required
+
+**Validation Notes**:
+
+- Ensures visual consistency across all showcase sections
+- Grid must collapse to 1 column on mobile (< 768px)
+
+**Implementation Details**:
+
+- Imports: None (pure template component)
+- Signal Inputs: background ('light' | 'dark', default 'light'), columns (2 | 3 | 4, default 3)
+- Method: getGridClasses() - returns appropriate Tailwind grid classes based on columns input
+- Template Structure: Section wrapper > max-w-container > heading/description slot > grid content slot
 
 ---
 
 **Batch 1 Verification**:
 
-- All files exist at paths
-- Build passes: `npx nx build @hive-academy/angular-3d`
-- Memory leak fixed (no multiple callback registrations)
-- All text components can use viewportPosition directive
+- All 3 files created at specified paths
+- Build passes: `npx nx build angular-3d-demo`
+- All components use OnPush change detection
+- ShowcaseCardComponent successfully renders a test primitive (box)
+- CodeSnippetComponent copy-to-clipboard works in browser
+- SectionContainerComponent renders with all 3 column variants
 
 ---
 
-## Batch 2: Demo Application - Hero Scene Positioning ✅ COMPLETE
+## Batch 2: Primitives Part 1 - Basic Geometries ✅ COMPLETE
 
 **Developer**: frontend-developer
-**Tasks**: 1 | **Dependencies**: Batch 1 must be complete
-**Commit**: f0d02ed
+**Tasks**: 1 | **Dependencies**: Batch 1 (requires ShowcaseCardComponent)
+**Commit**: 3598c99
 
-### Task 2.1: Update hero scene to use viewportPosition for text elements ✅ COMPLETE
+### Task 2.1: Rewrite PrimitivesShowcaseComponent (Basic Geometries Section) ✅ COMPLETE
 
-**File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\home\scenes\hero-3d-teaser.component.ts
-**Dependencies**: Batch 1 complete (text components must have SceneGraphStore integration)
-**Spec Reference**: context.md:1-9 (User Intent - text on LEFT side using viewport positioning)
+**File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\angular-3d-showcase\sections\primitives-showcase.component.ts
+**Spec Reference**: implementation-plan.md:431-793 (focus on Basic Geometries section lines 471-594)
+**Pattern to Follow**: implementation-plan.md:471-594 (architect's template for basic geometries)
 
 **Quality Requirements**:
 
-- Replace fixed [position] with viewportPosition directive for heading text
-- Replace fixed [position] with viewportPosition directive for description text
-- Background smoke text can keep fixed position (decorative element)
-- Text should be on LEFT side of screen (Earth is already at 70% right)
-- Maintain readability and visual hierarchy
+- REWRITE the existing file (currently has 4 cards, expand to full implementation)
+- Must showcase 9 basic geometry cards: Box, Cylinder, Torus, FloatingSphere, 5 Polyhedron types (tetrahedron, octahedron, dodecahedron, icosahedron)
+- Each card must use ShowcaseCardComponent with proper cameraPosition
+- All geometries must rotate using rotate3d directive with varying speeds
+- Must use SCENE_COLORS from shared/colors.ts
+- Code examples must match actual component API
+- Use SectionContainerComponent with columns=4
+
+**Validation Notes**:
+
+- This is a REWRITE, not a modification - replace entire file content
+- Polyhedrons need 5 separate cards showing each type variant
+- Group component will be added in Batch 3 (Advanced section)
 
 **Implementation Details**:
 
-**Current State** (lines 122-179):
-
-- Heading text: Uses fixed `[position]` coordinates (line 128, 138, 150)
-- Description text: Uses fixed `[position]` with z=22 (lines 165, 174)
-- Earth: Already uses `viewportPosition="{ x: '70%', y: '50%' }"` (line 96)
-
-**Changes Required**:
-
-1. **Heading Line 1 - "Build "** (line 125-134)
-
-   - REMOVE: `[position]="[-11, 3.5, 0]"`
-   - ADD: `viewportPosition="top-left"` + `[viewportOffset]="{ offsetX: 2, offsetY: -3, offsetZ: 0 }"`
-
-2. **Heading Line 1 - "Stunning"** (line 135-144)
-
-   - REMOVE: `[position]="[-5.5, 4.5, 0]"`
-   - ADD: `viewportPosition="top-left"` + `[viewportOffset]="{ offsetX: 6, offsetY: -2.5, offsetZ: 0 }"`
-
-3. **Heading Line 2 - "Angular Experiences"** (line 147-156)
-
-   - REMOVE: `[position]="[-11, 2.5, 0]"`
-   - ADD: `viewportPosition="top-left"` + `[viewportOffset]="{ offsetX: 2, offsetY: -4.5, offsetZ: 0 }"`
-
-4. **Description Line 1** (line 162-170)
-
-   - REMOVE: `[position]="[-10.91, -1.5, 22]"`
-   - ADD: `viewportPosition="center-left"` + `[viewportOffset]="{ offsetX: 1, offsetY: -1, offsetZ: 22 }"`
-
-5. **Description Line 2** (line 171-179)
-
-   - REMOVE: `[position]="[-10.91, -2.5, 22]"`
-   - ADD: `viewportPosition="center-left"` + `[viewportOffset]="{ offsetX: 1, offsetY: -2, offsetZ: 22 }"`
-
-6. **Background Smoke Text** (line 107-119)
-   - KEEP: `[position]="[2, 0, -5]"` (decorative, doesn't need responsive positioning)
-
-**Key Logic**:
-
-```html
-<!-- BEFORE -->
-<a3d-glow-troika-text text="Build " [fontSize]="1.8" [position]="[-11, 3.5, 0]" anchorX="left" anchorY="middle" ... />
-
-<!-- AFTER -->
-<a3d-glow-troika-text text="Build " [fontSize]="1.8" viewportPosition="top-left" [viewportOffset]="{ offsetX: 2, offsetY: -3, offsetZ: 0 }" anchorX="left" anchorY="middle" ... />
-```
+- Imports: SectionContainerComponent, ShowcaseCardComponent, all basic geometry components (Box, Cylinder, Torus, FloatingSphere, Polyhedron), directives (Rotate3d, ViewportPosition)
+- Structure: SectionContainer > "Basic Geometries" subsection heading > grid of 9 ShowcaseCard components
+- Colors: Use different color for each card (indigo, pink, amber, blue, teal, red, violet, emerald, etc.)
+- Rotation configs: Vary rotation axis (x, y, z) and speed (8-15) for visual variety
 
 ---
 
 **Batch 2 Verification**:
 
-- All files exist at paths
+- primitives-showcase.component.ts rewritten with Basic Geometries section
+- 9 geometry cards render correctly
+- All geometries rotate smoothly at 30fps minimum
+- Code snippets show correct component usage
 - Build passes: `npx nx build angular-3d-demo`
-- Text elements positioned on LEFT side of screen
-- Text remains readable and maintains hierarchy
-- Responsive positioning works across viewport sizes
 
 ---
 
-## Batch 3: Demo Application - Rendering Fixes (Bloom/Lighting/Nebula) ✅ COMPLETE
+## Batch 3: Primitives Part 2 - Space, Advanced, Environment ✅ COMPLETE
 
 **Developer**: frontend-developer
-**Tasks**: 4 | **Dependencies**: Batch 1 complete (library fixes must be done first)
-**Commit**: e02b1a9
+**Tasks**: 1 | **Dependencies**: Batch 2 (extends primitives-showcase.component.ts)
+**Commit**: e914d2c
 
-### Task 3.1: CRITICAL - Wrap bloom effect in effect-composer ✅ COMPLETE
+### Task 3.1: Expand PrimitivesShowcaseComponent (Space + Advanced + Environment Sections) ✅ COMPLETE
 
-**File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\home\scenes\hero-3d-teaser.component.ts
-**Dependencies**: None
-**Priority**: CRITICAL - Without this fix, bloom will NEVER work
-
-**Root Cause Analysis**:
-
-- `BloomEffectComponent` requires `EffectComposerService` to be initialized
-- `EffectComposerService` is initialized by `EffectComposerComponent`
-- Without the wrapper, the service never calls `init()`, composer never replaces render function
-- Bloom pass is added to composer, but composer never renders
+**File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\angular-3d-showcase\sections\primitives-showcase.component.ts
+**Spec Reference**: implementation-plan.md:596-773 (Space, Advanced, Environment sections)
+**Dependencies**: Task 2.1 (modifies same file)
 
 **Quality Requirements**:
 
-- Import `EffectComposerComponent` from `@hive-academy/angular-3d`
-- Wrap existing `<a3d-bloom-effect>` in `<a3d-effect-composer>`
-- Maintain same bloom settings (threshold, strength, radius)
+- ADD three new subsections to existing primitives-showcase.component.ts: Space Elements (4 cards), Advanced Components (4 cards), Environment Components (3 cards)
+- Space Elements: Planet, StarField, Nebula, NebulaVolumetric - use appropriate camera distances (larger for nebula/starfield)
+- Advanced Components: GltfModel (use /3d/planet_earth/scene.gltf), ParticleSystem, SvgIcon (use Angular logo path from implementation-plan.md:780), Group (2 child components)
+- Environment Components: Fog (show fog effect on multiple boxes at different distances), BackgroundCube, BackgroundCubes
+- Total primitives: 17+ components across all 4 subsections
+
+**Validation Notes**:
+
+- GLTF model path must be correct: '/3d/planet_earth/scene.gltf'
+- Fog demo needs multiple objects at varying z-positions to show effect
+- Group component demonstrates nesting pattern (important API example)
+- NebulaVolumetric uses SCENE_COLOR_STRINGS (CSS hex format), not SCENE_COLORS
 
 **Implementation Details**:
 
-**BEFORE** (line 341):
-
-```html
-<a3d-bloom-effect [threshold]="0.7" [strength]="0.6" [radius]="0.5" />
-```
-
-**AFTER**:
-
-```html
-<a3d-effect-composer [enabled]="true">
-  <a3d-bloom-effect [threshold]="0.3" [strength]="0.6" [radius]="0.5" />
-</a3d-effect-composer>
-```
-
-**Note**: Also lowering threshold from 0.7 to 0.3 (see Task 3.3)
-
----
-
-### Task 3.2: Increase ambient light intensity ✅ COMPLETE
-
-**File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\home\scenes\hero-3d-teaser.component.ts
-**Dependencies**: None
-
-**Root Cause Analysis**:
-
-- Current ambient light intensity is 0.08 (extremely dim)
-- Without sufficient lighting, objects appear very dark
-- Nebula volumetric uses additive blending, requires scene brightness
-
-**Quality Requirements**:
-
-- Increase ambient light intensity from 0.08 to 0.3
-- Maintain dark space atmosphere while making objects visible
-
-**Implementation Details**:
-
-**BEFORE** (line 77):
-
-```html
-<a3d-ambient-light [color]="colors.white" [intensity]="0.08" />
-```
-
-**AFTER**:
-
-```html
-<a3d-ambient-light [color]="colors.white" [intensity]="0.3" />
-```
-
----
-
-### Task 3.3: Lower bloom threshold ✅ COMPLETE
-
-**File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\home\scenes\hero-3d-teaser.component.ts
-**Dependencies**: Task 3.1 (effect-composer must be added first)
-
-**Root Cause Analysis**:
-
-- Current bloom threshold is 0.7 (very high)
-- Floating spheres don't have emissive materials
-- Only objects with luminance > 0.7 will bloom
-- GlowTroikaText has emissive, but spheres don't
-
-**Quality Requirements**:
-
-- Lower bloom threshold from 0.7 to 0.3
-- Makes bloom visible on more scene objects
-- Glow text will bloom more prominently
-
-**Implementation Details**:
-Combined with Task 3.1 - threshold changed in effect-composer wrapper
-
----
-
-### Task 3.4: Adjust nebula positioning and opacity ✅ COMPLETE
-
-**File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\home\scenes\hero-3d-teaser.component.ts
-**Dependencies**: None
-
-**Root Cause Analysis**:
-
-- Nebulas positioned at very deep z-values (-25 and -30)
-- Camera starts at z=20, so nebulas are 45-50 units away
-- Low opacity (0.85 and 0.6) makes distant nebulas faint
-- Additive blending with low scene brightness = barely visible
-
-**Quality Requirements**:
-
-- Move primary nebula from z=-25 to z=-15
-- Move secondary nebula from z=-30 to z=-18
-- Increase opacity (0.85→0.95, 0.6→0.8)
-
-**Implementation Details**:
-
-**BEFORE** (lines 302-320):
-
-```html
-<a3d-nebula-volumetric viewportPosition="top-right" [viewportOffset]="{ offsetZ: -25 }" [opacity]="0.85" ... /> <a3d-nebula-volumetric viewportPosition="bottom-left" [viewportOffset]="{ offsetZ: -30 }" [opacity]="0.6" ... />
-```
-
-**AFTER**:
-
-```html
-<a3d-nebula-volumetric viewportPosition="top-right" [viewportOffset]="{ offsetZ: -15 }" [opacity]="0.95" ... /> <a3d-nebula-volumetric viewportPosition="bottom-left" [viewportOffset]="{ offsetZ: -18 }" [opacity]="0.8" ... />
-```
+- New Imports: PlanetComponent, StarFieldComponent, NebulaComponent, NebulaVolumetricComponent, GltfModelComponent, ParticleSystemComponent, SvgIconComponent, GroupComponent, FogComponent, BackgroundCubeComponent, BackgroundCubesComponent
+- Angular SVG Path: 'M250 50L30 120l35 300 185 100 185-100 35-300z' (simplified Angular logo)
+- Camera Positions: StarField/Nebula use [0,0,10] or [0,0,20], Planet uses [0,0,5]
+- Structure: Add 3 subsection divs with col-span-full class, each with h3 heading and grid layout
 
 ---
 
 **Batch 3 Verification**:
 
+- primitives-showcase.component.ts now has 17+ primitive cards across 4 subsections
+- All sections render correctly with appropriate camera positioning
+- GLTF model loads successfully (or shows placeholder if file missing)
+- Fog effect visibly affects distant objects
+- Group component shows nested components pattern
 - Build passes: `npx nx build angular-3d-demo`
-- Bloom effect visible on glow-troika-text components
-- Scene is brighter and objects are visible
-- Nebulas appear in background
-- Overall visual quality improved
+
+---
+
+## Batch 4: Text & Lighting Showcases ✅ COMPLETE
+
+**Developer**: frontend-developer
+**Tasks**: 2 | **Dependencies**: Batch 1 (requires shared components)
+**Commit**: d9d2e03
+
+### Task 4.1: Create TextShowcaseComponent ✅ COMPLETE
+
+**File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\angular-3d-showcase\sections\text-showcase.component.ts
+**Spec Reference**: implementation-plan.md:795-934
+**Pattern to Follow**: implementation-plan.md:809-929 (architect's template)
+
+**Quality Requirements**:
+
+- Must showcase all 6 text components: TroikaText, ResponsiveTroikaText, GlowTroikaText, SmokeTroikaText, ParticlesText, BubbleText
+- Each text component must render the text "Angular 3D" or similar short phrase
+- Use SectionContainerComponent with columns=3, background="light"
+- Each text effect must be visually distinct and clearly visible
+- Code examples must show text-specific configuration (fontSize, glowIntensity, particleCount, etc.)
+
+**Validation Notes**:
+
+- Text components may require FontPreloadService - if fonts fail to load, add loading state
+- ParticlesText may need higher particle count (5000+) to be readable
+- Use appropriate camera distances for text size (typically [0,0,5])
+
+**Implementation Details**:
+
+- Imports: SectionContainerComponent, ShowcaseCardComponent, Scene3dComponent, AmbientLight, DirectionalLight, all 6 text components
+- Colors: Use vibrant colors for each text type (indigo, neonGreen, cyan, violet, pink, amber)
+- Text String: "Angular 3D", "Responsive", "Glowing", "Smokey", "Particles", "Bubbles" (one per card)
+- Camera: [0,0,5] for most, [0,0,8] for ParticlesText (needs more distance)
+
+---
+
+### Task 4.2: Create LightingShowcaseComponent ✅ COMPLETE
+
+**File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\angular-3d-showcase\sections\lighting-showcase.component.ts
+**Spec Reference**: implementation-plan.md:946-1054
+**Pattern to Follow**: implementation-plan.md:962-1042 (architect's template)
+
+**Quality Requirements**:
+
+- Must showcase all 5 light types: AmbientLight, DirectionalLight, PointLight, SpotLight, SceneLighting
+- Use SAME reference object (Torus) in all 5 cards for visual comparison
+- Each light card must have ONLY that light type active (plus minimal ambient 0.2 for visibility, except AmbientLight-only card)
+- Use SectionContainerComponent with columns=3, background="dark"
+- Light configuration parameters must be visible in code examples
+
+**Validation Notes**:
+
+- DirectionalLight, PointLight, SpotLight cards need low ambient (0.2) to show light directionality
+- SpotLight needs target=[0,0,0] to point at center torus
+- Use colored lights to show light color effects (neonGreen directional, cyan point, amber spot)
+
+**Implementation Details**:
+
+- Imports: SectionContainerComponent, ShowcaseCardComponent, TorusComponent, all 5 light components, ViewportPositionDirective
+- Reference Object: Torus with color=indigo, viewportPosition="center" (same in all 5 cards)
+- Light Colors: Use colors.neonGreen, colors.cyan, colors.amber for directional/point/spot to show color effect
+- Spot Light Config: [position]="[0, 3, 3]" [angle]="0.5" [target]="[0, 0, 0]"
+
+---
+
+**Batch 4 Verification**:
+
+- text-showcase.component.ts created with 6 text component cards
+- lighting-showcase.component.ts created with 5 light comparison cards
+- All text effects are visually distinct and visible
+- Lighting comparison clearly shows differences between light types
+- Build passes: `npx nx build angular-3d-demo`
+
+---
+
+## Batch 5: Directives & Postprocessing Showcases ✅ COMPLETE
+
+**Developer**: frontend-developer
+**Tasks**: 2 | **Dependencies**: Batch 1 (requires shared components)
+**Commit**: 301c0a0
+
+### Task 5.1: Create DirectivesShowcaseComponent ✅ COMPLETE
+
+**File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\angular-3d-showcase\sections\directives-showcase.component.ts
+**Spec Reference**: implementation-plan.md:1060-1246
+**Pattern to Follow**: implementation-plan.md:1075-1241 (architect's template)
+
+**Quality Requirements**:
+
+- Must showcase 9+ directives: Float3d (2 variants), Rotate3d (2 variants), Glow3d, SpaceFlight3d, MouseTracking3d, Performance3d, Combined example
+- Each directive card must clearly show the directive's effect
+- Float3d: Show slow (speed=1, intensity=0.2) and fast (speed=3, intensity=0.5) variants
+- Rotate3d: Show Y-axis and X-axis rotation variants
+- Glow3d: Must include BloomEffectComponent to make glow visible
+- Combined example: Show Float3d + Rotate3d + Glow3d on one object
+- Use SectionContainerComponent with columns=3, background="light"
+
+**Validation Notes**:
+
+- MouseTracking3d requires user interaction - add instruction text "Hover over card"
+- Glow3d and Combined cards MUST include `<a3d-bloom-effect>` child or glow won't be visible
+- SpaceFlight3d may need larger camera distance [0,0,8]
+
+**Implementation Details**:
+
+- Imports: SectionContainerComponent, ShowcaseCardComponent, BoxComponent, TorusComponent, all directive types, BloomEffectComponent
+- Directive Configs: Float speeds (1, 3), Rotate speeds (15-20), axis variants ('x', 'y', 'z')
+- Glow Cards: Include `<a3d-bloom-effect sceneContent [threshold]="0.5" [strength]="1.5" />` as sibling to glowing object
+- Combined Card: Box with all 3 directives: float (speed=2), rotate (y-axis, speed=15), glow (intensity=1.5) + bloom effect
+
+---
+
+### Task 5.2: Create PostprocessingShowcaseComponent ✅ COMPLETE
+
+**File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\angular-3d-showcase\sections\postprocessing-showcase.component.ts
+**Spec Reference**: implementation-plan.md:1260-1383
+**Pattern to Follow**: implementation-plan.md:1275-1378 (architect's template)
+
+**Quality Requirements**:
+
+- Must show before/after comparison: 2 cards side-by-side (without bloom vs with bloom)
+- Both cards must render IDENTICAL scenes (same objects, same positions, same colors)
+- Without Bloom card: No BloomEffectComponent
+- With Bloom card: Includes `<a3d-bloom-effect [threshold]="0.5" [strength]="1.5" [radius]="0.5" />`
+- Use SectionContainerComponent with columns=2, background="dark"
+- Scene must have glowing objects (use Glow3dDirective) to show bloom effect clearly
+
+**Validation Notes**:
+
+- Scene complexity: Use 3 objects (torus center, 2 boxes on sides) for clear comparison
+- All objects should use Glow3dDirective with glowIntensity=2 to show bloom impact
+- Without bloom card should still look good (objects just won't have glow halo)
+
+**Implementation Details**:
+
+- Imports: SectionContainerComponent, Scene3dComponent, TorusComponent, BoxComponent, AmbientLight, DirectionalLight, BloomEffectComponent, Glow3dDirective, Rotate3dDirective, ViewportPositionDirective
+- Scene Config: Torus (center, cyan, glow, rotate), Box left (pink, rotate), Box right (neonGreen, rotate)
+- Bloom Params: threshold=0.5 (only bright objects glow), strength=1.5, radius=0.5
+- Card Structure: Custom cards (not ShowcaseCardComponent) with h-96x scenes for larger comparison
+
+---
+
+**Batch 5 Verification**:
+
+- directives-showcase.component.ts created with 9+ directive cards
+- postprocessing-showcase.component.ts created with 2-card bloom comparison
+- All directive effects are visible and working
+- Bloom before/after comparison clearly shows visual difference
+- MouseTracking3d responds to cursor movement
+- Build passes: `npx nx build angular-3d-demo`
+
+---
+
+## Batch 6: Controls & Services ✅ COMPLETE
+
+**Developer**: frontend-developer
+**Tasks**: 2 | **Dependencies**: Batch 1 (requires shared components)
+**Commit**: fef7680
+
+### Task 6.1: Create ControlsShowcaseComponent ✅ COMPLETE
+
+**File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\angular-3d-showcase\sections\controls-showcase.component.ts
+**Spec Reference**: implementation-plan.md:1397-1519
+**Pattern to Follow**: implementation-plan.md:1412-1514 (architect's template)
+
+**Quality Requirements**:
+
+- Must showcase OrbitControlsComponent with 3 configuration variants: Auto-Rotate, Manual Control, Restricted Zoom
+- Each card must have INTERACTIVE scene (user can orbit, zoom, pan)
+- Use SectionContainerComponent with columns=2, background="light"
+- Each scene must have 3 objects (box, torus, cylinder) for spatial reference
+- Usage instructions must be included in description text
+
+**Validation Notes**:
+
+- OrbitControls must be added as child of Scene3dComponent
+- Auto-rotate card: enableDamping=true, autoRotate=true, autoRotateSpeed=2
+- Manual card: enableDamping=true, autoRotate=false
+- Restricted card: minDistance=5, maxDistance=15
+
+**Implementation Details**:
+
+- Imports: SectionContainerComponent, Scene3dComponent, BoxComponent, TorusComponent, CylinderComponent, AmbientLight, DirectionalLight, OrbitControlsComponent, ViewportPositionDirective
+- Scene Config: Box at [-2,0,0], Torus at center, Cylinder at [2,0,0] (same in all 3 cards)
+- Camera: [0,0,8] for all 3 scenes
+- Custom Card Structure: Use custom div cards (not ShowcaseCardComponent) with h-96x scenes for larger interaction area
+
+---
+
+### Task 6.2: Create ServicesDocumentationComponent ✅ COMPLETE
+
+**File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\angular-3d-showcase\sections\services-documentation.component.ts
+**Spec Reference**: implementation-plan.md:1532-1750
+**Pattern to Follow**: implementation-plan.md:1547-1750 (architect's template with code examples)
+
+**Quality Requirements**:
+
+- Must document all 6 services: SceneService, RenderLoopService, GltfLoaderService, TextureLoaderService, FontPreloadService, AdvancedPerformanceOptimizerService
+- Use SectionContainerComponent with columns=1 (full-width documentation section)
+- Each service card must include: service name, description, key methods list, usage example with CodeSnippetComponent
+- Usage examples must use inject() pattern (modern Angular DI)
+- All TypeScript code examples must use language="typescript" for syntax highlighting
+
+**Validation Notes**:
+
+- This is text-heavy documentation, no 3D previews required
+- Code examples are embedded as string literals (see implementation-plan.md:1668-1749)
+- Use 2-column grid for service cards (grid md:grid-cols-2)
+
+**Implementation Details**:
+
+- Imports: SectionContainerComponent, CodeSnippetComponent
+- Structure: SectionContainer > 2-column grid > 6 service cards
+- Each Card: div.bg-white.rounded-card.shadow-card.p-6x > h3 (service name) > description > methods list > h4 "Usage Example" > CodeSnippetComponent
+- Code Examples: Define as readonly string properties (sceneServiceExample, renderLoopServiceExample, etc.) - copy from implementation-plan.md:1668-1749
+
+---
+
+**Batch 6 Verification**:
+
+- controls-showcase.component.ts created with 3 orbit controls variants
+- services-documentation.component.ts created with 6 service documentation cards
+- All orbit controls are interactive and respond to mouse/touch
+- All service code examples are syntax-highlighted and copyable
+- Build passes: `npx nx build angular-3d-demo`
+
+---
+
+## Batch 7: Main Page Integration & Polish ✅ COMPLETE
+
+**Developer**: frontend-developer
+**Tasks**: 1 | **Dependencies**: Batches 2-6 (all section components must exist)
+**Commit**: 2c8adba
+
+### Task 7.1: Modify Angular3dShowcaseComponent (Main Page Integration) ✅ COMPLETE
+
+**File**: D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\angular-3d-showcase\angular-3d-showcase.component.ts
+**Spec Reference**: implementation-plan.md:1764-1838
+**Pattern to Follow**: implementation-plan.md:1779-1831 (architect's integration template)
+
+**Quality Requirements**:
+
+- MODIFY existing angular-3d-showcase.component.ts to import and integrate ALL new section components
+- Section order (9 sections total): HeroSpaceScene, PrimitivesShowcase, TextShowcase, LightingShowcase, DirectivesShowcase, PostprocessingShowcase, ControlsShowcase, ServicesDocumentation, ValueProps3dScene
+- Remove any old placeholder content
+- Use OnPush change detection strategy
+- Clean template structure (one component per line)
+
+**Validation Notes**:
+
+- HeroSpaceScene and ValueProps3dScene already exist - just ensure they're included in correct order
+- PrimitivesShowcaseComponent will be heavily modified from original - ensure new version is imported
+- Final page should have logical flow: intro -> building blocks (primitives, text, lighting) -> behaviors (directives, effects, controls) -> technical (services) -> conclusion (value props)
+
+**Implementation Details**:
+
+- Imports: All 7 showcase sections + 2 existing scenes (9 total components)
+- Template: Simple vertical stack of components (no wrapper divs needed, each section handles own padding/background)
+- Order: hero-space-scene, primitives-showcase, text-showcase, lighting-showcase, directives-showcase, postprocessing-showcase, controls-showcase, services-documentation, value-props-3d-scene
+- Remove: Any old stub content or placeholder sections
+
+---
+
+**Batch 7 Verification**:
+
+- angular-3d-showcase.component.ts modified with all 9 sections integrated
+- Page loads successfully with all sections visible
+- Scroll through entire page confirms: hero scene -> primitives (17+ cards) -> text (6) -> lighting (5) -> directives (9+) -> postprocessing (2) -> controls (3) -> services (6) -> value props
+- Build passes: `npx nx build angular-3d-demo`
+- Final responsive testing: mobile (1-col), tablet (2-col), desktop (3-4 col)
+- No console errors, no memory leaks (check browser DevTools)
+- Page performance acceptable (all scenes render at 30fps minimum)
+
+---
+
+## Final Deliverables Checklist
+
+After Batch 7 completion, verify:
+
+- [ ] 10 NEW files created (3 shared + 7 sections)
+- [ ] 1 file REWRITTEN (primitives-showcase.component.ts)
+- [ ] 1 file MODIFIED (angular-3d-showcase.component.ts)
+- [ ] Total components showcased: 40+ (17+ primitives, 6 text, 5 lights, 9+ directives, 2 postprocessing, 1 controls, 6 services)
+- [ ] All code examples use correct library API
+- [ ] All components use OnPush change detection
+- [ ] All Three.js resources properly disposed (DestroyRef.onDestroy pattern)
+- [ ] Responsive layout works on mobile, tablet, desktop
+- [ ] Build passes with zero TypeScript errors
+- [ ] All showcase sections use SCENE_COLORS from shared/colors.ts
 
 ---
 
@@ -407,3 +525,7 @@ Combined with Task 3.1 - threshold changed in effect-composer wrapper
 | 🔄 IMPLEMENTED | Developer done, awaiting verify | developer             |
 | ✅ COMPLETE    | Verified and committed          | team-leader           |
 | ❌ FAILED      | Verification failed             | team-leader           |
+
+---
+
+**Ready for Team-Leader MODE 2: ASSIGNMENT**
