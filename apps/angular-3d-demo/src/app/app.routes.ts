@@ -72,6 +72,14 @@ export const appRoutes: Routes = [
           ),
         title: 'Controls | Angular-3D',
       },
+      {
+        path: 'performance',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/sections/performance-section.component'
+          ),
+        title: 'Performance | Angular-3D',
+      },
     ],
   },
   {

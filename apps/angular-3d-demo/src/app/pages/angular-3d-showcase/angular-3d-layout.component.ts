@@ -138,5 +138,6 @@ export default class Angular3dLayoutComponent {
     { path: 'directives', label: 'Directives', icon: '⚡' },
     { path: 'postprocessing', label: 'Effects', icon: '✨' },
     { path: 'controls', label: 'Controls', icon: '🎮' },
+    { path: 'performance', label: 'Performance', icon: '⚡' },
   ];
 }

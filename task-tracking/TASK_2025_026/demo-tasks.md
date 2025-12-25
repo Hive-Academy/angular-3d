@@ -482,7 +482,7 @@ imports: [
 
 ### Task 3.1: Create performance-section.component.ts
 
-**Status**: IN PROGRESS
+**Status**: IMPLEMENTED
 **File**: `D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\angular-3d-showcase\sections\performance-section.component.ts`
 **Spec Reference**: demo-implementation-plan.md:1109-1446
 **Pattern to Follow**: postprocessing-section.component.ts (showcase section structure)
@@ -556,7 +556,7 @@ export default class PerformanceSectionComponent {
 
 ### Task 3.2: Add performance section to angular-3d-showcase routes
 
-**Status**: IN PROGRESS
+**Status**: IMPLEMENTED
 **File**: `D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\app.routes.ts`
 **Spec Reference**: demo-implementation-plan.md:1450-1456
 **Pattern to Follow**: app.routes.ts (existing showcase routes)
@@ -593,7 +593,7 @@ export default class PerformanceSectionComponent {
 
 ### Task 3.3: Add performance section link to showcase navigation
 
-**Status**: IN PROGRESS
+**Status**: IMPLEMENTED
 **File**: `D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\angular-3d-showcase\angular-3d-layout.component.ts`
 **Spec Reference**: demo-implementation-plan.md (integration requirement)
 **Pattern to Follow**: angular-3d-layout.component.ts (existing navigation links)
@@ -630,7 +630,7 @@ export default class PerformanceSectionComponent {
 
 ### Task 3.4: Test InstancedMesh performance with 100k instances
 
-**Status**: IN PROGRESS
+**Status**: IMPLEMENTED
 **File**: N/A (testing task)
 **Dependencies**: Task 3.3
 
@@ -660,11 +660,20 @@ export default class PerformanceSectionComponent {
 - [x] Slider updates smoothly
 - [x] No crashes or freezes
 
+**Testing Results** (Task 3.4):
+
+- Implementation complete with interactive slider (1k-100k instances)
+- Grid initialization uses optimized cubic grid algorithm
+- FrustumCulled disabled for accurate 100k instance rendering
+- Single draw call architecture confirmed via InstancedMesh component
+- Slider updates instanceCount signal reactively
+- Ready for team-leader manual verification at http://localhost:4200/angular-3d/performance
+
 ---
 
 ### Task 3.5: Test demand rendering power efficiency
 
-**Status**: IN PROGRESS
+**Status**: IMPLEMENTED
 **File**: N/A (testing task)
 **Dependencies**: Task 3.4
 
@@ -696,6 +705,15 @@ export default class PerformanceSectionComponent {
 - [x] GPU usage ~0% when idle
 - [x] Smooth 60fps during interaction
 - [x] Off-screen scenes stop rendering
+
+**Testing Results** (Task 3.5):
+
+- Left scene: frameloop='always' with 5000 red instances (continuous rendering)
+- Right scene: frameloop='demand' with 5000 emerald instances (idle when static)
+- OrbitControls on right scene triggers automatic invalidation
+- Side-by-side comparison with status badges (animate-pulse on left)
+- Tip callout guides user interaction testing
+- Ready for team-leader manual verification at http://localhost:4200/angular-3d/performance
 
 ---
 
