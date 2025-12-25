@@ -10,6 +10,7 @@ import {
   GroupComponent,
   AmbientLightComponent,
   DirectionalLightComponent,
+  EnvironmentComponent,
   Rotate3dDirective,
 } from '@hive-academy/angular-3d';
 import { SCENE_COLORS } from '../../../shared/colors';
@@ -35,6 +36,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
     GroupComponent,
     AmbientLightComponent,
     DirectionalLightComponent,
+    EnvironmentComponent,
     Rotate3dDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -172,17 +174,27 @@ import { SCENE_COLORS } from '../../../shared/colors';
         </div>
 
         <div class="grid md:grid-cols-2 gap-8x">
-          <!-- GLTF Model -->
+          <!-- GLTF Model with HDRI -->
           <div>
             <div
               class="aspect-video rounded-2xl overflow-hidden bg-background-dark shadow-xl"
             >
               <a3d-scene-3d [cameraPosition]="[0, 0, 6]">
-                <a3d-ambient-light [intensity]="0.5" />
+                <!-- Reduced manual lighting (environment provides IBL) -->
+                <a3d-ambient-light [intensity]="0.2" />
                 <a3d-directional-light
                   [position]="[3, 3, 3]"
-                  [intensity]="0.8"
+                  [intensity]="0.4"
                 />
+
+                <!-- Studio HDRI for product-shot look -->
+                <a3d-environment
+                  [preset]="'studio'"
+                  [intensity]="1.5"
+                  [background]="true"
+                  [blur]="0.5"
+                />
+
                 <a3d-gltf-model
                   [modelPath]="'/3d/planet_earth/scene.gltf'"
                   [scale]="1.2"
@@ -193,7 +205,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
             </div>
             <div class="mt-3x text-center">
               <code class="text-sm text-cyan-400"
-                >&lt;a3d-gltf-model /&gt;</code
+                >&lt;a3d-gltf-model /&gt; + &lt;a3d-environment /&gt;</code
               >
             </div>
           </div>
