@@ -79,3 +79,80 @@ And join the Nx community:
 - [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
 - [Our Youtube channel](https://www.youtube.com/@nxdevtools)
 - [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+
+## Publishing Packages
+
+This workspace uses Nx release tooling for automated versioning and publishing.
+
+### Automated Publishing (Recommended)
+
+When you're ready to release a new version:
+
+1. **Create and push version tag**:
+
+   ```bash
+   # For angular-3d library
+   npm run release:version -- --projects=@hive-academy/angular-3d
+   git push && git push --tags
+
+   # For angular-gsap library
+   npm run release:version -- --projects=@hive-academy/angular-gsap
+   git push && git push --tags
+   ```
+
+2. **Automated CI/CD**:
+   - GitHub Actions workflow triggers on tag push
+   - Runs full validation pipeline (lint, test, typecheck, build)
+   - Publishes to npm with provenance
+   - Creates GitHub Release with changelog
+
+### Manual Publishing
+
+For emergency hotfixes or when automation is unavailable:
+
+1. **Set NPM token**:
+
+   ```bash
+   export NPM_TOKEN=<your_npm_token>
+   ```
+
+2. **Preview changes** (dry-run):
+
+   ```bash
+   npm run release:version:dry -- --projects=@hive-academy/angular-3d
+   ```
+
+3. **Create version**:
+
+   ```bash
+   npm run release:version -- --projects=@hive-academy/angular-3d
+   ```
+
+4. **Publish to npm**:
+
+   ```bash
+   npm run release:publish -- --projects=@hive-academy/angular-3d
+   ```
+
+5. **Push to GitHub**:
+   ```bash
+   git push && git push --tags
+   ```
+
+### Versioning Strategy
+
+- **Independent versioning**: Each library has its own version number
+- **Semantic versioning**: MAJOR.MINOR.PATCH
+  - MAJOR: Breaking changes
+  - MINOR: New features (backward compatible)
+  - PATCH: Bug fixes (backward compatible)
+- **Automatic bump detection**: Based on conventional commits
+  - `feat:` → MINOR bump
+  - `fix:` → PATCH bump
+  - `BREAKING CHANGE:` → MAJOR bump
+
+### Requirements
+
+- **NPM Token**: Set `NPM_TOKEN` environment variable (manual publish) or GitHub secret (CI)
+- **Conventional Commits**: All commits must follow commitlint rules
+- **Validation**: All tests, lints, and builds must pass before publish

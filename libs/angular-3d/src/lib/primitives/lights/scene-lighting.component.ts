@@ -41,6 +41,7 @@ import {
   inject,
   input,
   afterNextRender,
+  signal,
 } from '@angular/core';
 import * as THREE from 'three';
 import { NG_3D_PARENT } from '../../types/tokens';
@@ -140,6 +141,9 @@ export class SceneLightingComponent implements OnDestroy {
   private ambientLight: THREE.AmbientLight | null = null;
   private lights: THREE.Light[] = [];
 
+  /** Signal to track if render has happened */
+  private readonly isRendered = signal(false);
+
   public constructor() {
     // Reactive effect for ambient intensity override
     effect(() => {
@@ -161,15 +165,23 @@ export class SceneLightingComponent implements OnDestroy {
       }
     });
 
-    // Reactive effect for preset changes
+    // Mark as rendered after first render
     afterNextRender(() => {
-      effect((onCleanup) => {
-        const preset = this.preset();
-        this.refreshLights(preset);
+      this.isRendered.set(true);
+    });
 
-        onCleanup(() => {
-          this.disposeLights();
-        });
+    // Reactive effect for preset changes (runs in injection context)
+    effect((onCleanup) => {
+      // Skip if not yet rendered
+      if (!this.isRendered()) {
+        return;
+      }
+
+      const preset = this.preset();
+      this.refreshLights(preset);
+
+      onCleanup(() => {
+        this.disposeLights();
       });
     });
   }

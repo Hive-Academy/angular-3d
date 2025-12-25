@@ -1,0 +1,73 @@
+name: Publish to NPM
+
+on:
+  push:
+    tags:
+      - '@hive-academy/angular-3d@*'
+      - '@hive-academy/angular-gsap@*'
+
+permissions:
+  contents: write      # For creating GitHub Releases
+  id-token: write      # For npm provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for changelog
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run validation pipeline
+        run: |
+          npx nx run-many -t lint
+          npx nx run-many -t test
+          npx nx run-many -t typecheck
+          npx nx run-many -t build
+
+      - name: Extract package name from tag
+        id: extract
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          PACKAGE_NAME=$(echo $TAG | sed 's/@.*//')
+          echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Publish to NPM with provenance
+        run: |
+          npx nx release publish --projects=${{ steps.extract.outputs.package_name }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
+
+      - name: Extract changelog for GitHub Release
+        id: changelog
+        run: |
+          VERSION=$(echo ${{ steps.extract.outputs.tag }} | sed 's/.*@//')
+          SECTION=$(sed -n "/## \[${{ steps.extract.outputs.tag }}\]/,/## \[/p" CHANGELOG.md | sed '$d')
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$SECTION" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: steps.changelog.outputs.notes != ''
+        with:
+          tag_name: ${{ steps.extract.outputs.tag }}
+          name: ${{ steps.extract.outputs.tag }}
+          body: ${{ steps.changelog.outputs.notes }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

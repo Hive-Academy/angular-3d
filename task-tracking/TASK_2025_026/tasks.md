@@ -508,7 +508,7 @@
 
 ### Task 6.1: Connect SSAO radius and intensity inputs to SSAOPass
 
-- **Status**: IMPLEMENTED
+- **Status**: COMPLETE
 - **Assigned**: backend-developer
 - **File(s)**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\postprocessing\effects\ssao-effect.component.ts`
 - **Description**: The `radius` and `intensity` inputs are declared but never applied to the SSAOPass. The SSAOPass uses `kernelRadius` internally for the radius concept. Either map the `radius` input to affect SSAOPass behavior properly, or rename/remove these misleading inputs. For intensity, SSAOPass output can be scaled via a custom post-pass or by adjusting the output blend.
@@ -525,7 +525,7 @@
 
 ### Task 6.2: Add LUT support to ColorGrading OR document as deferred
 
-- **Status**: IMPLEMENTED
+- **Status**: COMPLETE
 - **Assigned**: backend-developer
 - **File(s)**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\postprocessing\effects\color-grading-effect.component.ts`
 - **Description**: Requirements specified `[lut]` input for loading LUT textures but implementation omits it. Either implement LUT loading via TextureLoader and shader sampling, or explicitly document in JSDoc that LUT support is planned for a future version.
@@ -542,7 +542,7 @@
 
 ### Task 6.3: Add validation and error for invalid InstancedMesh count
 
-- **Status**: IMPLEMENTED
+- **Status**: COMPLETE
 - **Assigned**: backend-developer
 - **File(s)**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\instanced-mesh.component.ts`
 - **Description**: When `count <= 0`, the effect silently returns without any feedback. Add proper console.error to warn developers that count must be a positive number.
@@ -557,7 +557,7 @@
 
 ### Task 6.4: Add defensive check for DOF aspect ratio uniform
 
-- **Status**: IMPLEMENTED
+- **Status**: COMPLETE
 - **Assigned**: backend-developer
 - **File(s)**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\postprocessing\effects\dof-effect.component.ts`
 - **Description**: The aspect ratio update checks for `uniforms['aspect']` existence but should log a warning if the expected uniform is missing, as this could indicate a three-stdlib version incompatibility.
@@ -572,7 +572,7 @@
 
 ### Task 6.5: Migrate post-processing effects to DestroyRef pattern
 
-- **Status**: IMPLEMENTED
+- **Status**: COMPLETE
 - **Assigned**: backend-developer
 - **File(s)**:
   - `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\postprocessing\effects\dof-effect.component.ts`
@@ -592,7 +592,7 @@
 
 ### Task 6.6: Add precision qualifier to ColorGrading shader
 
-- **Status**: IMPLEMENTED
+- **Status**: COMPLETE
 - **Assigned**: backend-developer
 - **File(s)**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\postprocessing\effects\color-grading-effect.component.ts`
 - **Description**: The fragment shader lacks `precision mediump float;` declaration which may cause issues on some WebGL implementations, especially mobile devices.
@@ -606,7 +606,7 @@
 
 ### Task 6.7: Add isLoading check to Environment reload() method
 
-- **Status**: IMPLEMENTED
+- **Status**: COMPLETE
 - **Assigned**: backend-developer
 - **File(s)**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\environment.component.ts`
 - **Description**: The `reload()` method doesn't check if a load is already in progress before starting a new load. This can cause race conditions and resource leaks with multiple PMREMGenerator instances.
@@ -620,7 +620,7 @@
 
 ### Task 6.8: Document InstancedMesh count immutability
 
-- **Status**: IMPLEMENTED
+- **Status**: COMPLETE
 - **Assigned**: backend-developer
 - **File(s)**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\instanced-mesh.component.ts`
 - **Description**: When `count` input changes dynamically, the mesh is NOT recreated (guard at line 240). This is intentional for performance, but developers should be explicitly warned about this behavior.
@@ -682,4 +682,4 @@
 **Updated**: 2025-12-24
 **Author**: Team-Leader Agent
 **Task ID**: TASK_2025_026
-**Status**: BATCH 6 IMPLEMENTED (Review Fixes - Ready for team-leader verification)
+**Status**: ALL BATCHES COMPLETE

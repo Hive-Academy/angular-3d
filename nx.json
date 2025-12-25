@@ -80,7 +80,41 @@
   },
   "release": {
     "version": {
-      "preVersionCommand": "npx nx run-many -t build"
+      "preVersionCommand": "npx nx run-many -t build",
+      "git": {
+        "commitMessage": "chore(release): publish {version}",
+        "tagMessage": "Release {version}"
+      }
+    },
+    "changelog": {
+      "workspaceChangelog": {
+        "createRelease": "github",
+        "file": "CHANGELOG.md",
+        "renderOptions": {
+          "authors": false,
+          "commitReferences": true,
+          "versionTitleDate": true
+        }
+      },
+      "projectChangelogs": false,
+      "git": {
+        "commitMessage": "chore(release): update changelog for {version}"
+      }
+    },
+    "releaseTagPattern": "{projectName}@{version}",
+    "groups": {
+      "angular-3d": {
+        "projects": ["@hive-academy/angular-3d"],
+        "changelog": {
+          "createRelease": "github"
+        }
+      },
+      "angular-gsap": {
+        "projects": ["@hive-academy/angular-gsap"],
+        "changelog": {
+          "createRelease": "github"
+        }
+      }
     }
   },
   "tui": {

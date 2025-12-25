@@ -6,7 +6,11 @@
     "prepare": "husky",
     "lint:affected": "nx affected -t lint",
     "build:affected": "nx affected:build",
-    "typecheck:affected": "nx affected -t typecheck"
+    "typecheck:affected": "nx affected -t typecheck",
+    "release:version": "npx nx release version",
+    "release:version:dry": "npx nx release version --dry-run",
+    "release:publish": "npx nx release publish",
+    "release": "npx nx release"
   },
   "private": true,
   "dependencies": {

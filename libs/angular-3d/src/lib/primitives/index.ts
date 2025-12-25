@@ -13,6 +13,7 @@ export * from './polyhedron.component';
 export * from './star-field.component';
 export * from './svg-icon.component';
 export * from './torus.component';
+export * from './sphere.component';
 
 // Light components
 export * from './lights/ambient-light.component';
@@ -37,3 +38,6 @@ export * from './background-cubes.component';
 // Instancing and environment components
 export * from './instanced-mesh.component';
 export * from './environment.component';
+
+// Cloud components
+export * from './cloud-layer.component';

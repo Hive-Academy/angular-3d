@@ -3,136 +3,189 @@ import {
   Scene3dComponent,
   AmbientLightComponent,
   DirectionalLightComponent,
-  EnvironmentComponent,
   StarFieldComponent,
-  NebulaVolumetricComponent,
   PlanetComponent,
   Rotate3dDirective,
-  GltfModelComponent,
   OrbitControlsComponent,
   BloomEffectComponent,
-  ViewportPositionDirective,
+  EnvironmentComponent,
+  EffectComposerComponent,
+  DepthOfFieldEffectComponent,
 } from '@hive-academy/angular-3d';
-import { SCENE_COLORS } from '../../../shared/colors';
 
+/**
+ * Hero Space Scene - Cinematic Earth and Moon showcase
+ *
+ * A clean 3D space scene featuring:
+ * - Textured Earth with realistic surface and IBL reflections
+ * - Textured Moon orbiting in the distance
+ * - Multi-layer star fields for depth
+ * - HDRI environment for realistic reflections
+ * - DOF effect for cinematic focus
+ * - Bloom effects for atmospheric glow
+ */
 @Component({
   selector: 'app-hero-space-scene',
   imports: [
     Scene3dComponent,
     AmbientLightComponent,
     DirectionalLightComponent,
-    EnvironmentComponent,
     StarFieldComponent,
-    NebulaVolumetricComponent,
     PlanetComponent,
     Rotate3dDirective,
-    GltfModelComponent,
     OrbitControlsComponent,
     BloomEffectComponent,
-    ViewportPositionDirective,
+    EnvironmentComponent,
+    EffectComposerComponent,
+    DepthOfFieldEffectComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="relative min-h-screen bg-background-dark overflow-hidden">
-      <a3d-scene-3d [cameraPosition]="[0, 0, 20]" [cameraFov]="75">
-        <!-- Lights -->
-        <a3d-ambient-light [intensity]="0.5" />
+    <div
+      class="relative bg-background-dark overflow-hidden"
+      style="height: calc(100vh - 180px);"
+    >
+      <a3d-scene-3d
+        [cameraPosition]="[0, 2, 18]"
+        [cameraFov]="60"
+        [frameloop]="'demand'"
+      >
+        <!-- Ambient fill light -->
+        <a3d-ambient-light [intensity]="0.12" />
+
+        <!-- Main sun light from dramatic angle -->
         <a3d-directional-light
-          [position]="[10, 10, 5]"
-          [intensity]="1"
-          [color]="colors.neonGreen"
+          [position]="[15, 8, 10]"
+          [intensity]="1.6"
+          [color]="'#fff8f0'"
         />
 
-        <!-- HDRI Environment for IBL -->
+        <!-- Rim light for cinematic effect -->
+        <a3d-directional-light
+          [position]="[-10, 5, -5]"
+          [intensity]="0.25"
+          [color]="'#4a90d9'"
+        />
+
+        <!-- HDRI Environment for IBL reflections -->
         <a3d-environment
           [preset]="'night'"
           [intensity]="0.3"
           [background]="false"
         />
 
-        <!-- Multi-Layer Star Fields (creates depth parallax effect) -->
+        <!-- Multi-Layer Star Fields for depth parallax -->
         <!-- Layer 1: Close stars (larger, brighter) -->
         <a3d-star-field
-          [starCount]="3000"
-          [radius]="35"
-          [size]="0.03"
+          [starCount]="4000"
+          [radius]="40"
+          [size]="0.035"
           [multiSize]="true"
           [stellarColors]="true"
         />
 
         <!-- Layer 2: Mid-range stars -->
         <a3d-star-field
-          [starCount]="2000"
-          [radius]="45"
-          [size]="0.02"
+          [starCount]="3000"
+          [radius]="55"
+          [size]="0.025"
           [multiSize]="true"
           [stellarColors]="true"
         />
 
         <!-- Layer 3: Distant stars (smaller, dimmer) -->
         <a3d-star-field
-          [starCount]="2500"
-          [radius]="60"
-          [size]="0.015"
-          [opacity]="0.6"
+          [starCount]="3500"
+          [radius]="70"
+          [size]="0.018"
+          [opacity]="0.5"
           [multiSize]="true"
           [stellarColors]="true"
         />
 
-        <!-- Volumetric Nebula (atmospheric depth in top-right background) -->
-        <a3d-nebula-volumetric
-          [position]="[15, 10, -20]"
-          [width]="80"
-          [height]="40"
-          [primaryColor]="'#4a0080'"
-          [secondaryColor]="'#2a0050'"
-          [opacity]="0.3"
-        />
-
-        <!-- Moon (showcases PlanetComponent with glow and emissive features) -->
+        <!-- EARTH - Main focal point, slightly off-center -->
         <a3d-planet
-          [position]="[-8, 3, -5]"
-          [radius]="1.2"
-          [color]="'#aaaaaa'"
-          [emissive]="'#222222'"
-          [emissiveIntensity]="0.1"
+          [position]="[-2, 0, 0]"
+          [radius]="4"
+          [segments]="128"
+          [textureUrl]="'/earth.jpg'"
+          [metalness]="0.1"
+          [roughness]="0.8"
+          [emissive]="'#001122'"
+          [emissiveIntensity]="0.03"
           [glowIntensity]="0.5"
-          [glowColor]="'#ccccff'"
-        />
-
-        <!-- Earth Model -->
-        <a3d-gltf-model
-          [modelPath]="'/3d/planet_earth/scene.gltf'"
-          viewportPosition="center"
-          [scale]="2.5"
+          [glowColor]="'#4da6ff'"
+          [glowDistance]="12"
           rotate3d
-          [rotateConfig]="{ axis: 'y', speed: 60 }"
+          [rotateConfig]="{ axis: 'y', speed: 3 }"
         />
 
-        <!-- Controls -->
+        <!-- MOON - Upper right, smaller and distant -->
+        <a3d-planet
+          [position]="[8, 4, -8]"
+          [radius]="1.2"
+          [segments]="64"
+          [textureUrl]="'/moon.jpg'"
+          [metalness]="0.05"
+          [roughness]="0.95"
+          [emissive]="'#111111'"
+          [emissiveIntensity]="0.01"
+          [glowIntensity]="0.15"
+          [glowColor]="'#aaaacc'"
+          [glowDistance]="5"
+          rotate3d
+          [rotateConfig]="{ axis: 'y', speed: 2 }"
+        />
+
+        <!-- Interactive controls -->
         <a3d-orbit-controls
           [enableDamping]="true"
-          [dampingFactor]="0.05"
-          [minDistance]="5"
-          [maxDistance]="30"
+          [dampingFactor]="0.03"
+          [minDistance]="10"
+          [maxDistance]="40"
           [autoRotate]="true"
-          [autoRotateSpeed]="1.0"
+          [autoRotateSpeed]="0.3"
         />
 
-        <!-- Effects -->
-        <a3d-bloom-effect [threshold]="0.8" [strength]="0.8" [radius]="0.4" />
+        <!-- Post-processing effects -->
+        <a3d-effect-composer>
+          <!-- DOF for cinematic focus on Earth -->
+          <a3d-dof-effect [focus]="18" [aperture]="0.012" [maxblur]="0.005" />
+          <!-- Bloom for atmospheric glow -->
+          <a3d-bloom-effect [threshold]="0.7" [strength]="0.5" [radius]="0.4" />
+        </a3d-effect-composer>
       </a3d-scene-3d>
 
-      <!-- Overlay Text -->
-      <div class="absolute bottom-10x left-10x z-10">
-        <h1 class="text-display-lg text-white mb-2x">Angular-3D</h1>
-        <p class="text-headline-md text-text-secondary">
-          Component-based Three.js for Angular
+      <!-- Cinematic overlay text -->
+      <div class="absolute bottom-8x left-8x z-10 pointer-events-none">
+        <h1 class="text-display-lg text-white font-bold mb-2x drop-shadow-2xl">
+          <span class="text-gradient-cosmic">Angular-3D</span>
+        </h1>
+        <p class="text-headline-md text-white/80 drop-shadow-lg">
+          Stunning 3D experiences for Angular
         </p>
       </div>
     </div>
   `,
+  styles: [
+    `
+      :host {
+        display: block;
+      }
+
+      .text-gradient-cosmic {
+        background: linear-gradient(
+          135deg,
+          #6366f1 0%,
+          #8b5cf6 30%,
+          #ec4899 60%,
+          #f43f5e 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+    `,
+  ],
 })
-export class HeroSpaceSceneComponent {
-  public readonly colors = SCENE_COLORS;
-}
+export class HeroSpaceSceneComponent {}

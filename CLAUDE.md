@@ -154,6 +154,10 @@ import { ScrollAnimationDirective, HijackedScrollDirective } from '@hive-academy
 - Designing architecture (use software-architect)
 - Planning tasks (use project-manager)
 - Analyzing future improvements (use modernization-detector)
+- CI/CD pipelines (use devops-engineer)
+- Infrastructure automation (use devops-engineer)
+- Deployment workflows (use devops-engineer)
+- Package publishing (use devops-engineer)
 
 ### When You Can Work Directly (RARELY)
 
@@ -260,6 +264,20 @@ You: Present final summary - WORKFLOW COMPLETE <
 - **REFACTORING**: Architect USER VALIDATES Team Leader (3 modes) USER CHOOSES QA
 - **DOCUMENTATION**: PM USER VALIDATES Developer Style Reviewer
 - **RESEARCH**: Researcher [conditional implementation]
+- **DEVOPS**: PM USER VALIDATES Architect USER VALIDATES devops-engineer USER CHOOSES QA Modernization
+
+### DEVOPS Task Type Detection
+
+**Keywords that trigger DEVOPS strategy**:
+
+- "CI/CD", "pipeline", "GitHub Actions", "GitLab CI"
+- "deploy", "deployment", "release automation"
+- "Docker", "Dockerfile", "Kubernetes", "K8s"
+- "Terraform", "CloudFormation", "infrastructure"
+- "publish", "npm publish", "package registry"
+- "monitoring", "observability", "alerts"
+- "secrets", "Vault", "KMS"
+- "cloud", "AWS", "GCP", "Azure"
 
 ### Usage
 
@@ -340,18 +358,23 @@ You: Present final summary - WORKFLOW COMPLETE <
 
 ### Agent Selection Matrix
 
-| Request Type     | Agent Path                                      | Trigger                |
-| ---------------- | ----------------------------------------------- | ---------------------- |
-| Implement X      | project-manager → architect → team-leader → dev | New features           |
-| Fix bug          | team-leader → dev → test → review               | Bug reports            |
-| Research X       | researcher-expert → architect                   | Technical questions    |
-| Review style     | code-style-reviewer                             | Pattern checks         |
-| Review logic     | code-logic-reviewer                             | Completeness checks    |
-| Test X           | senior-tester                                   | Testing                |
-| Architecture     | software-architect                              | Design                 |
-| **Landing page** | **ui-ux-designer → technical-content-writer**   | **Marketing pages**    |
-| **Brand/visual** | **ui-ux-designer**                              | **Design system**      |
-| **Content**      | **technical-content-writer**                    | **Blogs, docs, video** |
+| Request Type     | Agent Path                                      | Trigger                         |
+| ---------------- | ----------------------------------------------- | ------------------------------- |
+| Implement X      | project-manager → architect → team-leader → dev | New features (application code) |
+| Fix bug          | team-leader → dev → test → review               | Bug reports                     |
+| Research X       | researcher-expert → architect                   | Technical questions             |
+| Review style     | code-style-reviewer                             | Pattern checks                  |
+| Review logic     | code-logic-reviewer                             | Completeness checks             |
+| Test X           | senior-tester                                   | Testing                         |
+| Architecture     | software-architect                              | Design                          |
+| **Landing page** | **ui-ux-designer → technical-content-writer**   | **Marketing pages**             |
+| **Brand/visual** | **ui-ux-designer**                              | **Design system**               |
+| **Content**      | **technical-content-writer**                    | **Blogs, docs, video**          |
+| **Deploy X**     | **PM → architect → devops-engineer**            | **Deployment, CI/CD, infra**    |
+| **Setup CI/CD**  | **devops-engineer**                             | **Pipeline automation**         |
+| **Publish X**    | **PM → architect → devops-engineer**            | **npm/Docker publishing**       |
+| **Monitor X**    | **devops-engineer**                             | **Observability, alerts**       |
+| **Optimize CI**  | **devops-engineer**                             | **Build speed, caching**        |
 
 **Default**: When uncertain, use `/orchestrate`
 
@@ -676,14 +699,13 @@ gh pr create --title "type(scope): description"
 ### Git Hooks
 
 **Pre-commit** (runs on `git commit`):
+
 1. **lint-staged** (no auto-stash): Format staged files via `npx nx format:write --uncommitted`
 2. **typecheck:affected**: Type-check changed projects via `npm run typecheck:affected`
 
-**Commit-msg** (validates commit message):
-3. **commitlint**: Validate commit message format against rules above
+**Commit-msg** (validates commit message): 3. **commitlint**: Validate commit message format against rules above
 
-**Pre-push** (runs on `git push`):
-4. **affected:build**: Build all affected projects via `npx nx affected:build`
+**Pre-push** (runs on `git push`): 4. **affected:build**: Build all affected projects via `npx nx affected:build`
 
 ### Commit Hook Failure Protocol
 

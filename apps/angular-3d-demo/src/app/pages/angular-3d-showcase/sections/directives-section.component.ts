@@ -214,6 +214,49 @@ import { SCENE_COLORS } from '../../../shared/colors';
           </div>
         </div>
       </section>
+
+      <!-- Space Flight Demo -->
+      <section class="max-w-container mx-auto px-4x">
+        <div class="text-center mb-8x">
+          <h2 class="text-display-md font-bold mb-2x">
+            Space Flight Animation
+          </h2>
+          <p class="text-text-secondary">
+            Multi-waypoint cinematic flight paths
+          </p>
+        </div>
+
+        <div class="max-w-2xl mx-auto">
+          <div
+            class="aspect-video rounded-2xl overflow-hidden bg-background-dark shadow-xl"
+          >
+            <a3d-scene-3d [cameraPosition]="[0, 0, 8]">
+              <a3d-ambient-light [intensity]="0.5" />
+              <a3d-directional-light [position]="[3, 3, 3]" [intensity]="0.8" />
+              <a3d-torus
+                [color]="colors.violet"
+                a3dSpaceFlight3d
+                [flightPath]="[
+                  { position: [2, 0, 0], duration: 2 },
+                  { position: [0, 0, 2], duration: 2 },
+                  { position: [-2, 0, 0], duration: 2 },
+                  { position: [0, 0, -2], duration: 2 }
+                ]"
+                [rotationsPerCycle]="4"
+                [loop]="true"
+              />
+            </a3d-scene-3d>
+          </div>
+          <div class="mt-3x text-center">
+            <code class="text-sm text-violet-400"
+              >&lt;a3d-torus a3dSpaceFlight3d [flightPath]="..." /&gt;</code
+            >
+            <p class="text-xs text-text-tertiary mt-1">
+              Object follows waypoints with smooth easing
+            </p>
+          </div>
+        </div>
+      </section>
     </div>
   `,
 })

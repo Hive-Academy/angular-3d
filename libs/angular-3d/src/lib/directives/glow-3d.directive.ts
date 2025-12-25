@@ -30,6 +30,7 @@ import {
   DestroyRef,
   afterNextRender,
   isDevMode,
+  signal,
 } from '@angular/core';
 import * as THREE from 'three';
 import { ColorRepresentation } from 'three';
@@ -104,32 +105,43 @@ export class Glow3dDirective {
   private glowMaterial: THREE.MeshBasicMaterial | null = null;
   private targetObject: THREE.Object3D | null = null;
 
+  /** Signal to track if render has happened */
+  private readonly isRendered = signal(false);
+
   public constructor() {
-    // Effect: Create glow when object is ready
+    // Mark as rendered after first render
     afterNextRender(() => {
-      effect(() => {
-        // Skip if no objectId
-        if (!this.objectId) {
-          if (isDevMode()) {
-            console.warn('[Glow3dDirective] No OBJECT_ID available');
-          }
-          return;
-        }
+      this.isRendered.set(true);
+    });
 
-        // Wait for object to be registered
-        if (!this.store.hasObject(this.objectId)) {
-          return;
-        }
+    // Effect: Create glow when object is ready (runs in injection context)
+    effect(() => {
+      // Skip if not yet rendered (signal read creates dependency)
+      if (!this.isRendered()) {
+        return;
+      }
 
-        // Get object from store (only once)
-        if (!this.targetObject) {
-          const storeObject = this.store.getObject(this.objectId);
-          if (!storeObject) return;
-
-          this.targetObject = storeObject;
-          this.createGlowEffect();
+      // Skip if no objectId
+      if (!this.objectId) {
+        if (isDevMode()) {
+          console.warn('[Glow3dDirective] No OBJECT_ID available');
         }
-      });
+        return;
+      }
+
+      // Wait for object to be registered
+      if (!this.store.hasObject(this.objectId)) {
+        return;
+      }
+
+      // Get object from store (only once)
+      if (!this.targetObject) {
+        const storeObject = this.store.getObject(this.objectId);
+        if (!storeObject) return;
+
+        this.targetObject = storeObject;
+        this.createGlowEffect();
+      }
     });
 
     // Effect: Update glow properties reactively

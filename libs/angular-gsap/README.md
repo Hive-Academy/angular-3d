@@ -23,7 +23,7 @@ A modern Angular library providing declarative, scroll-triggered animations usin
 ## 📦 Installation
 
 ```bash
-npm install @hive-academy/angular-gsap gsap
+npm install @hive-academy/angular-gsap gsap lenis
 ```
 
 **Peer Dependencies**:
@@ -31,6 +31,7 @@ npm install @hive-academy/angular-gsap gsap
 - `@angular/core`: ^20.3.0
 - `@angular/common`: ^20.3.0
 - `gsap`: ^3.12.0
+- `lenis`: ^1.3.16
 
 ---
 

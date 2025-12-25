@@ -80,6 +80,22 @@ export const appRoutes: Routes = [
           ),
         title: 'Performance | Angular-3D',
       },
+      {
+        path: 'hero-space',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/scenes/hero-space-scene.component'
+          ).then((m) => m.HeroSpaceSceneComponent),
+        title: 'Hero Space | Angular-3D',
+      },
+      {
+        path: 'clouds',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/scenes/cloud-hero-scene.component'
+          ).then((m) => m.CloudHeroSceneComponent),
+        title: 'Clouds | Angular-3D',
+      },
     ],
   },
   {

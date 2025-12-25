@@ -25,6 +25,10 @@
 - Designing architecture (use software-architect)
 - Planning tasks (use project-manager)
 - Analyzing future improvements (use modernization-detector)
+- CI/CD pipelines (use devops-engineer)
+- Infrastructure automation (use devops-engineer)
+- Deployment workflows (use devops-engineer)
+- Package publishing (use devops-engineer)
 
 ### When You Can Work Directly (RARELY)
 
@@ -131,6 +135,42 @@ You: Present final summary - WORKFLOW COMPLETE <
 - **REFACTORING**: Architect USER VALIDATES Team Leader (3 modes) USER CHOOSES QA
 - **DOCUMENTATION**: PM USER VALIDATES Developer Style Reviewer
 - **RESEARCH**: Researcher [conditional implementation]
+- **DEVOPS**: PM USER VALIDATES Architect USER VALIDATES devops-engineer USER CHOOSES QA Modernization
+
+### DEVOPS Task Type Detection
+
+**Keywords that trigger DEVOPS strategy**:
+
+- "CI/CD", "pipeline", "GitHub Actions", "GitLab CI"
+- "deploy", "deployment", "release automation"
+- "Docker", "Dockerfile", "Kubernetes", "K8s"
+- "Terraform", "CloudFormation", "infrastructure"
+- "publish", "npm publish", "package registry"
+- "monitoring", "observability", "alerts"
+- "secrets", "Vault", "KMS"
+- "cloud", "AWS", "GCP", "Azure"
+
+**DEVOPS Strategy Flow**:
+
+```
+Phase 1: project-manager → Creates task-description.md
+         ↓
+         USER VALIDATES ✋
+         ↓
+Phase 2: software-architect → Creates implementation-plan.md
+         ↓
+         USER VALIDATES ✋
+         ↓
+Phase 3: devops-engineer → Implements infrastructure
+         ↓
+         USER CHOOSES QA ✋
+         ↓
+Phase 4: [QA agents as chosen]
+         ↓
+Phase 5: User handles git
+         ↓
+Phase 6: modernization-detector → future-enhancements.md
+```
 
 ### Usage
 
@@ -211,18 +251,23 @@ You: Present final summary - WORKFLOW COMPLETE <
 
 ### Agent Selection Matrix
 
-| Request Type     | Agent Path                                      | Trigger                |
-| ---------------- | ----------------------------------------------- | ---------------------- |
-| Implement X      | project-manager → architect → team-leader → dev | New features           |
-| Fix bug          | team-leader → dev → test → review               | Bug reports            |
-| Research X       | researcher-expert → architect                   | Technical questions    |
-| Review style     | code-style-reviewer                             | Pattern checks         |
-| Review logic     | code-logic-reviewer                             | Completeness checks    |
-| Test X           | senior-tester                                   | Testing                |
-| Architecture     | software-architect                              | Design                 |
-| **Landing page** | **ui-ux-designer → technical-content-writer**   | **Marketing pages**    |
-| **Brand/visual** | **ui-ux-designer**                              | **Design system**      |
-| **Content**      | **technical-content-writer**                    | **Blogs, docs, video** |
+| Request Type     | Agent Path                                      | Trigger                         |
+| ---------------- | ----------------------------------------------- | ------------------------------- |
+| Implement X      | project-manager → architect → team-leader → dev | New features (application code) |
+| Fix bug          | team-leader → dev → test → review               | Bug reports                     |
+| Research X       | researcher-expert → architect                   | Technical questions             |
+| Review style     | code-style-reviewer                             | Pattern checks                  |
+| Review logic     | code-logic-reviewer                             | Completeness checks             |
+| Test X           | senior-tester                                   | Testing                         |
+| Architecture     | software-architect                              | Design                          |
+| **Landing page** | **ui-ux-designer → technical-content-writer**   | **Marketing pages**             |
+| **Brand/visual** | **ui-ux-designer**                              | **Design system**               |
+| **Content**      | **technical-content-writer**                    | **Blogs, docs, video**          |
+| **Deploy X**     | **PM → architect → devops-engineer**            | **Deployment, CI/CD, infra**    |
+| **Setup CI/CD**  | **devops-engineer**                             | **Pipeline automation**         |
+| **Publish X**    | **PM → architect → devops-engineer**            | **npm/Docker publishing**       |
+| **Monitor X**    | **devops-engineer**                             | **Observability, alerts**       |
+| **Optimize CI**  | **devops-engineer**                             | **Build speed, caching**        |
 
 **Default**: When uncertain, use `/orchestrate`
 
@@ -468,9 +513,9 @@ task-tracking/
 
 ### Allowed Scopes (REQUIRED)
 
-- `webview`: Webview (Angular SPA) changes
-- `vscode`: VS Code extension changes
-- `vscode-lm-tools`: VS Code LM tools library changes
+- `angular-3d`: @hive-academy/angular-3d library changes
+- `angular-gsap`: @hive-academy/angular-gsap library changes
+- `demo`: angular-3d-demo application changes
 - `deps`: Dependency updates
 - `release`: Release-related changes
 - `ci`: CI/CD changes
@@ -493,11 +538,14 @@ task-tracking/
 ### Valid Examples
 
 ```bash
-feat(webview): add semantic search for chat messages
-fix(vscode): resolve webview communication timeout issue
-docs(webview): update component usage examples
-refactor(hooks): simplify pre-commit validation
-chore(deps): update @angular/core to v20.1.2
+feat(angular-3d): add box component with material support
+fix(angular-gsap): resolve scroll trigger cleanup issue
+feat(demo): add hero section with 3d scene
+docs(angular-3d): update scene component usage examples
+refactor(angular-3d): simplify render loop service
+test(angular-gsap): add scroll animation directive tests
+chore(deps): update three.js to v0.182.0
+ci(release): add npm publish workflow
 ```
 
 ### Invalid Examples (WILL FAIL)
@@ -505,9 +553,9 @@ chore(deps): update @angular/core to v20.1.2
 ```bash
 L "Feature: Add search" # Wrong type, wrong case
 L "feat: Add search"    # Missing scope
-L "feat(search): Add search" # Invalid scope (not in allowed list), wrong case
-L "feat(webview): Add search." # Period at end
-L "feat(webview): Add Search" # Uppercase in subject
+L "feat(three): Add mesh helper" # Invalid scope (not in allowed list)
+L "feat(angular-3d): Add box." # Period at end
+L "feat(demo): Add New page" # Uppercase in subject
 ```
 
 ### Branch & PR Operations

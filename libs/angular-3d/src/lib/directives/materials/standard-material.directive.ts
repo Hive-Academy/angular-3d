@@ -16,6 +16,8 @@
  *   [metalness]="0.8"
  *   [roughness]="0.2"
  *   [wireframe]="false"
+ *   [emissive]="'#ff6b6b'"
+ *   [emissiveIntensity]="2"
  * />
  * ```
  */
@@ -75,6 +77,21 @@ export class StandardMaterialDirective {
    */
   public readonly roughness = input<number>(0.5);
 
+  /**
+   * Emissive color - light the material emits (hex number or CSS color string)
+   * Used with bloom postprocessing for glow effects.
+   * Default: 0x000000 (black, no emission)
+   */
+  public readonly emissive = input<number | string>(0x000000);
+
+  /**
+   * Emissive intensity multiplier.
+   * Values > 1 create bright emissive surfaces that trigger bloom.
+   * For bloom effect, use values like 2-5.
+   * Default: 1
+   */
+  public readonly emissiveIntensity = input<number>(1);
+
   /** Internal reference to created material */
   private material: THREE.MeshStandardMaterial | null = null;
 
@@ -85,6 +102,8 @@ export class StandardMaterialDirective {
       const wireframe = this.wireframe();
       const metalness = this.metalness();
       const roughness = this.roughness();
+      const emissive = this.emissive();
+      const emissiveIntensity = this.emissiveIntensity();
 
       if (!this.material) {
         this.material = new THREE.MeshStandardMaterial({
@@ -92,6 +111,8 @@ export class StandardMaterialDirective {
           wireframe,
           metalness,
           roughness,
+          emissive,
+          emissiveIntensity,
         });
         this.materialSignal.set(this.material);
       }
@@ -116,6 +137,11 @@ export class StandardMaterialDirective {
         // Update metalness and roughness directly (not in store interface yet)
         this.material.metalness = this.metalness();
         this.material.roughness = this.roughness();
+
+        // Update emissive properties
+        this.material.emissive = new THREE.Color(this.emissive());
+        this.material.emissiveIntensity = this.emissiveIntensity();
+
         this.material.needsUpdate = true;
       }
     });

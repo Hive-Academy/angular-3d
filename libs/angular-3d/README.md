@@ -1,6 +1,25 @@
-# angular-3d
+# @hive-academy/angular-3d
 
-This library was generated with [Nx](https://nx.dev).
+> 🎨 **Declarative Three.js components for Angular**
+
+A modern Angular library providing declarative, type-safe wrappers for Three.js. Build stunning 3D graphics experiences with familiar Angular patterns.
+
+## Installation
+
+```bash
+npm install @hive-academy/angular-3d three three-stdlib gsap maath troika-three-text
+```
+
+**Peer Dependencies**:
+
+- `@angular/core`: ~20.3.0
+- `@angular/common`: ~20.3.0
+- `three`: ^0.182.0
+- `three-stdlib`: ^2.35.0
+- `gsap`: ^3.14.2
+- `maath`: ^0.10.8
+- `troika-three-text`: ^0.52.4
+- `rxjs`: ~7.8.0
 
 ## Running unit tests
 

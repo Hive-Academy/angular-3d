@@ -75,7 +75,13 @@ export class BloomEffectComponent implements OnDestroy {
     effect(() => {
       // Create pass when resolution is available
       const renderer = this.sceneService.renderer();
-      if (renderer && !this.pass) {
+      const scene = this.sceneService.scene();
+      const camera = this.sceneService.camera();
+
+      if (renderer && scene && camera && !this.pass) {
+        // Initialize the composer first (if not already done)
+        this.composerService.init(renderer, scene, camera);
+
         const size = new THREE.Vector2();
         renderer.getSize(size);
 
@@ -87,6 +93,9 @@ export class BloomEffectComponent implements OnDestroy {
         );
 
         this.composerService.addPass(this.pass);
+
+        // Enable the composer to switch render function
+        this.composerService.enable();
       }
     });
 

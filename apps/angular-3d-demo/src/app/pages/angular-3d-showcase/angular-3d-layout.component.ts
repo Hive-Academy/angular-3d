@@ -120,10 +120,25 @@ interface SectionTab {
 
       .hide-scrollbar {
         -ms-overflow-style: none;
-        scrollbar-width: none;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+        padding-right: 2rem; /* Ensure last item is visible */
 
         &::-webkit-scrollbar {
-          display: none;
+          height: 4px;
+        }
+
+        &::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 4px;
+        }
+
+        &::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.4);
         }
       }
     `,
@@ -138,6 +153,8 @@ export default class Angular3dLayoutComponent {
     { path: 'directives', label: 'Directives', icon: '⚡' },
     { path: 'postprocessing', label: 'Effects', icon: '✨' },
     { path: 'controls', label: 'Controls', icon: '🎮' },
-    { path: 'performance', label: 'Performance', icon: '⚡' },
+    { path: 'performance', label: 'Performance', icon: '📊' },
+    { path: 'hero-space', label: 'Hero Space', icon: '🌍' },
+    { path: 'clouds', label: 'Clouds', icon: '☁️' },
   ];
 }

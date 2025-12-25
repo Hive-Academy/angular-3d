@@ -18,7 +18,9 @@ import { StandardMaterialDirective } from '../directives/materials/standard-mate
  *   [rotation]="[Math.PI / 2, 0, 0]"
  *   [args]="[10, 3, 16, 100]"
  *   [color]="'blue'"
- *   [wireframe]="false" />
+ *   [wireframe]="false"
+ *   [emissive]="'blue'"
+ *   [emissiveIntensity]="2" />
  * ```
  */
 @Component({
@@ -36,7 +38,10 @@ import { StandardMaterialDirective } from '../directives/materials/standard-mate
       directive: TransformDirective,
       inputs: ['position', 'rotation', 'scale'],
     },
-    { directive: StandardMaterialDirective, inputs: ['color', 'wireframe'] },
+    {
+      directive: StandardMaterialDirective,
+      inputs: ['color', 'wireframe', 'emissive', 'emissiveIntensity'],
+    },
   ],
 })
 export class TorusComponent {
@@ -49,4 +54,6 @@ export class TorusComponent {
   ]);
   public readonly color = input<number | string>('blue');
   public readonly wireframe = input<boolean>(false);
+  public readonly emissive = input<number | string>(0x000000);
+  public readonly emissiveIntensity = input<number>(1);
 }

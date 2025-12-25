@@ -40,6 +40,37 @@ FEATURE (Full Workflow):
 7. Git operations
 8. modernization-detector → Future enhancements
 
+---
+
+## Phase 2: Demo App Enhancements
+
+**Status**: 🔄 IN PROGRESS (starting 2025-12-25)
+**Research**: demo-enhancement-research.md (23 enhancement opportunities identified)
+
+### Phase 2 Scope
+
+Based on comprehensive research, implement demo app enhancements in 3 sub-phases:
+
+**Phase 2.1: Quick Wins (1-2 hours)**
+
+- Add HDRI to hero-3d-teaser.component.ts
+- Add DOF to hero-3d-teaser.component.ts
+- Demand rendering for value-props-3d-scene.component.ts
+- Demand rendering for text-showcase.component.ts
+
+**Phase 2.2: Showcase Expansions (4-6 hours)**
+
+- Expand postprocessing-showcase.component.ts (DOF, SSAO, Color Grading)
+- Add Environment to lighting-showcase.component.ts
+- Add HDRI to primitives-showcase.component.ts
+
+**Phase 2.3: New Showcase Sections (8-12 hours)**
+
+- Create performance-showcase.component.ts (InstancedMesh demo)
+- Create environment-showcase.component.ts (HDRI presets gallery)
+- Create shaders-showcase.component.ts (Custom shader examples)
+- Create cinematic-showcase.component.ts (Combined effects)
+
 ## Research Reference
 
 Full research report available at:
