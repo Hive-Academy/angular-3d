@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import {
   Scene3dComponent,
   InstancedMeshComponent,
@@ -19,12 +18,15 @@ import * as THREE from 'three';
  * Demonstrates performance optimizations:
  * - InstancedMesh: 100k+ objects with single draw call
  * - Demand rendering: Zero GPU usage when idle
+ *
+ * NOTE: Instance count is set at initialization and cannot be changed dynamically.
+ * Use preset buttons to switch between different instance counts.
  */
 @Component({
   selector: 'app-performance-section',
+  standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     Scene3dComponent,
     InstancedMeshComponent,
     BoxGeometryDirective,
@@ -92,33 +94,103 @@ import * as THREE from 'three';
             </div>
           </div>
 
-          <!-- InstancedMesh Approach (100,000 instances) -->
+          <!-- InstancedMesh Approach (50,000 instances) -->
           <div>
             <div
               class="aspect-video rounded-2xl overflow-hidden bg-background-dark shadow-xl relative"
             >
-              <a3d-scene-3d [cameraPosition]="[0, 0, 50]" [cameraFov]="60">
-                <a3d-ambient-light [intensity]="0.5" />
-                <a3d-directional-light
-                  [position]="[10, 10, 10]"
-                  [intensity]="0.8"
-                />
+              @if (selectedPreset() === '1k') {
+                <a3d-scene-3d [cameraPosition]="[0, 0, 50]" [cameraFov]="60">
+                  <a3d-ambient-light [intensity]="0.5" />
+                  <a3d-directional-light
+                    [position]="[10, 10, 10]"
+                    [intensity]="0.8"
+                  />
 
-                <!-- 100,000 instances - single draw call -->
-                <a3d-instanced-mesh
-                  [count]="instanceCount()"
-                  [frustumCulled]="false"
-                  (meshReady)="initInstancedGrid($event)"
-                >
-                  <ng-container a3dBoxGeometry [args]="[0.5, 0.5, 0.5]" />
-                  <ng-container a3dStandardMaterial [color]="colors.cyan" />
-                </a3d-instanced-mesh>
+                  <a3d-instanced-mesh
+                    [count]="presetCounts['1k']"
+                    [frustumCulled]="false"
+                    (meshReady)="initInstancedGrid($event)"
+                  >
+                    <ng-container a3dBoxGeometry [args]="[0.5, 0.5, 0.5]" />
+                    <ng-container a3dStandardMaterial [color]="colors.cyan" />
+                  </a3d-instanced-mesh>
 
-                <a3d-orbit-controls
-                  [enableDamping]="true"
-                  [dampingFactor]="0.05"
-                />
-              </a3d-scene-3d>
+                  <a3d-orbit-controls
+                    [enableDamping]="true"
+                    [dampingFactor]="0.05"
+                  />
+                </a3d-scene-3d>
+              }
+              @if (selectedPreset() === '10k') {
+                <a3d-scene-3d [cameraPosition]="[0, 0, 50]" [cameraFov]="60">
+                  <a3d-ambient-light [intensity]="0.5" />
+                  <a3d-directional-light
+                    [position]="[10, 10, 10]"
+                    [intensity]="0.8"
+                  />
+
+                  <a3d-instanced-mesh
+                    [count]="presetCounts['10k']"
+                    [frustumCulled]="false"
+                    (meshReady)="initInstancedGrid($event)"
+                  >
+                    <ng-container a3dBoxGeometry [args]="[0.5, 0.5, 0.5]" />
+                    <ng-container a3dStandardMaterial [color]="colors.cyan" />
+                  </a3d-instanced-mesh>
+
+                  <a3d-orbit-controls
+                    [enableDamping]="true"
+                    [dampingFactor]="0.05"
+                  />
+                </a3d-scene-3d>
+              }
+              @if (selectedPreset() === '50k') {
+                <a3d-scene-3d [cameraPosition]="[0, 0, 50]" [cameraFov]="60">
+                  <a3d-ambient-light [intensity]="0.5" />
+                  <a3d-directional-light
+                    [position]="[10, 10, 10]"
+                    [intensity]="0.8"
+                  />
+
+                  <a3d-instanced-mesh
+                    [count]="presetCounts['50k']"
+                    [frustumCulled]="false"
+                    (meshReady)="initInstancedGrid($event)"
+                  >
+                    <ng-container a3dBoxGeometry [args]="[0.5, 0.5, 0.5]" />
+                    <ng-container a3dStandardMaterial [color]="colors.cyan" />
+                  </a3d-instanced-mesh>
+
+                  <a3d-orbit-controls
+                    [enableDamping]="true"
+                    [dampingFactor]="0.05"
+                  />
+                </a3d-scene-3d>
+              }
+              @if (selectedPreset() === '100k') {
+                <a3d-scene-3d [cameraPosition]="[0, 0, 50]" [cameraFov]="60">
+                  <a3d-ambient-light [intensity]="0.5" />
+                  <a3d-directional-light
+                    [position]="[10, 10, 10]"
+                    [intensity]="0.8"
+                  />
+
+                  <a3d-instanced-mesh
+                    [count]="presetCounts['100k']"
+                    [frustumCulled]="false"
+                    (meshReady)="initInstancedGrid($event)"
+                  >
+                    <ng-container a3dBoxGeometry [args]="[0.5, 0.5, 0.5]" />
+                    <ng-container a3dStandardMaterial [color]="colors.cyan" />
+                  </a3d-instanced-mesh>
+
+                  <a3d-orbit-controls
+                    [enableDamping]="true"
+                    [dampingFactor]="0.05"
+                  />
+                </a3d-scene-3d>
+              }
 
               <!-- Badge: Draw Call -->
               <div
@@ -131,7 +203,7 @@ import * as THREE from 'three';
               <div
                 class="absolute top-4 right-4 px-3 py-1 bg-cyan-500/80 rounded-full text-xs font-medium text-white"
               >
-                {{ instanceCount().toLocaleString() }} instances
+                {{ presetCounts[selectedPreset()].toLocaleString() }} instances
               </div>
             </div>
             <div class="mt-3x p-4x bg-white/5 rounded-lg">
@@ -145,24 +217,40 @@ import * as THREE from 'three';
           </div>
         </div>
 
-        <!-- Interactive Instance Count Slider -->
+        <!-- Preset Buttons -->
         <div class="mt-8x max-w-2xl mx-auto">
-          <label class="block text-sm font-medium text-white mb-2">
-            Instance Count: {{ instanceCount().toLocaleString() }}
-          </label>
-          <input
-            type="range"
-            min="1000"
-            max="100000"
-            step="1000"
-            [ngModel]="instanceCount()"
-            (ngModelChange)="instanceCount.set($event)"
-            class="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer slider"
-          />
-          <div class="flex justify-between text-xs text-text-tertiary mt-1">
-            <span>1,000</span>
-            <span>100,000</span>
+          <p class="text-sm font-medium text-white mb-3 text-center">
+            Select Instance Count Preset:
+          </p>
+          <div class="flex gap-3 justify-center">
+            <button
+              (click)="selectedPreset.set('1k')"
+              [class]="selectedPreset() === '1k' ? 'px-6 py-3 rounded-lg font-medium transition-colors bg-cyan-500 text-white' : 'px-6 py-3 rounded-lg font-medium transition-colors bg-white/10 text-white hover:bg-white/20'"
+            >
+              1,000
+            </button>
+            <button
+              (click)="selectedPreset.set('10k')"
+              [class]="selectedPreset() === '10k' ? 'px-6 py-3 rounded-lg font-medium transition-colors bg-cyan-500 text-white' : 'px-6 py-3 rounded-lg font-medium transition-colors bg-white/10 text-white hover:bg-white/20'"
+            >
+              10,000
+            </button>
+            <button
+              (click)="selectedPreset.set('50k')"
+              [class]="selectedPreset() === '50k' ? 'px-6 py-3 rounded-lg font-medium transition-colors bg-cyan-500 text-white' : 'px-6 py-3 rounded-lg font-medium transition-colors bg-white/10 text-white hover:bg-white/20'"
+            >
+              50,000
+            </button>
+            <button
+              (click)="selectedPreset.set('100k')"
+              [class]="selectedPreset() === '100k' ? 'px-6 py-3 rounded-lg font-medium transition-colors bg-cyan-500 text-white' : 'px-6 py-3 rounded-lg font-medium transition-colors bg-white/10 text-white hover:bg-white/20'"
+            >
+              100,000
+            </button>
           </div>
+          <p class="text-xs text-text-tertiary mt-3 text-center">
+            Instance count is set at initialization. Changing presets recreates the mesh.
+          </p>
         </div>
       </section>
 
@@ -271,31 +359,18 @@ import * as THREE from 'three';
       </section>
     </div>
   `,
-  styles: [
-    `
-      .slider::-webkit-slider-thumb {
-        appearance: none;
-        width: 20px;
-        height: 20px;
-        background: #00d4ff;
-        cursor: pointer;
-        border-radius: 50%;
-      }
-
-      .slider::-moz-range-thumb {
-        width: 20px;
-        height: 20px;
-        background: #00d4ff;
-        cursor: pointer;
-        border-radius: 50%;
-        border: none;
-      }
-    `,
-  ],
 })
 export default class PerformanceSectionComponent {
   public readonly colors = SCENE_COLORS;
-  public readonly instanceCount = signal(50000);
+
+  // Preset selection for instance count
+  public readonly selectedPreset = signal<'1k' | '10k' | '50k' | '100k'>('50k');
+  public readonly presetCounts = {
+    '1k': 1000,
+    '10k': 10000,
+    '50k': 50000,
+    '100k': 100000,
+  } as const;
 
   /**
    * Initialize traditional grid (10x10x10 = 1000 cubes)
