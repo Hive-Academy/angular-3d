@@ -28,7 +28,11 @@ import { SCENE_COLORS } from '../../../shared/colors';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="relative min-h-screen bg-background-dark overflow-hidden">
-      <a3d-scene-3d [cameraPosition]="[0, 0, 15]" [cameraFov]="60">
+      <a3d-scene-3d
+        [cameraPosition]="[0, 0, 15]"
+        [cameraFov]="60"
+        [frameloop]="'demand'"
+      >
         <!--
           Z-DEPTH LAYERING CONVENTION:
           - Foreground (0 to -5): UI elements, text

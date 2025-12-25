@@ -2,8 +2,10 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
   AmbientLightComponent,
   BloomEffectComponent,
+  DepthOfFieldEffectComponent,
   DirectionalLightComponent,
   EffectComposerComponent,
+  EnvironmentComponent,
   Float3dDirective,
   FloatingSphereComponent,
   GltfModelComponent,
@@ -46,6 +48,7 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
     AmbientLightComponent,
     DirectionalLightComponent,
     PointLightComponent,
+    EnvironmentComponent,
     ViewportPositionDirective,
     Rotate3dDirective,
     Float3dDirective,
@@ -57,6 +60,7 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
     OrbitControlsComponent,
     EffectComposerComponent,
     BloomEffectComponent,
+    DepthOfFieldEffectComponent,
     FloatingSphereComponent,
     ScrollZoomCoordinatorDirective,
     ParticleTextComponent,
@@ -86,6 +90,14 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [position]="[-10, 5, 10]"
           [color]="colors.cyan"
           [intensity]="0.2"
+        />
+
+        <!-- HDRI Environment for IBL on PBR materials -->
+        <a3d-environment
+          [preset]="'night'"
+          [intensity]="0.5"
+          [background]="false"
+          [blur]="0.3"
         />
 
         <!-- ================================ -->
@@ -325,9 +337,13 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         />
 
         <!-- ================================ -->
-        <!-- POST-PROCESSING - Subtle Bloom for Smoke Effect -->
+        <!-- POST-PROCESSING - DOF + Bloom -->
         <!-- ================================ -->
         <a3d-effect-composer [enabled]="true">
+          <!-- Depth of Field - blurs distant stars, focuses on Earth -->
+          <a3d-dof-effect [focus]="20" [aperture]="0.015" [maxblur]="0.008" />
+
+          <!-- Bloom for glowing effects -->
           <a3d-bloom-effect [threshold]="0.5" [strength]="0.5" [radius]="0.5" />
         </a3d-effect-composer>
       </a3d-scene-3d>

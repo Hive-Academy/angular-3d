@@ -3,6 +3,7 @@ import {
   Scene3dComponent,
   AmbientLightComponent,
   DirectionalLightComponent,
+  EnvironmentComponent,
   StarFieldComponent,
   NebulaVolumetricComponent,
   PlanetComponent,
@@ -20,6 +21,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
     Scene3dComponent,
     AmbientLightComponent,
     DirectionalLightComponent,
+    EnvironmentComponent,
     StarFieldComponent,
     NebulaVolumetricComponent,
     PlanetComponent,
@@ -39,6 +41,13 @@ import { SCENE_COLORS } from '../../../shared/colors';
           [position]="[10, 10, 5]"
           [intensity]="1"
           [color]="colors.neonGreen"
+        />
+
+        <!-- HDRI Environment for IBL -->
+        <a3d-environment
+          [preset]="'night'"
+          [intensity]="0.3"
+          [background]="false"
         />
 
         <!-- Multi-Layer Star Fields (creates depth parallax effect) -->
