@@ -37,7 +37,7 @@
 **Developer**: frontend-developer
 **Tasks**: 4 | **Dependencies**: None (all library features complete)
 **Status**: COMPLETE
-**Commit**: [Pending verification]
+**Commit**: 739d127
 
 ### Task 1.1: Add HDRI Environment to hero-3d-teaser
 
@@ -255,11 +255,12 @@ imports: [
 
 **Developer**: frontend-developer
 **Tasks**: 3 | **Dependencies**: Batch 1 (Quick Wins complete)
-**Status**: PENDING
+**Status**: COMPLETE
+**Commit**: 4b5b087
 
 ### Task 2.1: Expand postprocessing-section with DOF, SSAO, Color Grading
 
-**Status**: PENDING
+**Status**: COMPLETE
 **File**: `D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\angular-3d-showcase\sections\postprocessing-section.component.ts`
 **Spec Reference**: demo-implementation-plan.md:365-690
 **Pattern to Follow**: postprocessing-section.component.ts:35-168 (existing bloom comparison structure)
@@ -341,7 +342,7 @@ imports: [
 
 ### Task 2.2: Add Environment/HDRI to lighting-section
 
-**Status**: PENDING
+**Status**: COMPLETE
 **File**: `D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\angular-3d-showcase\sections\lighting-section.component.ts`
 **Spec Reference**: demo-implementation-plan.md:693-961
 **Pattern to Follow**: lighting-section.component.ts:34-109 (existing 5-light comparison)
@@ -406,7 +407,7 @@ Each of 10 cards contains:
 
 ### Task 2.3: Add HDRI Background to primitives-section GLTF demo
 
-**Status**: PENDING
+**Status**: COMPLETE
 **File**: `D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\angular-3d-showcase\sections\primitives-section.component.ts`
 **Spec Reference**: demo-implementation-plan.md:964-1062
 **Pattern to Follow**: primitives-section.component.ts (existing GLTF model demo)
@@ -477,11 +478,11 @@ imports: [
 
 **Developer**: frontend-developer
 **Tasks**: 5 | **Dependencies**: Batch 2 (Showcase expansions complete)
-**Status**: PENDING
+**Status**: IN PROGRESS
 
 ### Task 3.1: Create performance-section.component.ts
 
-**Status**: PENDING
+**Status**: IN PROGRESS
 **File**: `D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\angular-3d-showcase\sections\performance-section.component.ts`
 **Spec Reference**: demo-implementation-plan.md:1109-1446
 **Pattern to Follow**: postprocessing-section.component.ts (showcase section structure)
@@ -555,7 +556,7 @@ export default class PerformanceSectionComponent {
 
 ### Task 3.2: Add performance section to angular-3d-showcase routes
 
-**Status**: PENDING
+**Status**: IN PROGRESS
 **File**: `D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\app.routes.ts`
 **Spec Reference**: demo-implementation-plan.md:1450-1456
 **Pattern to Follow**: app.routes.ts (existing showcase routes)
@@ -592,7 +593,7 @@ export default class PerformanceSectionComponent {
 
 ### Task 3.3: Add performance section link to showcase navigation
 
-**Status**: PENDING
+**Status**: IN PROGRESS
 **File**: `D:\projects\angular-3d-workspace\apps\angular-3d-demo\src\app\pages\angular-3d-showcase\angular-3d-layout.component.ts`
 **Spec Reference**: demo-implementation-plan.md (integration requirement)
 **Pattern to Follow**: angular-3d-layout.component.ts (existing navigation links)
@@ -629,7 +630,7 @@ export default class PerformanceSectionComponent {
 
 ### Task 3.4: Test InstancedMesh performance with 100k instances
 
-**Status**: PENDING
+**Status**: IN PROGRESS
 **File**: N/A (testing task)
 **Dependencies**: Task 3.3
 
@@ -663,7 +664,7 @@ export default class PerformanceSectionComponent {
 
 ### Task 3.5: Test demand rendering power efficiency
 
-**Status**: PENDING
+**Status**: IN PROGRESS
 **File**: N/A (testing task)
 **Dependencies**: Task 3.4
 
