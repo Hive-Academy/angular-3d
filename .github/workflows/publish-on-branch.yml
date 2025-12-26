@@ -1,0 +1,240 @@
+# BRANCH-BASED RELEASE WORKFLOW
+# This workflow is triggered when PRs are merged to release branches.
+# Use this for: Standard releases with PR review gate
+#
+# Release branches:
+# - release/angular-3d   -> Publishes @hive-academy/angular-3d
+# - release/angular-gsap -> Publishes @hive-academy/angular-gsap
+#
+# For emergency hotfixes without PR review, use the tag-based workflow:
+# - See .github/workflows/publish.yml
+
+name: Publish on Release Branch
+
+on:
+  push:
+    branches:
+      - 'release/angular-3d'
+      - 'release/angular-gsap'
+
+# Prevent concurrent publishes for same branch
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write     # For creating GitHub Releases and tags
+  id-token: write     # For npm provenance
+  pull-requests: read # For reading PR metadata
+
+jobs:
+  # Job 1: Determine which library to publish based on branch
+  determine-package:
+    runs-on: ubuntu-latest
+    outputs:
+      package_name: ${{ steps.detect.outputs.package_name }}
+      package_path: ${{ steps.detect.outputs.package_path }}
+      should_publish: ${{ steps.check-version.outputs.should_publish }}
+      version: ${{ steps.check-version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for version detection
+
+      - name: Detect package from branch
+        id: detect
+        shell: bash
+        run: |
+          BRANCH="${GITHUB_REF#refs/heads/}"
+          case "$BRANCH" in
+            "release/angular-3d")
+              echo "package_name=@hive-academy/angular-3d" >> $GITHUB_OUTPUT
+              echo "package_path=libs/angular-3d" >> $GITHUB_OUTPUT
+              ;;
+            "release/angular-gsap")
+              echo "package_name=@hive-academy/angular-gsap" >> $GITHUB_OUTPUT
+              echo "package_path=libs/angular-gsap" >> $GITHUB_OUTPUT
+              ;;
+            *)
+              echo "::error::Unknown release branch: $BRANCH"
+              exit 1
+              ;;
+          esac
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Check if version changed
+        id: check-version
+        shell: bash
+        run: |
+          # Get version from package.json in the library
+          CURRENT_VERSION=$(node -p "require('./${{ steps.detect.outputs.package_path }}/package.json').version")
+
+          # Check if this version is already published
+          PACKAGE_NAME="${{ steps.detect.outputs.package_name }}"
+          NPM_VERSION=$(npm view "$PACKAGE_NAME@$CURRENT_VERSION" version 2>/dev/null || echo "not-found")
+
+          if [ "$NPM_VERSION" = "$CURRENT_VERSION" ]; then
+            echo "Version $CURRENT_VERSION already published, skipping"
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+          else
+            echo "Version $CURRENT_VERSION not yet published"
+            echo "should_publish=true" >> $GITHUB_OUTPUT
+          fi
+
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+  # Job 2: Validate before publishing
+  validate-release:
+    needs: determine-package
+    if: needs.determine-package.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Verify NPM authentication
+        shell: bash
+        run: npm whoami
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Run validation pipeline
+        shell: bash
+        run: |
+          echo "::group::Linting"
+          npx nx run-many -t lint
+          echo "::endgroup::"
+
+          echo "::group::Testing"
+          npx nx run-many -t test
+          echo "::endgroup::"
+
+          echo "::group::Type Checking"
+          npx nx run-many -t typecheck
+          echo "::endgroup::"
+
+          echo "::group::Building"
+          npx nx run-many -t build
+          echo "::endgroup::"
+
+      - name: Validate build artifacts
+        shell: bash
+        run: |
+          PACKAGE_PATH="${{ needs.determine-package.outputs.package_path }}"
+          DIST_PATH="dist/$PACKAGE_PATH"
+
+          if [[ ! -d "$DIST_PATH" ]]; then
+            echo "::error::Build output not found at $DIST_PATH"
+            exit 1
+          fi
+
+          if [[ ! -f "$DIST_PATH/package.json" ]]; then
+            echo "::error::package.json not found in $DIST_PATH"
+            exit 1
+          fi
+
+          echo "Build artifacts validated successfully"
+
+  # Job 3: Publish to npm
+  publish:
+    needs: [determine-package, validate-release]
+    if: needs.determine-package.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Build packages
+        shell: bash
+        run: npx nx run-many -t build
+
+      - name: Publish to NPM with provenance
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 30
+          shell: bash
+          command: npx nx release publish --projects=${{ needs.determine-package.outputs.package_name }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
+
+      - name: Create git tag
+        shell: bash
+        run: |
+          VERSION="${{ needs.determine-package.outputs.version }}"
+          PACKAGE="${{ needs.determine-package.outputs.package_name }}"
+          TAG="${PACKAGE}@${VERSION}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create tag if it doesn't exist
+          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+            git tag -a "$TAG" -m "Release $TAG"
+            git push origin "$TAG"
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.determine-package.outputs.package_name }}@${{ needs.determine-package.outputs.version }}
+          name: ${{ needs.determine-package.outputs.package_name }}@${{ needs.determine-package.outputs.version }}
+          body: |
+            ## ${{ needs.determine-package.outputs.package_name }} v${{ needs.determine-package.outputs.version }}
+
+            Published via branch-based release workflow.
+
+            **Install:**
+            ```bash
+            npm install ${{ needs.determine-package.outputs.package_name }}@${{ needs.determine-package.outputs.version }}
+            ```
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Job 4: Skip notification when version unchanged
+  skip-notification:
+    needs: determine-package
+    if: needs.determine-package.outputs.should_publish == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log skip reason
+        shell: bash
+        run: |
+          echo "Skipping publish: version ${{ needs.determine-package.outputs.version }} already published"
+          echo "::notice::Version ${{ needs.determine-package.outputs.version }} already exists on npm, no publish needed"

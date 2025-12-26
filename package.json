@@ -10,7 +10,11 @@
     "release:version": "npx nx release version",
     "release:version:dry": "npx nx release version --dry-run",
     "release:publish": "npx nx release publish",
-    "release": "npx nx release"
+    "release": "npx nx release",
+    "release:prepare:a3d": "npx nx release version --projects=@hive-academy/angular-3d --skip-publish",
+    "release:prepare:gsap": "npx nx release version --projects=@hive-academy/angular-gsap --skip-publish",
+    "release:pr:a3d": "gh pr create --base release/angular-3d --head main --title \"release: angular-3d\" --body \"See CHANGELOG.md for changes.\"",
+    "release:pr:gsap": "gh pr create --base release/angular-gsap --head main --title \"release: angular-gsap\" --body \"See CHANGELOG.md for changes.\""
   },
   "private": true,
   "dependencies": {

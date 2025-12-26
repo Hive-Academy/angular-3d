@@ -1,3 +1,11 @@
+# TAG-BASED RELEASE WORKFLOW
+# This workflow is triggered when git tags are pushed.
+# Use this for: Emergency hotfixes, automated releases
+#
+# For standard releases with PR review, use the branch-based workflow:
+# - Create PR to release/angular-3d or release/angular-gsap
+# - See docs/publishing/README.md for details
+
 name: Publish to NPM
 
 on:
