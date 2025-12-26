@@ -96,10 +96,7 @@
           "versionTitleDate": true
         }
       },
-      "projectChangelogs": false,
-      "git": {
-        "commitMessage": "chore(release): update changelog for {version}"
-      }
+      "projectChangelogs": false
     },
     "releaseTagPattern": "{projectName}@{version}",
     "groups": {

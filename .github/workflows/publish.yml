@@ -6,9 +6,14 @@ on:
       - '@hive-academy/angular-3d@*'
       - '@hive-academy/angular-gsap@*'
 
+# Issue 7 Fix: Concurrency control to prevent race conditions when multiple tags are pushed
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
-  contents: write      # For creating GitHub Releases
-  id-token: write      # For npm provenance
+  contents: write # For creating GitHub Releases
+  id-token: write # For npm provenance
 
 jobs:
   publish:
@@ -17,7 +22,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for changelog
+          fetch-depth: 0 # Full history for changelog
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -29,6 +34,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Issue 9 Note: Playwright is NOT installed here because the publish workflow
+      # does not run e2e tests. E2E tests are only run in ci.yml on PRs and main branch pushes.
+      # This keeps the publish workflow fast and focused on validation + publishing.
+
+      # Issue 4 Fix: Verify NPM_TOKEN is valid early to fail fast
+      - name: Verify NPM authentication
+        run: npm whoami
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Run validation pipeline
         run: |
           npx nx run-many -t lint
@@ -36,33 +51,116 @@ jobs:
           npx nx run-many -t typecheck
           npx nx run-many -t build
 
+      # Issue 5 Fix: Added shell: bash for Windows runner compatibility
       - name: Extract package name from tag
         id: extract
+        shell: bash
         run: |
           TAG=${GITHUB_REF#refs/tags/}
-          PACKAGE_NAME=$(echo $TAG | sed 's/@.*//')
+          PACKAGE_NAME=$(echo $TAG | sed 's/@[^@]*$//')
+          VERSION=$(echo $TAG | sed 's/.*@//')
           echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Publish to NPM with provenance
+      # Issue 3 Fix: Validate dist/ artifacts before publishing
+      - name: Validate build artifacts
+        shell: bash
         run: |
-          npx nx release publish --projects=${{ steps.extract.outputs.package_name }}
+          # Determine the dist path based on package name
+          if [[ "${{ steps.extract.outputs.package_name }}" == "@hive-academy/angular-3d" ]]; then
+            DIST_PATH="dist/libs/angular-3d"
+          elif [[ "${{ steps.extract.outputs.package_name }}" == "@hive-academy/angular-gsap" ]]; then
+            DIST_PATH="dist/libs/angular-gsap"
+          else
+            echo "::error::Unknown package: ${{ steps.extract.outputs.package_name }}"
+            exit 1
+          fi
+
+          # Check that dist directory exists
+          if [[ ! -d "$DIST_PATH" ]]; then
+            echo "::error::Build output not found at $DIST_PATH"
+            exit 1
+          fi
+
+          # Check that package.json exists in dist
+          if [[ ! -f "$DIST_PATH/package.json" ]]; then
+            echo "::error::package.json not found in $DIST_PATH"
+            exit 1
+          fi
+
+          # Verify version in dist/package.json matches the tag version
+          DIST_VERSION=$(node -p "require('./$DIST_PATH/package.json').version")
+          TAG_VERSION="${{ steps.extract.outputs.version }}"
+
+          if [[ "$DIST_VERSION" != "$TAG_VERSION" ]]; then
+            echo "::error::Version mismatch! dist/package.json has $DIST_VERSION but tag is $TAG_VERSION"
+            exit 1
+          fi
+
+          echo "Build artifacts validated successfully:"
+          echo "  - Package: ${{ steps.extract.outputs.package_name }}"
+          echo "  - Version: $DIST_VERSION"
+          echo "  - Path: $DIST_PATH"
+
+      # Issue 1 Fix: Retry logic for transient npm registry failures
+      - name: Publish to NPM with provenance
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: npx nx release publish --projects=${{ steps.extract.outputs.package_name }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
 
+      # Issue 2 & 5 Fix: CHANGELOG.md validation with graceful fallback and shell: bash
       - name: Extract changelog for GitHub Release
         id: changelog
+        shell: bash
         run: |
-          VERSION=$(echo ${{ steps.extract.outputs.tag }} | sed 's/.*@//')
-          SECTION=$(sed -n "/## \[${{ steps.extract.outputs.tag }}\]/,/## \[/p" CHANGELOG.md | sed '$d')
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo "$SECTION" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # Check if CHANGELOG.md exists
+          if [[ ! -f "CHANGELOG.md" ]]; then
+            echo "::warning::CHANGELOG.md not found, using default release notes"
+            echo "notes<<EOF" >> $GITHUB_OUTPUT
+            echo "Release ${{ steps.extract.outputs.tag }}" >> $GITHUB_OUTPUT
+            echo "" >> $GITHUB_OUTPUT
+            echo "See commit history for changes." >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            exit 0
+          fi
 
+          # Try to extract the section for this release
+          VERSION="${{ steps.extract.outputs.version }}"
+          TAG="${{ steps.extract.outputs.tag }}"
+
+          # Look for version header in various formats
+          SECTION=$(sed -n "/## \[$TAG\]/,/## \[/p" CHANGELOG.md | sed '$d' 2>/dev/null || true)
+
+          if [[ -z "$SECTION" ]]; then
+            # Try alternative format with just version number
+            SECTION=$(sed -n "/## \[$VERSION\]/,/## \[/p" CHANGELOG.md | sed '$d' 2>/dev/null || true)
+          fi
+
+          if [[ -z "$SECTION" ]]; then
+            echo "::warning::No changelog section found for $TAG, using default release notes"
+            echo "notes<<EOF" >> $GITHUB_OUTPUT
+            echo "Release $TAG" >> $GITHUB_OUTPUT
+            echo "" >> $GITHUB_OUTPUT
+            echo "See CHANGELOG.md for previous releases." >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "notes<<EOF" >> $GITHUB_OUTPUT
+            echo "$SECTION" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      # Issue 6 Fix: continue-on-error so GitHub Release failure doesn't fail the workflow
+      # The npm publish already succeeded at this point, so this is non-critical
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
-        if: steps.changelog.outputs.notes != ''
+        continue-on-error: true
         with:
           tag_name: ${{ steps.extract.outputs.tag }}
           name: ${{ steps.extract.outputs.tag }}
