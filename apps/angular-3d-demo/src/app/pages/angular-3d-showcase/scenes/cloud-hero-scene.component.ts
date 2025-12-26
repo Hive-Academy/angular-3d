@@ -7,24 +7,24 @@ import {
 import {
   Scene3dComponent,
   CloudLayerComponent,
-  TroikaTextComponent,
+  GlowTroikaTextComponent,
   StarFieldComponent,
 } from '@hive-academy/angular-3d';
 
 /**
- * Cloud Hero Scene - Flying Through Clouds with 3D Text
+ * Cloud Hero Scene - Flying Through Clouds with Glowing 3D Text
  *
  * Features:
- * - 3D text visible behind clouds in the sky
+ * - Self-glowing 3D text (NO bloom post-processing needed!)
  * - Stars visible only in night mode
- * - Day/Night toggle
+ * - Day/Night toggle with different text colors
  */
 @Component({
   selector: 'app-cloud-hero-scene',
   imports: [
     Scene3dComponent,
     CloudLayerComponent,
-    TroikaTextComponent,
+    GlowTroikaTextComponent,
     StarFieldComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,10 +39,10 @@ import {
         [cameraFov]="30"
         [cameraNear]="1"
         [cameraFar]="10000"
-        [enableAntialiasing]="false"
+        [enableAntialiasing]="true"
         [alpha]="true"
       >
-        <!-- Stars - Only visible in night mode (behind everything) -->
+        <!-- Stars - Only visible in night mode -->
         @if (isNightMode()) {
         <a3d-star-field
           [starCount]="3000"
@@ -53,18 +53,24 @@ import {
         />
         }
 
-        <!-- 3D Text in the sky (visible above clouds) -->
-        <a3d-troika-text
+        <!-- GLOWING 3D Text - Using Troika's NATIVE glow (outlineBlur)! -->
+        <a3d-glow-troika-text
           [text]="'FLYTHROUGH'"
-          [fontSize]="80"
-          [position]="[0, 80, 4000]"
-          [color]="textColor()"
+          [fontSize]="120"
+          [position]="[0, 150, 4000]"
+          [glowColor]="textGlowColor()"
+          [textColor]="'#ffffff'"
+          [glowBlur]="'50%'"
+          [glowWidth]="'20%'"
+          [glowOpacity]="1"
+          [glowIntensity]="1.5"
+          [pulseSpeed]="0.3"
           [anchorX]="'center'"
           [anchorY]="'middle'"
-          [fillOpacity]="0.9"
+          [letterSpacing]="0.15"
         />
 
-        <!-- Cloud Layer -->
+        <!-- Cloud Layer - pure white clouds, no bloom interference -->
         <a3d-cloud-layer
           [textureUrl]="'/clouds/cloud10.png'"
           [cloudCount]="8000"
@@ -72,6 +78,8 @@ import {
           [speed]="0.03"
           [mouseParallax]="true"
         />
+
+        <!-- NO BLOOM! GlowTroikaText now has built-in glow -->
       </a3d-scene-3d>
 
       <!-- Day/Night Toggle -->
@@ -121,16 +129,24 @@ import {
 export class CloudHeroSceneComponent {
   public readonly isNightMode = signal(false);
 
+  // Background colors
   public readonly backgroundColor = computed(() =>
     this.isNightMode() ? '#050510' : '#326696'
   );
 
+  // Fog matches background for seamless blend
   public readonly fogColor = computed(() =>
     this.isNightMode() ? '#050510' : '#4584b4'
   );
 
+  // Text glow color: warm golden for day, cool cyan for night
+  public readonly textGlowColor = computed(() =>
+    this.isNightMode() ? '#00ffff' : '#ffd700'
+  );
+
+  // Main text color: white for both modes (visible against glow)
   public readonly textColor = computed(() =>
-    this.isNightMode() ? '#ffffff' : '#1e4877'
+    this.isNightMode() ? '#ffffff' : '#ffffff'
   );
 
   public toggleMode(): void {

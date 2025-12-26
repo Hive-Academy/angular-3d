@@ -16,42 +16,21 @@ import { SceneService } from '../../canvas/scene.service';
 import { SceneGraphStore } from '../../store/scene-graph.store';
 
 /**
- * Glow-enabled 3D text component for bloom post-processing effects.
+ * Glow-enabled 3D text component using Troika's NATIVE glow capabilities.
  *
- * Creates text with emissive glow that integrates with Three.js bloom.
- * Supports animated pulsing and configurable glow intensity.
+ * Uses Troika's built-in `outlineColor`, `outlineWidth`, and `outlineBlur`
+ * properties for proper neon glow effect WITHOUT bloom post-processing!
  *
  * @example
- * Static glow text:
  * ```html
  * <a3d-glow-troika-text
- *   text="GLOW EFFECT"
+ *   text="NEON GLOW"
  *   [fontSize]="1.0"
  *   glowColor="#00ffff"
- *   [glowIntensity]="3.0"
- *   [pulseSpeed]="0"
- *   [position]="[0, 0, 0]"
+ *   [glowIntensity]="1.5"
+ *   [glowBlur]="0.5"
  * />
  * ```
- *
- * @example
- * Pulsing glow text:
- * ```html
- * <a3d-glow-troika-text
- *   text="PULSE"
- *   [fontSize]="0.8"
- *   glowColor="#ff00ff"
- *   [glowIntensity]="2.5"
- *   [pulseSpeed]="0.5"
- *   [outlineWidthInput]="0.02"
- * />
- * ```
- *
- * @remarks
- * - REQUIRES bloom post-processing to be visible (BloomEffectComponent)
- * - Uses toneMapped: false material for values > 1.0
- * - Higher glowIntensity = brighter bloom pickup
- * - pulseSpeed of 0 disables pulsing animation
  */
 @Component({
   selector: 'a3d-glow-troika-text',
@@ -67,212 +46,130 @@ import { SceneGraphStore } from '../../store/scene-graph.store';
 })
 export class GlowTroikaTextComponent {
   // ========================================
-  // CORE TEXT PROPERTIES (from TroikaTextComponent)
+  // CORE TEXT PROPERTIES
   // ========================================
 
-  /**
-   * The text string to render.
-   * Supports multi-line text using newline characters (\n).
-   * @required
-   */
+  /** The text string to render. */
   public readonly text = input.required<string>();
 
-  /**
-   * Font size in 3D world units.
-   * @default 0.1
-   */
+  /** Font size in 3D world units. */
   public readonly fontSize = input<number>(0.1);
 
-  /**
-   * URL or path to custom font file (TTF, OTF, WOFF).
-   * If null, uses the default font.
-   * @default null
-   */
+  /** URL or path to custom font file. */
   public readonly font = input<string | null>(null);
 
-  /**
-   * Font style: 'normal' or 'italic'.
-   * @default 'normal'
-   */
+  /** Font style: 'normal' or 'italic'. */
   public readonly fontStyle = input<'normal' | 'italic'>('normal');
 
-  /**
-   * Font weight: 'normal', 'bold', or numeric (100-900).
-   * @default 'normal'
-   */
+  /** Font weight: 'normal', 'bold', or numeric (100-900). */
   public readonly fontWeight = input<string | number>('normal');
 
   // ========================================
   // TRANSFORM PROPERTIES
   // ========================================
 
-  /**
-   * Position in 3D space [x, y, z].
-   * @default [0, 0, 0]
-   */
+  /** Position in 3D space [x, y, z]. */
   public readonly position = input<[number, number, number]>([0, 0, 0]);
 
-  /**
-   * Rotation in radians [x, y, z].
-   * @default [0, 0, 0]
-   */
+  /** Rotation in radians [x, y, z]. */
   public readonly rotation = input<[number, number, number]>([0, 0, 0]);
 
-  /**
-   * Scale factor. Can be uniform (number) or per-axis [x, y, z].
-   * @default 1
-   */
+  /** Scale factor. Can be uniform or per-axis [x, y, z]. */
   public readonly scale = input<number | [number, number, number]>(1);
 
   // ========================================
   // LAYOUT PROPERTIES
   // ========================================
 
-  /**
-   * Maximum width for text wrapping in world units.
-   * Text will wrap to multiple lines if it exceeds this width.
-   * @default Infinity (no wrapping)
-   */
+  /** Maximum width for text wrapping. */
   public readonly maxWidth = input<number>(Infinity);
 
-  /**
-   * Horizontal text alignment within the maxWidth.
-   * @default 'left'
-   */
+  /** Horizontal text alignment. */
   public readonly textAlign = input<'left' | 'right' | 'center' | 'justify'>(
     'left'
   );
 
-  /**
-   * Horizontal anchor point as percentage string ('left', 'center', 'right')
-   * or numeric value (0 = left edge, 0.5 = center, 1 = right edge).
-   * @default 'left'
-   */
+  /** Horizontal anchor point. */
   public readonly anchorX = input<number | string>('left');
 
-  /**
-   * Vertical anchor point as percentage string ('top', 'middle', 'bottom')
-   * or numeric value (0 = top edge, 0.5 = middle, 1 = bottom edge).
-   * @default 'top'
-   */
+  /** Vertical anchor point. */
   public readonly anchorY = input<number | string>('top');
 
-  /**
-   * Line height as multiple of fontSize (number) or absolute value (string with units).
-   * @default 1.2
-   */
+  /** Line height as multiple of fontSize. */
   public readonly lineHeight = input<number | string>(1.2);
 
-  /**
-   * Letter spacing adjustment in world units.
-   * Positive values increase spacing, negative values decrease.
-   * @default 0
-   */
+  /** Letter spacing in world units. */
   public readonly letterSpacing = input<number>(0);
 
-  /**
-   * CSS white-space behavior: 'normal' or 'nowrap'.
-   * @default 'normal'
-   */
+  /** CSS white-space behavior. */
   public readonly whiteSpace = input<'normal' | 'nowrap'>('normal');
 
-  /**
-   * CSS overflow-wrap behavior: 'normal' or 'break-word'.
-   * @default 'normal'
-   */
+  /** CSS overflow-wrap behavior. */
   public readonly overflowWrap = input<'normal' | 'break-word'>('normal');
 
   // ========================================
-  // VISUAL STYLING PROPERTIES
+  // VISUAL STYLING
   // ========================================
 
-  /**
-   * Fill opacity (0 = transparent, 1 = opaque).
-   * @default 1
-   */
+  /** Fill opacity (0-1). */
   public readonly fillOpacity = input<number>(1);
 
-  /**
-   * Outline blur radius in world units (number) or as percentage string.
-   * @default 0 (sharp outline)
-   */
-  public readonly outlineBlur = input<number | string>(0);
-
   // ========================================
-  // ADVANCED RENDERING PROPERTIES
+  // GLOW PROPERTIES (Using Troika's native outline system)
   // ========================================
 
   /**
-   * Size of SDF glyph texture atlas in pixels.
-   * Higher values = better quality but more memory.
-   * @default 64
-   */
-  public readonly sdfGlyphSize = input<number>(64);
-
-  /**
-   * Level of detail for glyph geometry (1-4).
-   * Higher values = smoother curves but more vertices.
-   * @default 1
-   */
-  public readonly glyphGeometryDetail = input<number>(1);
-
-  /**
-   * Enable GPU-accelerated SDF generation (requires WebGL2).
-   * Falls back to CPU if unavailable.
-   * @default true
-   */
-  public readonly gpuAccelerateSDF = input<boolean>(true);
-
-  /**
-   * Depth offset for depth testing.
-   * Useful for preventing z-fighting.
-   * @default 0
-   */
-  public readonly depthOffset = input<number>(0);
-
-  // ========================================
-  // BEHAVIOR PROPERTIES
-  // ========================================
-
-  /**
-   * Enable billboard mode - text always faces the camera.
-   * Useful for labels and UI elements in 3D space.
-   * @default false
-   */
-  public readonly billboard = input<boolean>(false);
-
-  // ========================================
-  // GLOW-SPECIFIC PROPERTIES
-  // ========================================
-
-  /**
-   * Glow color as CSS string or numeric hex value.
-   * This color will be multiplied by glowIntensity for bloom effect.
-   * @default '#00ffff'
+   * Glow/outline color - the neon glow color.
+   * @default '#00ffff' (cyan)
    */
   public readonly glowColor = input<string | number>('#00ffff');
 
   /**
-   * Glow intensity multiplier for bloom post-processing.
-   * Values > 1.0 are required for bloom to pick up the glow.
-   * Higher values = brighter bloom effect.
-   * @default 2.5
+   * Main text fill color.
+   * If null, uses glowColor (solid neon look).
+   * @default '#ffffff' (white text with colored glow)
    */
-  public readonly glowIntensity = input<number>(2.5);
+  public readonly textColor = input<string | number | null>('#ffffff');
 
   /**
-   * Pulse animation speed in cycles per second.
-   * Set to 0 to disable pulsing animation.
-   * @default 1.0
+   * Glow blur amount - creates the soft glow effect!
+   * Value is relative to fontSize (e.g., 0.3 = 30% of fontSize blur).
+   * CRITICAL: This is the key property for the "glow" look!
+   * @default 0.3
    */
-  public readonly pulseSpeed = input<number>(1.0);
+  public readonly glowBlur = input<number | string>('30%');
 
   /**
-   * Outline/stroke width in world units (number) or as percentage string.
-   * Provides definition against bright backgrounds.
-   * @default 0.02
+   * Glow/outline width - how thick the glow extends.
+   * Value is relative to fontSize (e.g., 0.15 = 15% of fontSize width).
+   * @default '15%'
    */
-  public readonly glowOutlineWidth = input<number | string>(0.02);
+  public readonly glowWidth = input<number | string>('15%');
+
+  /**
+   * Glow opacity (0-1).
+   * @default 1
+   */
+  public readonly glowOpacity = input<number>(1);
+
+  /**
+   * Glow intensity multiplier (for emissive material).
+   * Higher values make the glow brighter (works with bloom!).
+   * @default 1.5
+   */
+  public readonly glowIntensity = input<number>(1.5);
+
+  /**
+   * Pulse animation speed (0 = disabled).
+   * @default 0
+   */
+  public readonly pulseSpeed = input<number>(0);
+
+  /**
+   * Enable billboard mode - text always faces the camera.
+   * @default false
+   */
+  public readonly billboard = input<boolean>(false);
 
   // ========================================
   // DEPENDENCY INJECTION
@@ -286,31 +183,18 @@ export class GlowTroikaTextComponent {
   private readonly objectId = inject(OBJECT_ID);
 
   // ========================================
-  // STATE SIGNALS
+  // STATE
   // ========================================
 
-  /**
-   * Loading state signal - true while font is being loaded.
-   * Useful for displaying loading indicators in UI.
-   */
   public readonly isLoading = signal(false);
-
-  /**
-   * Load error signal - contains error message if font loading failed.
-   * Null if no error or font loaded successfully.
-   */
   public readonly loadError = signal<string | null>(null);
-
-  // ========================================
-  // INTERNAL STATE
-  // ========================================
 
   private textObject?: Text;
   private cleanupRenderLoop?: () => void;
   private cleanupPulseLoop?: () => void;
 
   public constructor() {
-    // Effect: Initialize and update text
+    // Effect: Initialize and update text with glow properties
     effect((onCleanup) => {
       const textContent = this.text();
       const parent = this.parent();
@@ -325,7 +209,6 @@ export class GlowTroikaTextComponent {
         this.textObject = new Text();
         this.updateAllTextProperties();
 
-        // Sync and add to parent
         this.textObject.sync(() => {
           if (this.textObject && parent) {
             parent.add(this.textObject);
@@ -350,24 +233,31 @@ export class GlowTroikaTextComponent {
       });
     });
 
-    // Effect: Create glow material with bloom support
+    // Effect: Apply glow material
     effect(() => {
       if (!this.textObject) return;
 
-      // Create glow material with toneMapped: false (CRITICAL for bloom)
-      const glowMaterial = new THREE.MeshBasicMaterial({
-        color: new THREE.Color(this.glowColor()),
-        toneMapped: false, // Allows values > 1.0 for bloom
+      // Create emissive material for bloom support + natural brightness
+      const glowColorValue = new THREE.Color(this.glowColor());
+      const textColorValue = this.textColor()
+        ? new THREE.Color(this.textColor() as string | number)
+        : glowColorValue.clone();
+
+      // Use MeshBasicMaterial with color multiplier for emissive look
+      const material = new THREE.MeshBasicMaterial({
+        color: textColorValue.clone().multiplyScalar(this.glowIntensity()),
+        transparent: true,
+        opacity: this.fillOpacity(),
+        toneMapped: false, // Allow HDR values for extra brightness
       });
 
-      // Apply intensity multiplier for bloom effect
-      const baseIntensity = this.glowIntensity();
-      glowMaterial.color.multiplyScalar(baseIntensity);
+      this.textObject.material = material;
 
-      this.textObject.material = glowMaterial;
-      this.textObject.outlineWidth = this.glowOutlineWidth();
-      this.textObject.outlineColor = '#000000';
-      this.textObject.outlineOpacity = 1;
+      // CRITICAL: Apply Troika's native outline properties for REAL glow!
+      this.textObject.outlineColor = glowColorValue;
+      this.textObject.outlineWidth = this.glowWidth();
+      this.textObject.outlineBlur = this.glowBlur(); // This creates the soft glow!
+      this.textObject.outlineOpacity = this.glowOpacity();
 
       this.textObject.sync();
     });
@@ -375,7 +265,6 @@ export class GlowTroikaTextComponent {
     // Effect: Pulse animation
     effect(() => {
       if (this.pulseSpeed() === 0) {
-        // No pulsing - cleanup if active
         if (this.cleanupPulseLoop) {
           this.cleanupPulseLoop();
           this.cleanupPulseLoop = undefined;
@@ -385,29 +274,21 @@ export class GlowTroikaTextComponent {
 
       if (!this.textObject) return;
 
-      // Register pulse animation callback
       this.cleanupPulseLoop = this.renderLoop.registerUpdateCallback(
         (_delta, elapsed) => {
-          const material = this.textObject?.material;
-          if (!material || !(material instanceof THREE.MeshBasicMaterial))
-            return;
+          if (!this.textObject) return;
 
-          // Sine wave pulse: oscillates between 0.7 and 1.3 of base intensity
+          // Pulse outline opacity for glow breathing effect
           const pulse =
-            Math.sin(elapsed * this.pulseSpeed() * Math.PI * 2) * 0.3 + 1.0;
-          const intensity = this.glowIntensity() * pulse;
-
-          // Reset color and apply new intensity
-          const baseColor = new THREE.Color(this.glowColor());
-          material.color.copy(baseColor).multiplyScalar(intensity);
+            Math.sin(elapsed * this.pulseSpeed() * Math.PI * 2) * 0.2 + 0.8;
+          this.textObject.outlineOpacity = this.glowOpacity() * pulse;
         }
       );
     });
 
-    // Effect: Billboard rotation (optional)
+    // Effect: Billboard
     effect(() => {
       if (!this.billboard()) {
-        // Billboard disabled - cleanup if active
         if (this.cleanupRenderLoop) {
           this.cleanupRenderLoop();
           this.cleanupRenderLoop = undefined;
@@ -418,7 +299,6 @@ export class GlowTroikaTextComponent {
       const camera = this.sceneService.camera();
       if (!camera || !this.textObject) return;
 
-      // Billboard enabled - register render loop callback
       this.cleanupRenderLoop = this.renderLoop.registerUpdateCallback(() => {
         if (this.textObject && camera) {
           this.textObject.quaternion.copy(camera.quaternion);
@@ -437,15 +317,10 @@ export class GlowTroikaTextComponent {
     });
   }
 
-  /**
-   * Update all text properties from signal inputs.
-   * Called whenever text is created or signal inputs change.
-   * @private
-   */
   private updateAllTextProperties(): void {
     if (!this.textObject) return;
 
-    // Text content & font
+    // Core text properties
     this.textObject.text = this.text();
     this.textObject.fontSize = this.fontSize();
     if (this.font()) this.textObject.font = this.font();
@@ -461,16 +336,6 @@ export class GlowTroikaTextComponent {
     this.textObject.letterSpacing = this.letterSpacing();
     this.textObject.whiteSpace = this.whiteSpace();
     this.textObject.overflowWrap = this.overflowWrap();
-
-    // Styling
-    this.textObject.fillOpacity = this.fillOpacity();
-    this.textObject.outlineBlur = this.outlineBlur();
-
-    // Advanced
-    this.textObject.sdfGlyphSize = this.sdfGlyphSize();
-    this.textObject.glyphGeometryDetail = this.glyphGeometryDetail();
-    this.textObject.gpuAccelerateSDF = this.gpuAccelerateSDF();
-    this.textObject.depthOffset = this.depthOffset();
 
     // Transform
     this.textObject.position.set(...this.position());

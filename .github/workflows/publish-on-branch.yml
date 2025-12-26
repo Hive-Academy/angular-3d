@@ -23,8 +23,8 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write     # For creating GitHub Releases and tags
-  id-token: write     # For npm provenance
+  contents: write # For creating GitHub Releases and tags
+  id-token: write # For npm provenance
   pull-requests: read # For reading PR metadata
 
 jobs:

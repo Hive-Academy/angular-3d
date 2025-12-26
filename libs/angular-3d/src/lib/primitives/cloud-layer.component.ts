@@ -53,6 +53,10 @@ const cloudShader = {
       gl_FragColor = texture2D(map, vUv);
       gl_FragColor.w *= pow(gl_FragCoord.z, 20.0);
       gl_FragColor = mix(gl_FragColor, vec4(fogColor, gl_FragColor.w), fogFactor);
+
+      // CRITICAL: Clamp RGB to stay below bloom threshold (0.9)
+      // This prevents clouds from triggering the bloom effect
+      gl_FragColor.rgb = min(gl_FragColor.rgb, vec3(0.85));
     }
   `,
 };
@@ -229,7 +233,7 @@ export class CloudLayerComponent {
   }
 
   private startAnimation(): void {
-    // Animation loop - moves camera through clouds (like reference)
+    // Animation loop - moves CLOUDS, not camera (keeps other scene objects stationary)
     this.animationCleanup = this.renderLoop.registerUpdateCallback(() => {
       const camera = this.sceneService.camera();
       if (!camera) return;
@@ -238,12 +242,20 @@ export class CloudLayerComponent {
       const elapsed = Date.now() - this.startTime;
       const position = (elapsed * this.speed()) % 8000;
 
-      // Move camera through clouds (exactly like reference)
+      // Mouse parallax on camera (subtle effect)
       if (this.mouseParallax()) {
         camera.position.x += (this.mouseX - camera.position.x) * 0.01;
         camera.position.y += (-this.mouseY - camera.position.y) * 0.01;
       }
-      camera.position.z = -position + 8000;
+
+      // Move CLOUD MESHES instead of camera
+      // This keeps text and other scene objects stationary!
+      if (this.cloudMesh) {
+        this.cloudMesh.position.z = position;
+      }
+      if (this.cloudMeshBack) {
+        this.cloudMeshBack.position.z = position;
+      }
     });
   }
 

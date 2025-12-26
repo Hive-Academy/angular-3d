@@ -277,35 +277,13 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [stellarColors]="true"
         />
 
-        <!-- ================================ -->
-        <!-- NEBULA EFFECTS - Two-Layer Approach (Top-Right Position) -->
-        <!-- Layer 1: Sprite-based gray smoke (organic, fractal noise) -->
-        <!-- Layer 2: Volumetric blue glow (shader-based inner light) -->
-        <!-- Positioned at top-right to match temp scene configuration -->
-        <!-- ================================ -->
-
-        <!-- Gray smoke cloud - soft, wispy, organic shapes -->
-        <!-- Position: top-right viewport (x: ~10, y: ~5) 
-        with z-offset for depth-->
-        <a3d-nebula
-          [position]="[90, 40, -60]"
-          [cloudCount]="2"
-          [radius]="60"
-          [colorPalette]="['#ffffff', '#dfdbdb']"
-          [minSize]="40"
-          [maxSize]="60"
-          [minOpacity]="0.05"
-          [maxOpacity]="0.15"
-          [enableFlow]="false"
-        />
-
         <!-- Blue volumetric glow - inner illumination -->
-        <!-- Same top-right position, slightly forward for glow effect -->
+        <!-- Same top-right position, slightly forward for glow effect-->
         <a3d-nebula-volumetric
-          [position]="[90, 40, -60]"
-          [width]="100"
-          [height]="30"
-          [layers]="2"
+          [position]="[90, 40, -100]"
+          [width]="180"
+          [height]="60"
+          [layers]="4"
           [opacity]="0.9"
           [primaryColor]="'#0088ff'"
           [secondaryColor]="'#00d4ff'"
@@ -314,7 +292,7 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [flowSpeed]="0.8"
           [noiseScale]="0.03"
           [density]="1.2"
-          [edgeSoftness]="0.5"
+          [edgeSoftness]="1.9"
           [contrast]="1.0"
           [glowIntensity]="20"
           [colorIntensity]="2"
