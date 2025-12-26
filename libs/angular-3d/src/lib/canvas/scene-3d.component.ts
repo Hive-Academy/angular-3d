@@ -1,8 +1,11 @@
 /**
  * Scene3D Component - Root scene container for Three.js
  *
- * Creates and manages WebGLRenderer, Scene, and PerspectiveCamera.
+ * Creates and manages WebGPURenderer, Scene, and PerspectiveCamera.
  * Provides SceneService for child component access via DI.
+ *
+ * WebGPU is the primary rendering backend with automatic WebGL fallback.
+ * The renderer.backend.isWebGPU property indicates which backend is active.
  */
 
 import {
@@ -17,8 +20,9 @@ import {
   afterNextRender,
   Injector,
   runInInjectionContext,
+  effect,
 } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { SceneService } from './scene.service';
 import {
   RenderLoopService,
@@ -42,11 +46,13 @@ export interface CameraConfig {
 
 /**
  * Renderer configuration input interface
+ *
+ * Note: WebGPU only supports 'high-performance' and 'low-power' for powerPreference.
  */
 export interface RendererConfig {
   antialias?: boolean;
   alpha?: boolean;
-  powerPreference?: 'high-performance' | 'low-power' | 'default';
+  powerPreference?: 'high-performance' | 'low-power';
 }
 
 /**
@@ -153,9 +159,16 @@ export class Scene3dComponent implements OnDestroy {
   // Renderer inputs
   public readonly enableAntialiasing = input<boolean>(true);
   public readonly alpha = input<boolean>(true);
-  public readonly powerPreference = input<
-    'high-performance' | 'low-power' | 'default'
-  >('high-performance');
+  /**
+   * Power preference for GPU selection
+   *
+   * WebGPU only supports 'high-performance' and 'low-power'.
+   * 'high-performance' (default): Prefer discrete GPU for better performance
+   * 'low-power': Prefer integrated GPU for battery efficiency
+   */
+  public readonly powerPreference = input<'high-performance' | 'low-power'>(
+    'high-performance'
+  );
 
   // Scene inputs
   public readonly backgroundColor = input<number | null>(null);
@@ -183,7 +196,7 @@ export class Scene3dComponent implements OnDestroy {
   public readonly frameloop = input<FrameloopMode>('always');
 
   // Three.js objects
-  private renderer!: THREE.WebGLRenderer;
+  private renderer!: THREE.WebGPURenderer;
   private readonly scene = new THREE.Scene();
   private camera!: THREE.PerspectiveCamera;
 
@@ -198,27 +211,48 @@ export class Scene3dComponent implements OnDestroy {
     afterNextRender(() => {
       // Wrap in injection context so child components can use effect()
       runInInjectionContext(injector, () => {
-        this.initRenderer();
-        this.initScene(); // Sets background color
-        this.initCamera();
+        // WebGPURenderer requires async initialization
+        this.initRendererAsync().then(() => {
+          this.initScene(); // Sets background color
+          this.initCamera();
 
-        // Expose renderer and camera (available after init)
-        this.sceneService.setRenderer(this.renderer);
-        this.sceneService.setCamera(this.camera);
+          // Expose renderer and camera (available after init)
+          this.sceneService.setRenderer(this.renderer);
+          this.sceneService.setCamera(this.camera);
 
-        // Initialize scene graph store with core Three.js objects
-        this.sceneStore.initScene(this.scene, this.camera, this.renderer);
+          // Initialize scene graph store with core Three.js objects
+          this.sceneStore.initScene(this.scene, this.camera, this.renderer);
 
-        // Set frameloop mode before starting render loop
-        this.renderLoop.setFrameloop(this.frameloop());
+          // Set frameloop mode before starting render loop
+          this.renderLoop.setFrameloop(this.frameloop());
 
-        // Start render loop delegating to RenderLoopService
-        this.renderLoop.start(() => {
-          this.renderer.render(this.scene, this.camera);
+          // Use setAnimationLoop for WebGPU - delegates to RenderLoopService.tick()
+          // This replaces manual requestAnimationFrame management
+          this.renderer.setAnimationLoop((time: number) => {
+            this.renderLoop.tick(time);
+          });
+
+          // Set the render function for RenderLoopService to use
+          this.renderLoop.setRenderFunction(() => {
+            this.renderer.render(this.scene, this.camera);
+          });
+
+          // Mark render loop as running (without starting internal RAF loop)
+          this.renderLoop.markAsRunning();
+
+          // Setup resize handler
+          this.setupResizeHandler();
+
+          // Reactive effect: Update scene background when input changes
+          effect(() => {
+            const bgColor = this.backgroundColor();
+            if (bgColor !== null) {
+              this.scene.background = new THREE.Color(bgColor);
+            } else {
+              this.scene.background = null;
+            }
+          });
         });
-
-        // Setup resize handler
-        this.setupResizeHandler();
       });
     });
 
@@ -251,7 +285,7 @@ export class Scene3dComponent implements OnDestroy {
   /**
    * Get the current renderer instance
    */
-  public getRenderer(): THREE.WebGLRenderer {
+  public getRenderer(): THREE.WebGPURenderer {
     return this.renderer;
   }
 
@@ -262,15 +296,36 @@ export class Scene3dComponent implements OnDestroy {
     return this.camera;
   }
 
-  private initRenderer(): void {
+  /**
+   * Initialize WebGPURenderer with async init() for WebGPU backend
+   *
+   * CRITICAL: Must await init() before first render or any WebGPU operations.
+   * The renderer will automatically fall back to WebGL if WebGPU is not available.
+   */
+  private async initRendererAsync(): Promise<void> {
     const canvas = this.canvasRef().nativeElement;
 
-    this.renderer = new THREE.WebGLRenderer({
+    this.renderer = new THREE.WebGPURenderer({
       canvas,
       antialias: this.enableAntialiasing(),
       alpha: this.alpha(),
       powerPreference: this.powerPreference(),
     });
+
+    // CRITICAL: Must await init() before first render
+    // This initializes the WebGPU adapter/device or falls back to WebGL
+    await this.renderer.init();
+
+    // Log backend detection for debugging
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const backend = (this.renderer as any).backend;
+    if (backend?.isWebGPU) {
+      console.log('[Scene3d] Using WebGPU backend');
+    } else {
+      console.warn(
+        '[Scene3d] WebGPU not available, fell back to WebGL backend'
+      );
+    }
 
     // Set initial size based on container
     const container = canvas.parentElement;
@@ -334,6 +389,11 @@ export class Scene3dComponent implements OnDestroy {
   }
 
   private dispose(): void {
+    // Stop the animation loop first (WebGPU uses setAnimationLoop)
+    if (this.renderer) {
+      this.renderer.setAnimationLoop(null);
+    }
+
     this.renderLoop.stop();
 
     // Dispose Three.js resources

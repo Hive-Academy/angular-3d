@@ -89,7 +89,7 @@ import {
   signal,
   output,
 } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { RGBELoader } from 'three-stdlib';
 import { SceneService } from '../canvas/scene.service';
 
@@ -331,12 +331,12 @@ export class EnvironmentComponent {
    * Loads an HDRI file and applies it to the scene.
    *
    * @param url URL or path to the HDRI file
-   * @param renderer WebGL renderer for PMREM generation
+   * @param renderer WebGPU renderer for PMREM generation
    * @param scene Scene to apply environment to
    */
   private loadEnvironment(
     url: string,
-    renderer: THREE.WebGLRenderer,
+    renderer: THREE.WebGPURenderer,
     scene: THREE.Scene
   ): void {
     this.isLoading.set(true);

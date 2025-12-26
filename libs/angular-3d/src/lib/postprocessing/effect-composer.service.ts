@@ -3,10 +3,14 @@
  *
  * Manages the Three.js EffectComposer and render passes.
  * Allows switching between standard render and post-processing render.
+ *
+ * NOTE: This service currently uses three-stdlib EffectComposer which expects
+ * WebGLRenderer. For full WebGPU support, this will be migrated to THREE.PostProcessing
+ * with TSL nodes in Batch 9. For now, post-processing may only work in WebGL fallback mode.
  */
 
 import { Injectable, OnDestroy, inject, signal } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { EffectComposer, RenderPass, Pass } from 'three-stdlib';
 import { RenderLoopService } from '../render-loop/render-loop.service';
 
@@ -28,7 +32,10 @@ export class EffectComposerService implements OnDestroy {
   private readonly passes = new Set<Pass>();
 
   // Stored references for default rendering
-  private renderer: THREE.WebGLRenderer | null = null;
+  // Note: three-stdlib EffectComposer expects WebGLRenderer, but we accept
+  // WebGPURenderer and cast it. Post-processing may only work in WebGL fallback mode
+  // until Batch 9 migration to THREE.PostProcessing with TSL.
+  private renderer: THREE.WebGPURenderer | null = null;
   private scene: THREE.Scene | null = null;
   private camera: THREE.PerspectiveCamera | null = null;
 
@@ -41,9 +48,13 @@ export class EffectComposerService implements OnDestroy {
 
   /**
    * Initialize the effect composer with scene resources
+   *
+   * Note: three-stdlib EffectComposer expects WebGLRenderer internally.
+   * When using WebGPU backend, post-processing effects may not work.
+   * Full WebGPU post-processing support will be added in Batch 9.
    */
   public init(
-    renderer: THREE.WebGLRenderer,
+    renderer: THREE.WebGPURenderer,
     scene: THREE.Scene,
     camera: THREE.PerspectiveCamera
   ): void {
@@ -51,7 +62,10 @@ export class EffectComposerService implements OnDestroy {
     this.scene = scene;
     this.camera = camera;
 
-    this.composer = new EffectComposer(renderer);
+    // Cast to any for three-stdlib compatibility
+    // TODO: Migrate to THREE.PostProcessing in Batch 9
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.composer = new EffectComposer(renderer as any);
 
     // Create default render pass
     this.renderPass = new RenderPass(scene, camera);

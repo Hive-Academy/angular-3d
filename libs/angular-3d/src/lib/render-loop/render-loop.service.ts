@@ -1,16 +1,20 @@
 /**
  * Render Loop Service - Frame loop management
  *
- * Manages requestAnimationFrame loop outside Angular zone.
- * Provides callback registration for per-frame updates.
+ * Manages frame updates for Three.js rendering.
+ * With WebGPU, the animation loop is managed via renderer.setAnimationLoop(),
+ * and this service's tick() method is called for each frame.
  *
  * Supports two rendering modes:
  * - 'always': Continuous rendering at 60fps (default, backward compatible)
  * - 'demand': Only render when invalidate() is called, saving battery
+ *
+ * WebGPU Migration: The tick() method replaces internal RAF management
+ * when used with WebGPURenderer.setAnimationLoop().
  */
 
 import { Injectable, NgZone, OnDestroy, inject, signal } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 
 /**
  * Callback function type for per-frame updates
@@ -213,6 +217,81 @@ export class RenderLoopService implements OnDestroy {
    */
   public setRenderFunction(fn: () => void): void {
     this.renderFn = fn;
+  }
+
+  /**
+   * Mark the render loop as running without starting internal RAF
+   *
+   * Used when the animation loop is managed externally via
+   * renderer.setAnimationLoop() (WebGPU pattern).
+   */
+  public markAsRunning(): void {
+    this._isRunning.set(true);
+    this._isPaused.set(false);
+    this.clock.start();
+    this.lastFpsUpdate = performance.now();
+    this.frameCount = 0;
+    this.renderCount = 0;
+  }
+
+  /**
+   * Process a single frame tick (called by renderer.setAnimationLoop)
+   *
+   * This is the WebGPU-compatible entry point for frame updates.
+   * Instead of managing its own RAF loop, this method is called by
+   * the WebGPURenderer's animation loop.
+   *
+   * @param time - Timestamp from setAnimationLoop (in milliseconds)
+   *
+   * @example
+   * ```typescript
+   * // In Scene3dComponent with WebGPURenderer:
+   * this.renderer.setAnimationLoop((time) => {
+   *   this.renderLoop.tick(time);
+   * });
+   * ```
+   */
+  public tick(time: number): void {
+    // Skip if not running or paused
+    if (!this._isRunning() || this._isPaused()) {
+      return;
+    }
+
+    // Check if we should render in demand mode
+    const shouldRender = this._frameloop() === 'always' || this._needsRender();
+
+    // In demand mode with no pending render, skip this frame
+    if (!shouldRender) {
+      return;
+    }
+
+    const delta = this.clock.getDelta();
+    const elapsed = this.clock.getElapsedTime();
+
+    // Call all registered update callbacks
+    this.updateCallbacks.forEach((callback) => {
+      try {
+        callback(delta, elapsed);
+      } catch (error) {
+        console.error('Error in render loop callback:', error);
+      }
+    });
+
+    // Call render function if set
+    if (this.renderFn) {
+      this.renderFn();
+    }
+
+    // Track actual renders for FPS
+    this.renderCount++;
+
+    // Reset needsRender flag after rendering in demand mode
+    if (this._frameloop() === 'demand') {
+      this._needsRender.set(false);
+    }
+
+    // Update FPS
+    this.updateFps();
   }
 
   /**

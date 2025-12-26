@@ -47,10 +47,10 @@ import type {
   Object3D,
   Scene,
   PerspectiveCamera,
-  WebGLRenderer,
+  WebGPURenderer,
   Material,
   BufferGeometry,
-} from 'three';
+} from 'three/webgpu';
 
 // ============================================================================
 // Interfaces
@@ -112,7 +112,7 @@ export class SceneGraphStore {
   // Core Three.js objects (provided by Scene3dComponent)
   private readonly _scene = signal<Scene | null>(null);
   private readonly _camera = signal<PerspectiveCamera | null>(null);
-  private readonly _renderer = signal<WebGLRenderer | null>(null);
+  private readonly _renderer = signal<WebGPURenderer | null>(null);
 
   // Ready state - signals when scene initialization is complete
   private readonly _isReady = signal(false);
@@ -152,7 +152,7 @@ export class SceneGraphStore {
   public initScene(
     scene: Scene,
     camera: PerspectiveCamera,
-    renderer: WebGLRenderer
+    renderer: WebGPURenderer
   ): void {
     this._scene.set(scene);
     this._camera.set(camera);

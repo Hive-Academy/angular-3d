@@ -7,10 +7,13 @@
  * NOTE: This service is intentionally NOT providedIn: 'root' because it
  * should be scoped to the Scene3dComponent that provides it. Each scene
  * gets its own instance of this service.
+ *
+ * WebGPU Migration: Now uses WebGPURenderer with backend detection.
+ * Use isWebGPU() to check which backend is active.
  */
 
 import { Injectable, inject, signal } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { RenderLoopService } from '../render-loop/render-loop.service';
 
 /**
@@ -42,6 +45,11 @@ import { RenderLoopService } from '../render-loop/render-loop.service';
  * }
  * ```
  */
+/**
+ * Backend type indicator for WebGPU/WebGL detection
+ */
+export type RenderBackend = 'webgpu' | 'webgl' | null;
+
 // eslint-disable-next-line @angular-eslint/use-injectable-provided-in
 @Injectable()
 export class SceneService {
@@ -50,13 +58,17 @@ export class SceneService {
 
   // Writable signals for internal updates
   private readonly _scene = signal<THREE.Scene | null>(null);
-  private readonly _renderer = signal<THREE.WebGLRenderer | null>(null);
+  private readonly _renderer = signal<THREE.WebGPURenderer | null>(null);
   private readonly _camera = signal<THREE.PerspectiveCamera | null>(null);
+  private readonly _backend = signal<RenderBackend>(null);
 
   // Public readonly signals for consumers
   public readonly scene = this._scene.asReadonly();
   public readonly renderer = this._renderer.asReadonly();
   public readonly camera = this._camera.asReadonly();
+
+  /** Current render backend ('webgpu' or 'webgl') */
+  public readonly backend = this._backend.asReadonly();
 
   /**
    * Get the renderer's DOM element for controls like OrbitControls
@@ -74,9 +86,43 @@ export class SceneService {
 
   /**
    * Set the active renderer (called by Scene3dComponent)
+   *
+   * Automatically detects and sets the backend type (WebGPU or WebGL).
    */
-  public setRenderer(renderer: THREE.WebGLRenderer): void {
+  public setRenderer(renderer: THREE.WebGPURenderer): void {
     this._renderer.set(renderer);
+
+    // Detect and set backend type
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const backend = (renderer as any).backend;
+    this._backend.set(backend?.isWebGPU ? 'webgpu' : 'webgl');
+  }
+
+  /**
+   * Check if WebGPU backend is active
+   *
+   * @returns true if using WebGPU, false if using WebGL fallback
+   *
+   * @example
+   * ```typescript
+   * if (this.sceneService.isWebGPU()) {
+   *   console.log('Running on WebGPU');
+   * } else {
+   *   console.log('Fell back to WebGL');
+   * }
+   * ```
+   */
+  public isWebGPU(): boolean {
+    return this._backend() === 'webgpu';
+  }
+
+  /**
+   * Check if WebGL fallback is active
+   *
+   * @returns true if using WebGL, false if using WebGPU or not initialized
+   */
+  public isWebGL(): boolean {
+    return this._backend() === 'webgl';
   }
 
   /**
@@ -162,5 +208,6 @@ export class SceneService {
     this._scene.set(null);
     this._renderer.set(null);
     this._camera.set(null);
+    this._backend.set(null);
   }
 }
