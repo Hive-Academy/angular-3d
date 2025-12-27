@@ -200,6 +200,9 @@ export class Scene3dComponent implements OnDestroy {
   private readonly scene = new THREE.Scene();
   private camera!: THREE.PerspectiveCamera;
 
+  // Lifecycle flag to prevent race conditions during async initialization
+  private destroyed = false;
+
   public constructor() {
     // Capture injector for use in afterNextRender callback
     const injector = inject(Injector);
@@ -212,52 +215,73 @@ export class Scene3dComponent implements OnDestroy {
       // Wrap in injection context so child components can use effect()
       runInInjectionContext(injector, () => {
         // WebGPURenderer requires async initialization
-        this.initRendererAsync().then(() => {
-          this.initScene(); // Sets background color
-          this.initCamera();
+        this.initRendererAsync()
+          .then(() => {
+            // Check if component was destroyed during async initialization
+            if (this.destroyed) {
+              return;
+            }
 
-          // Expose renderer and camera (available after init)
-          this.sceneService.setRenderer(this.renderer);
-          this.sceneService.setCamera(this.camera);
+            this.initScene(); // Sets background color
+            this.initCamera();
 
-          // Initialize scene graph store with core Three.js objects
-          this.sceneStore.initScene(this.scene, this.camera, this.renderer);
+            // Expose renderer and camera (available after init)
+            this.sceneService.setRenderer(this.renderer);
+            this.sceneService.setCamera(this.camera);
 
-          // Set frameloop mode before starting render loop
-          this.renderLoop.setFrameloop(this.frameloop());
+            // Initialize scene graph store with core Three.js objects
+            this.sceneStore.initScene(this.scene, this.camera, this.renderer);
 
-          // Use setAnimationLoop for WebGPU - delegates to RenderLoopService.tick()
-          // This replaces manual requestAnimationFrame management
-          this.renderer.setAnimationLoop((time: number) => {
-            this.renderLoop.tick(time);
-          });
+            // Set frameloop mode before starting render loop
+            this.renderLoop.setFrameloop(this.frameloop());
 
-          // Set the render function for RenderLoopService to use
-          this.renderLoop.setRenderFunction(() => {
-            this.renderer.render(this.scene, this.camera);
-          });
+            // Use setAnimationLoop for WebGPU - delegates to RenderLoopService.tick()
+            // This replaces manual requestAnimationFrame management
+            this.renderer.setAnimationLoop((time: number) => {
+              this.renderLoop.tick(time);
+            });
 
-          // Mark render loop as running (without starting internal RAF loop)
-          this.renderLoop.markAsRunning();
+            // Set the render function for RenderLoopService to use
+            this.renderLoop.setRenderFunction(() => {
+              this.renderer.render(this.scene, this.camera);
+            });
 
-          // Setup resize handler
-          this.setupResizeHandler();
+            // Mark render loop as running (without starting internal RAF loop)
+            this.renderLoop.markAsRunning();
 
-          // Reactive effect: Update scene background when input changes
-          effect(() => {
-            const bgColor = this.backgroundColor();
-            if (bgColor !== null) {
-              this.scene.background = new THREE.Color(bgColor);
-            } else {
-              this.scene.background = null;
+            // Setup resize handler
+            this.setupResizeHandler();
+
+            // Reactive effect: Update scene background when input changes
+            effect(() => {
+              const bgColor = this.backgroundColor();
+              if (bgColor !== null) {
+                this.scene.background = new THREE.Color(bgColor);
+              } else {
+                this.scene.background = null;
+              }
+            });
+          })
+          .catch((error: Error) => {
+            console.error(
+              '[Scene3d] Failed to initialize WebGPU renderer:',
+              error
+            );
+            // Attempt graceful degradation - clear any partial state
+            if (this.renderer) {
+              try {
+                this.renderer.dispose();
+              } catch {
+                // Ignore disposal errors during error recovery
+              }
             }
           });
-        });
       });
     });
 
     // Register cleanup on destroy
     this.destroyRef.onDestroy(() => {
+      this.destroyed = true;
       this.dispose();
     });
   }

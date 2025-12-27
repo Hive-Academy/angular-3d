@@ -6,8 +6,18 @@ import {
   effect,
   DestroyRef,
 } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { NG_3D_PARENT } from '../types/tokens';
+
+/**
+ * Simple uniform interface for ShaderMaterial uniforms.
+ * Replaces THREE.IUniform which isn't exported from three/webgpu.
+ * Uses `any` for value type since uniforms can be numbers, colors, vectors, etc.
+ */
+interface ShaderUniform {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  value: any;
+}
 import { OBJECT_ID } from '../tokens/object-id.token';
 import { RenderLoopService } from '../render-loop/render-loop.service';
 
@@ -129,7 +139,7 @@ export class MetaballComponent {
   // Internal Three.js objects
   private mesh!: THREE.Mesh;
   private material!: THREE.ShaderMaterial;
-  private uniforms: Record<string, THREE.IUniform> = {};
+  private uniforms: Record<string, ShaderUniform> = {};
   private readonly group = new THREE.Group();
 
   // Mouse tracking state

@@ -309,14 +309,20 @@ export class ShaderMaterialDirective {
   /** Cached resolution vector to avoid creating new objects each frame */
   private readonly cachedResolution = new THREE.Vector2();
 
+  /** Static flag to ensure deprecation warning is only shown once per session */
+  private static deprecationWarned = false;
+
   public constructor() {
-    // Deprecation warning for WebGPU migration
-    console.warn(
-      '[a3dShaderMaterial] DEPRECATED: ShaderMaterial with GLSL shaders is deprecated. ' +
-        'Consider migrating to NodeMaterialDirective (a3dNodeMaterial) with TSL node graphs ' +
-        'for better WebGPU performance and cross-platform compatibility. ' +
-        'See: https://threejs.org/docs/#api/en/materials/NodeMaterial'
-    );
+    // Deprecation warning for WebGPU migration (once per session)
+    if (!ShaderMaterialDirective.deprecationWarned) {
+      console.warn(
+        '[a3dShaderMaterial] DEPRECATED: ShaderMaterial with GLSL shaders is deprecated. ' +
+          'Consider migrating to NodeMaterialDirective (a3dNodeMaterial) with TSL node graphs ' +
+          'for better WebGPU performance and cross-platform compatibility. ' +
+          'See: https://threejs.org/docs/#api/en/materials/NodeMaterial'
+      );
+      ShaderMaterialDirective.deprecationWarned = true;
+    }
 
     // Effect 1: Create material when shaders are available
     effect(() => {

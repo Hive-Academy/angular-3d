@@ -112,10 +112,6 @@ export class NebulaVolumetricComponent {
       if (parent && !this.isAddedToScene) {
         parent.add(this.group);
         this.isAddedToScene = true;
-        console.log(
-          '✅ NebulaVolumetric added to scene, group children:',
-          this.group.children.length
-        );
       }
     });
 
@@ -123,7 +119,6 @@ export class NebulaVolumetricComponent {
     effect(() => {
       const pos = this.position();
       this.group.position.set(...pos);
-      console.log(`🌫️ NebulaVolumetric position set to [${pos.join(', ')}]`);
     });
 
     // Effect: Create nebula layers when configuration changes
@@ -132,10 +127,6 @@ export class NebulaVolumetricComponent {
       const width = this.width();
       const height = this.height();
 
-      console.log(
-        `🌫️ NebulaVolumetric: Creating ${layerCount} layers (${width}x${height})`
-      );
-
       // Clear existing layers
       this.clearLayers();
 
@@ -143,10 +134,6 @@ export class NebulaVolumetricComponent {
       for (let i = 0; i < layerCount; i++) {
         this.createNebulaLayer(i, width, height, layerCount);
       }
-
-      console.log(
-        `🌫️ NebulaVolumetric: Created ${this.nebulaLayers.length} meshes, ${this.layerUniforms.length} uniforms`
-      );
     });
 
     // Single effect: Update all uniforms when inputs change
@@ -214,7 +201,6 @@ export class NebulaVolumetricComponent {
       this.isAddedToScene = false;
       // Dispose Three.js resources
       this.clearLayers();
-      console.log('🧹 NebulaVolumetric cleaned up');
     });
   }
 
@@ -287,11 +273,6 @@ export class NebulaVolumetricComponent {
     // Create mesh
     const mesh = new THREE.Mesh(geometry, material);
 
-    // Log mesh creation for debugging
-    console.log(
-      `🌫️ NebulaVolumetric Layer ${layerIndex}: mesh created at position [${mesh.position.x}, ${mesh.position.y}, ${mesh.position.z}]`
-    );
-
     // CRITICAL: Set renderOrder for proper transparent object rendering
     // Reference uses 997 for layer 1, 998 for layer 2
     mesh.renderOrder = 997 + layerIndex;
@@ -306,10 +287,6 @@ export class NebulaVolumetricComponent {
       mesh.position.set(8, -5, -8);
       mesh.scale.set(width * 0.85, height * 0.85, 1);
     }
-
-    console.log(
-      `🌫️ Layer ${layerIndex}: scale [${mesh.scale.x}, ${mesh.scale.y}, ${mesh.scale.z}]`
-    );
 
     this.group.add(mesh);
     this.nebulaLayers.push(mesh);
