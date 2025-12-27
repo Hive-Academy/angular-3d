@@ -129,6 +129,14 @@ export const appRoutes: Routes = [
           ).then((m) => m.ParticleStormHeroSceneComponent),
         title: 'Particle Storm | Angular-3D',
       },
+      {
+        path: 'bubble-dream',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/scenes/bubble-dream-hero-scene.component'
+          ).then((m) => m.BubbleDreamHeroSceneComponent),
+        title: 'Bubble Dream | Angular-3D',
+      },
     ],
   },
   {
