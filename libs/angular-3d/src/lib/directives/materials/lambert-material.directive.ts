@@ -23,8 +23,8 @@
  */
 
 import { Directive, inject, effect, input, DestroyRef } from '@angular/core';
-import * as THREE from 'three';
-import { ColorRepresentation } from 'three';
+import * as THREE from 'three/webgpu';
+import { ColorRepresentation } from 'three/webgpu';
 import { MATERIAL_SIGNAL } from '../../tokens/material.token';
 import { SceneGraphStore } from '../../store/scene-graph.store';
 import { OBJECT_ID } from '../../tokens/object-id.token';
@@ -83,7 +83,7 @@ export class LambertMaterialDirective {
   public readonly opacity = input<number>(1);
 
   /** Internal reference to created material */
-  private material: THREE.MeshLambertMaterial | null = null;
+  private material: THREE.MeshLambertNodeMaterial | null = null;
 
   public constructor() {
     // Single effect: Create material on first run, update on subsequent runs
@@ -96,14 +96,13 @@ export class LambertMaterialDirective {
       const opacity = this.opacity();
 
       if (!this.material) {
-        // First run: create material and set signal
-        this.material = new THREE.MeshLambertMaterial({
-          color,
-          emissive,
-          emissiveIntensity,
-          transparent,
-          opacity,
-        });
+        // First run: create material with NodeMaterial pattern (direct property assignment)
+        this.material = new THREE.MeshLambertNodeMaterial();
+        this.material.color = new THREE.Color(color);
+        this.material.emissive = new THREE.Color(emissive);
+        this.material.emissiveIntensity = emissiveIntensity;
+        this.material.transparent = transparent;
+        this.material.opacity = opacity;
         this.materialSignal.set(this.material);
       } else {
         // Subsequent runs: update existing material properties

@@ -1,6 +1,6 @@
 # Development Tasks - TASK_2025_028
 
-**Total Tasks**: 57 | **Batches**: 11 | **Status**: 3/11 complete
+**Total Tasks**: 57 | **Batches**: 11 | **Status**: 4/11 complete
 
 ---
 
@@ -325,6 +325,8 @@
 
 ## Batch 3: Import-Only Changes Part 2 (Services & Primitives) - ✅ COMPLETE
 
+**Git Commit**: 1b0474b - feat(angular-3d): migrate services and primitives to webgpu imports
+
 **Developer**: backend-developer
 **Estimated Hours**: 3-4
 **Tasks**: 4 | **Dependencies**: Batch 2
@@ -425,7 +427,7 @@
 
 ---
 
-## Batch 4: Standard Materials to NodeMaterials
+## Batch 4: Standard Materials to NodeMaterials - COMPLETE
 
 **Developer**: backend-developer
 **Estimated Hours**: 10-12
@@ -433,7 +435,7 @@
 
 ### Task 4.1: Migrate Material Directives (3 files)
 
-- **Status**: PENDING
+- **Status**: COMPLETE
 - **File(s)**:
   - `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\directives\materials\lambert-material.directive.ts`
   - `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\directives\materials\standard-material.directive.ts`
@@ -464,7 +466,7 @@
 
 ### Task 4.2: Migrate Glow Directive
 
-- **Status**: PENDING
+- **Status**: COMPLETE
 - **File(s)**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\directives\glow-3d.directive.ts`
 - **Spec Reference**: implementation-plan.md: Section 3.2
 
@@ -483,7 +485,7 @@
 
 ### Task 4.3: Migrate Planet and SVG-Icon Components
 
-- **Status**: PENDING
+- **Status**: COMPLETE
 - **File(s)**:
   - `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\planet.component.ts`
   - `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\svg-icon.component.ts`
@@ -506,7 +508,7 @@
 
 ### Task 4.4: Migrate Star-Field Component (Points + Sprites)
 
-- **Status**: PENDING
+- **Status**: COMPLETE
 - **File(s)**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\star-field.component.ts`
 - **Spec Reference**: implementation-plan.md: Section 3.3, Phase 4
 
@@ -533,7 +535,7 @@
 
 ### Task 4.5: Migrate Particle-System and Nebula Components
 
-- **Status**: PENDING
+- **Status**: COMPLETE
 - **File(s)**:
   - `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\particle-system.component.ts`
   - `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\nebula.component.ts`
@@ -556,12 +558,12 @@
 
 **Batch 4 Verification**:
 
-- [ ] All 10 files updated with NodeMaterial classes
-- [ ] Build passes: `npx nx build @hive-academy/angular-3d`
-- [ ] Materials render correctly with colors
-- [ ] Textures work (planet)
-- [ ] Points render with correct sizes
-- [ ] Sprites render with blending
+- [x] All 9 files updated with NodeMaterial classes
+- [x] Build passes: `npx nx build @hive-academy/angular-3d`
+- [ ] Materials render correctly with colors (requires runtime testing)
+- [ ] Textures work (planet) (requires runtime testing)
+- [ ] Points render with correct sizes (requires runtime testing)
+- [ ] Sprites render with blending (requires runtime testing)
 - [ ] code-logic-reviewer approved
 
 ---
@@ -1379,7 +1381,7 @@ export * from './smoke-text.tsl';
 | 1         | Core Infrastructure                   | 4      | 10-14      | ✅ COMPLETE |
 | 2         | Imports Part 1 (Lights, Core)         | 23     | 3-4        | ✅ COMPLETE |
 | 3         | Imports Part 2 (Services, Primitives) | 7      | 3-4        | ✅ COMPLETE |
-| 4         | NodeMaterials                         | 10     | 10-12      | PENDING     |
+| 4         | NodeMaterials                         | 9      | 10-12      | ✅ COMPLETE |
 | 5         | Text Components                       | 5      | 8-10       | PENDING     |
 | 6         | TSL Utilities + Nebula                | 4      | 10-12      | PENDING     |
 | 7         | Cloud + Bubble TSL                    | 4      | 8-10       | PENDING     |

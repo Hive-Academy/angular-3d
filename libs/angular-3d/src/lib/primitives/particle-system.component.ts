@@ -46,7 +46,7 @@ import {
   input,
   afterNextRender,
 } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { NG_3D_PARENT } from '../types/tokens';
 
 /** Distribution types for particle system */
@@ -122,7 +122,7 @@ export class ParticleSystemComponent implements OnDestroy {
   private readonly parentFn = inject(NG_3D_PARENT, { optional: true });
   private points!: THREE.Points;
   private geometry!: THREE.BufferGeometry;
-  private material!: THREE.PointsMaterial;
+  private material!: THREE.PointsNodeMaterial;
 
   // Computed positions based on distribution type
   private readonly positions = computed(() => {
@@ -189,15 +189,14 @@ export class ParticleSystemComponent implements OnDestroy {
       new THREE.BufferAttribute(positions, 3)
     );
 
-    // Create new material
-    this.material = new THREE.PointsMaterial({
-      color: options.color,
-      size: options.size,
-      sizeAttenuation: true,
-      transparent: true,
-      opacity: options.opacity,
-      depthWrite: false,
-    });
+    // Create new material with NodeMaterial pattern (direct property assignment)
+    this.material = new THREE.PointsNodeMaterial();
+    this.material.color = new THREE.Color(options.color);
+    this.material.size = options.size;
+    this.material.sizeAttenuation = true;
+    this.material.transparent = true;
+    this.material.opacity = options.opacity;
+    this.material.depthWrite = false;
 
     // If points object exists, update it; otherwise create it
     if (!this.points) {

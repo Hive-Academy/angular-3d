@@ -23,7 +23,7 @@
  */
 
 import { Directive, inject, effect, input, DestroyRef } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { MATERIAL_SIGNAL } from '../../tokens/material.token';
 import { SceneGraphStore } from '../../store/scene-graph.store';
 import { OBJECT_ID } from '../../tokens/object-id.token';
@@ -131,7 +131,7 @@ export class PhysicalMaterialDirective {
   public readonly wireframe = input<boolean>(false);
 
   /** Internal reference to created material */
-  private material: THREE.MeshPhysicalMaterial | null = null;
+  private material: THREE.MeshPhysicalNodeMaterial | null = null;
 
   public constructor() {
     // Single effect: Create material on first run, update on subsequent runs
@@ -148,18 +148,17 @@ export class PhysicalMaterialDirective {
       const thickness = this.thickness();
 
       if (!this.material) {
-        // First run: create material and set signal
-        this.material = new THREE.MeshPhysicalMaterial({
-          color,
-          wireframe,
-          metalness,
-          roughness,
-          clearcoat,
-          clearcoatRoughness,
-          transmission,
-          ior,
-          thickness,
-        });
+        // First run: create material with NodeMaterial pattern (direct property assignment)
+        this.material = new THREE.MeshPhysicalNodeMaterial();
+        this.material.color = new THREE.Color(color);
+        this.material.wireframe = wireframe;
+        this.material.metalness = metalness;
+        this.material.roughness = roughness;
+        this.material.clearcoat = clearcoat;
+        this.material.clearcoatRoughness = clearcoatRoughness;
+        this.material.transmission = transmission;
+        this.material.ior = ior;
+        this.material.thickness = thickness;
         this.materialSignal.set(this.material);
       } else {
         // Subsequent runs: update existing material properties

@@ -8,7 +8,7 @@ import {
   computed,
   DestroyRef,
 } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { NG_3D_PARENT } from '../types/tokens';
 import { RenderLoopService } from '../render-loop/render-loop.service';
 
@@ -108,7 +108,7 @@ export class StarFieldComponent implements OnDestroy {
 
   private object3d: THREE.Points | THREE.Group | null = null;
   private geometry: THREE.BufferGeometry | null = null;
-  private material: THREE.PointsMaterial | THREE.SpriteMaterial | null = null;
+  private material: THREE.PointsNodeMaterial | null = null; // For Points mode only
   private glowTexture: THREE.CanvasTexture | null = null; // For sprite mode
   private pointsGlowTexture: THREE.CanvasTexture | null = null; // For Points mode
   private starDataArray: StarData[] = [];
@@ -362,7 +362,7 @@ export class StarFieldComponent implements OnDestroy {
       const count = this.starDataArray.length;
       const colors = new Float32Array(count * 3);
 
-      // Calculate average size for uniform material (PointsMaterial doesn't support per-vertex sizes)
+      // Calculate average size for uniform material (PointsNodeMaterial doesn't support per-vertex sizes)
       let totalSize = 0;
       for (let i = 0; i < count; i++) {
         const star = this.starDataArray[i];
@@ -378,30 +378,29 @@ export class StarFieldComponent implements OnDestroy {
         new THREE.BufferAttribute(colors, 3)
       );
 
-      this.material = new THREE.PointsMaterial({
-        size: avgSize, // Use average size since PointsMaterial doesn't support per-vertex sizes
-        map: this.pointsGlowTexture, // Add glow texture for round appearance
-        alphaMap: this.pointsGlowTexture, // Use as alpha for smooth edges
-        sizeAttenuation: true,
-        transparent: true,
-        opacity: starOpacity,
-        depthWrite: false,
-        vertexColors: true, // Use per-vertex colors
-        blending: THREE.AdditiveBlending, // Additive blending for glow effect
-      });
+      // Create material with NodeMaterial pattern (direct property assignment)
+      this.material = new THREE.PointsNodeMaterial();
+      this.material.size = avgSize; // Use average size since PointsNodeMaterial doesn't support per-vertex sizes
+      this.material.map = this.pointsGlowTexture; // Add glow texture for round appearance
+      this.material.alphaMap = this.pointsGlowTexture; // Use as alpha for smooth edges
+      this.material.sizeAttenuation = true;
+      this.material.transparent = true;
+      this.material.opacity = starOpacity;
+      this.material.depthWrite = false;
+      this.material.vertexColors = true; // Use per-vertex colors
+      this.material.blending = THREE.AdditiveBlending; // Additive blending for glow effect
     } else {
-      // Simple uniform stars
-      this.material = new THREE.PointsMaterial({
-        color: color,
-        size: starSize,
-        map: this.pointsGlowTexture, // Add glow texture for round appearance
-        alphaMap: this.pointsGlowTexture, // Use as alpha for smooth edges
-        sizeAttenuation: true,
-        transparent: true,
-        opacity: starOpacity,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending, // Additive blending for glow effect
-      });
+      // Simple uniform stars with NodeMaterial pattern
+      this.material = new THREE.PointsNodeMaterial();
+      this.material.color = new THREE.Color(color);
+      this.material.size = starSize;
+      this.material.map = this.pointsGlowTexture; // Add glow texture for round appearance
+      this.material.alphaMap = this.pointsGlowTexture; // Use as alpha for smooth edges
+      this.material.sizeAttenuation = true;
+      this.material.transparent = true;
+      this.material.opacity = starOpacity;
+      this.material.depthWrite = false;
+      this.material.blending = THREE.AdditiveBlending; // Additive blending for glow effect
     }
 
     this.object3d = new THREE.Points(this.geometry!, this.material);
@@ -434,14 +433,14 @@ export class StarFieldComponent implements OnDestroy {
     for (let i = 0; i < count; i++) {
       const star = this.starDataArray[i];
 
-      const spriteMaterial = new THREE.SpriteMaterial({
-        map: texture,
-        color: star.color,
-        opacity: star.brightness,
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      });
+      // Create sprite material with NodeMaterial pattern (direct property assignment)
+      const spriteMaterial = new THREE.SpriteNodeMaterial();
+      spriteMaterial.map = texture;
+      spriteMaterial.color = star.color;
+      spriteMaterial.opacity = star.brightness;
+      spriteMaterial.transparent = true;
+      spriteMaterial.blending = THREE.AdditiveBlending;
+      spriteMaterial.depthWrite = false;
 
       const sprite = new THREE.Sprite(spriteMaterial);
       sprite.position.set(
@@ -486,7 +485,7 @@ export class StarFieldComponent implements OnDestroy {
             sprite.userData['starIndex'] !== undefined
           ) {
             const star = this.starDataArray[sprite.userData['starIndex']];
-            const spriteMat = sprite.material as THREE.SpriteMaterial;
+            const spriteMat = sprite.material as THREE.SpriteNodeMaterial;
             const twinkle =
               Math.sin(elapsed * star.twinkleSpeed + star.twinklePhase) * 0.3 +
               0.7;
@@ -497,7 +496,7 @@ export class StarFieldComponent implements OnDestroy {
         // Twinkle for point-based stars
         // For Points material, we can't easily animate per-star opacity
         // Instead, we'll pulse the overall opacity slightly
-        const pointsMat = this.object3d.material as THREE.PointsMaterial;
+        const pointsMat = this.object3d.material as THREE.PointsNodeMaterial;
         const baseOpacity = this.opacity();
         const twinkle = Math.sin(elapsed * 0.5) * 0.1 + 0.9;
         pointsMat.opacity = baseOpacity * twinkle;

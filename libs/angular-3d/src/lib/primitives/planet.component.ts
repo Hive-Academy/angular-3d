@@ -6,7 +6,7 @@ import {
   input,
   effect,
 } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { NG_3D_PARENT } from '../types/tokens';
 import { injectTextureLoader } from '../loaders/inject-texture-loader';
 
@@ -86,7 +86,7 @@ export class PlanetComponent implements OnDestroy {
 
   private mesh: THREE.Mesh | null = null;
   private geometry: THREE.SphereGeometry | null = null;
-  private material: THREE.MeshStandardMaterial | null = null;
+  private material: THREE.MeshStandardNodeMaterial | null = null;
   private light: THREE.PointLight | null = null;
 
   public constructor() {
@@ -168,19 +168,20 @@ export class PlanetComponent implements OnDestroy {
     // Geometry
     this.geometry = new THREE.SphereGeometry(radius, segments, segments);
 
-    // Material with conditional properties and bump mapping
+    // Material with NodeMaterial pattern (direct property assignment)
     // When texture exists: less metallic (0.1), more rough (0.9) for realistic appearance
     // When no texture: use input values for metalness/roughness
-    this.material = new THREE.MeshStandardMaterial({
-      color: color,
-      map: texture,
-      bumpMap: texture, // Use texture as bump map for surface detail
-      bumpScale: texture ? 1 : 0, // Only apply bump when texture exists
-      emissive: emissive, // Self-illumination color
-      emissiveIntensity: emissiveIntensity, // Self-illumination strength
-      metalness: texture ? 0.1 : metalness, // Conditional: textured planets less metallic
-      roughness: texture ? 0.9 : roughness, // Conditional: textured planets rougher
-    });
+    this.material = new THREE.MeshStandardNodeMaterial();
+    this.material.color = new THREE.Color(color);
+    if (texture) {
+      this.material.map = texture;
+      this.material.bumpMap = texture; // Use texture as bump map for surface detail
+      this.material.bumpScale = 1; // Only apply bump when texture exists
+    }
+    this.material.emissive = new THREE.Color(emissive); // Self-illumination color
+    this.material.emissiveIntensity = emissiveIntensity; // Self-illumination strength
+    this.material.metalness = texture ? 0.1 : metalness; // Conditional: textured planets less metallic
+    this.material.roughness = texture ? 0.9 : roughness; // Conditional: textured planets rougher
 
     // Mesh
     this.mesh = new THREE.Mesh(this.geometry, this.material);

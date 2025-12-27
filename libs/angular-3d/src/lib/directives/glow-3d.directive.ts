@@ -32,8 +32,8 @@ import {
   isDevMode,
   signal,
 } from '@angular/core';
-import * as THREE from 'three';
-import { ColorRepresentation } from 'three';
+import * as THREE from 'three/webgpu';
+import { ColorRepresentation } from 'three/webgpu';
 import { SceneGraphStore } from '../store/scene-graph.store';
 import { OBJECT_ID } from '../tokens/object-id.token';
 
@@ -102,7 +102,7 @@ export class Glow3dDirective {
   /** Internal references */
   private glowMesh: THREE.Mesh | null = null;
   private glowGeometry: THREE.SphereGeometry | null = null;
-  private glowMaterial: THREE.MeshBasicMaterial | null = null;
+  private glowMaterial: THREE.MeshBasicNodeMaterial | null = null;
   private targetObject: THREE.Object3D | null = null;
 
   /** Signal to track if render has happened */
@@ -211,15 +211,14 @@ export class Glow3dDirective {
       segments
     );
 
-    // Create glow material (BackSide with transparency)
-    this.glowMaterial = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(this.glowColor()),
-      transparent: true,
-      opacity: this.glowIntensity(),
-      side: THREE.BackSide,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending, // Additive for better glow effect
-    });
+    // Create glow material with NodeMaterial pattern (BackSide with transparency)
+    this.glowMaterial = new THREE.MeshBasicNodeMaterial();
+    this.glowMaterial.color = new THREE.Color(this.glowColor());
+    this.glowMaterial.transparent = true;
+    this.glowMaterial.opacity = this.glowIntensity();
+    this.glowMaterial.side = THREE.BackSide;
+    this.glowMaterial.depthWrite = false;
+    this.glowMaterial.blending = THREE.AdditiveBlending; // Additive for better glow effect
 
     // Create glow mesh
     this.glowMesh = new THREE.Mesh(this.glowGeometry, this.glowMaterial);

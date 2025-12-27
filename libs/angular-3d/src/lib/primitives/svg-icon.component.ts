@@ -7,7 +7,7 @@ import {
   effect,
   afterNextRender,
 } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import { NG_3D_PARENT } from '../types/tokens';
 
@@ -44,7 +44,7 @@ export class SvgIconComponent implements OnDestroy {
   // Three.js objects
   private group: THREE.Group | null = null;
   private geometries: THREE.BufferGeometry[] = [];
-  private materials: THREE.MeshStandardMaterial[] = [];
+  private materials: THREE.MeshStandardNodeMaterial[] = [];
 
   // Parent injection
   private readonly parentFn = inject(NG_3D_PARENT, { optional: true });
@@ -79,10 +79,11 @@ export class SvgIconComponent implements OnDestroy {
         const emissiveIntensity = this.emissiveIntensity();
 
         this.materials.forEach((material) => {
-          material.color.set(color);
+          // NodeMaterial pattern: assign Color objects directly
+          material.color = new THREE.Color(color);
           material.metalness = metalness;
           material.roughness = roughness;
-          material.emissive.set(emissive);
+          material.emissive = new THREE.Color(emissive);
           material.emissiveIntensity = emissiveIntensity;
           material.needsUpdate = true;
         });
@@ -171,13 +172,13 @@ export class SvgIconComponent implements OnDestroy {
               geometry = new THREE.ShapeGeometry(shape);
             }
 
-            const material = new THREE.MeshStandardMaterial({
-              color: this.color(),
-              metalness: this.metalness(),
-              roughness: this.roughness(),
-              emissive: this.emissive(),
-              emissiveIntensity: this.emissiveIntensity(),
-            });
+            // Create material with NodeMaterial pattern (direct property assignment)
+            const material = new THREE.MeshStandardNodeMaterial();
+            material.color = new THREE.Color(this.color());
+            material.metalness = this.metalness();
+            material.roughness = this.roughness();
+            material.emissive = new THREE.Color(this.emissive());
+            material.emissiveIntensity = this.emissiveIntensity();
 
             const mesh = new THREE.Mesh(geometry, material);
             if (this.group) {

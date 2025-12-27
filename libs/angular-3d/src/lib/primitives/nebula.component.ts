@@ -9,7 +9,7 @@ import {
   DestroyRef,
 } from '@angular/core';
 import { random } from 'maath';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { NG_3D_PARENT } from '../types/tokens';
 import { RenderLoopService } from '../render-loop/render-loop.service';
 
@@ -390,16 +390,16 @@ export class NebulaComponent implements OnDestroy {
       const texture =
         this.textures[Math.floor(Math.random() * this.textures.length)];
 
-      const material = new THREE.SpriteMaterial({
-        map: texture,
-        color: new THREE.Color(colorHex),
-        transparent: true,
-        opacity: spriteOpacity,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        depthTest: true,
-        fog: false,
-      });
+      // Create sprite material with NodeMaterial pattern (direct property assignment)
+      const material = new THREE.SpriteNodeMaterial();
+      material.map = texture;
+      material.color = new THREE.Color(colorHex);
+      material.transparent = true;
+      material.opacity = spriteOpacity;
+      material.blending = THREE.AdditiveBlending;
+      material.depthWrite = false;
+      material.depthTest = true;
+      material.fog = false;
 
       const sprite = new THREE.Sprite(material);
       sprite.position.copy(positions[i]);
@@ -420,7 +420,7 @@ export class NebulaComponent implements OnDestroy {
   private disposeResources(): void {
     // Dispose sprites and materials
     for (const sprite of this.sprites) {
-      if (sprite.material instanceof THREE.SpriteMaterial) {
+      if (sprite.material instanceof THREE.SpriteNodeMaterial) {
         sprite.material.dispose();
       }
     }
