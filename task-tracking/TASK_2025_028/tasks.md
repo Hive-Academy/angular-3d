@@ -1,6 +1,6 @@
 # Development Tasks - TASK_2025_028
 
-**Total Tasks**: 57 | **Batches**: 11 | **Status**: 2/11 complete
+**Total Tasks**: 57 | **Batches**: 11 | **Status**: 3/11 complete
 
 ---
 
@@ -171,6 +171,8 @@
 
 ## Batch 2: Import-Only Changes Part 1 (Lights & Core Directives) - ✅ COMPLETE
 
+**Git Commit**: 0877461 - feat(angular-3d): migrate directives and loaders to webgpu imports
+
 **Developer**: backend-developer
 **Estimated Hours**: 3-4
 **Tasks**: 6 | **Dependencies**: Batch 1
@@ -321,7 +323,7 @@
 
 ---
 
-## Batch 3: Import-Only Changes Part 2 (Services & Primitives)
+## Batch 3: Import-Only Changes Part 2 (Services & Primitives) - ✅ COMPLETE
 
 **Developer**: backend-developer
 **Estimated Hours**: 3-4
@@ -329,7 +331,7 @@
 
 ### Task 3.1: Migrate Services (3 files)
 
-- **Status**: PENDING
+- **Status**: ✅ COMPLETE (2 files had THREE imports)
 - **File(s)**:
   - `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\render-loop\animation.service.ts`
   - `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\services\advanced-performance-optimizer.service.ts`
@@ -350,7 +352,7 @@
 
 ### Task 3.2: Migrate Fog Component
 
-- **Status**: PENDING
+- **Status**: ✅ COMPLETE
 - **File(s)**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\fog.component.ts`
 - **Spec Reference**: implementation-plan.md: Section 2.8
 
@@ -368,7 +370,7 @@
 
 ### Task 3.3: Migrate GLTF Model Component
 
-- **Status**: PENDING
+- **Status**: ✅ COMPLETE
 - **File(s)**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\gltf-model.component.ts`
 - **Spec Reference**: implementation-plan.md: Section 2.8
 
@@ -393,7 +395,7 @@
 
 ### Task 3.4: Migrate Remaining Primitives (4 files)
 
-- **Status**: PENDING
+- **Status**: ✅ COMPLETE (environment.component.ts already migrated)
 - **File(s)**:
   - `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\environment.component.ts`
   - `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\instanced-mesh.component.ts`
@@ -415,8 +417,8 @@
 
 **Batch 3 Verification**:
 
-- [ ] All 10 files updated with `three/webgpu` import
-- [ ] Build passes: `npx nx build @hive-academy/angular-3d`
+- [x] All 7 files with THREE imports updated to `three/webgpu`
+- [x] Build passes: `npx nx build @hive-academy/angular-3d`
 - [ ] No TypeScript errors
 - [ ] GLTF models load correctly
 - [ ] code-logic-reviewer approved
@@ -1376,7 +1378,7 @@ export * from './smoke-text.tsl';
 | --------- | ------------------------------------- | ------ | ---------- | ----------- |
 | 1         | Core Infrastructure                   | 4      | 10-14      | ✅ COMPLETE |
 | 2         | Imports Part 1 (Lights, Core)         | 23     | 3-4        | ✅ COMPLETE |
-| 3         | Imports Part 2 (Services, Primitives) | 10     | 3-4        | PENDING     |
+| 3         | Imports Part 2 (Services, Primitives) | 7      | 3-4        | ✅ COMPLETE |
 | 4         | NodeMaterials                         | 10     | 10-12      | PENDING     |
 | 5         | Text Components                       | 5      | 8-10       | PENDING     |
 | 6         | TSL Utilities + Nebula                | 4      | 10-12      | PENDING     |

@@ -5,7 +5,7 @@ import {
   computed,
 } from '@angular/core';
 import { BackgroundCubeComponent } from './background-cube.component';
-import { ColorRepresentation } from 'three';
+import { ColorRepresentation } from 'three/webgpu';
 
 /**
  * CubeConfig - Configuration for a single background cube

@@ -86,7 +86,7 @@ import {
   signal,
   output,
 } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { NG_3D_PARENT } from '../types/tokens';
 import { SceneGraphStore } from '../store/scene-graph.store';
 import { OBJECT_ID } from '../tokens/object-id.token';

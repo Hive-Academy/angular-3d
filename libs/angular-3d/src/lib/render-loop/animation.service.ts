@@ -6,7 +6,7 @@
  */
 
 import { Injectable } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import gsap from 'gsap';
 
 /**

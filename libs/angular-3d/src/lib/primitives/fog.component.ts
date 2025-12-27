@@ -6,7 +6,7 @@ import {
   input,
   effect,
 } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { SceneService } from '../canvas/scene.service';
 
 /**

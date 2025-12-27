@@ -4,7 +4,7 @@ import { MeshDirective } from '../directives/mesh.directive';
 import { BoxGeometryDirective } from '../directives/geometries/box-geometry.directive';
 import { TransformDirective } from '../directives/transform.directive';
 import { LambertMaterialDirective } from '../directives/materials/lambert-material.directive';
-import { ColorRepresentation } from 'three';
+import { ColorRepresentation } from 'three/webgpu';
 
 /**
  * BackgroundCubeComponent - Simple cube primitive for background decoration
