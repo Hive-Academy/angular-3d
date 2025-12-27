@@ -8,7 +8,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ViewportPositioningService } from './viewport-positioning.service';
 import { SceneGraphStore } from '../store/scene-graph.store';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 
 describe('ViewportPositioningService', () => {
   let service: ViewportPositioningService;
@@ -40,7 +40,7 @@ describe('ViewportPositioningService', () => {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(fov, aspect, 0.1, 1000);
     camera.position.z = cameraZ;
-    store.initScene(scene, camera, {} as THREE.WebGLRenderer);
+    store.initScene(scene, camera, {} as unknown as THREE.WebGPURenderer);
     return camera;
   }
 
@@ -512,7 +512,7 @@ describe('ViewportPositioningService', () => {
       const scene = new THREE.Scene();
       const camera2 = new THREE.PerspectiveCamera(90, 16 / 9, 0.1, 1000);
       camera2.position.z = 20;
-      store.initScene(scene, camera2, {} as THREE.WebGLRenderer);
+      store.initScene(scene, camera2, {} as unknown as THREE.WebGPURenderer);
 
       const [x2, y2] = posSignal();
 
@@ -531,7 +531,7 @@ describe('ViewportPositioningService', () => {
       const scene = new THREE.Scene();
       const camera2 = new THREE.PerspectiveCamera(75, 16 / 9, 0.1, 1000);
       camera2.position.z = 30;
-      store.initScene(scene, camera2, {} as THREE.WebGLRenderer);
+      store.initScene(scene, camera2, {} as unknown as THREE.WebGPURenderer);
 
       const [x2, y2] = posSignal();
 
@@ -611,7 +611,7 @@ describe('ViewportPositioningService', () => {
         const scene = new THREE.Scene();
         const camera2 = new THREE.PerspectiveCamera(75, 16 / 9, 0.1, 1000);
         camera2.position.z = 30;
-        store.initScene(scene, camera2, {} as THREE.WebGLRenderer);
+        store.initScene(scene, camera2, {} as unknown as THREE.WebGPURenderer);
 
         const size2 = service.getResponsiveFontSize(5);
 

@@ -1,11 +1,25 @@
+import { TestBed } from '@angular/core/testing';
 import { SceneService } from './scene.service';
-import * as THREE from 'three';
+import { RenderLoopService } from '../render-loop/render-loop.service';
+import * as THREE from 'three/webgpu';
+
+// Mock RenderLoopService
+class MockRenderLoopService {
+  requestFrame = jest.fn();
+  registerUpdateCallback = jest.fn(() => jest.fn());
+}
 
 describe('SceneService', () => {
   let service: SceneService;
 
   beforeEach(() => {
-    service = new SceneService();
+    TestBed.configureTestingModule({
+      providers: [
+        SceneService,
+        { provide: RenderLoopService, useClass: MockRenderLoopService },
+      ],
+    });
+    service = TestBed.inject(SceneService);
   });
 
   describe('initialization', () => {
@@ -32,18 +46,27 @@ describe('SceneService', () => {
   describe('setRenderer', () => {
     it('should update renderer signal', () => {
       const canvas = document.createElement('canvas');
-      const renderer = new THREE.WebGLRenderer({ canvas });
+      // Mock WebGPURenderer for tests - real renderer requires async init
+      const renderer = {
+        domElement: canvas,
+        dispose: jest.fn(),
+        render: jest.fn(),
+        setSize: jest.fn(),
+      } as unknown as THREE.WebGPURenderer;
       service.setRenderer(renderer);
       expect(service.renderer()).toBe(renderer);
-      renderer.dispose();
     });
 
     it('should expose domElement', () => {
       const canvas = document.createElement('canvas');
-      const renderer = new THREE.WebGLRenderer({ canvas });
+      const renderer = {
+        domElement: canvas,
+        dispose: jest.fn(),
+        render: jest.fn(),
+        setSize: jest.fn(),
+      } as unknown as THREE.WebGPURenderer;
       service.setRenderer(renderer);
       expect(service.domElement).toBe(canvas);
-      renderer.dispose();
     });
   });
 
@@ -134,7 +157,12 @@ describe('SceneService', () => {
     it('should reset all signals to null', () => {
       const scene = new THREE.Scene();
       const canvas = document.createElement('canvas');
-      const renderer = new THREE.WebGLRenderer({ canvas });
+      const renderer = {
+        domElement: canvas,
+        dispose: jest.fn(),
+        render: jest.fn(),
+        setSize: jest.fn(),
+      } as unknown as THREE.WebGPURenderer;
       const camera = new THREE.PerspectiveCamera();
 
       service.setScene(scene);
@@ -146,8 +174,6 @@ describe('SceneService', () => {
       expect(service.scene()).toBeNull();
       expect(service.renderer()).toBeNull();
       expect(service.camera()).toBeNull();
-
-      renderer.dispose();
     });
   });
 });

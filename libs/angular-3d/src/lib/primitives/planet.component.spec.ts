@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { PlanetComponent } from './planet.component';
 import { NG_3D_PARENT } from '../types/tokens';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 
 // Mock injectTextureLoader
 jest.mock('../loaders/inject-texture-loader', () => ({

@@ -1,5 +1,5 @@
 import { AnimationService } from './animation.service';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 
 // GSAP is mocked globally in test-setup.ts
 

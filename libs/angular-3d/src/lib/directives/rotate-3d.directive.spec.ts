@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Rotate3dDirective, RotateConfig } from './rotate-3d.directive';
 import { SceneGraphStore } from '../store/scene-graph.store';
 import { OBJECT_ID } from '../tokens/object-id.token';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 
 // Mock GSAP - uses the global mock from test-setup.ts
 

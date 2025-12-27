@@ -2,7 +2,7 @@ import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { CloudLayerComponent } from './cloud-layer.component';
 import { NG_3D_PARENT } from '../types/tokens';
 import { RenderLoopService } from '../render-loop/render-loop.service';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { Component, DebugElement } from '@angular/core';
 import { By } from '@angular/platform-browser';
 

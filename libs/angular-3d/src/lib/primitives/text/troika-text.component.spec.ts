@@ -3,7 +3,7 @@ import { Component, signal } from '@angular/core';
 import { NG_3D_PARENT } from '../../types/tokens';
 import { RenderLoopService } from '../../render-loop/render-loop.service';
 import { SceneService } from '../../canvas/scene.service';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 
 // Define MockText class BEFORE the module mock
 class MockText extends THREE.Object3D {
@@ -276,7 +276,9 @@ describe('TroikaTextComponent', () => {
     setTimeout(() => {
       const textObject = mockParent.children[0] as any;
       expect(textObject.position.toArray()).toEqual([1, 2, 3]);
-      expect(textObject.rotation.toArray().slice(0, 3)).toEqual([0.1, 0.2, 0.3]);
+      expect(textObject.rotation.toArray().slice(0, 3)).toEqual([
+        0.1, 0.2, 0.3,
+      ]);
       expect(textObject.scale.toArray()).toEqual([2, 2, 2]);
       done();
     }, 10);
@@ -311,7 +313,9 @@ describe('TroikaTextComponent', () => {
     fixture.detectChanges();
 
     setTimeout(() => {
-      expect(mockRenderLoopService.registerUpdateCallback).not.toHaveBeenCalled();
+      expect(
+        mockRenderLoopService.registerUpdateCallback
+      ).not.toHaveBeenCalled();
       done();
     }, 10);
   });
@@ -443,7 +447,8 @@ describe('TroikaTextComponent', () => {
       const textObject = mockParent.children[0] as any;
 
       // Get the callback that was registered
-      const callback = mockRenderLoopService.registerUpdateCallback.mock.calls[0][0];
+      const callback =
+        mockRenderLoopService.registerUpdateCallback.mock.calls[0][0];
 
       // Execute the callback
       callback(0.016, 0.016);

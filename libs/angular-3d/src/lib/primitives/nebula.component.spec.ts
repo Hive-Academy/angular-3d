@@ -1,7 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { NebulaComponent } from './nebula.component';
 import { NG_3D_PARENT } from '../types/tokens';
-import * as THREE from 'three';
+import { RenderLoopService } from '../render-loop/render-loop.service';
+import * as THREE from 'three/webgpu';
+
+// Mock RenderLoopService
+class MockRenderLoopService {
+  requestFrame = jest.fn();
+  registerUpdateCallback = jest.fn(() => jest.fn());
+}
 
 describe('NebulaComponent', () => {
   let mockParent: THREE.Object3D;
@@ -16,6 +23,7 @@ describe('NebulaComponent', () => {
       providers: [
         NebulaComponent,
         { provide: NG_3D_PARENT, useValue: mockParentFn },
+        { provide: RenderLoopService, useClass: MockRenderLoopService },
       ],
     });
   });

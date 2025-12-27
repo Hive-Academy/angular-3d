@@ -39,6 +39,10 @@ import { Color, type UniformNode } from 'three/webgpu';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TSLNode = any;
 
+// TSL Fn helper with proper typing to avoid arg type mismatch
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const TSLFn = Fn as any;
+
 // ============================================================================
 // Type Definitions
 // ============================================================================
@@ -84,7 +88,7 @@ export function createFogUniforms(config: FogConfig): FogUniforms {
  * Simple pseudo-random function for TSL
  * Generates a pseudo-random value based on input position
  */
-export const hash = Fn(([p]: [TSLNode]) => {
+export const hash = TSLFn(([p]: [TSLNode]) => {
   const x = dot(p, vec3(127.1, 311.7, 74.7));
   return sin(x).mul(43758.5453123).fract();
 });
@@ -93,7 +97,7 @@ export const hash = Fn(([p]: [TSLNode]) => {
  * Simple 3D noise function using sine waves
  * Less sophisticated than Simplex noise but works in TSL
  */
-export const simpleNoise3D = Fn(([p]: [TSLNode]) => {
+export const simpleNoise3D = TSLFn(([p]: [TSLNode]) => {
   const i = p.floor();
   const f = p.fract();
 
@@ -126,7 +130,7 @@ export const simpleNoise3D = Fn(([p]: [TSLNode]) => {
  * Fractal Brownian Motion using simple noise
  * Creates organic, cloud-like patterns
  */
-export const simpleFBM = Fn(([p, octaves]: [TSLNode, number]) => {
+export const simpleFBM = TSLFn(([p, octaves]: [TSLNode, number]) => {
   // Build up the FBM result using TSL operations
   // Using explicit octave unrolling for TSL compatibility
   const n1 = simpleNoise3D(p).mul(0.5);
@@ -145,7 +149,7 @@ export const simpleFBM = Fn(([p, octaves]: [TSLNode, number]) => {
  * Fresnel effect for rim lighting
  * Creates a glow effect at the edges of objects
  */
-export const fresnel = Fn(
+export const fresnel = TSLFn(
   ([config]: [{ power: number; intensity: number; bias: number }]) => {
     const viewDir = normalize(positionWorld.sub(cameraPosition));
     const dotProduct = dot(viewDir, normalLocal);
@@ -157,7 +161,7 @@ export const fresnel = Fn(
 /**
  * Apply fog to a color based on depth
  */
-export const applyFog = Fn(
+export const applyFog = TSLFn(
   ([inputColor, fogColor, fogNear, fogFar, depth]: [
     TSLNode,
     TSLNode,
@@ -174,7 +178,7 @@ export const applyFog = Fn(
  * Smooth radial falloff for soft edges
  * Used for nebula and cloud effects
  */
-export const radialFalloff = Fn(
+export const radialFalloff = TSLFn(
   ([uv, innerRadius, outerRadius]: [TSLNode, TSLNode, TSLNode]) => {
     const centered = uv.sub(vec3(0.5, 0.5, 0));
     const dist = centered.length();
@@ -185,7 +189,7 @@ export const radialFalloff = Fn(
 /**
  * Rainbow iridescence effect for bubble materials
  */
-export const iridescence = Fn(([rimValue, intensity]: [TSLNode, number]) => {
+export const iridescence = TSLFn(([rimValue, intensity]: [TSLNode, number]) => {
   const rainbow = sin(rimValue.mul(6.28)).mul(0.5).add(0.5);
   return vec3(
     rainbow.mul(intensity),
@@ -197,7 +201,7 @@ export const iridescence = Fn(([rimValue, intensity]: [TSLNode, number]) => {
 /**
  * Clamp color to prevent bloom on clouds
  */
-export const clampForBloom = Fn(([color, maxValue]: [TSLNode, number]) => {
+export const clampForBloom = TSLFn(([color, maxValue]: [TSLNode, number]) => {
   const r = clamp(color.x, float(0), float(maxValue));
   const g = clamp(color.y, float(0), float(maxValue));
   const b = clamp(color.z, float(0), float(maxValue));

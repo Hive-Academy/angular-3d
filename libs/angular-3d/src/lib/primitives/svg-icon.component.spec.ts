@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { SvgIconComponent } from './svg-icon.component';
 import { NG_3D_PARENT } from '../types/tokens';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 
 // Mock SVGLoader

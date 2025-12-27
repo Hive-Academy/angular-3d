@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { SceneLightingComponent } from './scene-lighting.component';
 import { NG_3D_PARENT } from '../../types/tokens';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 
 describe('SceneLightingComponent', () => {
   let mockParent: THREE.Object3D;

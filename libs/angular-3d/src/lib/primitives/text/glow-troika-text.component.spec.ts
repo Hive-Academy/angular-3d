@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Component, signal } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { GlowTroikaTextComponent } from './glow-troika-text.component';
 import { NG_3D_PARENT } from '../../types/tokens';
 import { RenderLoopService } from '../../render-loop/render-loop.service';

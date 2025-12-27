@@ -2,8 +2,15 @@ import { TestBed } from '@angular/core/testing';
 import { GltfModelComponent } from './gltf-model.component';
 import { GltfLoaderService } from '../loaders/gltf-loader.service';
 import { NG_3D_PARENT } from '../types/tokens';
-import * as THREE from 'three';
+import { RenderLoopService } from '../render-loop/render-loop.service';
+import * as THREE from 'three/webgpu';
 import { signal } from '@angular/core';
+
+// Mock RenderLoopService
+class MockRenderLoopService {
+  requestFrame = jest.fn();
+  registerUpdateCallback = jest.fn(() => jest.fn());
+}
 
 describe('GltfModelComponent', () => {
   let mockLoaderService: jest.Mocked<GltfLoaderService>;
@@ -25,6 +32,7 @@ describe('GltfModelComponent', () => {
         GltfModelComponent,
         { provide: GltfLoaderService, useValue: mockLoaderService },
         { provide: NG_3D_PARENT, useValue: mockParentFn },
+        { provide: RenderLoopService, useClass: MockRenderLoopService },
       ],
     });
   });

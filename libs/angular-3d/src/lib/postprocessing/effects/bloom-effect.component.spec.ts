@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BloomEffectComponent } from './bloom-effect.component';
 import { EffectComposerService } from '../effect-composer.service';
 import { SceneService } from '../../canvas/scene.service';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { UnrealBloomPass } from 'three-stdlib';
 
 // Mock dependencies
@@ -13,6 +13,8 @@ class MockEffectComposerService {
 
 class MockSceneService {
   renderer = jest.fn();
+  scene = jest.fn();
+  camera = jest.fn();
 }
 
 // Mock UnrealBloomPass
@@ -27,13 +29,15 @@ describe('BloomEffectComponent', () => {
   let fixture: ComponentFixture<BloomEffectComponent>;
   let mockComposerService: MockEffectComposerService;
   let mockSceneService: MockSceneService;
-  let renderer: THREE.WebGLRenderer;
+  let renderer: THREE.WebGPURenderer;
 
   beforeEach(async () => {
     mockComposerService = new MockEffectComposerService();
     mockSceneService = new MockSceneService();
-    renderer = { getSize: jest.fn() } as unknown as THREE.WebGLRenderer;
+    renderer = { getSize: jest.fn() } as unknown as THREE.WebGPURenderer;
     mockSceneService.renderer.mockReturnValue(renderer);
+    mockSceneService.scene.mockReturnValue({} as THREE.Scene);
+    mockSceneService.camera.mockReturnValue({} as THREE.Camera);
 
     await TestBed.configureTestingModule({
       imports: [BloomEffectComponent],
