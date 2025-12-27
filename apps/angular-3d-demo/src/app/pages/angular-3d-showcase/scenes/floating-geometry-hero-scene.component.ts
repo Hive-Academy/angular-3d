@@ -4,6 +4,7 @@ import {
   AmbientLightComponent,
   DirectionalLightComponent,
   PolyhedronComponent,
+  BoxComponent,
   EnvironmentComponent,
   Float3dDirective,
   MouseTracking3dDirective,
@@ -31,6 +32,7 @@ import {
     AmbientLightComponent,
     DirectionalLightComponent,
     PolyhedronComponent,
+    BoxComponent,
     EnvironmentComponent,
     Float3dDirective,
     MouseTracking3dDirective,
@@ -48,7 +50,7 @@ import {
         [cameraPosition]="[0, 0, 20]"
         [cameraFov]="50"
         [enableAntialiasing]="true"
-        [backgroundColor]="0x0a0a1a"
+        [backgroundColor]="backgroundColor"
       >
         <!-- Lighting -->
         <a3d-ambient-light [intensity]="0.2" />
@@ -125,10 +127,9 @@ import {
         />
 
         <!-- Cube - Bottom right, cyan -->
-        <a3d-polyhedron
-          [type]="'cube'"
+        <a3d-box
           [position]="[6, -2, -1]"
-          [args]="[1.2, 0]"
+          [args]="[1.2, 1.2, 1.2]"
           [color]="'#06b6d4'"
           float3d
           [floatConfig]="{
@@ -173,4 +174,6 @@ import {
     `,
   ],
 })
-export class FloatingGeometryHeroSceneComponent {}
+export class FloatingGeometryHeroSceneComponent {
+  readonly backgroundColor = 0x0a0a1a;
+}

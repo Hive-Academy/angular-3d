@@ -37,16 +37,13 @@ import {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div
-      class="relative overflow-hidden"
-      style="height: calc(100vh - 180px);"
-    >
+    <div class="relative overflow-hidden" style="height: calc(100vh - 180px);">
       <a3d-scene-3d
         [cameraPosition]="[0, 0, 12]"
         [cameraFov]="55"
         [enableAntialiasing]="true"
         [alpha]="false"
-        [backgroundColor]="0x0f0520"
+        [backgroundColor]="backgroundColor"
       >
         <!-- Soft ambient lighting for bubble visibility -->
         <a3d-ambient-light [intensity]="0.3" />
@@ -73,7 +70,7 @@ import {
           [text]="'BUBBLE DREAM'"
           [fontSize]="70"
           [fontScaleFactor]="0.07"
-          [bubbleColor]="0xffffff"
+          [bubbleColor]="bubbleColor"
           [opacity]="0.6"
           [maxBubbleScale]="0.8"
           [bubblesPerPixel]="2"
@@ -85,11 +82,7 @@ import {
 
         <!-- Soft bloom for dreamy ethereal atmosphere -->
         <a3d-effect-composer>
-          <a3d-bloom-effect
-            [threshold]="0.7"
-            [strength]="0.4"
-            [radius]="0.6"
-          />
+          <a3d-bloom-effect [threshold]="0.7" [strength]="0.4" [radius]="0.6" />
         </a3d-effect-composer>
       </a3d-scene-3d>
     </div>
@@ -102,4 +95,7 @@ import {
     `,
   ],
 })
-export class BubbleDreamHeroSceneComponent {}
+export class BubbleDreamHeroSceneComponent {
+  readonly backgroundColor = 0x0f0520;
+  readonly bubbleColor = 0xffffff;
+}

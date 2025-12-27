@@ -35,7 +35,7 @@ import {
         [cameraPosition]="[0, 0, 15]"
         [cameraFov]="60"
         [enableAntialiasing]="true"
-        [backgroundColor]="0x0a0a0f"
+        [backgroundColor]="backgroundColor"
       >
         <!-- Ambient lighting for subtle visibility -->
         <a3d-ambient-light [intensity]="0.1" />
@@ -63,7 +63,7 @@ import {
           [text]="'PARTICLE STORM'"
           [fontSize]="80"
           [fontScaleFactor]="0.06"
-          [particleColor]="0x00d4ff"
+          [particleColor]="particleColor"
           [opacity]="0.25"
           [maxParticleScale]="0.12"
           [particlesPerPixel]="2"
@@ -94,4 +94,7 @@ import {
     `,
   ],
 })
-export class ParticleStormHeroSceneComponent {}
+export class ParticleStormHeroSceneComponent {
+  readonly backgroundColor = 0x0a0a0f;
+  readonly particleColor = 0x00d4ff;
+}

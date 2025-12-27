@@ -14,6 +14,8 @@
 | TASK_2025_023 | Troika-Three-Text Implementation    | ✅ COMPLETE              | 2025-12-22 |
 | TASK_2025_024 | Particle Text → Troika Refactor     | ✅ COMPLETE              | 2025-12-23 |
 | TASK_2025_025 | Angular-3D Showcase Page Redesign   | 🔄 IN PROGRESS           | 2025-12-23 |
+| TASK_2025_028 | WebGPU Migration                    | 🔄 QA Phase              | 2025-12-26 |
+| TASK_2025_030 | WebGPU Test Suite Fixes             | 📋 PENDING               | 2025-12-27 |
 
 ## Task Dependencies
 
