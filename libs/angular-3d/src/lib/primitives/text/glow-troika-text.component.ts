@@ -8,7 +8,7 @@ import {
   DestroyRef,
 } from '@angular/core';
 import { Text } from 'troika-three-text';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { NG_3D_PARENT } from '../../types/tokens';
 import { OBJECT_ID } from '../../tokens/object-id.token';
 import { RenderLoopService } from '../../render-loop/render-loop.service';
@@ -243,13 +243,14 @@ export class GlowTroikaTextComponent {
         ? new THREE.Color(this.textColor() as string | number)
         : glowColorValue.clone();
 
-      // Use MeshBasicMaterial with color multiplier for emissive look
-      const material = new THREE.MeshBasicMaterial({
-        color: textColorValue.clone().multiplyScalar(this.glowIntensity()),
-        transparent: true,
-        opacity: this.fillOpacity(),
-        toneMapped: false, // Allow HDR values for extra brightness
-      });
+      // Use MeshBasicNodeMaterial with color multiplier for emissive look
+      const material = new THREE.MeshBasicNodeMaterial();
+      material.color = textColorValue
+        .clone()
+        .multiplyScalar(this.glowIntensity());
+      material.transparent = true;
+      material.opacity = this.fillOpacity();
+      material.toneMapped = false; // Allow HDR values for extra brightness
 
       this.textObject.material = material;
 

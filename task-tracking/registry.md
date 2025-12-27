@@ -55,3 +55,4 @@
 | TASK_2025_024 | Particle Text → Troika Refactor            | COMPLETE | 2025-12-23 |
 | TASK_2025_026 | Award-Winning Three.js Enhancements        | COMPLETE | 2025-12-24 |
 | TASK_2025_027 | NPM Publishing Infrastructure              | COMPLETE | 2025-12-25 |
+| TASK_2025_029 | Prebuilt Hero Section Showcases            | COMPLETE | 2025-12-26 |

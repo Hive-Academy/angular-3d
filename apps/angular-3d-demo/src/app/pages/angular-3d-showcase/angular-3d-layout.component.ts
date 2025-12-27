@@ -147,7 +147,6 @@ interface SectionTab {
 export default class Angular3dLayoutComponent {
   public readonly tabs: SectionTab[] = [
     { path: 'primitives', label: 'Primitives', icon: '🔷' },
-    { path: 'space', label: 'Space', icon: '🌌' },
     { path: 'text', label: 'Text', icon: '✏️' },
     { path: 'lighting', label: 'Lighting', icon: '💡' },
     { path: 'directives', label: 'Directives', icon: '⚡' },

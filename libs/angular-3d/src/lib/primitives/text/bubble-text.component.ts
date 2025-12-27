@@ -78,6 +78,7 @@ export class BubbleTextComponent {
   public readonly growSpeed = input<number>(0.02);
   public readonly enableFlying = input<boolean>(true);
   public readonly flyingRatio = input<number>(0.2); // 20% of bubbles fly
+  public readonly lineHeightMultiplier = input<number>(2.5); // Canvas height multiplier for text rendering
 
   // DI
   private readonly parent = inject(NG_3D_PARENT, { optional: true });
@@ -170,8 +171,13 @@ export class BubbleTextComponent {
   private sampleTextPositions(text: string, fontSize: number): void {
     const scaleFactor = this.fontScaleFactor();
 
-    // Sample every 2nd pixel for performance
-    const positions = this.textSampling.sampleTextPositions(text, fontSize, 2);
+    // Sample every 2nd pixel for performance, using lineHeightMultiplier for consistent vertical sampling
+    const positions = this.textSampling.sampleTextPositions(
+      text,
+      fontSize,
+      2,
+      this.lineHeightMultiplier()
+    );
 
     // Calculate scene dimensions
     const maxX = Math.max(...positions.map(([x]) => Math.abs(x)));

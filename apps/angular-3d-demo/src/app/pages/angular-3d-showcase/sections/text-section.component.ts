@@ -16,6 +16,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
  * Contains 2 grouped scenes:
  * 1. Troika Text variants (basic, glow)
  * 2. Particle-based text (particles, bubbles)
+ * Updated to use height multiplier 2.5 for better fitting.
  */
 @Component({
   selector: 'app-text-section',
@@ -111,7 +112,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
             <div
               class="aspect-video rounded-2xl overflow-hidden bg-background-dark shadow-xl"
             >
-              <a3d-scene-3d [cameraPosition]="[0, 0, 10]">
+              <a3d-scene-3d [cameraPosition]="[0, 0, 18]">
                 <a3d-ambient-light [intensity]="0.5" />
                 <a3d-directional-light
                   [position]="[3, 3, 3]"
@@ -119,6 +120,9 @@ import { SCENE_COLORS } from '../../../shared/colors';
                 />
                 <a3d-particle-text
                   text="Particles"
+                  [fontScaleFactor]="0.07"
+                  [fontSize]="55"
+                  [lineHeightMultiplier]="6.0"
                   [particleColor]="colors.pink"
                 />
               </a3d-scene-3d>
@@ -135,7 +139,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
             <div
               class="aspect-video rounded-2xl overflow-hidden bg-background-dark shadow-xl"
             >
-              <a3d-scene-3d [cameraPosition]="[0, 0, 8]">
+              <a3d-scene-3d [cameraPosition]="[0, 0, 18]">
                 <a3d-ambient-light [intensity]="0.5" />
                 <a3d-directional-light
                   [position]="[3, 3, 3]"
@@ -144,7 +148,8 @@ import { SCENE_COLORS } from '../../../shared/colors';
                 <a3d-bubble-text
                   text="Bubbles"
                   [fontSize]="60"
-                  [bubbleColor]="colors.orange"
+                  [lineHeightMultiplier]="3.0"
+                  [fontScaleFactor]="0.07"
                 />
               </a3d-scene-3d>
             </div>

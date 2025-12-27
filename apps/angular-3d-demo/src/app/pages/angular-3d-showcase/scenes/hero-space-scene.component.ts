@@ -1,16 +1,18 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
-  Scene3dComponent,
   AmbientLightComponent,
+  BloomEffectComponent,
+  DepthOfFieldEffectComponent,
   DirectionalLightComponent,
-  StarFieldComponent,
+  EffectComposerComponent,
+  EnvironmentComponent,
+  NebulaComponent,
+  NebulaVolumetricComponent,
+  OrbitControlsComponent,
   PlanetComponent,
   Rotate3dDirective,
-  OrbitControlsComponent,
-  BloomEffectComponent,
-  EnvironmentComponent,
-  EffectComposerComponent,
-  DepthOfFieldEffectComponent,
+  Scene3dComponent,
+  StarFieldComponent,
 } from '@hive-academy/angular-3d';
 
 /**
@@ -38,6 +40,8 @@ import {
     EnvironmentComponent,
     EffectComposerComponent,
     DepthOfFieldEffectComponent,
+    NebulaComponent,
+    NebulaVolumetricComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -145,6 +149,22 @@ import {
           [maxDistance]="40"
           [autoRotate]="true"
           [autoRotateSpeed]="0.3"
+        />
+
+        <a3d-nebula-volumetric
+          [position]="[8, 4, -8]"
+          [width]="50"
+          [height]="25"
+          [primaryColor]="'#8b5cf6'"
+          [secondaryColor]="'#d946ef'"
+          [opacity]="0.2"
+        />
+
+        <a3d-nebula
+          [opacity]="0.2"
+          [cloudCount]="3"
+          [position]="[8, 4, -8]"
+          [colorPalette]="['#8b5cf6', '#ec4899', '#06b6d4']"
         />
 
         <!-- Post-processing effects -->
