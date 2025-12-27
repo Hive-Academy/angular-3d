@@ -97,6 +97,22 @@ export const appRoutes: Routes = [
           ).then((m) => m.MetaballHeroSceneComponent),
         title: 'Metaball Hero | Angular-3D',
       },
+      {
+        path: 'cosmic-portal',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/scenes/cosmic-portal-hero-scene.component'
+          ).then((m) => m.CosmicPortalHeroSceneComponent),
+        title: 'Cosmic Portal | Angular-3D',
+      },
+      {
+        path: 'crystal-grid',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/scenes/crystal-grid-hero-scene.component'
+          ).then((m) => m.CrystalGridHeroSceneComponent),
+        title: 'Crystal Grid | Angular-3D',
+      },
     ],
   },
   {
