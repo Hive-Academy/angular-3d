@@ -11,10 +11,7 @@
 | TASK_2025_020 | Library Quality Audit (Temp vs Lib) | 🔄 IN PROGRESS           | 2025-12-22 |
 | TASK_2025_021 | Hero Section 3D Text Redesign       | ⏸️ PAUSED (pivot)        | 2025-12-22 |
 | TASK_2025_022 | GSAP Service Centralization         | 🔄 Execution (Batch 1)   | 2025-12-22 |
-| TASK_2025_023 | Troika-Three-Text Implementation    | ✅ COMPLETE              | 2025-12-22 |
-| TASK_2025_024 | Particle Text → Troika Refactor     | ✅ COMPLETE              | 2025-12-23 |
 | TASK_2025_025 | Angular-3D Showcase Page Redesign   | 🔄 IN PROGRESS           | 2025-12-23 |
-| TASK_2025_028 | WebGPU Migration                    | 🔄 QA Phase              | 2025-12-26 |
 | TASK_2025_030 | WebGPU Test Suite Fixes             | 📋 PENDING               | 2025-12-27 |
 
 ## Task Dependencies
@@ -57,4 +54,5 @@
 | TASK_2025_024 | Particle Text → Troika Refactor            | COMPLETE | 2025-12-23 |
 | TASK_2025_026 | Award-Winning Three.js Enhancements        | COMPLETE | 2025-12-24 |
 | TASK_2025_027 | NPM Publishing Infrastructure              | COMPLETE | 2025-12-25 |
+| TASK_2025_028 | WebGPU Migration                           | COMPLETE | 2025-12-26 |
 | TASK_2025_029 | Prebuilt Hero Section Showcases            | COMPLETE | 2025-12-26 |
