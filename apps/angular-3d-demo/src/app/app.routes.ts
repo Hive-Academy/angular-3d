@@ -26,14 +26,7 @@ export const appRoutes: Routes = [
           ),
         title: 'Primitives | Angular-3D',
       },
-      {
-        path: 'space',
-        loadComponent: () =>
-          import(
-            './pages/angular-3d-showcase/sections/space-section.component'
-          ),
-        title: 'Space Elements | Angular-3D',
-      },
+
       {
         path: 'text',
         loadComponent: () =>
@@ -95,6 +88,14 @@ export const appRoutes: Routes = [
             './pages/angular-3d-showcase/scenes/cloud-hero-scene.component'
           ).then((m) => m.CloudHeroSceneComponent),
         title: 'Clouds | Angular-3D',
+      },
+      {
+        path: 'metaball',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/scenes/metaball-hero-scene.component'
+          ).then((m) => m.MetaballHeroSceneComponent),
+        title: 'Metaball Hero | Angular-3D',
       },
     ],
   },
