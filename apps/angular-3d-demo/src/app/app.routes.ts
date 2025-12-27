@@ -113,6 +113,22 @@ export const appRoutes: Routes = [
           ).then((m) => m.CrystalGridHeroSceneComponent),
         title: 'Crystal Grid | Angular-3D',
       },
+      {
+        path: 'floating-geometry',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/scenes/floating-geometry-hero-scene.component'
+          ).then((m) => m.FloatingGeometryHeroSceneComponent),
+        title: 'Floating Geometry | Angular-3D',
+      },
+      {
+        path: 'particle-storm',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/scenes/particle-storm-hero-scene.component'
+          ).then((m) => m.ParticleStormHeroSceneComponent),
+        title: 'Particle Storm | Angular-3D',
+      },
     ],
   },
   {
