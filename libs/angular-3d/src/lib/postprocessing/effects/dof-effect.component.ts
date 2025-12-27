@@ -14,10 +14,19 @@ import {
   effect,
   DestroyRef,
 } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { BokehPass } from 'three-stdlib';
 import { EffectComposerService } from '../effect-composer.service';
 import { SceneService } from '../../canvas/scene.service';
+
+/**
+ * Simple uniform interface for shader uniforms.
+ * Replaces THREE.IUniform which isn't exported from three/webgpu.
+ */
+interface ShaderUniform {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  value: any;
+}
 
 /**
  * DepthOfFieldEffectComponent - Bokeh DOF effect
@@ -112,7 +121,7 @@ export class DepthOfFieldEffectComponent {
     // Update DOF parameters reactively
     effect(() => {
       if (this.pass) {
-        const uniforms = this.pass.uniforms as Record<string, THREE.IUniform>;
+        const uniforms = this.pass.uniforms as Record<string, ShaderUniform>;
         uniforms['focus'].value = this.focus();
         uniforms['aperture'].value = this.aperture();
         uniforms['maxblur'].value = this.maxblur();
@@ -130,7 +139,7 @@ export class DepthOfFieldEffectComponent {
       renderer.getSize(size);
 
       // BokehPass uses aspect ratio from camera, update uniforms if needed
-      const uniforms = pass.uniforms as Record<string, THREE.IUniform>;
+      const uniforms = pass.uniforms as Record<string, ShaderUniform>;
       if (uniforms['aspect']) {
         uniforms['aspect'].value = size.x / size.y;
       } else if (!this.aspectUniformWarned) {

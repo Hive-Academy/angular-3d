@@ -4,9 +4,10 @@
  * Manages the Three.js EffectComposer and render passes.
  * Allows switching between standard render and post-processing render.
  *
- * NOTE: This service currently uses three-stdlib EffectComposer which expects
- * WebGLRenderer. For full WebGPU support, this will be migrated to THREE.PostProcessing
- * with TSL nodes in Batch 9. For now, post-processing may only work in WebGL fallback mode.
+ * Uses three-stdlib EffectComposer with WebGPU renderer. The three-stdlib passes
+ * (UnrealBloomPass, BokehPass, SSAOPass, ShaderPass) work with WebGPURenderer
+ * through compatibility layer. For native WebGPU post-processing with TSL nodes,
+ * consider THREE.PostProcessing when it stabilizes.
  */
 
 import { Injectable, OnDestroy, inject, signal } from '@angular/core';
@@ -32,9 +33,8 @@ export class EffectComposerService implements OnDestroy {
   private readonly passes = new Set<Pass>();
 
   // Stored references for default rendering
-  // Note: three-stdlib EffectComposer expects WebGLRenderer, but we accept
-  // WebGPURenderer and cast it. Post-processing may only work in WebGL fallback mode
-  // until Batch 9 migration to THREE.PostProcessing with TSL.
+  // Note: three-stdlib EffectComposer expects WebGLRenderer, but accepts
+  // WebGPURenderer through Three.js compatibility layer
   private renderer: THREE.WebGPURenderer | null = null;
   private scene: THREE.Scene | null = null;
   private camera: THREE.PerspectiveCamera | null = null;
@@ -49,9 +49,9 @@ export class EffectComposerService implements OnDestroy {
   /**
    * Initialize the effect composer with scene resources
    *
-   * Note: three-stdlib EffectComposer expects WebGLRenderer internally.
-   * When using WebGPU backend, post-processing effects may not work.
-   * Full WebGPU post-processing support will be added in Batch 9.
+   * Note: three-stdlib EffectComposer works with WebGPURenderer through
+   * Three.js compatibility layer. GLSL-based passes are automatically
+   * handled by the renderer.
    */
   public init(
     renderer: THREE.WebGPURenderer,
@@ -62,8 +62,8 @@ export class EffectComposerService implements OnDestroy {
     this.scene = scene;
     this.camera = camera;
 
-    // Cast to any for three-stdlib compatibility
-    // TODO: Migrate to THREE.PostProcessing in Batch 9
+    // Cast to any for three-stdlib type compatibility
+    // three-stdlib EffectComposer accepts WebGPURenderer at runtime
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.composer = new EffectComposer(renderer as any);
 

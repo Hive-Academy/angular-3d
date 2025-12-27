@@ -14,7 +14,7 @@ import {
   effect,
   DestroyRef,
 } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { SSAOPass } from 'three-stdlib';
 import { EffectComposerService } from '../effect-composer.service';
 import { SceneService } from '../../canvas/scene.service';
