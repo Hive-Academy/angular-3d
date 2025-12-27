@@ -12,8 +12,37 @@
 
 import { Injectable, OnDestroy, inject, signal } from '@angular/core';
 import * as THREE from 'three/webgpu';
-import { EffectComposer, RenderPass, Pass } from 'three-stdlib';
+import { EffectComposer, RenderPass, Pass, ShaderPass } from 'three-stdlib';
 import { RenderLoopService } from '../render-loop/render-loop.service';
+
+/**
+ * Flip shader to correct Y-axis inversion when using WebGPURenderer
+ * with WebGL fallback and three-stdlib EffectComposer.
+ *
+ * WebGPU and WebGL have different coordinate systems for render targets.
+ * This shader flips the image vertically to correct the inversion.
+ */
+const FlipShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      // Flip Y coordinate
+      vUv.y = 1.0 - vUv.y;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    varying vec2 vUv;
+    void main() {
+      gl_FragColor = texture2D(tDiffuse, vUv);
+    }
+  `,
+};
 
 /**
  * Service to manage post-processing effects.
@@ -30,6 +59,7 @@ export class EffectComposerService implements OnDestroy {
 
   private composer: EffectComposer | null = null;
   private renderPass: RenderPass | null = null;
+  private flipPass: ShaderPass | null = null;
   private readonly passes = new Set<Pass>();
 
   // Stored references for default rendering
@@ -38,6 +68,9 @@ export class EffectComposerService implements OnDestroy {
   private renderer: THREE.WebGPURenderer | null = null;
   private scene: THREE.Scene | null = null;
   private camera: THREE.PerspectiveCamera | null = null;
+
+  // Track if using WebGL fallback (needs Y-flip correction)
+  private needsFlipCorrection = false;
 
   // State signals
   private readonly _isEnabled = signal<boolean>(false);
@@ -62,6 +95,18 @@ export class EffectComposerService implements OnDestroy {
     this.scene = scene;
     this.camera = camera;
 
+    // Detect if using WebGL fallback (needs Y-flip correction for render targets)
+    // WebGPU and WebGL have different coordinate systems
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const backend = (renderer as any).backend;
+    this.needsFlipCorrection = !backend?.isWebGPU;
+
+    if (this.needsFlipCorrection) {
+      console.log(
+        '[EffectComposer] WebGL fallback detected, enabling Y-flip correction'
+      );
+    }
+
     // Cast to any for three-stdlib type compatibility
     // three-stdlib EffectComposer accepts WebGPURenderer at runtime
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -75,6 +120,14 @@ export class EffectComposerService implements OnDestroy {
     this.passes.forEach((pass) => {
       this.composer?.addPass(pass);
     });
+
+    // Add flip correction pass at the end if using WebGL fallback
+    // This corrects the Y-axis inversion caused by coordinate system differences
+    if (this.needsFlipCorrection) {
+      this.flipPass = new ShaderPass(FlipShader);
+      this.flipPass.renderToScreen = true;
+      this.composer.addPass(this.flipPass);
+    }
 
     // If enabled, ensure render loop is using composer
     if (this._isEnabled()) {
@@ -150,9 +203,11 @@ export class EffectComposerService implements OnDestroy {
     // For now, we assume components dispose their own passes.
     this.composer = null;
     this.renderPass = null;
+    this.flipPass = null;
     this.renderer = null;
     this.scene = null;
     this.camera = null;
+    this.needsFlipCorrection = false;
   }
 
   private updateRenderLoop(): void {
