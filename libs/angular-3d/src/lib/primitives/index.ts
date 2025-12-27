@@ -41,3 +41,6 @@ export * from './environment.component';
 
 // Cloud components
 export * from './cloud-layer.component';
+
+// Metaball ray-marching component
+export * from './metaball.component';
