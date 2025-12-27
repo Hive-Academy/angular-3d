@@ -21,6 +21,7 @@ export * from './materials/standard-material.directive';
 export * from './materials/physical-material.directive';
 export * from './materials/lambert-material.directive';
 export * from './materials/shader-material.directive';
+export * from './materials/node-material.directive';
 
 // Light directives
 export * from './light.directive';

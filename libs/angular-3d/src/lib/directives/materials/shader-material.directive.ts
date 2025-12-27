@@ -44,7 +44,7 @@
  */
 
 import { Directive, inject, effect, input, DestroyRef } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { MATERIAL_SIGNAL } from '../../tokens/material.token';
 import { SceneService } from '../../canvas/scene.service';
 import { RenderLoopService } from '../../render-loop/render-loop.service';
@@ -111,6 +111,25 @@ const BLENDING_MAP: Record<
  * - time: float - elapsed time in seconds (updated each frame)
  * - resolution: vec2 - canvas width and height in pixels
  * - mouse: vec2 - normalized mouse position (0-1)
+ *
+ * @deprecated Use NodeMaterialDirective (a3dNodeMaterial) with TSL node graphs instead.
+ * ShaderMaterial uses GLSL shaders which are not native to WebGPU. While the WebGPU
+ * renderer provides GLSL fallback support, NodeMaterial with TSL provides better
+ * performance and cross-platform compatibility. This directive is maintained for
+ * backward compatibility during migration.
+ *
+ * Migration example:
+ * ```typescript
+ * // Before (ShaderMaterial with GLSL):
+ * fragmentShader = `
+ *   uniform vec3 color;
+ *   void main() { gl_FragColor = vec4(color, 1.0); }
+ * `;
+ *
+ * // After (NodeMaterial with TSL):
+ * import { color } from 'three/tsl';
+ * colorNode = color(0xff0000);
+ * ```
  */
 @Directive({
   selector: '[a3dShaderMaterial]',
@@ -291,6 +310,14 @@ export class ShaderMaterialDirective {
   private readonly cachedResolution = new THREE.Vector2();
 
   public constructor() {
+    // Deprecation warning for WebGPU migration
+    console.warn(
+      '[a3dShaderMaterial] DEPRECATED: ShaderMaterial with GLSL shaders is deprecated. ' +
+        'Consider migrating to NodeMaterialDirective (a3dNodeMaterial) with TSL node graphs ' +
+        'for better WebGPU performance and cross-platform compatibility. ' +
+        'See: https://threejs.org/docs/#api/en/materials/NodeMaterial'
+    );
+
     // Effect 1: Create material when shaders are available
     effect(() => {
       const vs = this.vertexShader();
@@ -341,7 +368,7 @@ export class ShaderMaterialDirective {
    */
   private createMaterial(vertexShader: string, fragmentShader: string): void {
     // Build uniform objects including auto-injected ones
-    const uniformObjects: Record<string, THREE.IUniform> = {};
+    const uniformObjects: Record<string, { value: unknown }> = {};
 
     // Auto-inject time uniform
     if (this.injectTime()) {
