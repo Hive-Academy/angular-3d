@@ -6,10 +6,20 @@ import {
   effect,
   DestroyRef,
 } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { NG_3D_PARENT } from '../types/tokens';
 import { OBJECT_ID } from '../tokens/object-id.token';
 import { RenderLoopService } from '../render-loop/render-loop.service';
+
+/**
+ * Simple uniform interface for ShaderMaterial uniforms.
+ * Replaces THREE.IUniform which isn't exported from three/webgpu.
+ * Uses `any` for value type since uniforms can be numbers, colors, vectors, etc.
+ */
+interface ShaderUniform {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  value: any;
+}
 
 /**
  * NebulaVolumetricComponent - Realistic Shader-Based Nebula Clouds
@@ -88,7 +98,7 @@ export class NebulaVolumetricComponent {
   // Internal state
   private readonly group = new THREE.Group();
   private readonly nebulaLayers: THREE.Mesh[] = [];
-  private readonly layerUniforms: Array<{ [uniform: string]: THREE.IUniform }> =
+  private readonly layerUniforms: Array<{ [uniform: string]: ShaderUniform }> =
     [];
   private renderLoopCleanup!: () => void;
 

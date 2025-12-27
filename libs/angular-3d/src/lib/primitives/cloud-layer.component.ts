@@ -23,7 +23,7 @@ import {
   PLATFORM_ID,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { NG_3D_PARENT } from '../types/tokens';
 import { RenderLoopService } from '../render-loop/render-loop.service';
