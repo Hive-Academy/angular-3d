@@ -120,6 +120,14 @@ export class SceneGraphStore {
   // Object registry
   private readonly _registry = signal<Map<string, ObjectEntry>>(new Map());
 
+  // Pending registrations queue for objects that try to register before scene is ready
+  private readonly _pendingRegistrations: Array<{
+    id: string;
+    object: Object3D;
+    type: Object3DType;
+    parentId?: string;
+  }> = [];
+
   // ============================================================================
   // Public Computed Signals
   // ============================================================================
@@ -159,6 +167,34 @@ export class SceneGraphStore {
     this._renderer.set(renderer);
     // Signal ready AFTER all core objects are set
     this._isReady.set(true);
+    // Flush any objects that were registered before scene was ready
+    this.flushPendingRegistrations();
+  }
+
+  /**
+   * Flush pending registrations - adds queued objects to the scene
+   *
+   * This is called automatically when initScene() completes.
+   * Objects registered before the scene was initialized are queued
+   * and added to the scene graph once it becomes available.
+   */
+  private flushPendingRegistrations(): void {
+    const scene = this._scene();
+    if (!scene) return;
+
+    // Process all pending registrations in order
+    for (const { id, object, parentId } of this._pendingRegistrations) {
+      const parent = parentId ? this._registry().get(parentId)?.object : scene;
+      if (parent) {
+        parent.add(object);
+      } else {
+        // Parent not found, add directly to scene as fallback
+        scene.add(object);
+      }
+    }
+
+    // Clear the pending queue
+    this._pendingRegistrations.length = 0;
   }
 
   // ============================================================================
@@ -178,11 +214,11 @@ export class SceneGraphStore {
         : this._scene();
 
       if (!parent) {
-        console.warn(
-          `[SceneGraphStore] Cannot add ${id} to scene - scene not initialized yet`
-        );
-        // Still add to registry so component is tracked
-        // Scene will be available on next registration attempt
+        // Scene not ready yet - queue for later addition
+        // This happens when child components initialize before Scene3dComponent
+        // completes its async renderer initialization
+        this._pendingRegistrations.push({ id, object, type, parentId });
+        // Still add to registry so component is tracked and can be found by children
       } else {
         parent.add(object);
       }

@@ -273,6 +273,9 @@ export class ScrollZoomCoordinatorDirective
   /**
    * Initialize in simple mode (using SceneService)
    * Uses canvas element from SceneService
+   *
+   * Includes retry mechanism for cases where the canvas is not yet available
+   * (e.g., when Scene3dComponent is still initializing its async WebGPU renderer)
    */
   private initializeCoordinator(): void {
     // Skip if already initialized in advanced mode
@@ -281,11 +284,47 @@ export class ScrollZoomCoordinatorDirective
     // Get the canvas element from the scene service
     this.canvasElement = this.sceneService.domElement;
     if (!this.canvasElement) {
-      console.warn(
-        'ScrollZoomCoordinatorDirective: Canvas element not found. Coordination disabled.'
-      );
+      // Canvas not ready yet - retry after a short delay
+      // This handles the case where Scene3dComponent is still initializing
+      this.retryInitialization();
       return;
     }
+
+    this.completeInitialization();
+  }
+
+  /**
+   * Retry initialization after a delay
+   * Gives Scene3dComponent time to complete async renderer initialization
+   */
+  private retryInitialization(retryCount = 0): void {
+    const maxRetries = 5;
+    const retryDelayMs = 100;
+
+    if (this.destroyed || this.initialized) return;
+
+    setTimeout(() => {
+      if (this.destroyed || this.initialized) return;
+
+      this.canvasElement = this.sceneService.domElement;
+      if (this.canvasElement) {
+        this.completeInitialization();
+      } else if (retryCount < maxRetries) {
+        // Retry again
+        this.retryInitialization(retryCount + 1);
+      } else {
+        console.warn(
+          'ScrollZoomCoordinatorDirective: Canvas element not found after retries. Coordination disabled.'
+        );
+      }
+    }, retryDelayMs);
+  }
+
+  /**
+   * Complete initialization once canvas is available
+   */
+  private completeInitialization(): void {
+    if (this.initialized || !this.canvasElement) return;
 
     this.initialized = true;
 

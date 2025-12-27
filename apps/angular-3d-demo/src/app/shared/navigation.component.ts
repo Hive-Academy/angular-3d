@@ -38,7 +38,7 @@ import { distinctUntilChanged, fromEvent, map } from 'rxjs';
             ngSrc="/logo.png"
             alt="logo"
             width="160"
-            height="56"
+            height="94"
             priority
             class="transition-all duration-300"
           />
