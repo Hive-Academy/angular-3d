@@ -7,7 +7,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { SceneService } from '../../canvas/scene.service';
 import { RenderLoopService } from '../../render-loop/render-loop.service';
 import { TextSamplingService } from '../../services/text-sampling.service';
