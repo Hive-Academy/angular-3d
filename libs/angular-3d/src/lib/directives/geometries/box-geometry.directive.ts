@@ -1,5 +1,5 @@
 import { Directive, inject, input, effect, DestroyRef } from '@angular/core';
-import { BoxGeometry } from 'three';
+import { BoxGeometry } from 'three/webgpu';
 import { GEOMETRY_SIGNAL } from '../../tokens/geometry.token';
 
 /**

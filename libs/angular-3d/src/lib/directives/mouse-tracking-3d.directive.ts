@@ -11,8 +11,8 @@ import {
 import { DOCUMENT } from '@angular/common';
 import { SceneGraphStore } from '../store/scene-graph.store';
 import { OBJECT_ID } from '../tokens/object-id.token';
-import type { Object3D } from 'three';
-import { Vector2, Euler, Vector3 } from 'three';
+import type { Object3D } from 'three/webgpu';
+import { Vector2, Euler, Vector3 } from 'three/webgpu';
 
 export interface MouseTrackingConfig {
   /** Movement sensitivity (default: 0.5) */

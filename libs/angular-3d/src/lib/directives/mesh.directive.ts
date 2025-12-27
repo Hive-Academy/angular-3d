@@ -22,7 +22,7 @@
  */
 
 import { Directive, inject, DestroyRef, effect, signal } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { SceneGraphStore } from '../store/scene-graph.store';
 import { OBJECT_ID } from '../tokens/object-id.token';
 import { GEOMETRY_SIGNAL } from '../tokens/geometry.token';

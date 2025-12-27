@@ -22,7 +22,7 @@
 import { Directive, inject } from '@angular/core';
 import { SceneGraphStore } from '../store/scene-graph.store';
 import { OBJECT_ID } from '../tokens/object-id.token';
-import type * as THREE from 'three';
+import type * as THREE from 'three/webgpu';
 
 /**
  * LightDirective

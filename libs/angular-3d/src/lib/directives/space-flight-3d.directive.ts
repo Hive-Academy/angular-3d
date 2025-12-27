@@ -50,7 +50,7 @@ import {
   afterNextRender,
   computed,
 } from '@angular/core';
-import type { Object3D } from 'three';
+import type { Object3D } from 'three/webgpu';
 import { RenderLoopService } from '../render-loop/render-loop.service';
 import { SceneGraphStore } from '../store/scene-graph.store';
 import { OBJECT_ID } from '../tokens/object-id.token';

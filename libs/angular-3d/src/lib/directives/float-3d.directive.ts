@@ -59,7 +59,7 @@ import {
   inject,
   input,
 } from '@angular/core';
-import { Mesh } from 'three';
+import { Mesh } from 'three/webgpu';
 import { SceneGraphStore } from '../store/scene-graph.store';
 import { SceneService } from '../canvas/scene.service';
 import { OBJECT_ID } from '../tokens/object-id.token';

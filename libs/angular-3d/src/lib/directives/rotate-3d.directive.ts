@@ -68,7 +68,7 @@ import {
   inject,
   input,
 } from '@angular/core';
-import type { Object3D } from 'three';
+import type { Object3D } from 'three/webgpu';
 import { SceneGraphStore } from '../store/scene-graph.store';
 import { SceneService } from '../canvas/scene.service';
 import { OBJECT_ID } from '../tokens/object-id.token';

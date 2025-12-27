@@ -5,7 +5,7 @@ import {
   OctahedronGeometry,
   TetrahedronGeometry,
   BufferGeometry,
-} from 'three';
+} from 'three/webgpu';
 import { GEOMETRY_SIGNAL } from '../../tokens/geometry.token';
 
 /**
