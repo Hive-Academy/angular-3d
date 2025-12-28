@@ -1,7 +1,7 @@
 # Development Tasks - TASK_2025_031
 
 **Task Type**: Frontend (Angular 3D Library)
-**Total Tasks**: 14 | **Batches**: 5 | **Status**: 2/5 complete (40%)
+**Total Tasks**: 14 | **Batches**: 5 | **Status**: 3/5 complete (60%)
 **Batching Strategy**: Layer-based (Foundation → Simple → Complex → Infrastructure → Polish)
 
 ---
@@ -182,8 +182,9 @@
 **Developer**: frontend-developer
 **Tasks**: 3 | **Dependencies**: Batch 2 complete
 **Estimated Commits**: 1
+**Commit**: 8ef3c2e
 
-### Task 3.1: Migrate NebulaVolumetric to TSL Material ✅ IMPLEMENTED
+### Task 3.1: Migrate NebulaVolumetric to TSL Material ✅ COMPLETE
 
 **File**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\nebula-volumetric.component.ts`  
 **Specification Reference**: implementation-plan.md:L275-340  
@@ -215,7 +216,7 @@
 
 ---
 
-### Task 3.2: Migrate SmokeTroikaText to TSL Material ✅ IMPLEMENTED
+### Task 3.2: Migrate SmokeTroikaText to TSL Material ✅ COMPLETE
 
 **File**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\text\smoke-troika-text.component.ts`  
 **Specification Reference**: implementation-plan.md:L345-360  
@@ -237,7 +238,7 @@
 
 ---
 
-### Task 3.3: Migrate Nebula Component (CPU Noise to TSL) ✅ IMPLEMENTED
+### Task 3.3: Migrate Nebula Component (CPU Noise to TSL) ✅ COMPLETE
 
 **File**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\nebula.component.ts`  
 **Specification Reference**: implementation-plan.md (component analysis)  
@@ -271,82 +272,88 @@
 
 ---
 
-## Batch 4: Metaball TSL Migration ⏸️ PENDING
+## Batch 4: Metaball TSL Migration 🔄 IN PROGRESS
 
-**Developer**: frontend-developer  
-**Tasks**: 3 | **Dependencies**: Batch 3 complete  
+**Developer**: frontend-developer
+**Tasks**: 3 | **Dependencies**: Batch 3 complete
 **Estimated Commits**: 1
 
-> ⚠️ **HIGH COMPLEXITY BATCH**: Metaball has 600+ lines of GLSL ray marching.  
+> ⚠️ **HIGH COMPLEXITY BATCH**: Metaball has 600+ lines of GLSL ray marching.
 > This batch may take 15-20 hours. Consider splitting if needed.
 
-### Task 4.1: Create TSL Ray Marching Utilities ⏸️ PENDING
+### Task 4.1: Create TSL Ray Marching Utilities 🔄 IMPLEMENTED
 
-**File**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\shaders\tsl-raymarching.ts`  
-**Specification Reference**: implementation-plan.md:L365-395  
-**Pattern to Follow**: Three.js webgpu_volume_cloud example  
+**File**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\shaders\tsl-raymarching.ts`
+**Specification Reference**: implementation-plan.md:L365-395
+**Pattern to Follow**: Three.js webgpu_volume_cloud example
 **Expected Commit Pattern**: `feat(angular-3d): add tsl ray marching utilities`
 
 **Quality Requirements**:
 
 - ✅ Create `tslSphereDistance(point, center, radius)` SDF function
 - ✅ Create `tslSmoothUnion(d1, d2, k)` for smooth blending
-- ✅ Create `tslRayMarch(origin, direction, steps)` loop using `Loop` node
-- ✅ Create `tslNormal(point, sdf)` for normal calculation
+- ✅ Create `tslRayMarch(origin, direction, sceneSDF, steps)` loop using `Loop` node
+- ✅ Create `tslNormal(point, sdf, epsilon?)` for normal calculation
 - ✅ All functions use pure TSL nodes
+- ✅ Added bonus: `tslAmbientOcclusion` and `tslSoftShadow` for lighting effects
 
 **Implementation Details**:
 
-- **New File**: Create `tsl-raymarching.ts`
-- **Imports Needed**: `Fn`, `Loop`, `float`, `vec3`, `normalize`, etc.
+- **New File**: Created `tsl-raymarching.ts` (350+ lines)
+- **Imports Used**: `Fn`, `Loop`, `If`, `Break`, `float`, `vec3`, `vec4`, `normalize`, etc.
 - **Reference**: Three.js `webgpu_volume_cloud` example for Loop pattern
+- **Exports**: All functions exported via `shaders/index.ts`
 
 ---
 
-### Task 4.2: Migrate Metaball SDF and Lighting to TSL ⏸️ PENDING
+### Task 4.2: Migrate Metaball SDF and Lighting to TSL 🔄 IMPLEMENTED
 
-**File**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\metaball.component.ts`  
-**Specification Reference**: implementation-plan.md:L365-395  
-**Dependencies**: Task 4.1  
-**Pattern to Follow**: tsl-raymarching.ts (new utilities)  
+**File**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\metaball.component.ts`
+**Specification Reference**: implementation-plan.md:L365-395
+**Dependencies**: Task 4.1
+**Pattern to Follow**: tsl-raymarching.ts (new utilities)
 **Expected Commit Pattern**: (part of batch commit)
 
 **Quality Requirements**:
 
-- ✅ Port metaball SDF evaluation to TSL
-- ✅ Port lighting calculation (ambient, diffuse, specular) to TSL
+- ✅ Port metaball SDF evaluation to TSL (all 10 metaballs + 4 fixed spheres)
+- ✅ Port lighting calculation (ambient, diffuse, specular, fresnel) to TSL
 - ✅ Port cursor glow effect to TSL
-- ✅ Maintain all presets (holographic, subtle, vivid, etc.)
+- ✅ Maintain all 6 presets (moody, cosmic, neon, sunset, holographic, minimal)
 - ✅ Maintain all inputs (sphereCount, smoothness, animationSpeed, etc.)
+- ✅ Adaptive step count: 64 (WebGPU), 32 (WebGL fallback), 16 (mobile)
 
 **Implementation Details**:
 
-- **Line Range to Modify**: L458-L1020
-- **Key Method**: `getFragmentShader()` → Replace entirely with TSL material
-- **Uniform Updates**: Keep same pattern but use TSL `uniform()` nodes
+- **Lines Replaced**: L656-L1020 (365 lines of GLSL vertex/fragment shaders)
+- **New Method**: `createTSLMaterial()` - 280 lines of TSL shader logic
+- **SDF Functions**: Uses `tslSphereDistance`, `tslSmoothUnion` from utilities
+- **Ray Marching**: Uses `tslRayMarch` with adaptive step counts
+- **Lighting**: Uses `tslNormal`, `tslAmbientOcclusion`, `tslSoftShadow`
+- **Uniform Updates**: All uniforms converted to TSL uniform nodes
 
 **Validation Notes**:
 
-- ⚠️ RISK: Ray marching performance on WebGL fallback
-- Add step count reduction for WebGL: `const steps = isWebGPU ? 64 : 32;`
-- Monitor FPS during verification
+- ⚠️ Performance: Adaptive step counts implemented (64/32/16)
+- ⚠️ AO samples: 6 (desktop), 3 (low-power)
+- ⚠️ Soft shadows: Disabled on low-power via reduced iterations
 
 ---
 
-### Task 4.3: Update Metaball Material Creation ⏸️ PENDING
+### Task 4.3: Update Metaball Material Creation 🔄 IMPLEMENTED
 
-**File**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\metaball.component.ts`  
-**Specification Reference**: implementation-plan.md:L365-395  
-**Dependencies**: Task 4.2  
+**File**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\metaball.component.ts`
+**Specification Reference**: implementation-plan.md:L365-395
+**Dependencies**: Task 4.2
 **Expected Commit Pattern**: (part of batch commit)
 
 **Quality Requirements**:
 
-- ✅ Replace `THREE.ShaderMaterial` with `THREE.MeshBasicNodeMaterial`
-- ✅ Configure `colorNode` with ray marching result
-- ✅ Update `createMetaballMesh()` method
-- ✅ Ensure uniform updates work in render loop
-- ✅ Remove 600+ lines of GLSL from file
+- ✅ Replace `THREE.ShaderMaterial` with `MeshBasicNodeMaterial`
+- ✅ Configure `colorNode` with TSL ray marching shader
+- ✅ Update `createMetaballMesh()` method with TSL uniforms
+- ✅ Ensure uniform updates work in render loop (all effects updated)
+- ✅ Remove 365+ lines of GLSL shader strings (vertexShader, getFragmentShader)
 
 ---
 

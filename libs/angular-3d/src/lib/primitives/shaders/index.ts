@@ -45,3 +45,23 @@ export {
   radialFalloff,
   clampForBloom,
 } from './tsl-utilities';
+
+export {
+  // Constants
+  RAY_MARCH_EPSILON,
+  RAY_MARCH_MAX_DIST,
+
+  // Signed Distance Functions (SDFs)
+  tslSphereDistance,
+  tslSmoothUnion,
+
+  // Ray Marching Core
+  tslRayMarch,
+
+  // Surface Normals
+  tslNormal,
+
+  // Lighting Effects for Ray Marched Surfaces
+  tslAmbientOcclusion,
+  tslSoftShadow,
+} from './tsl-raymarching';

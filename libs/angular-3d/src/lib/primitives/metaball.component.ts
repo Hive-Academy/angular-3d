@@ -7,19 +7,55 @@ import {
   DestroyRef,
 } from '@angular/core';
 import * as THREE from 'three/webgpu';
+import { MeshBasicNodeMaterial } from 'three/webgpu';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import * as TSL from 'three/tsl';
 import { NG_3D_PARENT } from '../types/tokens';
-
-/**
- * Simple uniform interface for ShaderMaterial uniforms.
- * Replaces THREE.IUniform which isn't exported from three/webgpu.
- * Uses `any` for value type since uniforms can be numbers, colors, vectors, etc.
- */
-interface ShaderUniform {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  value: any;
-}
 import { OBJECT_ID } from '../tokens/object-id.token';
 import { RenderLoopService } from '../render-loop/render-loop.service';
+import {
+  tslSphereDistance,
+  tslSmoothUnion,
+  tslRayMarch,
+  tslNormal,
+  tslAmbientOcclusion,
+  tslSoftShadow,
+  RAY_MARCH_EPSILON,
+} from './shaders/tsl-raymarching';
+
+// Extract TSL functions we'll use
+const {
+  Fn,
+  Loop,
+  If,
+  float,
+  vec2,
+  vec3,
+  vec4,
+  uniform,
+  min,
+  max,
+  abs,
+  dot,
+  pow,
+  sin,
+  cos,
+  length,
+  normalize,
+  smoothstep,
+  clamp,
+  mix,
+  exp,
+  Break,
+} = TSL;
+
+// TSL nodes use complex types - use generic node type for flexibility
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TSLNode = any;
+
+// TSL Fn helper with proper typing to avoid arg type mismatch
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const TSLFn = Fn as any;
 
 /**
  * MetaballComponent - Ray-Marched Metaball Shader Component
@@ -138,9 +174,80 @@ export class MetaballComponent {
 
   // Internal Three.js objects
   private mesh!: THREE.Mesh;
-  private material!: THREE.ShaderMaterial;
-  private uniforms: Record<string, ShaderUniform> = {};
+  private material!: MeshBasicNodeMaterial;
   private readonly group = new THREE.Group();
+
+  // TSL Uniform Nodes (use any type as UniformNode is not exported)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uTime!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uResolution!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uActualResolution!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uPixelRatio!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uMousePosition!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uCursorSphere!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uCursorRadius!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uSphereCount!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uFixedTopLeftRadius!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uFixedBottomRightRadius!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uSmallTopLeftRadius!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uSmallBottomRightRadius!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uMergeDistance!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uSmoothness!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uAmbientIntensity!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uDiffuseIntensity!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uSpecularIntensity!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uSpecularPower!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uFresnelPower!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uBackgroundColor!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uSphereColor!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uLightColor!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uLightPosition!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uContrast!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uFogDensity!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uAnimationSpeed!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uMovementScale!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uMouseProximityEffect!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uMinMovementScale!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uMaxMovementScale!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uCursorGlowIntensity!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uCursorGlowRadius!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uCursorGlowColor!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uIsMobile!: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private uIsLowPower!: any;
 
   // Mouse tracking state
   private readonly mousePosition = new THREE.Vector2(0.5, 0.5);
@@ -207,7 +314,7 @@ export class MetaballComponent {
 
     // Effect: Update individual uniforms when inputs change
     effect(() => {
-      if (!this.uniforms || Object.keys(this.uniforms).length === 0) return;
+      if (!this.uSphereCount) return;
 
       // Read inputs to create dependencies
       const sphereCount = this.sphereCount();
@@ -223,27 +330,27 @@ export class MetaballComponent {
       const smallBottomRightRadius = this.smallBottomRightRadius();
       const mergeDistance = this.mergeDistance();
 
-      // Update uniforms
-      this.uniforms['uSphereCount'].value = sphereCount;
-      this.uniforms['uSmoothness'].value = smoothness;
-      this.uniforms['uAnimationSpeed'].value = animationSpeed;
-      this.uniforms['uMovementScale'].value = movementScale;
-      this.uniforms['uMouseProximityEffect'].value = mouseProximityEffect;
-      this.uniforms['uMinMovementScale'].value = minMovementScale;
-      this.uniforms['uMaxMovementScale'].value = maxMovementScale;
-      this.uniforms['uFixedTopLeftRadius'].value = fixedTopLeftRadius;
-      this.uniforms['uFixedBottomRightRadius'].value = fixedBottomRightRadius;
-      this.uniforms['uSmallTopLeftRadius'].value = smallTopLeftRadius;
-      this.uniforms['uSmallBottomRightRadius'].value = smallBottomRightRadius;
-      this.uniforms['uMergeDistance'].value = mergeDistance;
+      // Update TSL uniform nodes
+      this.uSphereCount.value = sphereCount;
+      this.uSmoothness.value = smoothness;
+      this.uAnimationSpeed.value = animationSpeed;
+      this.uMovementScale.value = movementScale;
+      this.uMouseProximityEffect.value = mouseProximityEffect;
+      this.uMinMovementScale.value = minMovementScale;
+      this.uMaxMovementScale.value = maxMovementScale;
+      this.uFixedTopLeftRadius.value = fixedTopLeftRadius;
+      this.uFixedBottomRightRadius.value = fixedBottomRightRadius;
+      this.uSmallTopLeftRadius.value = smallTopLeftRadius;
+      this.uSmallBottomRightRadius.value = smallBottomRightRadius;
+      this.uMergeDistance.value = mergeDistance;
     });
 
     // Animation loop - update time and mouse position
     this.renderLoopCleanup = this.renderLoop.registerUpdateCallback((delta) => {
-      if (!this.uniforms || Object.keys(this.uniforms).length === 0) return;
+      if (!this.uTime) return;
 
       // Update time
-      this.uniforms['uTime'].value += delta;
+      this.uTime.value += delta;
 
       // Smooth mouse movement with interpolation
       const smoothness = this.mouseSmoothness();
@@ -252,7 +359,7 @@ export class MetaballComponent {
       this.mousePosition.y +=
         (this.targetMousePosition.y - this.mousePosition.y) * smoothness;
 
-      this.uniforms['uMousePosition'].value = this.mousePosition;
+      this.uMousePosition.value = this.mousePosition;
     });
 
     // Cleanup
@@ -400,7 +507,7 @@ export class MetaballComponent {
   }
 
   /**
-   * Create the full-screen metaball mesh with ray marching shader
+   * Create the full-screen metaball mesh with TSL ray marching shader
    */
   private createMetaballMesh(): void {
     // Get initial viewport dimensions
@@ -414,55 +521,47 @@ export class MetaballComponent {
     // Initialize uniforms with current preset
     const currentPreset = this.presets[this.preset()];
 
-    this.uniforms = {
-      uTime: { value: 0 },
-      uResolution: { value: new THREE.Vector2(width, height) },
-      uActualResolution: {
-        value: new THREE.Vector2(width * pixelRatio, height * pixelRatio),
-      },
-      uPixelRatio: { value: pixelRatio },
-      uMousePosition: { value: new THREE.Vector2(0.5, 0.5) },
-      uCursorSphere: { value: new THREE.Vector3(0, 0, 0) },
-      uCursorRadius: { value: this.cursorRadiusMin() },
-      uSphereCount: { value: this.sphereCount() },
-      uFixedTopLeftRadius: { value: this.fixedTopLeftRadius() },
-      uFixedBottomRightRadius: { value: this.fixedBottomRightRadius() },
-      uSmallTopLeftRadius: { value: this.smallTopLeftRadius() },
-      uSmallBottomRightRadius: { value: this.smallBottomRightRadius() },
-      uMergeDistance: { value: this.mergeDistance() },
-      uSmoothness: { value: this.smoothness() },
-      uAmbientIntensity: { value: currentPreset.ambientIntensity },
-      uDiffuseIntensity: { value: currentPreset.diffuseIntensity },
-      uSpecularIntensity: { value: currentPreset.specularIntensity },
-      uSpecularPower: { value: currentPreset.specularPower },
-      uFresnelPower: { value: currentPreset.fresnelPower },
-      uBackgroundColor: { value: currentPreset.backgroundColor },
-      uSphereColor: { value: currentPreset.sphereColor },
-      uLightColor: { value: currentPreset.lightColor },
-      uLightPosition: { value: currentPreset.lightPosition },
-      uContrast: { value: currentPreset.contrast },
-      uFogDensity: { value: currentPreset.fogDensity },
-      uAnimationSpeed: { value: this.animationSpeed() },
-      uMovementScale: { value: this.movementScale() },
-      uMouseProximityEffect: { value: this.mouseProximityEffect() },
-      uMinMovementScale: { value: this.minMovementScale() },
-      uMaxMovementScale: { value: this.maxMovementScale() },
-      uCursorGlowIntensity: { value: currentPreset.cursorGlowIntensity },
-      uCursorGlowRadius: { value: currentPreset.cursorGlowRadius },
-      uCursorGlowColor: { value: currentPreset.cursorGlowColor },
-      uIsMobile: { value: this.isMobile ? 1.0 : 0.0 },
-      uIsLowPower: { value: this.isLowPowerDevice ? 1.0 : 0.0 },
-    };
+    // Create TSL uniform nodes
+    this.uTime = uniform(0);
+    this.uResolution = uniform(new THREE.Vector2(width, height));
+    this.uActualResolution = uniform(
+      new THREE.Vector2(width * pixelRatio, height * pixelRatio)
+    );
+    this.uPixelRatio = uniform(pixelRatio);
+    this.uMousePosition = uniform(new THREE.Vector2(0.5, 0.5));
+    this.uCursorSphere = uniform(new THREE.Vector3(0, 0, 0));
+    this.uCursorRadius = uniform(this.cursorRadiusMin());
+    this.uSphereCount = uniform(this.sphereCount());
+    this.uFixedTopLeftRadius = uniform(this.fixedTopLeftRadius());
+    this.uFixedBottomRightRadius = uniform(this.fixedBottomRightRadius());
+    this.uSmallTopLeftRadius = uniform(this.smallTopLeftRadius());
+    this.uSmallBottomRightRadius = uniform(this.smallBottomRightRadius());
+    this.uMergeDistance = uniform(this.mergeDistance());
+    this.uSmoothness = uniform(this.smoothness());
+    this.uAmbientIntensity = uniform(currentPreset.ambientIntensity);
+    this.uDiffuseIntensity = uniform(currentPreset.diffuseIntensity);
+    this.uSpecularIntensity = uniform(currentPreset.specularIntensity);
+    this.uSpecularPower = uniform(currentPreset.specularPower);
+    this.uFresnelPower = uniform(currentPreset.fresnelPower);
+    this.uBackgroundColor = uniform(currentPreset.backgroundColor);
+    this.uSphereColor = uniform(currentPreset.sphereColor);
+    this.uLightColor = uniform(currentPreset.lightColor);
+    this.uLightPosition = uniform(currentPreset.lightPosition);
+    this.uContrast = uniform(currentPreset.contrast);
+    this.uFogDensity = uniform(currentPreset.fogDensity);
+    this.uAnimationSpeed = uniform(this.animationSpeed());
+    this.uMovementScale = uniform(this.movementScale());
+    this.uMouseProximityEffect = uniform(this.mouseProximityEffect());
+    this.uMinMovementScale = uniform(this.minMovementScale());
+    this.uMaxMovementScale = uniform(this.maxMovementScale());
+    this.uCursorGlowIntensity = uniform(currentPreset.cursorGlowIntensity);
+    this.uCursorGlowRadius = uniform(currentPreset.cursorGlowRadius);
+    this.uCursorGlowColor = uniform(currentPreset.cursorGlowColor);
+    this.uIsMobile = uniform(this.isMobile ? 1.0 : 0.0);
+    this.uIsLowPower = uniform(this.isLowPowerDevice ? 1.0 : 0.0);
 
-    // Create shader material with ray marching
-    this.material = new THREE.ShaderMaterial({
-      uniforms: this.uniforms,
-      vertexShader: this.vertexShader,
-      fragmentShader: this.getFragmentShader(),
-      transparent: true,
-      depthWrite: false,
-      depthTest: false,
-    });
+    // Create TSL material with ray marching shader
+    this.material = this.createTSLMaterial();
 
     // Create full-screen 2x2 plane geometry
     const geometry = new THREE.PlaneGeometry(2, 2);
@@ -480,24 +579,24 @@ export class MetaballComponent {
    */
   private applyPreset(presetName: MetaballPreset): void {
     const preset = this.presets[presetName];
-    if (!preset || !this.uniforms) return;
+    if (!preset || !this.uSphereCount) return;
 
-    this.uniforms['uSphereCount'].value = preset.sphereCount;
-    this.uniforms['uAmbientIntensity'].value = preset.ambientIntensity;
-    this.uniforms['uDiffuseIntensity'].value = preset.diffuseIntensity;
-    this.uniforms['uSpecularIntensity'].value = preset.specularIntensity;
-    this.uniforms['uSpecularPower'].value = preset.specularPower;
-    this.uniforms['uFresnelPower'].value = preset.fresnelPower;
-    this.uniforms['uBackgroundColor'].value = preset.backgroundColor;
-    this.uniforms['uSphereColor'].value = preset.sphereColor;
-    this.uniforms['uLightColor'].value = preset.lightColor;
-    this.uniforms['uLightPosition'].value = preset.lightPosition;
-    this.uniforms['uSmoothness'].value = preset.smoothness;
-    this.uniforms['uContrast'].value = preset.contrast;
-    this.uniforms['uFogDensity'].value = preset.fogDensity;
-    this.uniforms['uCursorGlowIntensity'].value = preset.cursorGlowIntensity;
-    this.uniforms['uCursorGlowRadius'].value = preset.cursorGlowRadius;
-    this.uniforms['uCursorGlowColor'].value = preset.cursorGlowColor;
+    this.uSphereCount.value = preset.sphereCount;
+    this.uAmbientIntensity.value = preset.ambientIntensity;
+    this.uDiffuseIntensity.value = preset.diffuseIntensity;
+    this.uSpecularIntensity.value = preset.specularIntensity;
+    this.uSpecularPower.value = preset.specularPower;
+    this.uFresnelPower.value = preset.fresnelPower;
+    this.uBackgroundColor.value = preset.backgroundColor;
+    this.uSphereColor.value = preset.sphereColor;
+    this.uLightColor.value = preset.lightColor;
+    this.uLightPosition.value = preset.lightPosition;
+    this.uSmoothness.value = preset.smoothness;
+    this.uContrast.value = preset.contrast;
+    this.uFogDensity.value = preset.fogDensity;
+    this.uCursorGlowIntensity.value = preset.cursorGlowIntensity;
+    this.uCursorGlowRadius.value = preset.cursorGlowRadius;
+    this.uCursorGlowColor.value = preset.cursorGlowColor;
   }
 
   /**
@@ -579,9 +678,9 @@ export class MetaballComponent {
       this.cursorRadiusMin() +
       (this.cursorRadiusMax() - this.cursorRadiusMin()) * smoothFactor;
 
-    if (this.uniforms) {
-      this.uniforms['uCursorSphere'].value.copy(this.cursorSphere3D);
-      this.uniforms['uCursorRadius'].value = dynamicRadius;
+    if (this.uCursorSphere) {
+      this.uCursorSphere.value.copy(this.cursorSphere3D);
+      this.uCursorRadius.value = dynamicRadius;
     }
   }
 
@@ -617,7 +716,7 @@ export class MetaballComponent {
    * Handle window resize events
    */
   private onWindowResize(): void {
-    if (typeof window === 'undefined' || !this.uniforms) return;
+    if (typeof window === 'undefined' || !this.uResolution) return;
 
     const width = window.innerWidth;
     const height = window.innerHeight;
@@ -626,12 +725,9 @@ export class MetaballComponent {
       this.isMobile ? 1.5 : 2
     );
 
-    this.uniforms['uResolution'].value.set(width, height);
-    this.uniforms['uActualResolution'].value.set(
-      width * pixelRatio,
-      height * pixelRatio
-    );
-    this.uniforms['uPixelRatio'].value = pixelRatio;
+    this.uResolution.value.set(width, height);
+    this.uActualResolution.value.set(width * pixelRatio, height * pixelRatio);
+    this.uPixelRatio.value = pixelRatio;
   }
 
   /**
@@ -652,370 +748,332 @@ export class MetaballComponent {
   }
 
   /**
-   * Vertex Shader - Simple passthrough with UV
+   * Create TSL Material with Ray Marching Shader
+   * Ports 600+ lines of GLSL to TSL using ray marching utilities
    */
-  private readonly vertexShader = `
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `;
+  private createTSLMaterial(): MeshBasicNodeMaterial {
+    // Define TSL screen coordinate helper
+    const screenToWorld = TSLFn(([normalizedPos]: [TSLNode]) => {
+      const uv = normalizedPos.mul(2).sub(1);
+      const aspect = this.uResolution.x.div(this.uResolution.y);
+      return vec3(uv.x.mul(aspect).mul(2), uv.y.mul(2), float(0));
+    });
 
-  /**
-   * Generate fragment shader with device-appropriate precision
-   */
-  private getFragmentShader(): string {
-    const precisionDecl =
-      this.isMobile || this.isLowPowerDevice
-        ? 'precision mediump float;'
-        : 'precision highp float;';
+    // Define scene SDF combining all metaballs
+    const sceneSDF = TSLFn(([pos]: [TSLNode]) => {
+      let result = float(100).toVar();
 
-    return `
-      ${precisionDecl}
+      // Fixed corner spheres
+      const topLeftPos = screenToWorld(vec2(0.08, 0.92));
+      const topLeft = tslSphereDistance(
+        pos,
+        topLeftPos,
+        this.uFixedTopLeftRadius
+      );
 
-      uniform float uTime;
-      uniform vec2 uResolution;
-      uniform vec2 uActualResolution;
-      uniform float uPixelRatio;
-      uniform vec2 uMousePosition;
-      uniform vec3 uCursorSphere;
-      uniform float uCursorRadius;
-      uniform int uSphereCount;
-      uniform float uFixedTopLeftRadius;
-      uniform float uFixedBottomRightRadius;
-      uniform float uSmallTopLeftRadius;
-      uniform float uSmallBottomRightRadius;
-      uniform float uMergeDistance;
-      uniform float uSmoothness;
-      uniform float uAmbientIntensity;
-      uniform float uDiffuseIntensity;
-      uniform float uSpecularIntensity;
-      uniform float uSpecularPower;
-      uniform float uFresnelPower;
-      uniform vec3 uBackgroundColor;
-      uniform vec3 uSphereColor;
-      uniform vec3 uLightColor;
-      uniform vec3 uLightPosition;
-      uniform float uContrast;
-      uniform float uFogDensity;
-      uniform float uAnimationSpeed;
-      uniform float uMovementScale;
-      uniform bool uMouseProximityEffect;
-      uniform float uMinMovementScale;
-      uniform float uMaxMovementScale;
-      uniform float uCursorGlowIntensity;
-      uniform float uCursorGlowRadius;
-      uniform vec3 uCursorGlowColor;
-      uniform float uIsMobile;
-      uniform float uIsLowPower;
+      const smallTopLeftPos = screenToWorld(vec2(0.25, 0.72));
+      const smallTopLeft = tslSphereDistance(
+        pos,
+        smallTopLeftPos,
+        this.uSmallTopLeftRadius
+      );
 
-      varying vec2 vUv;
+      const bottomRightPos = screenToWorld(vec2(0.92, 0.08));
+      const bottomRight = tslSphereDistance(
+        pos,
+        bottomRightPos,
+        this.uFixedBottomRightRadius
+      );
 
-      const float PI = 3.14159265359;
-      const float EPSILON = 0.001;
-      const float MAX_DIST = 100.0;
+      const smallBottomRightPos = screenToWorld(vec2(0.72, 0.25));
+      const smallBottomRight = tslSphereDistance(
+        pos,
+        smallBottomRightPos,
+        this.uSmallBottomRightRadius
+      );
 
-      // Smooth minimum for organic blob blending
-      float smin(float a, float b, float k) {
-        float h = max(k - abs(a - b), 0.0) / k;
-        return min(a, b) - h * h * k * 0.25;
-      }
+      const t = this.uTime.mul(this.uAnimationSpeed);
 
-      // Sphere signed distance function
-      float sdSphere(vec3 p, float r) {
-        return length(p) - r;
-      }
+      // Dynamic movement scale based on mouse proximity
+      const distToCenter = length(this.uMousePosition.sub(vec2(0.5, 0.5))).mul(
+        2
+      );
+      const mixFactor = smoothstep(float(0), float(1), distToCenter);
+      const dynamicMovementScale = If(this.uMouseProximityEffect, () =>
+        mix(this.uMinMovementScale, this.uMaxMovementScale, mixFactor)
+      ).Else(() => this.uMovementScale);
 
-      // Convert normalized screen position to world coordinates
-      vec3 screenToWorld(vec2 normalizedPos) {
-        vec2 uv = normalizedPos * 2.0 - 1.0;
-        uv.x *= uResolution.x / uResolution.y;
-        return vec3(uv * 2.0, 0.0);
-      }
+      // Animated metaball spheres (up to 10)
+      const maxIter = If(this.uIsMobile.greaterThan(0.5), () => float(4))
+        .ElseIf(this.uIsLowPower.greaterThan(0.5), () => float(6))
+        .Else(() => min(this.uSphereCount, float(10)));
 
-      // Calculate distance from center for mouse proximity effect
-      float getDistanceToCenter(vec2 pos) {
-        float dist = length(pos - vec2(0.5, 0.5)) * 2.0;
-        return smoothstep(0.0, 1.0, dist);
-      }
+      Loop(float(10), ({ i }) => {
+        // Break if beyond sphere count or max iterations
+        If(
+          i.greaterThanEqual(this.uSphereCount).or(i.greaterThanEqual(maxIter)),
+          () => {
+            Break();
+          }
+        );
 
-      // Main scene SDF - combines all metaballs
-      float sceneSDF(vec3 pos) {
-        float result = MAX_DIST;
+        const fi = float(i);
+        const speed = float(0.4).add(fi.mul(0.12));
+        const radius = float(0.12).add(fi.mod(3).mul(0.06));
+        const baseOrbitRadius = float(0.3).add(fi.mod(3).mul(0.15));
 
-        // Fixed sphere positions using consistent coordinate system
-        vec3 topLeftPos = screenToWorld(vec2(0.08, 0.92));
-        float topLeft = sdSphere(pos - topLeftPos, uFixedTopLeftRadius);
+        const distToCursor = length(vec3(0, 0, 0).sub(this.uCursorSphere));
+        const proximityScale = float(1).add(
+          float(1)
+            .sub(smoothstep(float(0), float(1), distToCursor))
+            .mul(0.5)
+        );
+        const orbitRadius = baseOrbitRadius
+          .mul(dynamicMovementScale)
+          .mul(proximityScale);
+        const phaseOffset = fi.mul(3.14159265359).mul(0.35);
 
-        vec3 smallTopLeftPos = screenToWorld(vec2(0.25, 0.72));
-        float smallTopLeft = sdSphere(pos - smallTopLeftPos, uSmallTopLeftRadius);
+        // Calculate sphere offset position (orbital animation)
+        const offset = If(i.equal(0), () =>
+          vec3(
+            sin(t.mul(speed)).mul(orbitRadius).mul(0.7),
+            sin(t.mul(0.5)).mul(orbitRadius),
+            cos(t.mul(speed).mul(0.7)).mul(orbitRadius).mul(0.5)
+          )
+        )
+          .ElseIf(i.equal(1), () =>
+            vec3(
+              sin(t.mul(speed).add(3.14159)).mul(orbitRadius).mul(0.5),
+              sin(t.mul(0.5)).mul(orbitRadius).negate(),
+              cos(t.mul(speed).mul(0.7).add(3.14159)).mul(orbitRadius).mul(0.5)
+            )
+          )
+          .Else(() =>
+            vec3(
+              sin(t.mul(speed).add(phaseOffset)).mul(orbitRadius).mul(0.8),
+              cos(t.mul(speed).mul(0.85).add(phaseOffset.mul(1.3)))
+                .mul(orbitRadius)
+                .mul(0.6),
+              sin(t.mul(speed).mul(0.5).add(phaseOffset)).mul(0.3)
+            )
+          )
+          .toVar();
 
-        vec3 bottomRightPos = screenToWorld(vec2(0.92, 0.08));
-        float bottomRight = sdSphere(pos - bottomRightPos, uFixedBottomRightRadius);
+        // Cursor attraction
+        const toCursor = this.uCursorSphere.sub(offset);
+        const cursorDist = length(toCursor);
+        If(
+          cursorDist
+            .lessThan(this.uMergeDistance)
+            .and(cursorDist.greaterThan(0)),
+          () => {
+            const attraction = float(1)
+              .sub(cursorDist.div(this.uMergeDistance))
+              .mul(0.3);
+            offset.assign(offset.add(normalize(toCursor).mul(attraction)));
+          }
+        );
 
-        vec3 smallBottomRightPos = screenToWorld(vec2(0.72, 0.25));
-        float smallBottomRight = sdSphere(pos - smallBottomRightPos, uSmallBottomRightRadius);
+        const movingSphere = tslSphereDistance(pos, offset, radius);
 
-        float t = uTime * uAnimationSpeed;
+        // Dynamic blend factor based on cursor proximity
+        const blend = If(cursorDist.lessThan(this.uMergeDistance), () => {
+          const influence = float(1).sub(cursorDist.div(this.uMergeDistance));
+          return mix(
+            float(0.05),
+            this.uSmoothness,
+            influence.mul(influence).mul(influence)
+          );
+        }).Else(() => float(0.05));
 
-        // Calculate dynamic movement scale based on mouse proximity
-        float dynamicMovementScale = uMovementScale;
-        if (uMouseProximityEffect) {
-          float distToCenter = getDistanceToCenter(uMousePosition);
-          float mixFactor = smoothstep(0.0, 1.0, distToCenter);
-          dynamicMovementScale = mix(uMinMovementScale, uMaxMovementScale, mixFactor);
-        }
+        result.assign(tslSmoothUnion(result, movingSphere, blend));
+      });
 
-        // Optimized iterations for performance
-        int maxIter = uIsMobile > 0.5 ? 4 : (uIsLowPower > 0.5 ? 6 : min(uSphereCount, 10));
-        for (int i = 0; i < 10; i++) {
-          if (i >= uSphereCount || i >= maxIter) break;
+      // Cursor sphere
+      const cursorBall = tslSphereDistance(
+        pos,
+        this.uCursorSphere,
+        this.uCursorRadius
+      );
 
-          float fi = float(i);
-          float speed = 0.4 + fi * 0.12;
-          float radius = 0.12 + mod(fi, 3.0) * 0.06;
-          float orbitRadius = (0.3 + mod(fi, 3.0) * 0.15) * dynamicMovementScale;
-          float phaseOffset = fi * PI * 0.35;
+      // Group fixed spheres with smooth blending
+      const topLeftGroup = tslSmoothUnion(topLeft, smallTopLeft, float(0.4));
+      const bottomRightGroup = tslSmoothUnion(
+        bottomRight,
+        smallBottomRight,
+        float(0.4)
+      );
 
-          float distToCursor = length(vec3(0.0) - uCursorSphere);
-          float proximityScale = 1.0 + (1.0 - smoothstep(0.0, 1.0, distToCursor)) * 0.5;
-          orbitRadius *= proximityScale;
+      // Combine all spheres
+      result.assign(tslSmoothUnion(result, topLeftGroup, float(0.3)));
+      result.assign(tslSmoothUnion(result, bottomRightGroup, float(0.3)));
+      result.assign(tslSmoothUnion(result, cursorBall, this.uSmoothness));
 
-          vec3 offset;
-          if (i == 0) {
-            offset = vec3(
-              sin(t * speed) * orbitRadius * 0.7,
-              sin(t * 0.5) * orbitRadius,
-              cos(t * speed * 0.7) * orbitRadius * 0.5
+      return result;
+    });
+
+    // Adaptive ray march step count
+    const stepCount = If(this.uIsMobile.greaterThan(0.5), () => float(16))
+      .ElseIf(this.uIsLowPower.greaterThan(0.5), () => float(32))
+      .Else(() => float(64));
+
+    // Adaptive AO sample count
+    const aoSamples = If(this.uIsLowPower.greaterThan(0.5), () =>
+      float(3)
+    ).Else(() => float(6));
+
+    // Define lighting function
+    const lighting = TSLFn(
+      ([hitPoint, rayDir, hitDist]: [TSLNode, TSLNode, TSLNode]) => {
+        return If(hitDist.lessThan(0), () => vec3(0, 0, 0)).Else(() => {
+          const normal = tslNormal(hitPoint, sceneSDF);
+          const viewDir = rayDir.negate();
+
+          const baseColor = this.uSphereColor;
+
+          // Ambient occlusion
+          const ao = tslAmbientOcclusion(hitPoint, normal, sceneSDF, aoSamples);
+
+          const ambient = this.uLightColor
+            .mul(this.uAmbientIntensity)
+            .mul(ao)
+            .toVar();
+
+          // Diffuse lighting
+          const lightDir = normalize(this.uLightPosition);
+          const diff = max(dot(normal, lightDir), float(0));
+
+          // Soft shadows
+          const shadow = tslSoftShadow(
+            hitPoint,
+            lightDir,
+            sceneSDF,
+            float(0.01),
+            float(10),
+            float(20)
+          );
+
+          const diffuse = this.uLightColor
+            .mul(diff)
+            .mul(this.uDiffuseIntensity)
+            .mul(shadow);
+
+          // Specular with fresnel
+          const reflectDir = lightDir.negate().reflect(normal);
+          const spec = pow(
+            max(dot(viewDir, reflectDir), float(0)),
+            this.uSpecularPower
+          );
+          const fresnel = pow(
+            float(1).sub(max(dot(viewDir, normal), float(0))),
+            this.uFresnelPower
+          );
+
+          let specular = this.uLightColor
+            .mul(spec)
+            .mul(this.uSpecularIntensity)
+            .mul(fresnel)
+            .toVar();
+
+          const fresnelRim = this.uLightColor.mul(fresnel).mul(0.4);
+
+          // Cursor proximity highlight
+          const distToCursor = length(hitPoint.sub(this.uCursorSphere));
+          If(distToCursor.lessThan(this.uCursorRadius.add(0.4)), () => {
+            const highlight = float(1).sub(
+              smoothstep(float(0), this.uCursorRadius.add(0.4), distToCursor)
             );
-          } else if (i == 1) {
-            offset = vec3(
-              sin(t * speed + PI) * orbitRadius * 0.5,
-              -sin(t * 0.5) * orbitRadius,
-              cos(t * speed * 0.7 + PI) * orbitRadius * 0.5
+            specular.assign(
+              specular.add(this.uLightColor.mul(highlight).mul(0.2))
             );
-          } else {
-            offset = vec3(
-              sin(t * speed + phaseOffset) * orbitRadius * 0.8,
-              cos(t * speed * 0.85 + phaseOffset * 1.3) * orbitRadius * 0.6,
-              sin(t * speed * 0.5 + phaseOffset) * 0.3
-            );
-          }
 
-          // Attraction toward cursor
-          vec3 toCursor = uCursorSphere - offset;
-          float cursorDist = length(toCursor);
-          if (cursorDist < uMergeDistance && cursorDist > 0.0) {
-            float attraction = (1.0 - cursorDist / uMergeDistance) * 0.3;
-            offset += normalize(toCursor) * attraction;
-          }
+            const glow = exp(distToCursor.negate().mul(3)).mul(0.15);
+            ambient.assign(ambient.add(this.uLightColor.mul(glow).mul(0.5)));
+          });
 
-          float movingSphere = sdSphere(pos - offset, radius);
+          let color = baseColor
+            .add(ambient)
+            .add(diffuse)
+            .add(specular)
+            .add(fresnelRim)
+            .mul(ao)
+            .toVar();
 
-          // Dynamic blend factor based on cursor proximity
-          float blend = 0.05;
-          if (cursorDist < uMergeDistance) {
-            float influence = 1.0 - (cursorDist / uMergeDistance);
-            blend = mix(0.05, uSmoothness, influence * influence * influence);
-          }
+          // Tone mapping
+          color.assign(pow(color, vec3(this.uContrast.mul(0.9))));
+          color.assign(color.div(color.add(vec3(0.8, 0.8, 0.8))));
 
-          result = smin(result, movingSphere, blend);
-        }
-
-        // Cursor sphere
-        float cursorBall = sdSphere(pos - uCursorSphere, uCursorRadius);
-
-        // Group fixed spheres
-        float topLeftGroup = smin(topLeft, smallTopLeft, 0.4);
-        float bottomRightGroup = smin(bottomRight, smallBottomRight, 0.4);
-
-        // Combine all spheres
-        result = smin(result, topLeftGroup, 0.3);
-        result = smin(result, bottomRightGroup, 0.3);
-        result = smin(result, cursorBall, uSmoothness);
-
-        return result;
+          return color;
+        });
       }
+    );
 
-      // Calculate surface normal via gradient
-      vec3 calcNormal(vec3 p) {
-        float eps = uIsLowPower > 0.5 ? 0.002 : 0.001;
-        return normalize(vec3(
-          sceneSDF(p + vec3(eps, 0, 0)) - sceneSDF(p - vec3(eps, 0, 0)),
-          sceneSDF(p + vec3(0, eps, 0)) - sceneSDF(p - vec3(0, eps, 0)),
-          sceneSDF(p + vec3(0, 0, eps)) - sceneSDF(p - vec3(0, 0, eps))
-        ));
-      }
+    // Cursor glow effect
+    const calculateCursorGlow = TSLFn(([worldPos]: [TSLNode]) => {
+      const dist = length(worldPos.xy.sub(this.uCursorSphere.xy));
+      const glow = float(1).sub(
+        smoothstep(float(0), this.uCursorGlowRadius, dist)
+      );
+      return pow(glow, float(2)).mul(this.uCursorGlowIntensity);
+    });
 
-      // Ambient occlusion sampling
-      float ambientOcclusion(vec3 p, vec3 n) {
-        if (uIsLowPower > 0.5) {
-          float h1 = sceneSDF(p + n * 0.03);
-          float h2 = sceneSDF(p + n * 0.06);
-          float occ = (0.03 - h1) + (0.06 - h2) * 0.5;
-          return clamp(1.0 - occ * 2.0, 0.0, 1.0);
-        } else {
-          float occ = 0.0;
-          float weight = 1.0;
-          for (int i = 0; i < 6; i++) {
-            float dist = 0.01 + 0.015 * float(i * i);
-            float h = sceneSDF(p + n * dist);
-            occ += (dist - h) * weight;
-            weight *= 0.85;
-          }
-          return clamp(1.0 - occ, 0.0, 1.0);
-        }
-      }
+    // Main shader function using TSL.uv() and TSL.viewportCoordinate
+    const metaballShader = TSLFn(([]: []) => {
+      // Calculate UV using fragment coordinates
+      const fragCoord = TSL.viewportCoordinate.mul(this.uActualResolution);
+      let uv = fragCoord
+        .mul(2)
+        .sub(this.uActualResolution)
+        .div(this.uActualResolution)
+        .toVar();
+      uv.x.assign(uv.x.mul(this.uResolution.x.div(this.uResolution.y)));
 
-      // Soft shadow calculation
-      float softShadow(vec3 ro, vec3 rd, float mint, float maxt, float k) {
-        if (uIsLowPower > 0.5) {
-          float result = 1.0;
-          float t = mint;
-          for (int i = 0; i < 3; i++) {
-            t += 0.3;
-            if (t >= maxt) break;
-            float h = sceneSDF(ro + rd * t);
-            if (h < EPSILON) return 0.0;
-            result = min(result, k * h / t);
-          }
-          return result;
-        } else {
-          float result = 1.0;
-          float t = mint;
-          for (int i = 0; i < 20; i++) {
-            if (t >= maxt) break;
-            float h = sceneSDF(ro + rd * t);
-            if (h < EPSILON) return 0.0;
-            result = min(result, k * h / t);
-            t += h;
-          }
-          return result;
-        }
-      }
+      // Ray setup (orthographic projection)
+      const rayOrigin = vec3(uv.mul(2), float(-1));
+      const rayDirection = vec3(0, 0, 1);
 
-      // Main ray marching loop
-      float rayMarch(vec3 ro, vec3 rd) {
-        float t = 0.0;
-        int maxSteps = uIsMobile > 0.5 ? 16 : 48;
+      // Ray march
+      const hitDist = tslRayMarch(rayOrigin, rayDirection, sceneSDF, stepCount);
+      const hitPoint = rayOrigin.add(rayDirection.mul(hitDist));
 
-        for (int i = 0; i < 48; i++) {
-          if (i >= maxSteps) break;
+      // Calculate lighting
+      const color = lighting(hitPoint, rayDirection, hitDist).toVar();
 
-          vec3 p = ro + rd * t;
-          float d = sceneSDF(p);
+      // Cursor glow
+      const cursorGlow = calculateCursorGlow(rayOrigin);
+      const glowContribution = this.uCursorGlowColor.mul(cursorGlow);
 
-          if (d < EPSILON) {
-            return t;
-          }
+      // Final color with fog and glow
+      const finalColor = If(hitDist.greaterThan(0), () => {
+        // Surface hit - apply fog and glow
+        const fogAmount = float(1).sub(
+          exp(hitDist.negate().mul(this.uFogDensity))
+        );
+        const colorWithFog = mix(
+          color,
+          this.uBackgroundColor,
+          fogAmount.mul(0.3)
+        );
+        return colorWithFog.add(glowContribution.mul(0.3));
+      }).Else(() => {
+        // Background - show glow only
+        return glowContribution;
+      });
 
-          if (t > 5.0) {
-            break;
-          }
+      const alpha = If(hitDist.greaterThan(0), () => float(1))
+        .ElseIf(cursorGlow.greaterThan(0.01), () => cursorGlow.mul(0.8))
+        .Else(() => float(0));
 
-          t += d * (uIsLowPower > 0.5 ? 1.2 : 0.9);
-        }
+      return vec4(finalColor, alpha);
+    });
 
-        return -1.0;
-      }
+    // Create material
+    const material = new MeshBasicNodeMaterial();
+    material.colorNode = metaballShader();
+    material.transparent = true;
+    material.depthWrite = false;
+    material.depthTest = false;
 
-      // Full lighting model
-      vec3 lighting(vec3 p, vec3 rd, float t) {
-        if (t < 0.0) {
-          return vec3(0.0);
-        }
-
-        vec3 normal = calcNormal(p);
-        vec3 viewDir = -rd;
-
-        vec3 baseColor = uSphereColor;
-
-        float ao = ambientOcclusion(p, normal);
-
-        vec3 ambient = uLightColor * uAmbientIntensity * ao;
-
-        vec3 lightDir = normalize(uLightPosition);
-        float diff = max(dot(normal, lightDir), 0.0);
-
-        float shadow = softShadow(p, lightDir, 0.01, 10.0, 20.0);
-
-        vec3 diffuse = uLightColor * diff * uDiffuseIntensity * shadow;
-
-        vec3 reflectDir = reflect(-lightDir, normal);
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), uSpecularPower);
-        float fresnel = pow(1.0 - max(dot(viewDir, normal), 0.0), uFresnelPower);
-
-        vec3 specular = uLightColor * spec * uSpecularIntensity * fresnel;
-
-        vec3 fresnelRim = uLightColor * fresnel * 0.4;
-
-        // Cursor proximity highlight
-        float distToCursor = length(p - uCursorSphere);
-        if (distToCursor < uCursorRadius + 0.4) {
-          float highlight = 1.0 - smoothstep(0.0, uCursorRadius + 0.4, distToCursor);
-          specular += uLightColor * highlight * 0.2;
-
-          float glow = exp(-distToCursor * 3.0) * 0.15;
-          ambient += uLightColor * glow * 0.5;
-        }
-
-        vec3 color = (baseColor + ambient + diffuse + specular + fresnelRim) * ao;
-
-        // Tone mapping
-        color = pow(color, vec3(uContrast * 0.9));
-        color = color / (color + vec3(0.8));
-
-        return color;
-      }
-
-      // Calculate cursor glow effect
-      float calculateCursorGlow(vec3 worldPos) {
-        float dist = length(worldPos.xy - uCursorSphere.xy);
-        float glow = 1.0 - smoothstep(0.0, uCursorGlowRadius, dist);
-        glow = pow(glow, 2.0);
-        return glow * uCursorGlowIntensity;
-      }
-
-      void main() {
-        // Calculate UV coordinates using actual resolution for proper aspect ratio
-        vec2 uv = (gl_FragCoord.xy * 2.0 - uActualResolution.xy) / uActualResolution.xy;
-        uv.x *= uResolution.x / uResolution.y;
-
-        // Ray origin and direction for orthographic-like projection
-        vec3 ro = vec3(uv * 2.0, -1.0);
-        vec3 rd = vec3(0.0, 0.0, 1.0);
-
-        // Ray march to find surface
-        float t = rayMarch(ro, rd);
-
-        // Calculate hit point
-        vec3 p = ro + rd * t;
-
-        // Calculate lighting
-        vec3 color = lighting(p, rd, t);
-
-        // Calculate cursor glow
-        float cursorGlow = calculateCursorGlow(ro);
-        vec3 glowContribution = uCursorGlowColor * cursorGlow;
-
-        if (t > 0.0) {
-          // Hit surface - apply fog and glow
-          float fogAmount = 1.0 - exp(-t * uFogDensity);
-          color = mix(color, uBackgroundColor.rgb, fogAmount * 0.3);
-
-          color += glowContribution * 0.3;
-
-          gl_FragColor = vec4(color, 1.0);
-        } else {
-          // Background - show glow only
-          if (cursorGlow > 0.01) {
-            gl_FragColor = vec4(glowContribution, cursorGlow * 0.8);
-          } else {
-            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-          }
-        }
-      }
-    `;
+    return material;
   }
 }
