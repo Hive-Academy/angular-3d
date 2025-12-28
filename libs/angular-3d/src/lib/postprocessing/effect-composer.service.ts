@@ -1,76 +1,74 @@
 /**
  * Effect Composer Service - Post-processing pipeline manager
  *
- * Manages the Three.js EffectComposer and render passes.
+ * Manages the native Three.js PostProcessing pipeline using TSL nodes.
  * Allows switching between standard render and post-processing render.
  *
- * Uses three-stdlib EffectComposer with WebGPU renderer. The three-stdlib passes
- * (UnrealBloomPass, BokehPass, SSAOPass, ShaderPass) work with WebGPURenderer
- * through compatibility layer. For native WebGPU post-processing with TSL nodes,
- * consider THREE.PostProcessing when it stabilizes.
+ * Uses native THREE.PostProcessing with WebGPU renderer and TSL effect nodes.
+ * TSL nodes automatically transpile to WGSL (WebGPU) or GLSL (WebGL fallback),
+ * ensuring cross-backend compatibility.
+ *
+ * Migration from three-stdlib EffectComposer complete (TASK_2025_031 Batch 5).
  */
 
 import { Injectable, OnDestroy, inject, signal } from '@angular/core';
 import * as THREE from 'three/webgpu';
-import { EffectComposer, RenderPass, Pass, ShaderPass } from 'three-stdlib';
+import { pass } from 'three/tsl';
+import { Node } from 'three/webgpu';
+import BloomNode, { bloom } from 'three/addons/tsl/display/BloomNode.js';
+import DepthOfFieldNode, {
+  dof,
+} from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { RenderLoopService } from '../render-loop/render-loop.service';
 
-/**
- * Flip shader to correct Y-axis inversion when using WebGPURenderer
- * with WebGL fallback and three-stdlib EffectComposer.
- *
- * WebGPU and WebGL have different coordinate systems for render targets.
- * This shader flips the image vertically to correct the inversion.
- */
-const FlipShader = {
-  uniforms: {
-    tDiffuse: { value: null },
-  },
-  vertexShader: `
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      // Flip Y coordinate
-      vUv.y = 1.0 - vUv.y;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `,
-  fragmentShader: `
-    uniform sampler2D tDiffuse;
-    varying vec2 vUv;
-    void main() {
-      gl_FragColor = texture2D(tDiffuse, vUv);
-    }
-  `,
-};
+// Import local type declarations (see lib/types/three-tsl-addons.d.ts)
+// These provide TypeScript support for TSL addons which don't have official types
 
 /**
- * Service to manage post-processing effects.
+ * Configuration for bloom effect
+ */
+export interface BloomConfig {
+  threshold: number;
+  strength: number;
+  radius: number;
+}
+
+/**
+ * Configuration for depth of field effect
+ */
+export interface DOFConfig {
+  focus: number;
+  aperture: number;
+  maxBlur: number;
+}
+
+/**
+ * Service to manage post-processing effects using native THREE.PostProcessing.
  *
- * Wraps `three-stdlib` EffectComposer.
- * Replaces the default `RenderLoopService` render function with `composer.render()`.
+ * Wraps native `THREE.PostProcessing` with TSL effect nodes.
+ * Replaces the default `RenderLoopService` render function with `postProcessing.render()`.
  *
  * CRITICAL: Component-scoped service (NOT singleton).
  * Provided by Scene3dComponent for per-scene post-processing isolation.
+ *
+ * TSL nodes (pass, bloom, dof) automatically handle:
+ * - WebGPU: Transpile to WGSL shaders
+ * - WebGL: Transpile to GLSL shaders
+ * - Y-flip correction: Native PostProcessing handles coordinate systems
  */
 @Injectable()
 export class EffectComposerService implements OnDestroy {
   private readonly renderLoop = inject(RenderLoopService);
 
-  private composer: EffectComposer | null = null;
-  private renderPass: RenderPass | null = null;
-  private flipPass: ShaderPass | null = null;
-  private readonly passes = new Set<Pass>();
+  private postProcessing: THREE.PostProcessing | null = null;
+  private scenePassNode: ReturnType<typeof pass> | null = null;
+  private effectNodes: Map<string, Node | BloomNode | DepthOfFieldNode> =
+    new Map();
 
   // Stored references for default rendering
-  // Note: three-stdlib EffectComposer expects WebGLRenderer, but accepts
-  // WebGPURenderer through Three.js compatibility layer
   private renderer: THREE.WebGPURenderer | null = null;
   private scene: THREE.Scene | null = null;
   private camera: THREE.PerspectiveCamera | null = null;
-
-  // Track if using WebGL fallback (needs Y-flip correction)
-  private needsFlipCorrection = false;
 
   // State signals
   private readonly _isEnabled = signal<boolean>(false);
@@ -80,11 +78,11 @@ export class EffectComposerService implements OnDestroy {
   private pendingEnable = false;
 
   /**
-   * Initialize the effect composer with scene resources
+   * Initialize the PostProcessing pipeline with scene resources
    *
-   * Note: three-stdlib EffectComposer works with WebGPURenderer through
-   * Three.js compatibility layer. GLSL-based passes are automatically
-   * handled by the renderer.
+   * Native PostProcessing works with WebGPURenderer and TSL nodes.
+   * TSL nodes automatically transpile to WGSL (WebGPU) or GLSL (WebGL fallback).
+   * No Y-flip correction needed - native PostProcessing handles coordinate systems.
    */
   public init(
     renderer: THREE.WebGPURenderer,
@@ -95,41 +93,16 @@ export class EffectComposerService implements OnDestroy {
     this.scene = scene;
     this.camera = camera;
 
-    // Detect if using WebGL fallback (needs Y-flip correction for render targets)
-    // WebGPU and WebGL have different coordinate systems
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const backend = (renderer as any).backend;
-    this.needsFlipCorrection = !backend?.isWebGPU;
+    // Create native PostProcessing instance
+    this.postProcessing = new THREE.PostProcessing(renderer);
 
-    if (this.needsFlipCorrection) {
-      console.log(
-        '[EffectComposer] WebGL fallback detected, enabling Y-flip correction'
-      );
-    }
+    // Create scene pass (replaces RenderPass from three-stdlib)
+    this.scenePassNode = pass(scene, camera);
 
-    // Cast to any for three-stdlib type compatibility
-    // three-stdlib EffectComposer accepts WebGPURenderer at runtime
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.composer = new EffectComposer(renderer as any);
+    // Initial output is just the scene pass
+    this.postProcessing.outputNode = this.scenePassNode;
 
-    // Create default render pass
-    this.renderPass = new RenderPass(scene, camera);
-    this.composer.addPass(this.renderPass);
-
-    // Add any previously added passes (if any were added before init)
-    this.passes.forEach((pass) => {
-      this.composer?.addPass(pass);
-    });
-
-    // Add flip correction pass at the end if using WebGL fallback
-    // This corrects the Y-axis inversion caused by coordinate system differences
-    if (this.needsFlipCorrection) {
-      this.flipPass = new ShaderPass(FlipShader);
-      this.flipPass.renderToScreen = true;
-      this.composer.addPass(this.flipPass);
-    }
-
-    // If enabled, ensure render loop is using composer
+    // If enabled, ensure render loop is using PostProcessing
     if (this._isEnabled()) {
       this.updateRenderLoop();
     }
@@ -142,41 +115,183 @@ export class EffectComposerService implements OnDestroy {
   }
 
   /**
-   * Update the size of the composer
+   * Update the size of the PostProcessing pipeline
    */
   public setSize(width: number, height: number): void {
-    this.composer?.setSize(width, height);
+    // PostProcessing automatically handles size from renderer
+    // No explicit setSize needed (unlike three-stdlib EffectComposer)
+    void width;
+    void height;
   }
 
   /**
-   * Add a post-processing pass
+   * Add bloom effect using TSL bloom node
+   *
+   * Bloom parameters:
+   * - threshold: Luminance threshold - only bright areas above this contribute to bloom
+   * - strength: Intensity of the glow effect
+   * - radius: Spread of the bloom effect (0-1)
+   *
+   * @param config Bloom configuration (threshold, strength, radius)
    */
-  public addPass(pass: Pass): void {
-    this.passes.add(pass);
-    this.composer?.addPass(pass);
+  public addBloom(config: BloomConfig): void {
+    if (!this.postProcessing || !this.scenePassNode) {
+      console.warn('[EffectComposer] Cannot add bloom before init() is called');
+      return;
+    }
+
+    // Get current output node (either scene pass or last effect)
+    const currentOutput = this.getCurrentOutput();
+
+    // Create bloom effect node
+    // bloom(inputNode, strength, radius, threshold)
+    // Note: bloom() takes strength first, then radius, then threshold
+    const bloomNode = bloom(
+      currentOutput as Node,
+      config.strength,
+      config.radius,
+      config.threshold
+    );
+
+    // Store effect node
+    this.effectNodes.set('bloom', bloomNode);
+
+    // Rebuild output chain to include new effect
+    this.rebuildOutputChain();
   }
 
   /**
-   * Remove a post-processing pass
+   * Update bloom effect parameters
+   *
+   * @param config Updated bloom configuration
    */
-  public removePass(pass: Pass): void {
-    this.passes.delete(pass);
-    this.composer?.removePass(pass);
+  public updateBloom(config: BloomConfig): void {
+    const existingBloom = this.effectNodes.get('bloom') as BloomNode;
+    if (!existingBloom) return;
+
+    // BloomNode has uniform properties we can update directly
+    if (existingBloom.strength) {
+      existingBloom.strength.value = config.strength;
+    }
+    if (existingBloom.radius) {
+      existingBloom.radius.value = config.radius;
+    }
+    if (existingBloom.threshold) {
+      existingBloom.threshold.value = config.threshold;
+    }
+  }
+
+  /**
+   * Remove bloom effect
+   */
+  public removeBloom(): void {
+    const bloomNode = this.effectNodes.get('bloom') as BloomNode;
+    if (bloomNode?.dispose) {
+      bloomNode.dispose();
+    }
+    this.effectNodes.delete('bloom');
+    this.rebuildOutputChain();
+  }
+
+  /**
+   * Add depth of field effect using TSL dof node
+   *
+   * DOF requires access to depth buffer from scene pass.
+   * Parameters:
+   * - focus: Focus distance in world units
+   * - aperture: Controls DOF range (smaller = wider focus area)
+   * - maxBlur: Maximum blur intensity
+   *
+   * @param config DOF configuration (focus, aperture, maxBlur)
+   */
+  public addDepthOfField(config: DOFConfig): void {
+    if (!this.postProcessing || !this.scenePassNode) {
+      console.warn('[EffectComposer] Cannot add DOF before init() is called');
+      return;
+    }
+
+    // Get current output node
+    const currentOutput = this.getCurrentOutput();
+
+    // Get depth buffer from scene pass for DOF calculations
+    // dof(textureNode, viewZNode, focusDistance, focalLength, bokehScale)
+    const viewZ = this.scenePassNode.getViewZNode();
+    const dofNode = dof(
+      currentOutput as Node,
+      viewZ,
+      config.focus, // Focus distance in world units
+      config.aperture * 100, // Convert aperture to focal length-like value
+      config.maxBlur * 100 // Scale maxBlur to bokehScale
+    );
+
+    // Store effect node
+    this.effectNodes.set('dof', dofNode);
+
+    // Rebuild output chain
+    this.rebuildOutputChain();
+  }
+
+  /**
+   * Update DOF effect parameters
+   *
+   * @param config Updated DOF configuration
+   */
+  public updateDepthOfField(config: DOFConfig): void {
+    const existingDof = this.effectNodes.get('dof') as DepthOfFieldNode;
+    if (!existingDof) return;
+
+    // For DOF, we need to recreate since parameters are set at construction
+    // Remove and re-add with new config
+    this.removeDepthOfField();
+    this.addDepthOfField(config);
+  }
+
+  /**
+   * Remove depth of field effect
+   */
+  public removeDepthOfField(): void {
+    const dofNode = this.effectNodes.get('dof') as DepthOfFieldNode;
+    if (dofNode?.dispose) {
+      dofNode.dispose();
+    }
+    this.effectNodes.delete('dof');
+    this.rebuildOutputChain();
+  }
+
+  /**
+   * Add a custom TSL effect node
+   *
+   * @param name Unique identifier for the effect
+   * @param effectNode TSL effect node
+   */
+  public addEffect(name: string, effectNode: Node): void {
+    this.effectNodes.set(name, effectNode);
+    this.rebuildOutputChain();
+  }
+
+  /**
+   * Remove a custom effect by name
+   *
+   * @param name Effect identifier
+   */
+  public removeEffect(name: string): void {
+    this.effectNodes.delete(name);
+    this.rebuildOutputChain();
   }
 
   /**
    * Enable post-processing
-   * If composer is not yet initialized, enable request is queued
+   * If PostProcessing is not yet initialized, enable request is queued
    */
   public enable(): void {
     if (this._isEnabled()) return;
     this._isEnabled.set(true);
 
-    if (this.composer) {
-      // Composer initialized - enable immediately
+    if (this.postProcessing) {
+      // PostProcessing initialized - enable immediately
       this.updateRenderLoop();
     } else {
-      // Composer not yet initialized - queue enable for after init()
+      // PostProcessing not yet initialized - queue enable for after init()
       this.pendingEnable = true;
       console.warn(
         '[EffectComposer] Enable requested before init, will activate after init'
@@ -198,22 +313,63 @@ export class EffectComposerService implements OnDestroy {
    */
   public ngOnDestroy(): void {
     this.disable();
-    this.passes.clear();
-    // Disposal of passes is usually user responsibility or handle here if strictly owned
-    // For now, we assume components dispose their own passes.
-    this.composer = null;
-    this.renderPass = null;
-    this.flipPass = null;
+
+    // Dispose all effect nodes
+    for (const [, effectNode] of this.effectNodes) {
+      if ('dispose' in effectNode && typeof effectNode.dispose === 'function') {
+        effectNode.dispose();
+      }
+    }
+
+    this.effectNodes.clear();
+    this.postProcessing = null;
+    this.scenePassNode = null;
     this.renderer = null;
     this.scene = null;
     this.camera = null;
-    this.needsFlipCorrection = false;
   }
 
+  /**
+   * Get the current output node (last effect in chain or scene pass)
+   */
+  private getCurrentOutput(): Node | BloomNode | DepthOfFieldNode {
+    if (this.effectNodes.size === 0) {
+      return this.scenePassNode as unknown as Node;
+    }
+
+    // Return last effect node in insertion order
+    const effectArray = Array.from(this.effectNodes.values());
+    return effectArray[effectArray.length - 1];
+  }
+
+  /**
+   * Rebuild the output chain by chaining all effect nodes
+   *
+   * Output chain: scenePass → effect1 → effect2 → ... → effectN
+   */
+  private rebuildOutputChain(): void {
+    if (!this.postProcessing) return;
+
+    let output: Node | BloomNode | DepthOfFieldNode = this
+      .scenePassNode as unknown as Node;
+
+    // Chain all effects in insertion order
+    for (const [, effectNode] of this.effectNodes) {
+      output = effectNode;
+    }
+
+    // Set final output - use type assertion for Three.js internal compatibility
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.postProcessing.outputNode = output as any;
+  }
+
+  /**
+   * Update render loop to use PostProcessing or default rendering
+   */
   private updateRenderLoop(): void {
-    if (this._isEnabled() && this.composer) {
+    if (this._isEnabled() && this.postProcessing) {
       this.renderLoop.setRenderFunction(() => {
-        this.composer?.render();
+        this.postProcessing?.render();
       });
     } else if (this.renderer && this.scene && this.camera) {
       // Restore default render

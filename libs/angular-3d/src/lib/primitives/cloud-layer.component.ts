@@ -14,28 +14,28 @@
  * ```
  */
 
+import { isPlatformBrowser } from '@angular/common';
 import {
-  Component,
   ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  effect,
   inject,
   input,
-  effect,
-  DestroyRef,
   PLATFORM_ID,
 } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import * as THREE from 'three/webgpu';
 import { MeshBasicNodeMaterial } from 'three/webgpu';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { NG_3D_PARENT } from '../types/tokens';
-import { RenderLoopService } from '../render-loop/render-loop.service';
 import { SceneService } from '../canvas/scene.service';
 import { injectTextureLoader } from '../loaders/inject-texture-loader';
+import { RenderLoopService } from '../render-loop/render-loop.service';
+import { NG_3D_PARENT } from '../types/tokens';
 import { applyFog, clampForBloom } from './shaders/tsl-utilities';
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import * as TSL from 'three/tsl';
 
-const { texture, uv, positionView, float, vec3, pow, color } = TSL;
+const { texture, uv, positionView, float, pow, color } = TSL;
 
 @Component({
   selector: 'a3d-cloud-layer',
