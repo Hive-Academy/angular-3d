@@ -3,6 +3,7 @@
  *
  * Creates realistic cloud layers matching the MrDoob reference.
  * Uses merged geometries for optimal GPU performance.
+ * Now uses TSL (Three.js Shading Language) for WebGPU/WebGL native materials.
  *
  * @example
  * ```html
@@ -24,42 +25,17 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import * as THREE from 'three/webgpu';
+import { MeshBasicNodeMaterial } from 'three/webgpu';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { NG_3D_PARENT } from '../types/tokens';
 import { RenderLoopService } from '../render-loop/render-loop.service';
 import { SceneService } from '../canvas/scene.service';
 import { injectTextureLoader } from '../loaders/inject-texture-loader';
+import { applyFog, clampForBloom } from './shaders/tsl-utilities';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import * as TSL from 'three/tsl';
 
-// Cloud shader - exact match to reference
-const cloudShader = {
-  vertexShader: `
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `,
-  fragmentShader: `
-    uniform sampler2D map;
-    uniform vec3 fogColor;
-    uniform float fogNear;
-    uniform float fogFar;
-    varying vec2 vUv;
-
-    void main() {
-      float depth = gl_FragCoord.z / gl_FragCoord.w;
-      float fogFactor = smoothstep(fogNear, fogFar, depth);
-
-      gl_FragColor = texture2D(map, vUv);
-      gl_FragColor.w *= pow(gl_FragCoord.z, 20.0);
-      gl_FragColor = mix(gl_FragColor, vec4(fogColor, gl_FragColor.w), fogFactor);
-
-      // CRITICAL: Clamp RGB to stay below bloom threshold (0.9)
-      // This prevents clouds from triggering the bloom effect
-      gl_FragColor.rgb = min(gl_FragColor.rgb, vec3(0.85));
-    }
-  `,
-};
+const { texture, uv, positionView, float, vec3, pow, color } = TSL;
 
 @Component({
   selector: 'a3d-cloud-layer',
@@ -96,7 +72,7 @@ export class CloudLayerComponent {
   // Three.js objects
   private cloudMesh: THREE.Mesh | null = null;
   private cloudMeshBack: THREE.Mesh | null = null;
-  private material: THREE.ShaderMaterial | null = null;
+  private material: MeshBasicNodeMaterial | null = null;
   private startTime = 0;
   private mouseX = 0;
   private mouseY = 0;
@@ -118,10 +94,10 @@ export class CloudLayerComponent {
 
     // Create clouds when texture is loaded
     effect(() => {
-      const texture = this.textureResource.data();
-      if (!texture) return;
+      const loadedTexture = this.textureResource.data();
+      if (!loadedTexture) return;
 
-      this.createClouds(texture);
+      this.createClouds(loadedTexture);
     });
 
     // Cleanup
@@ -130,7 +106,7 @@ export class CloudLayerComponent {
     });
   }
 
-  private createClouds(texture: THREE.Texture): void {
+  private createClouds(loadedTexture: THREE.Texture): void {
     const parent = this.parentFn?.();
     if (!parent) {
       console.warn('[CloudLayerComponent] No parent found');
@@ -141,28 +117,12 @@ export class CloudLayerComponent {
     this.cleanup();
 
     // Configure texture - exact match to reference
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.magFilter = THREE.LinearFilter;
-    texture.minFilter = THREE.LinearMipMapLinearFilter;
+    loadedTexture.colorSpace = THREE.SRGBColorSpace;
+    loadedTexture.magFilter = THREE.LinearFilter;
+    loadedTexture.minFilter = THREE.LinearMipMapLinearFilter;
 
-    // Get fog color
-    const fogColorValue = this.fogColor();
-    const fogColorThree = new THREE.Color(fogColorValue);
-
-    // Create shader material - exact match to reference
-    this.material = new THREE.ShaderMaterial({
-      uniforms: {
-        map: { value: texture },
-        fogColor: { value: fogColorThree },
-        fogNear: { value: this.fogNear() },
-        fogFar: { value: this.fogFar() },
-      },
-      vertexShader: cloudShader.vertexShader,
-      fragmentShader: cloudShader.fragmentShader,
-      depthWrite: false,
-      depthTest: false,
-      transparent: true,
-    });
+    // Create TSL-based material
+    this.material = this.createCloudMaterial(loadedTexture);
 
     // Create merged geometry - EXACT match to reference positioning
     const geometry = this.createMergedCloudGeometry();
@@ -187,6 +147,51 @@ export class CloudLayerComponent {
 
     // Start animation
     this.startAnimation();
+  }
+
+  /**
+   * Create TSL-based cloud material
+   * Replaces GLSL ShaderMaterial with native TSL nodes
+   */
+  private createCloudMaterial(
+    cloudTexture: THREE.Texture
+  ): MeshBasicNodeMaterial {
+    const fogColorValue = this.fogColor();
+    const fogColorThree = new THREE.Color(fogColorValue);
+
+    // Create TSL nodes for the material
+    // Sample the cloud texture
+    const texColor = texture(cloudTexture, uv());
+
+    // Calculate view depth for fog (use view-space z position)
+    const depth = positionView.z.negate();
+
+    // Apply depth-based alpha modification (matches original: pow(gl_FragCoord.z, 20.0))
+    // Use a power curve to fade clouds based on depth
+    const depthFade = pow(depth.div(3000).clamp(0, 1), float(0.5));
+    const alphaWithDepth = texColor.a.mul(depthFade);
+
+    // Apply fog to the color
+    const foggedColor = applyFog(
+      texColor,
+      color(fogColorThree),
+      float(this.fogNear()),
+      float(this.fogFar()),
+      depth
+    );
+
+    // Clamp RGB to stay below bloom threshold (0.85)
+    const clampedColor = clampForBloom(foggedColor, 0.85);
+
+    // Create MeshBasicNodeMaterial with TSL nodes
+    const material = new MeshBasicNodeMaterial();
+    material.colorNode = clampedColor;
+    material.opacityNode = alphaWithDepth;
+    material.transparent = true;
+    material.depthWrite = false;
+    material.depthTest = false;
+
+    return material;
   }
 
   private createMergedCloudGeometry(): THREE.BufferGeometry {

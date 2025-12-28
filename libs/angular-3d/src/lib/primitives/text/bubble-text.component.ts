@@ -8,22 +8,28 @@ import {
   signal,
 } from '@angular/core';
 import * as THREE from 'three/webgpu';
+import { MeshStandardNodeMaterial } from 'three/webgpu';
 import { SceneService } from '../../canvas/scene.service';
 import { RenderLoopService } from '../../render-loop/render-loop.service';
 import { TextSamplingService } from '../../services/text-sampling.service';
 import { OBJECT_ID } from '../../tokens/object-id.token';
 import { NG_3D_PARENT } from '../../types/tokens';
+import { tslFresnel, tslIridescence } from '../shaders/tsl-utilities';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import * as TSL from 'three/tsl';
+
+const { float, vec3, color, mix } = TSL;
 
 /**
  * BubbleTextComponent - 3D Bubble Text using Instanced Meshes
  *
  * Creates transparent bubble spheres that form text shape, inspired by
- * Codrops bubble typer effect. Uses IcosahedronGeometry with custom
+ * Codrops bubble typer effect. Uses IcosahedronGeometry with TSL-based
  * rim-lighting shader for realistic soap bubble appearance.
  *
  * Features:
  * - IcosahedronGeometry spheres (not flat planes)
- * - Custom bubble shader (transparent center, opaque rim)
+ * - TSL bubble material (transparent center, opaque rim) - WebGPU native
  * - Grow → Burst → Regrow lifecycle animation
  * - Optional flying bubbles that float upward
  * - Billboard-free (true 3D spheres)
@@ -89,7 +95,7 @@ export class BubbleTextComponent {
 
   // Internal state
   private bubbleGeometry?: THREE.IcosahedronGeometry;
-  private bubbleMaterial?: THREE.ShaderMaterial;
+  private bubbleMaterial?: MeshStandardNodeMaterial;
   private instancedMesh?: THREE.InstancedMesh;
   private dummy = new THREE.Object3D();
 
@@ -132,7 +138,7 @@ export class BubbleTextComponent {
       if (this.instancedMesh && parent) {
         parent.remove(this.instancedMesh);
         this.instancedMesh.geometry.dispose();
-        (this.instancedMesh.material as THREE.ShaderMaterial).dispose();
+        (this.instancedMesh.material as MeshStandardNodeMaterial).dispose();
       }
       if (this.bubbleGeometry) {
         this.bubbleGeometry.dispose();
@@ -152,7 +158,7 @@ export class BubbleTextComponent {
       if (this.instancedMesh && parent) {
         parent.remove(this.instancedMesh);
         this.instancedMesh.geometry.dispose();
-        (this.instancedMesh.material as THREE.ShaderMaterial).dispose();
+        (this.instancedMesh.material as MeshStandardNodeMaterial).dispose();
         this.instancedMesh = undefined;
       }
       this.bubbles = [];
@@ -243,7 +249,7 @@ export class BubbleTextComponent {
     if (this.instancedMesh && parent) {
       parent.remove(this.instancedMesh);
       this.instancedMesh.geometry.dispose();
-      (this.instancedMesh.material as THREE.ShaderMaterial).dispose();
+      (this.instancedMesh.material as MeshStandardNodeMaterial).dispose();
     }
 
     // Create geometry (Icosahedron for spherical bubbles)
@@ -251,10 +257,8 @@ export class BubbleTextComponent {
       this.bubbleGeometry = new THREE.IcosahedronGeometry(1, 2); // Detail level 2
     }
 
-    // Create bubble shader material
-    if (!this.bubbleMaterial) {
-      this.bubbleMaterial = this.createBubbleShaderMaterial();
-    }
+    // Create TSL bubble material
+    this.bubbleMaterial = this.createBubbleMaterial();
 
     // Create instanced mesh
     this.instancedMesh = new THREE.InstancedMesh(
@@ -273,59 +277,39 @@ export class BubbleTextComponent {
   }
 
   /**
-   * Create bubble shader material with rim transparency effect
+   * Create TSL-based bubble material with rim transparency effect
+   * Uses native TSL nodes for WebGPU/WebGL compatibility
    */
-  private createBubbleShaderMaterial(): THREE.ShaderMaterial {
-    const bubbleColor = new THREE.Color(this.bubbleColor());
+  private createBubbleMaterial(): MeshStandardNodeMaterial {
+    const bubbleColorValue = new THREE.Color(this.bubbleColor());
+    const opacityValue = this.opacity();
 
-    return new THREE.ShaderMaterial({
-      uniforms: {
-        uColor: { value: bubbleColor },
-        uOpacity: { value: this.opacity() },
-      },
-      vertexShader: `
-        varying vec3 vNormal;
-        varying vec3 vViewPosition;
+    // Create TSL color node
+    const baseColor = color(bubbleColorValue);
 
-        void main() {
-          vNormal = normalize(normalMatrix * normal);
-          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-          vViewPosition = -mvPosition.xyz;
-          gl_Position = projectionMatrix * mvPosition;
-        }
-      `,
-      fragmentShader: `
-        uniform vec3 uColor;
-        uniform float uOpacity;
-        
-        varying vec3 vNormal;
-        varying vec3 vViewPosition;
+    // Calculate fresnel rim effect using TSL utilities
+    const fresnelValue = tslFresnel(float(2.0), float(0.6), float(0.2));
 
-        void main() {
-          // Fresnel-like rim effect
-          vec3 viewDir = normalize(vViewPosition);
-          float rim = 1.0 - abs(dot(vNormal, viewDir));
-          rim = pow(rim, 2.0);
-          
-          // Mix white center with colored rim (bubble refraction look)
-          vec3 centerColor = vec3(1.0, 1.0, 1.0);
-          vec3 rimColor = uColor;
-          vec3 finalColor = mix(centerColor, rimColor, rim * 0.7);
-          
-          // Add rainbow iridescence
-          float rainbow = sin(rim * 6.28) * 0.5 + 0.5;
-          finalColor += vec3(rainbow * 0.1, rainbow * 0.05, rainbow * 0.15);
-          
-          // Alpha: more transparent at center, more opaque at rim
-          float alpha = (0.2 + rim * 0.6) * uOpacity;
-          
-          gl_FragColor = vec4(finalColor, alpha);
-        }
-      `,
-      transparent: true,
-      side: THREE.DoubleSide,
-      depthWrite: false,
-    });
+    // Mix white center with colored rim (bubble refraction look)
+    const centerColor = vec3(1, 1, 1);
+    const finalColor = mix(centerColor, baseColor, fresnelValue.mul(0.7));
+
+    // Add rainbow iridescence using TSL utilities
+    const iridescent = tslIridescence(fresnelValue, float(0.1));
+    const colorWithIridescence = finalColor.add(iridescent);
+
+    // Alpha: more transparent at center, more opaque at rim
+    const alpha = float(0.2).add(fresnelValue.mul(0.6)).mul(opacityValue);
+
+    // Create MeshStandardNodeMaterial with TSL nodes
+    const material = new MeshStandardNodeMaterial();
+    material.colorNode = colorWithIridescence;
+    material.opacityNode = alpha;
+    material.transparent = true;
+    material.side = THREE.DoubleSide;
+    material.depthWrite = false;
+
+    return material;
   }
 
   /**
