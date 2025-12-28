@@ -10,165 +10,23 @@ import {
 } from '@angular/core';
 import { random } from 'maath';
 import * as THREE from 'three/webgpu';
+import { SpriteNodeMaterial } from 'three/webgpu';
+import {
+  float,
+  vec3,
+  uniform,
+  mix,
+  smoothstep,
+  uv,
+  mul,
+  add,
+  pow,
+  abs,
+  sin,
+} from 'three/tsl';
 import { NG_3D_PARENT } from '../types/tokens';
 import { RenderLoopService } from '../render-loop/render-loop.service';
-
-/**
- * FBM (Fractal Brownian Motion) using simplex noise
- * Creates organic, self-similar patterns
- */
-function fbm(
-  x: number,
-  y: number,
-  octaves: number,
-  lacunarity: number,
-  gain: number
-): number {
-  let value = 0;
-  let amplitude = 1.0;
-  let frequency = 1.0;
-  let maxValue = 0;
-
-  for (let i = 0; i < octaves; i++) {
-    value += amplitude * random.noise.simplex2(x * frequency, y * frequency);
-    maxValue += amplitude;
-    amplitude *= gain;
-    frequency *= lacunarity;
-  }
-
-  return value / maxValue;
-}
-
-/**
- * Turbulence - FBM with absolute values for sharp wispy details
- */
-function turbulence(
-  x: number,
-  y: number,
-  octaves: number,
-  lacunarity: number,
-  gain: number
-): number {
-  let value = 0;
-  let amplitude = 1.0;
-  let frequency = 1.0;
-  let maxValue = 0;
-
-  for (let i = 0; i < octaves; i++) {
-    value +=
-      amplitude * Math.abs(random.noise.simplex2(x * frequency, y * frequency));
-    maxValue += amplitude;
-    amplitude *= gain;
-    frequency *= lacunarity;
-  }
-
-  return value / maxValue;
-}
-
-/**
- * Domain warping - distort coordinates using noise for organic shapes
- */
-function domainWarp(x: number, y: number, amount: number): [number, number] {
-  const warpX = fbm(x + 1.7, y + 9.2, 4, 2.0, 0.5) * amount;
-  const warpY = fbm(x + 8.3, y + 2.8, 4, 2.0, 0.5) * amount;
-  return [x + warpX, y + warpY];
-}
-
-/**
- * Generate a procedural cloud texture using domain warping and FBM
- * Creates realistic wispy clouds with irregular, organic edges
- *
- * Techniques used:
- * - Domain warping for organic shape distortion
- * - Multi-octave FBM for cloud density
- * - Turbulence for wispy edge details
- * - Noise-based edge falloff (not circular!)
- */
-function generateFractalCloudTexture(size: number): THREE.CanvasTexture {
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d')!;
-  const imageData = ctx.createImageData(size, size);
-  const data = imageData.data;
-
-  // Random seed offset for variety
-  const seedX = Math.random() * 100;
-  const seedY = Math.random() * 100;
-
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      // Normalize coordinates to -0.5 to 0.5
-      const nx = x / size - 0.5;
-      const ny = y / size - 0.5;
-
-      // Scale for noise sampling
-      const scale = 3.0;
-      let px = nx * scale + seedX;
-      let py = ny * scale + seedY;
-
-      // Apply domain warping for organic distortion
-      [px, py] = domainWarp(px, py, 0.8);
-
-      // Main cloud density using FBM (6 octaves for detail)
-      const cloudDensity = fbm(px, py, 6, 2.0, 0.5);
-
-      // Wispy detail using turbulence
-      const wispyDetail = turbulence(px * 2, py * 2, 4, 2.0, 0.5);
-
-      // Combine for final density
-      let density = cloudDensity * 0.7 + wispyDetail * 0.3;
-      density = (density + 1.0) * 0.5; // Normalize to 0-1
-
-      // NOISE-BASED edge falloff (not circular!)
-      // Use noise to create irregular edges
-      const dist = Math.sqrt(nx * nx + ny * ny);
-
-      // Create irregular edge using noise
-      const edgeNoise = fbm(px * 1.5 + 5.0, py * 1.5 + 5.0, 3, 2.0, 0.5);
-      const edgeThreshold = 0.35 + edgeNoise * 0.15; // Varies between 0.2 and 0.5
-
-      // Soft falloff from noise-varied edge
-      let edgeFalloff =
-        1.0 - smoothstep(edgeThreshold - 0.15, edgeThreshold + 0.1, dist);
-
-      // Add wispy tendrils at edges using turbulence
-      const tendrilNoise = turbulence(px * 3 + 10, py * 3 + 10, 4, 2.0, 0.6);
-      edgeFalloff += tendrilNoise * 0.3 * (1.0 - dist * 1.5);
-      edgeFalloff = Math.max(0, Math.min(1, edgeFalloff));
-
-      // Final alpha calculation
-      let alpha = density * edgeFalloff;
-
-      // Enhance contrast for more visible clouds
-      alpha = Math.pow(alpha, 1.2);
-
-      // Clamp to valid range
-      alpha = Math.max(0, Math.min(1, alpha));
-
-      // Write to image data
-      const idx = (y * size + x) * 4;
-      data[idx] = 255; // R
-      data[idx + 1] = 255; // G
-      data[idx + 2] = 255; // B
-      data[idx + 3] = Math.floor(alpha * 255); // A
-    }
-  }
-
-  ctx.putImageData(imageData, 0, 0);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.needsUpdate = true;
-  return texture;
-}
-
-/**
- * Smoothstep function for smooth interpolation
- */
-function smoothstep(edge0: number, edge1: number, x: number): number {
-  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
-  return t * t * (3 - 2 * t);
-}
+import { nativeFBMVec3, domainWarp } from './shaders/tsl-utilities';
 
 /**
  * Generate random positions in a sphere using maath
@@ -191,19 +49,28 @@ function generateSpherePositions(
 }
 
 /**
- * NebulaComponent - Volumetric Cloud/Dust Effect (Sprite-Based)
+ * Smoothstep function for smooth interpolation
+ */
+function smoothstepCPU(edge0: number, edge1: number, x: number): number {
+  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
+
+/**
+ * NebulaComponent - Volumetric Cloud/Dust Effect (TSL Sprite-Based)
  *
- * Creates soft, wispy nebula clouds using sprite materials with procedural
- * fractal noise textures. This creates organic, irregular cloud shapes
- * that look like real space nebulae.
+ * Creates soft, wispy nebula clouds using TSL sprite materials with procedural
+ * MaterialX noise. This creates organic, irregular cloud shapes that look like
+ * real space nebulae, rendered entirely on the GPU.
  *
  * Features:
- * - Procedurally generated fractal noise cloud textures
+ * - GPU-procedural MaterialX noise (no CPU texture generation)
  * - Sprite-based rendering for billboarding effect
  * - Additive blending for ethereal glow
  * - Layered depth with varying sizes and opacity
  * - Optional slow rotation animation (flow)
  * - Color palette support for varied cloud colors
+ * - Significant performance improvement over CPU noise (GPU-accelerated)
  *
  * @example
  * ```html
@@ -254,7 +121,6 @@ export class NebulaComponent implements OnDestroy {
 
   private group: THREE.Group;
   private sprites: THREE.Sprite[] = [];
-  private textures: THREE.CanvasTexture[] = []; // Multiple textures for variety
   private renderLoopCleanup?: () => void;
 
   public constructor() {
@@ -363,16 +229,6 @@ export class NebulaComponent implements OnDestroy {
     this.group.clear();
     this.sprites = [];
 
-    // Dispose old textures
-    this.textures.forEach((t) => t.dispose());
-    this.textures = [];
-
-    // Generate multiple unique textures for variety (4-6 variations)
-    const textureCount = Math.min(6, Math.max(4, Math.floor(count / 10)));
-    for (let i = 0; i < textureCount; i++) {
-      this.textures.push(generateFractalCloudTexture(512));
-    }
-
     // Generate sprite positions using maath random
     const positions = generateSpherePositions(count, radius);
 
@@ -386,20 +242,17 @@ export class NebulaComponent implements OnDestroy {
       const spriteOpacity =
         minOpacity + Math.random() * (maxOpacity - minOpacity);
 
-      // Pick a random texture for variety
-      const texture =
-        this.textures[Math.floor(Math.random() * this.textures.length)];
+      // Random seed for procedural noise variety
+      const seedX = Math.random() * 100;
+      const seedY = Math.random() * 100;
 
-      // Create sprite material with NodeMaterial pattern (direct property assignment)
-      const material = new THREE.SpriteNodeMaterial();
-      material.map = texture;
-      material.color = new THREE.Color(colorHex);
-      material.transparent = true;
-      material.opacity = spriteOpacity;
-      material.blending = THREE.AdditiveBlending;
-      material.depthWrite = false;
-      material.depthTest = true;
-      material.fog = false;
+      // Create TSL procedural sprite material (GPU-accelerated)
+      const material = this.createProceduralCloudMaterial(
+        colorHex,
+        spriteOpacity,
+        seedX,
+        seedY
+      );
 
       const sprite = new THREE.Sprite(material);
       sprite.position.copy(positions[i]);
@@ -417,18 +270,143 @@ export class NebulaComponent implements OnDestroy {
     }
   }
 
+  /**
+   * Create procedural cloud material using TSL
+   * Replaces CPU-based CanvasTexture generation with GPU procedural noise
+   * SIGNIFICANT PERFORMANCE IMPROVEMENT: GPU vs CPU noise generation
+   */
+  private createProceduralCloudMaterial(
+    colorHex: string,
+    opacity: number,
+    seedX: number,
+    seedY: number
+  ): SpriteNodeMaterial {
+    const material = new SpriteNodeMaterial();
+
+    // Color as TSL uniform
+    const uColor = uniform(vec3(...new THREE.Color(colorHex).toArray()));
+    const uOpacity = uniform(float(opacity));
+    const uSeed = uniform(vec3(seedX, seedY, 0));
+
+    // Normalize coordinates to -0.5 to 0.5
+    const nx = add(uv().x, float(-0.5));
+    const ny = add(uv().y, float(-0.5));
+
+    // Scale for noise sampling
+    const scale = 3.0;
+    let px = add(mul(nx, float(scale)), uSeed.x);
+    let py = add(mul(ny, float(scale)), uSeed.y);
+
+    // Apply domain warping for organic distortion
+    const warpedPos = domainWarp(vec3(px, py, float(0)), float(0.8));
+    px = warpedPos.x;
+    py = warpedPos.y;
+
+    // Main cloud density using MaterialX FBM (6 octaves for detail)
+    const cloudDensity = nativeFBMVec3(
+      vec3(px, py, float(0)),
+      float(6),
+      float(2.0),
+      float(0.5)
+    );
+
+    // Wispy detail using turbulence (absolute value)
+    const wispyDetail = abs(
+      nativeFBMVec3(
+        vec3(mul(px, float(2)), mul(py, float(2)), float(0)),
+        float(4),
+        float(2.0),
+        float(0.5)
+      )
+    );
+
+    // Combine for final density
+    const densityBase = add(
+      mul(cloudDensity.x, float(0.7)),
+      mul(wispyDetail.x, float(0.3))
+    );
+
+    // Normalize to 0-1
+    const density = mul(add(densityBase, float(1.0)), float(0.5));
+
+    // NOISE-BASED edge falloff (not circular!)
+    // Use noise to create irregular edges
+    const dist = pow(add(mul(nx, nx), mul(ny, ny)), float(0.5)); // sqrt(nx*nx + ny*ny)
+
+    // Create irregular edge using noise
+    const edgeNoise = nativeFBMVec3(
+      vec3(
+        add(mul(px, float(1.5)), float(5.0)),
+        add(mul(py, float(1.5)), float(5.0)),
+        float(0)
+      ),
+      float(3),
+      float(2.0),
+      float(0.5)
+    );
+    const edgeThreshold = add(float(0.35), mul(edgeNoise.x, float(0.15))); // Varies between 0.2 and 0.5
+
+    // Soft falloff from noise-varied edge
+    const edgeFalloffBase = float(1).sub(
+      smoothstep(
+        add(edgeThreshold, float(-0.15)),
+        add(edgeThreshold, float(0.1)),
+        dist
+      )
+    );
+
+    // Add wispy tendrils at edges using turbulence
+    const tendrilNoise = abs(
+      nativeFBMVec3(
+        vec3(
+          add(mul(px, float(3)), float(10)),
+          add(mul(py, float(3)), float(10)),
+          float(0)
+        ),
+        float(4),
+        float(2.0),
+        float(0.6)
+      )
+    );
+    const edgeFalloff = add(
+      edgeFalloffBase,
+      mul(mul(tendrilNoise.x, float(0.3)), float(1).sub(mul(dist, float(1.5))))
+    ).clamp(0, 1);
+
+    // Final alpha calculation
+    const alphaBase = mul(density, edgeFalloff);
+
+    // Enhance contrast for more visible clouds
+    const alphaEnhanced = pow(alphaBase, float(1.2));
+
+    // Clamp to valid range
+    const alphaClamped = alphaEnhanced.clamp(0, 1);
+
+    // Apply opacity multiplier
+    const alpha = mul(alphaClamped, uOpacity);
+
+    // Assign color and opacity nodes to material
+    material.colorNode = uColor;
+    material.opacityNode = alpha;
+
+    // Material properties
+    material.transparent = true;
+    material.blending = THREE.AdditiveBlending;
+    material.depthWrite = false;
+    material.depthTest = true;
+    material.fog = false;
+
+    return material;
+  }
+
   private disposeResources(): void {
     // Dispose sprites and materials
     for (const sprite of this.sprites) {
-      if (sprite.material instanceof THREE.SpriteNodeMaterial) {
+      if (sprite.material instanceof SpriteNodeMaterial) {
         sprite.material.dispose();
       }
     }
     this.sprites = [];
-
-    // Dispose all textures
-    this.textures.forEach((t) => t.dispose());
-    this.textures = [];
   }
 
   public ngOnDestroy(): void {

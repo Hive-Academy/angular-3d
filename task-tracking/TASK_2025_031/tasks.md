@@ -1,7 +1,7 @@
 # Development Tasks - TASK_2025_031
 
-**Task Type**: Frontend (Angular 3D Library)  
-**Total Tasks**: 14 | **Batches**: 5 | **Status**: 0/5 complete (0%)  
+**Task Type**: Frontend (Angular 3D Library)
+**Total Tasks**: 14 | **Batches**: 5 | **Status**: 2/5 complete (40%)
 **Batching Strategy**: Layer-based (Foundation → Simple → Complex → Infrastructure → Polish)
 
 ---
@@ -35,13 +35,14 @@
 
 ---
 
-## Batch 1: TSL Utilities Enhancement 🔄 IN PROGRESS
+## Batch 1: TSL Utilities Enhancement ✅ COMPLETE
 
-**Developer**: frontend-developer  
-**Tasks**: 2 | **Dependencies**: None  
+**Developer**: frontend-developer
+**Tasks**: 2 | **Dependencies**: None
 **Estimated Commits**: 1 (one commit per batch)
+**Commit**: 189bf2d
 
-### Task 1.1: Extend TSL Utilities with MaterialX Noise 🔄 IN PROGRESS
+### Task 1.1: Extend TSL Utilities with MaterialX Noise ✅ COMPLETE
 
 **File**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\shaders\tsl-utilities.ts`  
 **Specification Reference**: implementation-plan.md:L95-145  
@@ -64,7 +65,7 @@
 
 ---
 
-### Task 1.2: Add TSL Fresnel and Iridescence Effects 🔄 IN PROGRESS
+### Task 1.2: Add TSL Fresnel and Iridescence Effects ✅ COMPLETE
 
 **File**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\shaders\tsl-utilities.ts`  
 **Specification Reference**: implementation-plan.md:L148-165  
@@ -96,13 +97,14 @@
 
 ---
 
-## Batch 2: Simple Component Migrations ⏸️ PENDING
+## Batch 2: Simple Component Migrations ✅ COMPLETE
 
-**Developer**: frontend-developer  
-**Tasks**: 3 | **Dependencies**: Batch 1 complete  
+**Developer**: frontend-developer
+**Tasks**: 3 | **Dependencies**: Batch 1 complete
 **Estimated Commits**: 1
+**Commit**: 8d7837f
 
-### Task 2.1: Migrate BubbleText to TSL Material ⏸️ PENDING
+### Task 2.1: Migrate BubbleText to TSL Material ✅ COMPLETE
 
 **File**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\text\bubble-text.component.ts`  
 **Specification Reference**: implementation-plan.md:L175-225  
@@ -127,7 +129,7 @@
 
 ---
 
-### Task 2.2: Migrate CloudLayer to TSL Material ⏸️ PENDING
+### Task 2.2: Migrate CloudLayer to TSL Material ✅ COMPLETE
 
 **File**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\cloud-layer.component.ts`  
 **Specification Reference**: implementation-plan.md:L230-265  
@@ -150,7 +152,7 @@
 
 ---
 
-### Task 2.3: Update Shaders Index Export ⏸️ PENDING
+### Task 2.3: Update Shaders Index Export ✅ COMPLETE
 
 **File**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\shaders\index.ts`  
 **Specification Reference**: implementation-plan.md (file structure section)  
@@ -175,13 +177,13 @@
 
 ---
 
-## Batch 3: Complex Volumetric Migrations ⏸️ PENDING
+## Batch 3: Complex Volumetric Migrations 🔄 IN PROGRESS
 
-**Developer**: frontend-developer  
-**Tasks**: 3 | **Dependencies**: Batch 2 complete  
+**Developer**: frontend-developer
+**Tasks**: 3 | **Dependencies**: Batch 2 complete
 **Estimated Commits**: 1
 
-### Task 3.1: Migrate NebulaVolumetric to TSL Material ⏸️ PENDING
+### Task 3.1: Migrate NebulaVolumetric to TSL Material ✅ IMPLEMENTED
 
 **File**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\nebula-volumetric.component.ts`  
 **Specification Reference**: implementation-plan.md:L275-340  
@@ -213,7 +215,7 @@
 
 ---
 
-### Task 3.2: Migrate SmokeTroikaText to TSL Material ⏸️ PENDING
+### Task 3.2: Migrate SmokeTroikaText to TSL Material ✅ IMPLEMENTED
 
 **File**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\text\smoke-troika-text.component.ts`  
 **Specification Reference**: implementation-plan.md:L345-360  
@@ -235,7 +237,7 @@
 
 ---
 
-### Task 3.3: Migrate Nebula Component (CPU Noise to TSL) ⏸️ PENDING
+### Task 3.3: Migrate Nebula Component (CPU Noise to TSL) ✅ IMPLEMENTED
 
 **File**: `D:\projects\angular-3d-workspace\libs\angular-3d\src\lib\primitives\nebula.component.ts`  
 **Specification Reference**: implementation-plan.md (component analysis)  
