@@ -4,17 +4,9 @@
  * This module exports shared TSL (Three.js Shading Language) utilities
  * for use with WebGPU NodeMaterial shaders.
  *
- * Note on Complex Shaders:
- * Components like nebula-volumetric and cloud-layer use GLSL ShaderMaterial
- * with WebGPU's automatic fallback mechanism. This is intentional because:
- *
- * 1. Their shaders contain sophisticated algorithms (Simplex noise, FBM, domain warping)
- *    that don't have direct TSL equivalents with visual parity
- * 2. The WebGPU renderer automatically handles GLSL shaders via fallback
- * 3. This approach maintains visual quality while benefiting from WebGPU's
- *    performance improvements elsewhere in the rendering pipeline
- *
- * For simpler shader needs, use the TSL utilities exported here.
+ * The utilities provide native MaterialX noise functions, domain warping,
+ * fresnel effects, and other shader helpers that work on both WebGPU
+ * (via WGSL) and WebGL (via GLSL) backends through TSL's auto-transpilation.
  *
  * @module primitives/shaders
  */
@@ -28,13 +20,28 @@ export {
   type FogConfig,
   type FresnelConfig,
 
-  // TSL Functions
+  // Legacy Noise Functions (simple implementations)
   hash,
   simpleNoise3D,
   simpleFBM,
+
+  // Native MaterialX Noise Functions (GPU-Optimized)
+  nativeNoise3D,
+  nativeFBM,
+  nativeFBMVec3,
+  domainWarp,
+  cloudDensity,
+
+  // TSL Lighting Effects (modern, TSL-node inputs)
+  tslFresnel,
+  tslIridescence,
+
+  // Legacy Lighting Effects (config-based, deprecated)
   fresnel,
+  iridescence,
+
+  // Environment Effects
   applyFog,
   radialFalloff,
-  iridescence,
   clampForBloom,
 } from './tsl-utilities';

@@ -13,6 +13,7 @@
 | TASK_2025_022 | GSAP Service Centralization         | 🔄 Execution (Batch 1)   | 2025-12-22 |
 | TASK_2025_025 | Angular-3D Showcase Page Redesign   | 🔄 IN PROGRESS           | 2025-12-23 |
 | TASK_2025_030 | WebGPU Test Suite Fixes             | 📋 PENDING               | 2025-12-27 |
+| TASK_2025_031 | Complete WebGPU TSL Migration       | 🔄 Requirements Complete | 2025-12-28 |
 
 ## Task Dependencies
 
