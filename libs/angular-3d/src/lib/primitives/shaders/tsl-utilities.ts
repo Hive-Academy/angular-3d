@@ -34,12 +34,26 @@ const {
   clamp,
   pow,
   sin,
+  cos,
   dot,
   abs,
   normalize,
   positionWorld,
   cameraPosition,
   normalLocal,
+  // Control flow for conditional logic
+  If,
+  select,
+  // Matrix types
+  mat4,
+  // Math functions
+  log2,
+  remap,
+  min,
+  max,
+  add,
+  sub,
+  mul,
   // MaterialX noise functions (GPU-optimized)
   mx_noise_vec3,
   mx_fractal_noise_float,
@@ -434,8 +448,376 @@ export const clampForBloom = TSLFn(([color, maxValue]: [TSLNode, number]) => {
 });
 
 // ============================================================================
-// Export Documentation
+// Caustic Light Pattern Functions
 // ============================================================================
+
+/**
+ * TSL Caustic Pattern Generator
+ * Creates animated underwater-style caustic light patterns using sine wave interference.
+ *
+ * Generates sharp, web-like patterns of light that shimmer and move over time,
+ * similar to light refracted through water.
+ *
+ * @param position - 2D or 3D position to sample caustic pattern at
+ * @param time - Animation time value for movement
+ * @param scale - Pattern scale (higher = smaller patterns)
+ * @param sharpness - Power curve for contrast (2.0-4.0 typical)
+ * @returns Caustic intensity value in range [0, 1]
+ *
+ * @example
+ * ```typescript
+ * const caustic = tslCaustics(positionLocal.xy, uTime, float(2.0), float(2.5));
+ * material.colorNode = mix(darkColor, brightColor, caustic);
+ * ```
+ */
+export const tslCaustics = TSLFn(
+  ([position, time, scale, sharpness]: [
+    TSLNode,
+    TSLNode,
+    TSLNode,
+    TSLNode
+  ]) => {
+    const p = position;
+    const t = time.mul(0.3);
+
+    // Layer 1: Primary caustic waves
+    const c1x = p.x.add(sin(p.y.add(t))).mul(scale);
+    const c1y = p.y.add(sin(p.x.add(t.mul(0.8)))).mul(scale);
+    const caustic1 = sin(c1x).mul(0.5).add(0.5);
+    const caustic2 = sin(c1y).mul(0.5).add(0.5);
+
+    // Layer 2: Secondary smaller waves for detail
+    const c2x = p.x
+      .mul(2.3)
+      .add(sin(p.y.mul(1.7).add(t)))
+      .mul(scale);
+    const c2y = p.y
+      .mul(2.1)
+      .add(sin(p.x.mul(1.9).add(t)))
+      .mul(scale);
+    const caustic3 = sin(c2x).mul(0.5).add(0.5);
+    const caustic4 = sin(c2y).mul(0.5).add(0.5);
+
+    // Combine layers with multiplication for sharp bright bands
+    const rawCaustic = caustic1.mul(caustic2).mul(caustic3).mul(caustic4);
+
+    // Apply power curve for sharp contrast
+    return pow(rawCaustic, sharpness);
+  }
+);
+
+/**
+ * TSL Volumetric Ray Intensity
+ * Calculates light ray intensity at a point based on light direction and caustic pattern.
+ *
+ * Combines directional light influence with caustic patterns to create
+ * volumetric god ray effects.
+ *
+ * @param position - 3D position in the volume
+ * @param lightDirection - Normalized light direction vector
+ * @param causticValue - Pre-calculated caustic pattern value
+ * @param density - Fog/particle density for scattering
+ * @returns Light ray intensity at this point
+ *
+ * @example
+ * ```typescript
+ * const caustic = tslCaustics(pos.xy, uTime, float(2.0), float(2.5));
+ * const ray = tslVolumetricRay(pos, lightDir, caustic, float(0.5));
+ * material.opacityNode = ray;
+ * ```
+ */
+export const tslVolumetricRay = TSLFn(
+  ([position, lightDirection, causticValue, density]: [
+    TSLNode,
+    TSLNode,
+    TSLNode,
+    TSLNode
+  ]) => {
+    // Calculate directional light influence
+    const lightDot = dot(normalize(position), lightDirection);
+    const lightInfluence = lightDot.mul(0.3).add(0.7).clamp(0, 1);
+
+    // Combine with caustic pattern and density
+    return causticValue.mul(lightInfluence).mul(density);
+  }
+);
+
+// ============================================================================
+// HSL Color Conversion Functions (ported from tsl-textures/tsl-utils.js)
+// ============================================================================
+
+/**
+ * Helper function for HSL to RGB conversion
+ * Implements the HSL to RGB algorithm component calculation
+ *
+ * @internal
+ * @param h - Hue (0-1)
+ * @param s - Saturation (0-1)
+ * @param l - Lightness (0-1)
+ * @param n - Component offset (0 for R, 8 for G, 4 for B)
+ * @returns RGB component value
+ */
+const tslHslHelper = TSLFn(
+  ([h, s, l, n]: [TSLNode, TSLNode, TSLNode, TSLNode]) => {
+    const k = n.add(h.mul(12)).mod(12);
+    const a = s.mul(min(l, sub(1, l)));
+    return l.sub(a.mul(max(-1, min(min(k.sub(3), sub(9, k)), 1))));
+  }
+);
+
+/**
+ * TSL HSL to RGB Color Conversion
+ * Converts HSL color values to RGB color values.
+ *
+ * Uses the standard HSL to RGB algorithm, with hue wrapping and
+ * saturation/lightness clamping for robust color handling.
+ *
+ * @param h - Hue value (0-1, wraps around)
+ * @param s - Saturation value (0-1)
+ * @param l - Lightness value (0-1)
+ * @returns vec3 RGB color
+ *
+ * @example
+ * ```typescript
+ * const color = tslHsl(float(0.6), float(0.8), float(0.5)); // Blue-ish color
+ * material.colorNode = color;
+ * ```
+ */
+export const tslHsl = TSLFn(([h, s, l]: [TSLNode, TSLNode, TSLNode]) => {
+  // Wrap hue to 0-1 range
+  const hWrapped = h.fract().add(1).fract();
+  // Clamp saturation and lightness
+  const sClamped = s.clamp(0, 1);
+  const lClamped = l.clamp(0, 1);
+
+  const r = tslHslHelper(hWrapped, sClamped, lClamped, 0);
+  const g = tslHslHelper(hWrapped, sClamped, lClamped, 8);
+  const b = tslHslHelper(hWrapped, sClamped, lClamped, 4);
+
+  return vec3(r, g, b);
+});
+
+/**
+ * TSL RGB to HSL Color Conversion
+ * Converts RGB color values to HSL color values.
+ *
+ * Handles edge cases like achromatic colors (when min equals max)
+ * and correctly calculates hue based on which RGB component is maximum.
+ *
+ * @param rgb - RGB color as vec3 (components 0-1)
+ * @returns vec3 with (hue, saturation, lightness) in 0-1 range
+ *
+ * @example
+ * ```typescript
+ * const hsl = tslToHsl(textureColor);
+ * // Modify hue: hsl.x
+ * // Modify saturation: hsl.y
+ * // Modify lightness: hsl.z
+ * ```
+ */
+export const tslToHsl = TSLFn(([rgb]: [TSLNode]) => {
+  const R = float(rgb.x).toVar();
+  const G = float(rgb.y).toVar();
+  const B = float(rgb.z).toVar();
+
+  const mx = max(R, max(G, B)).toVar();
+  const mn = min(R, min(G, B)).toVar();
+
+  const H = float(0).toVar();
+  const S = float(0).toVar();
+  const L = add(mx, mn).div(2);
+
+  If(mn.notEqual(mx), () => {
+    const delta = sub(mx, mn).toVar();
+
+    S.assign(
+      select(
+        L.lessThanEqual(0.5),
+        delta.div(add(mn, mx)),
+        delta.div(sub(2, add(mn, mx)))
+      )
+    );
+
+    If(mx.equal(R), () => {
+      H.assign(
+        sub(G, B)
+          .div(delta)
+          .add(select(G.lessThanEqual(B), 6, 0))
+      );
+    })
+      .ElseIf(mx.equal(G), () => {
+        H.assign(sub(B, R).div(delta).add(2));
+      })
+      .Else(() => {
+        H.assign(sub(R, G).div(delta).add(4));
+      });
+
+    H.divAssign(6);
+  });
+
+  return vec3(H, S, L);
+});
+
+// ============================================================================
+// Spherical Coordinate Functions
+// ============================================================================
+
+/**
+ * TSL Spherical Coordinate Conversion
+ * Converts phi-theta angles to a point on the unit sphere.
+ *
+ * Uses standard spherical coordinate convention where:
+ * - phi is the polar angle from the positive Y-axis (0 to PI)
+ * - theta is the azimuthal angle in the XZ-plane from the positive Z-axis
+ *
+ * @param phi - Polar angle (radians, 0 to PI)
+ * @param theta - Azimuthal angle (radians, 0 to 2*PI)
+ * @returns vec3 point on unit sphere
+ *
+ * @example
+ * ```typescript
+ * // Random point distribution on sphere
+ * const point = tslSpherical(float(PI * 0.5), float(PI * 0.25));
+ * ```
+ */
+export const tslSpherical = TSLFn(([phi, theta]: [TSLNode, TSLNode]) => {
+  return vec3(sin(theta).mul(sin(phi)), cos(phi), cos(theta).mul(sin(phi)));
+});
+
+// ============================================================================
+// Simple Noise Functions
+// ============================================================================
+
+/**
+ * TSL Simple Vector Noise
+ * Fast pseudo-random noise function based on dot product with magic numbers.
+ *
+ * Much faster than MaterialX noise but lower quality. Useful for quick
+ * randomization where visual quality isn't critical.
+ *
+ * @param v - Input vector (vec3)
+ * @returns float noise value in range [-1, 1]
+ *
+ * @example
+ * ```typescript
+ * const noise = tslVnoise(positionLocal);
+ * const randomOffset = noise.mul(0.1);
+ * ```
+ */
+export const tslVnoise = TSLFn(([v]: [TSLNode]) => {
+  return v
+    .dot(vec3(12.9898, 78.233, -97.5123))
+    .sin()
+    .mul(43758.5453)
+    .fract()
+    .mul(2)
+    .sub(1);
+});
+
+// ============================================================================
+// Rotation Matrix Functions
+// ============================================================================
+
+/**
+ * TSL X-Axis Rotation Matrix
+ * Creates a 4x4 rotation matrix for rotation around the X-axis.
+ *
+ * @param angle - Rotation angle in radians
+ * @returns mat4 rotation matrix
+ *
+ * @example
+ * ```typescript
+ * const rotatedPos = tslMatRotX(uTime.mul(0.5)).mul(vec4(position, 1)).xyz;
+ * ```
+ */
+export const tslMatRotX = TSLFn(([angle]: [TSLNode]) => {
+  const c = angle.cos().toVar();
+  const s = angle.sin().toVar();
+
+  return mat4(1, 0, 0, 0, 0, c, s, 0, 0, s.negate(), c, 0, 0, 0, 0, 1);
+});
+
+/**
+ * TSL Y-Axis Rotation Matrix
+ * Creates a 4x4 rotation matrix for rotation around the Y-axis.
+ *
+ * @param angle - Rotation angle in radians
+ * @returns mat4 rotation matrix
+ *
+ * @example
+ * ```typescript
+ * const rotatedPos = tslMatRotY(uTime).mul(vec4(position, 1)).xyz;
+ * ```
+ */
+export const tslMatRotY = TSLFn(([angle]: [TSLNode]) => {
+  const c = angle.cos().toVar();
+  const s = angle.sin().toVar();
+
+  return mat4(c, 0, s.negate(), 0, 0, 1, 0, 0, s, 0, c, 0, 0, 0, 0, 1);
+});
+
+/**
+ * TSL Z-Axis Rotation Matrix
+ * Creates a 4x4 rotation matrix for rotation around the Z-axis.
+ *
+ * @param angle - Rotation angle in radians
+ * @returns mat4 rotation matrix
+ *
+ * @example
+ * ```typescript
+ * const rotatedPos = tslMatRotZ(float(PI / 4)).mul(vec4(position, 1)).xyz;
+ * ```
+ */
+export const tslMatRotZ = TSLFn(([angle]: [TSLNode]) => {
+  const c = angle.cos().toVar();
+  const s = angle.sin().toVar();
+
+  return mat4(c, s, 0, 0, s.negate(), c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+});
+
+// ============================================================================
+// Remapping Functions
+// ============================================================================
+
+/**
+ * TSL Exponential Remap
+ * Remaps a value from one range to another using exponential interpolation.
+ *
+ * Unlike linear remap, this preserves multiplicative relationships and is
+ * useful for parameters like frequency or scale where doubling matters
+ * more than absolute differences.
+ *
+ * @param x - Input value
+ * @param fromMin - Input range minimum
+ * @param fromMax - Input range maximum
+ * @param toMin - Output range minimum (must be > 0)
+ * @param toMax - Output range maximum (must be > 0)
+ * @returns Exponentially remapped value
+ *
+ * @example
+ * ```typescript
+ * // Remap 0-1 slider to 0.1-10 frequency range with exponential scaling
+ * const freq = tslRemapExp(sliderValue, float(0), float(1), float(0.1), float(10));
+ * ```
+ */
+export const tslRemapExp = TSLFn(
+  ([x, fromMin, fromMax, toMin, toMax]: [
+    TSLNode,
+    TSLNode,
+    TSLNode,
+    TSLNode,
+    TSLNode
+  ]) => {
+    // First remap to 0-1 range
+    const normalized = remap(x, fromMin, fromMax, 0, 1);
+    // Apply exponential interpolation in log space
+    const result = pow(
+      2,
+      mul(normalized, log2(toMax.div(toMin))).add(log2(toMin))
+    );
+    return result;
+  }
+);
 
 /**
  * TSL Utilities Quick Reference:
@@ -451,6 +833,7 @@ export const clampForBloom = TSLFn(([color, maxValue]: [TSLNode, number]) => {
  *    - simpleNoise3D(position) - Basic 3D noise using sine
  *    - simpleFBM(position, octaves) - Simple FBM implementation
  *    - hash(position) - Pseudo-random hash
+ *    - tslVnoise(v) - Fast vector noise [-1, 1]
  *
  * 3. Lighting Effects:
  *    - tslFresnel(power, intensity, bias) - Rim lighting (TSL nodes)
@@ -467,6 +850,19 @@ export const clampForBloom = TSLFn(([color, maxValue]: [TSLNode, number]) => {
  *
  * 6. Post-processing:
  *    - clampForBloom(color, maxValue) - Prevent bloom overflow
+ *
+ * 7. Color Conversions (ported from tsl-textures):
+ *    - tslHsl(h, s, l) - HSL to RGB conversion
+ *    - tslToHsl(rgb) - RGB to HSL conversion
+ *
+ * 8. Coordinate Transformations:
+ *    - tslSpherical(phi, theta) - Angles to unit sphere point
+ *    - tslMatRotX(angle) - X-axis rotation matrix (mat4)
+ *    - tslMatRotY(angle) - Y-axis rotation matrix (mat4)
+ *    - tslMatRotZ(angle) - Z-axis rotation matrix (mat4)
+ *
+ * 9. Value Remapping:
+ *    - tslRemapExp(x, fromMin, fromMax, toMin, toMax) - Exponential remap
  *
  * Note: The native MaterialX noise functions (nativeNoise3D, nativeFBM, etc.)
  * are recommended for all new shader development as they're GPU-optimized and
