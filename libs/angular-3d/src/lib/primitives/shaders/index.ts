@@ -44,6 +44,10 @@ export {
   applyFog,
   radialFalloff,
   clampForBloom,
+
+  // Caustic Light Patterns
+  tslCaustics,
+  tslVolumetricRay,
 } from './tsl-utilities';
 
 export {
@@ -65,3 +69,32 @@ export {
   tslAmbientOcclusion,
   tslSoftShadow,
 } from './tsl-raymarching';
+
+// TSL Procedural Textures
+export {
+  // Types and helpers
+  type TslTextureParams,
+  type TSLNode,
+  convertToNodes,
+
+  // Space/Sci-Fi textures
+  tslPlanet,
+  tslStars,
+  tslCausticsTexture,
+  tslPhotosphere,
+
+  // Natural materials
+  tslMarble,
+  tslWood,
+  tslRust,
+
+  // Patterns
+  tslPolkaDots,
+  tslGrid,
+  tslVoronoiCells,
+  tslBricks,
+
+  // Shape modifiers
+  tslSupersphere,
+  tslMelter,
+} from './tsl-textures';
