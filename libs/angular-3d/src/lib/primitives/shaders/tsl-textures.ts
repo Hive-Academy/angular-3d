@@ -9,7 +9,6 @@
  * @module primitives/shaders/tsl-textures
  */
 
-// eslint-disable-next-line @nx/enforce-module-boundaries
 import * as TSL from 'three/tsl';
 import { Color, Vector3 } from 'three/webgpu';
 
@@ -29,8 +28,17 @@ const {
   abs,
   add,
   mul,
+  div,
   sin,
   select,
+  oneMinus,
+  floor,
+  fract,
+  distance,
+  mod,
+  min,
+  max,
+  acos,
 } = TSL;
 
 // TSL Fn helper with proper typing to avoid arg type mismatch
@@ -42,7 +50,7 @@ const TSLFn = Fn as any;
 type TSLNode = any;
 
 // Import utilities from tsl-utilities
-import { tslHsl, tslToHsl, nativeFBM } from './tsl-utilities';
+import { tslHsl, tslToHsl, nativeFBM, tslSpherical } from './tsl-utilities';
 
 // ============================================================================
 // Type Definitions
@@ -433,4 +441,405 @@ export const tslPhotosphere = TSLFn((userParams: TslTextureParams = {}) => {
   const k = noise(vec).add(1).div(2);
 
   return mix(p['background'], p['color'], k);
+});
+
+// ============================================================================
+// TIER 2: Natural Materials
+// ============================================================================
+
+/**
+ * Default parameters for tslMarble texture
+ */
+const marbleDefaults: TslTextureParams = {
+  $name: 'Marble',
+  scale: 1.2,
+  thinness: 5,
+  noise: 0.3,
+  color: new Color(0x4545d3),
+  background: new Color(0xf0f8ff),
+  seed: 0,
+};
+
+/**
+ * TSL Marble Texture
+ * Creates veined marble patterns for stone surfaces.
+ *
+ * Uses multi-octave noise with abs().pow() to create the characteristic
+ * vein patterns found in natural marble.
+ *
+ * @param params - Configuration parameters
+ * @param params.scale - Pattern scale (default: 1.2)
+ * @param params.thinness - Vein thinness (default: 5)
+ * @param params.noise - Surface noise amount (default: 0.3)
+ * @param params.color - Vein color
+ * @param params.background - Base marble color
+ * @param params.seed - Random seed offset
+ * @returns vec3 color node for material.colorNode
+ *
+ * @example
+ * ```typescript
+ * const marble = tslMarble({ color: new Color(0x333333), thinness: 7 });
+ * material.colorNode = marble;
+ * ```
+ */
+export const tslMarble = TSLFn((userParams: TslTextureParams = {}) => {
+  const p = convertToNodes(userParams, marbleDefaults);
+
+  const pos = positionGeometry
+    .mul(exp(p['scale'] as TSLNode))
+    .add(p['seed'])
+    .toVar();
+
+  // Multi-octave noise for vein pattern
+  const noiseSum = add(
+    noise(pos),
+    noise(pos.mul(2)).mul(0.5),
+    noise(pos.mul(6)).mul(0.1)
+  );
+
+  // Create vein pattern with abs and pow
+  const k = oneMinus(abs(noiseSum).pow(2.5)).toVar();
+
+  // Smoothing thresholds based on thinness
+  const maxSmooth = oneMinus(
+    pow(0.5, (p['thinness'] as TSLNode).add(7))
+  ).toVar();
+  const minSmooth = oneMinus(
+    pow(0.5, (p['thinness'] as TSLNode).add(7).mul(0.5))
+  ).toVar();
+
+  // Apply smoothing zones
+  If(k.greaterThan(maxSmooth), () => {
+    k.assign(1);
+  })
+    .ElseIf(k.lessThan(minSmooth), () => {
+      k.assign(0);
+    })
+    .Else(() => {
+      const a = k.sub(minSmooth);
+      const b = maxSmooth.sub(minSmooth);
+      k.assign(pow(div(a, b), 5).mul(0.75));
+      k.assign(k.mul(add(0.5, noise(pos.mul(2)).mul(1.5))));
+    });
+
+  // Add surface noise
+  k.assign(k.add(mul(p['noise'], abs(noise(pos.mul(150))).pow(3))));
+
+  return mix(p['background'], p['color'], k);
+});
+
+/**
+ * Default parameters for tslWood texture
+ */
+const woodDefaults: TslTextureParams = {
+  $name: 'Wood',
+  scale: 2,
+  rings: 10,
+  noise: 0.3,
+  color: new Color(0x8b4513),
+  background: new Color(0xdeb887),
+  seed: 0,
+};
+
+/**
+ * TSL Wood Grain Texture
+ * Creates wood grain with ring patterns.
+ *
+ * Uses radial distance combined with noise to create natural wood ring patterns.
+ *
+ * @param params - Configuration parameters
+ * @param params.scale - Pattern scale (default: 2)
+ * @param params.rings - Number of rings (default: 10)
+ * @param params.noise - Grain variation (default: 0.3)
+ * @param params.color - Ring color
+ * @param params.background - Wood base color
+ * @param params.seed - Random seed offset
+ * @returns vec3 color node for material.colorNode
+ */
+export const tslWood = TSLFn((userParams: TslTextureParams = {}) => {
+  const p = convertToNodes(userParams, woodDefaults);
+
+  const pos = positionGeometry.mul(exp(p['scale'] as TSLNode)).add(p['seed']);
+
+  // Radial distance for rings
+  const dist = pos.xz.length();
+  const noiseVal = noise(pos.mul(0.5)).mul(p['noise']);
+
+  // Create ring pattern
+  const rings = sin(dist.mul(p['rings']).add(noiseVal.mul(10)))
+    .mul(0.5)
+    .add(0.5);
+
+  return mix(p['background'], p['color'], rings.pow(0.5));
+});
+
+/**
+ * Default parameters for tslRust texture
+ */
+const rustDefaults: TslTextureParams = {
+  $name: 'Rust',
+  scale: 2,
+  intensity: 0.6,
+  color: new Color(0xb7410e),
+  background: new Color(0x5c4033),
+  seed: 0,
+};
+
+/**
+ * TSL Rust/Oxidation Texture
+ * Creates rust and corrosion patterns.
+ *
+ * Uses multi-scale noise to create pitting and oxidation effects.
+ *
+ * @param params - Configuration parameters
+ * @param params.scale - Pattern scale (default: 2)
+ * @param params.intensity - Rust intensity (default: 0.6)
+ * @param params.color - Rust color
+ * @param params.background - Metal base color
+ * @param params.seed - Random seed offset
+ * @returns vec3 color node for material.colorNode
+ */
+export const tslRust = TSLFn((userParams: TslTextureParams = {}) => {
+  const p = convertToNodes(userParams, rustDefaults);
+
+  const pos = positionGeometry.mul(exp(p['scale'] as TSLNode)).add(p['seed']);
+
+  // Multi-scale noise for rust patterns
+  const n1 = noise(pos).add(0.5);
+  const n2 = noise(pos.mul(3)).mul(0.5).add(0.5);
+  const n3 = noise(pos.mul(10)).mul(0.25).add(0.5);
+
+  const rustLevel = n1.mul(n2).mul(n3).mul(p['intensity']);
+
+  return mix(p['background'], p['color'], rustLevel);
+});
+
+// ============================================================================
+// TIER 3: Patterns
+// ============================================================================
+
+/**
+ * Default parameters for tslPolkaDots texture
+ */
+const polkaDotsDefaults: TslTextureParams = {
+  $name: 'Polka Dots',
+  count: 2,
+  size: 0.5,
+  blur: 0.25,
+  color: new Color(0x000000),
+  background: new Color(0xffffff),
+  flat: 0,
+};
+
+// Golden ratio for spherical point distribution
+const goldenRatio = (1 + Math.sqrt(5)) / 2;
+
+/**
+ * TSL Polka Dots Texture
+ * Creates repeating dot patterns (flat or spherical distribution).
+ *
+ * Uses golden ratio for uniform spherical distribution of dots.
+ *
+ * @param params - Configuration parameters
+ * @param params.count - Dot density (default: 2)
+ * @param params.size - Dot size (default: 0.5)
+ * @param params.blur - Edge blur (default: 0.25)
+ * @param params.color - Dot color
+ * @param params.background - Background color
+ * @param params.flat - Use flat UV distribution (default: 0 = spherical)
+ * @returns vec3 color node for material.colorNode
+ */
+export const tslPolkaDots = TSLFn((userParams: TslTextureParams = {}) => {
+  const p = convertToNodes(userParams, polkaDotsDefaults);
+
+  const dist = float(1).toVar();
+
+  If((p['flat'] as TSLNode).equal(1), () => {
+    // Flat UV-based dots using simple grid
+    const cnt = (p['count'] as TSLNode).pow(2).sub(0.5).toVar();
+    const posScaled = positionGeometry.xy.mul(cnt);
+    const posTo = posScaled.round().toVar();
+    dist.assign(posScaled.distance(posTo).div(cnt));
+  }).Else(() => {
+    // Spherical golden ratio distribution
+    const cnt = pow(10, p['count']).toVar();
+    const vec = positionGeometry.normalize().toVar();
+    const besti = oneMinus(vec.y).mul(cnt).sub(1).div(2);
+    const span = max(10, cnt.pow(0.5));
+    const mini = besti.sub(span).floor().clamp(0, cnt);
+    const maxi = besti.add(span).floor().clamp(0, cnt);
+
+    dist.assign(1).toVar();
+
+    Loop(maxi.sub(mini), ({ i }: { i: TSLNode }) => {
+      const j = add(i, mini);
+      const theta = mod(mul((2 * Math.PI) / goldenRatio, j), 2 * Math.PI);
+      const phi = acos(oneMinus(float(j).mul(2).add(1).div(cnt)));
+      const pnt = tslSpherical(phi, theta);
+      dist.assign(min(dist, distance(vec, pnt)));
+    });
+  });
+
+  const size = exp((p['size'] as TSLNode).mul(5).sub(5)).toVar();
+  const blur = (p['blur'] as TSLNode).pow(4).toVar();
+  const k = smoothstep(size.sub(blur), size.add(blur), dist);
+
+  return mix(p['color'], p['background'], k);
+});
+
+/**
+ * Default parameters for tslGrid texture
+ */
+const gridDefaults: TslTextureParams = {
+  $name: 'Grid',
+  scale: 5,
+  thickness: 0.05,
+  blur: 0.01,
+  color: new Color(0x00ffff),
+  background: new Color(0x001122),
+};
+
+/**
+ * TSL Tech Grid Texture
+ * Creates holographic/tech grid patterns.
+ *
+ * Uses UV-based grid with smoothstep blur for clean lines.
+ *
+ * @param params - Configuration parameters
+ * @param params.scale - Grid cell size (default: 5)
+ * @param params.thickness - Line thickness (default: 0.05)
+ * @param params.blur - Line blur (default: 0.01)
+ * @param params.color - Line color
+ * @param params.background - Background color
+ * @returns vec3 color node for material.colorNode
+ */
+export const tslGrid = TSLFn((userParams: TslTextureParams = {}) => {
+  const p = convertToNodes(userParams, gridDefaults);
+
+  const pos = positionGeometry.xy.mul(p['scale'] as TSLNode);
+
+  // Grid lines using fract
+  const gridX = fract(pos.x);
+  const gridY = fract(pos.y);
+
+  const halfThick = (p['thickness'] as TSLNode).div(2);
+  const blurVal = p['blur'] as TSLNode;
+
+  // Smoothstep for X and Y lines
+  const lineX = smoothstep(
+    halfThick.add(blurVal),
+    halfThick.sub(blurVal),
+    abs(gridX.sub(0.5))
+  );
+  const lineY = smoothstep(
+    halfThick.add(blurVal),
+    halfThick.sub(blurVal),
+    abs(gridY.sub(0.5))
+  );
+
+  // Combine lines
+  const lines = max(lineX, lineY);
+
+  return mix(p['background'], p['color'], lines);
+});
+
+/**
+ * Default parameters for tslVoronoiCells texture
+ */
+const voronoiDefaults: TslTextureParams = {
+  $name: 'Voronoi',
+  scale: 3,
+  edgeWidth: 0.1,
+  color: new Color(0xffffff),
+  background: new Color(0x333333),
+  seed: 0,
+};
+
+/**
+ * TSL Voronoi Cell Texture
+ * Creates cellular voronoi patterns with edge detection.
+ *
+ * Uses noise-based pseudo-voronoi for organic cell structures.
+ *
+ * @param params - Configuration parameters
+ * @param params.scale - Cell size (default: 3)
+ * @param params.edgeWidth - Edge thickness (default: 0.1)
+ * @param params.color - Cell color
+ * @param params.background - Edge color
+ * @param params.seed - Random seed offset
+ * @returns vec3 color node for material.colorNode
+ */
+export const tslVoronoiCells = TSLFn((userParams: TslTextureParams = {}) => {
+  const p = convertToNodes(userParams, voronoiDefaults);
+
+  const pos = positionGeometry.mul(p['scale'] as TSLNode).add(p['seed']);
+
+  // Simulate voronoi with noise gradient
+  const n1 = noise(pos);
+  const n2 = noise(pos.add(0.01));
+  const gradient = abs(n1.sub(n2)).mul(100);
+
+  const edge = smoothstep(0, p['edgeWidth'], gradient);
+
+  return mix(p['color'], p['background'], edge);
+});
+
+/**
+ * Default parameters for tslBricks texture
+ */
+const bricksDefaults: TslTextureParams = {
+  $name: 'Bricks',
+  scaleX: 4,
+  scaleY: 8,
+  mortarWidth: 0.05,
+  blur: 0.02,
+  color: new Color(0xb22222),
+  background: new Color(0x888888),
+};
+
+/**
+ * TSL Brick Wall Texture
+ * Creates offset brick patterns with mortar.
+ *
+ * Uses offset grid pattern for classic brick layout.
+ *
+ * @param params - Configuration parameters
+ * @param params.scaleX - Horizontal brick count (default: 4)
+ * @param params.scaleY - Vertical brick count (default: 8)
+ * @param params.mortarWidth - Mortar thickness (default: 0.05)
+ * @param params.blur - Edge blur (default: 0.02)
+ * @param params.color - Brick color
+ * @param params.background - Mortar color
+ * @returns vec3 color node for material.colorNode
+ */
+export const tslBricks = TSLFn((userParams: TslTextureParams = {}) => {
+  const p = convertToNodes(userParams, bricksDefaults);
+
+  const posX = positionGeometry.x.mul(p['scaleX'] as TSLNode);
+  const posY = positionGeometry.y.mul(p['scaleY'] as TSLNode);
+
+  // Offset every other row
+  const row = floor(posY);
+  const offset = mod(row, 2).mul(0.5);
+  const brickX = fract(posX.add(offset));
+  const brickY = fract(posY);
+
+  const mortarHalf = (p['mortarWidth'] as TSLNode).div(2);
+  const blurVal = p['blur'] as TSLNode;
+
+  // Mortar lines
+  const mortarX = smoothstep(
+    mortarHalf.add(blurVal),
+    mortarHalf.sub(blurVal),
+    abs(brickX.sub(0.5))
+  );
+  const mortarY = smoothstep(
+    mortarHalf.add(blurVal),
+    mortarHalf.sub(blurVal),
+    abs(brickY.sub(0.5))
+  );
+
+  const isBrick = mortarX.mul(mortarY);
+
+  return mix(p['background'], p['color'], isBrick);
 });
