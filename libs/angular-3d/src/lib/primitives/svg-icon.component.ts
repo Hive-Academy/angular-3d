@@ -38,7 +38,7 @@ export class SvgIconComponent implements OnDestroy {
   public readonly color = input<string | number>(0xffd700);
   public readonly metalness = input<number>(0.7);
   public readonly roughness = input<number>(0.2);
-  public readonly emissive = input<number>(0x000000);
+  public readonly emissive = input<string | number>(0x000000);
   public readonly emissiveIntensity = input<number>(0);
 
   // Three.js objects

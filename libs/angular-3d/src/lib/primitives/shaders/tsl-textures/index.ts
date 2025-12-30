@@ -10,7 +10,9 @@
  */
 
 // Types and helpers
-export { TslTextureParams, TSLNode, TSLFn, convertToNodes } from './types';
+// Types and helpers
+export type { TslTextureParams, TSLNode, TSLFn } from './types';
+export { convertToNodes } from './types';
 
 // Space/Sci-Fi textures (Tier 1)
 export {
@@ -28,3 +30,11 @@ export { tslPolkaDots, tslGrid, tslVoronoiCells, tslBricks } from './patterns';
 
 // Shape modifiers
 export { tslSupersphere, tslMelter } from './shapes';
+
+// Organic textures
+export {
+  tslBrain,
+  tslReticularVeins,
+  tslWaterMarble,
+  tslRoughClay,
+} from './organic';

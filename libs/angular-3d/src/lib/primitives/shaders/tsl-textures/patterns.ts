@@ -6,8 +6,8 @@
  * @module primitives/shaders/tsl-textures/patterns
  */
 
-// eslint-disable-next-line @nx/enforce-module-boundaries
 import * as TSL from 'three/tsl';
+import { time } from 'three/tsl';
 import { Color } from 'three/webgpu';
 
 import { TSLFn, TSLNode, TslTextureParams, convertToNodes } from './types';
@@ -15,6 +15,7 @@ import { nativeFBM, tslSpherical } from '../tsl-utilities';
 
 const {
   float,
+  vec3,
   mix,
   smoothstep,
   positionGeometry,
@@ -32,6 +33,8 @@ const {
   min,
   max,
   acos,
+  sin,
+  cos,
   oneMinus,
 } = TSL;
 
@@ -148,6 +151,7 @@ const voronoiDefaults: TslTextureParams = {
   $name: 'Voronoi',
   scale: 3,
   edgeWidth: 0.1,
+  speed: 0.3, // Animation speed
   color: new Color(0xffffff),
   background: new Color(0x333333),
   seed: 0,
@@ -155,12 +159,19 @@ const voronoiDefaults: TslTextureParams = {
 
 /**
  * TSL Voronoi Cell Texture
- * Creates cellular voronoi patterns with edge detection.
+ * Creates animated cellular voronoi patterns with edge detection.
  */
 export const tslVoronoiCells = TSLFn((userParams: TslTextureParams = {}) => {
   const p = convertToNodes(userParams, voronoiDefaults);
 
-  const pos = positionGeometry.mul(p['scale'] as TSLNode).add(p['seed']);
+  // Time-based flowing animation
+  const t = time.mul(p['speed']);
+  const flow = vec3(sin(t), cos(t.mul(0.8)), sin(t.mul(1.2))).mul(0.2);
+
+  const pos = positionGeometry
+    .mul(p['scale'] as TSLNode)
+    .add(p['seed'])
+    .add(flow);
 
   const n1 = noise(pos);
   const n2 = noise(pos.add(0.01));

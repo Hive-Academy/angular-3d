@@ -9,6 +9,7 @@ import {
   DestroyRef,
 } from '@angular/core';
 import * as THREE from 'three/webgpu';
+import { uv, float, smoothstep, sub, length, vec2, mul } from 'three/tsl';
 import { NG_3D_PARENT } from '../types/tokens';
 import { RenderLoopService } from '../render-loop/render-loop.service';
 
@@ -106,11 +107,12 @@ export class StarFieldComponent implements OnDestroy {
   private readonly renderLoop = inject(RenderLoopService);
   private readonly destroyRef = inject(DestroyRef);
 
-  private object3d: THREE.Points | THREE.Group | null = null;
-  private geometry: THREE.BufferGeometry | null = null;
-  private material: THREE.PointsNodeMaterial | null = null; // For Points mode only
-  private glowTexture: THREE.CanvasTexture | null = null; // For sprite mode
-  private pointsGlowTexture: THREE.CanvasTexture | null = null; // For Points mode
+  // WebGPU-compatible: use InstancedMesh with quads instead of Points
+  private object3d: THREE.InstancedMesh | THREE.Group | null = null;
+  private starGeometry: THREE.PlaneGeometry | null = null;
+  private starMaterial: THREE.MeshBasicNodeMaterial | null = null;
+  private geometry: THREE.BufferGeometry | null = null; // For position data
+  private glowTexture: THREE.CanvasTexture | null = null;
   private starDataArray: StarData[] = [];
   private twinkleCleanup: (() => void) | null = null;
 
@@ -342,10 +344,11 @@ export class StarFieldComponent implements OnDestroy {
   }
 
   /**
-   * Build simple star field using THREE.Points (high performance)
+   * Build star field using THREE.InstancedMesh with PlaneGeometry quads
    *
-   * CRITICAL FIX: Adds glow texture to Points mode to fix "flat square stars" visual bug.
-   * Stars now appear as soft glowing circles instead of flat pixel squares.
+   * WebGPU COMPATIBLE: Uses InstancedMesh with small plane quads.
+   * Each quad has UVs, so we can use TSL's uv() for circular falloff.
+   * This works in both WebGPU and WebGL (unlike Points which are 1px in WebGPU).
    */
   private buildSimpleStars(
     color: string | number,
@@ -354,56 +357,78 @@ export class StarFieldComponent implements OnDestroy {
     multiSize: boolean,
     stellarColors: boolean
   ): void {
-    // Generate glow texture for Points mode (fixes flat square appearance)
-    this.pointsGlowTexture = this.generatePointsGlowTexture();
+    const count =
+      this.starDataArray.length > 0
+        ? this.starDataArray.length
+        : this.starCount();
+    const positions = this.geometry!.getAttribute('position');
 
-    // If multi-size or stellar colors, we need per-star attributes
-    if (multiSize || stellarColors) {
-      const count = this.starDataArray.length;
-      const colors = new Float32Array(count * 3);
+    // Create a small plane geometry for each star (has proper UVs)
+    this.starGeometry = new THREE.PlaneGeometry(1, 1);
 
-      // Calculate average size for uniform material (PointsNodeMaterial doesn't support per-vertex sizes)
-      let totalSize = 0;
-      for (let i = 0; i < count; i++) {
-        const star = this.starDataArray[i];
-        totalSize += star.size;
-        colors[i * 3] = star.color.r;
-        colors[i * 3 + 1] = star.color.g;
-        colors[i * 3 + 2] = star.color.b;
-      }
-      const avgSize = totalSize / count;
+    // Create TSL material with circular falloff using uv()
+    // uv() works with PlaneGeometry (it has UV attributes)
+    const centeredUV = sub(uv(), vec2(0.5, 0.5));
+    const dist = length(centeredUV);
+    // Soft circular falloff: opaque at center, transparent at edges
+    const circularAlpha = sub(
+      float(1.0),
+      smoothstep(float(0.0), float(0.5), dist)
+    );
+    const finalOpacity = mul(circularAlpha, float(starOpacity));
 
-      this.geometry!.setAttribute(
-        'color',
-        new THREE.BufferAttribute(colors, 3)
-      );
+    // Create material
+    this.starMaterial = new THREE.MeshBasicNodeMaterial();
+    this.starMaterial.transparent = true;
+    this.starMaterial.depthWrite = false;
+    this.starMaterial.blending = THREE.AdditiveBlending;
+    this.starMaterial.side = THREE.DoubleSide;
+    this.starMaterial.opacityNode = finalOpacity;
 
-      // Create material with NodeMaterial pattern (direct property assignment)
-      this.material = new THREE.PointsNodeMaterial();
-      this.material.size = avgSize; // Use average size since PointsNodeMaterial doesn't support per-vertex sizes
-      this.material.map = this.pointsGlowTexture; // Add glow texture for round appearance
-      this.material.alphaMap = this.pointsGlowTexture; // Use as alpha for smooth edges
-      this.material.sizeAttenuation = true;
-      this.material.transparent = true;
-      this.material.opacity = starOpacity;
-      this.material.depthWrite = false;
-      this.material.vertexColors = true; // Use per-vertex colors
-      this.material.blending = THREE.AdditiveBlending; // Additive blending for glow effect
-    } else {
-      // Simple uniform stars with NodeMaterial pattern
-      this.material = new THREE.PointsNodeMaterial();
-      this.material.color = new THREE.Color(color);
-      this.material.size = starSize;
-      this.material.map = this.pointsGlowTexture; // Add glow texture for round appearance
-      this.material.alphaMap = this.pointsGlowTexture; // Use as alpha for smooth edges
-      this.material.sizeAttenuation = true;
-      this.material.transparent = true;
-      this.material.opacity = starOpacity;
-      this.material.depthWrite = false;
-      this.material.blending = THREE.AdditiveBlending; // Additive blending for glow effect
+    // Set base color
+    if (!stellarColors) {
+      this.starMaterial.color = new THREE.Color(color);
     }
 
-    this.object3d = new THREE.Points(this.geometry!, this.material);
+    // Create instanced mesh
+    this.object3d = new THREE.InstancedMesh(
+      this.starGeometry,
+      this.starMaterial,
+      count
+    );
+
+    // Set up instance transforms
+    const dummy = new THREE.Object3D();
+    for (let i = 0; i < count; i++) {
+      // Position
+      dummy.position.set(
+        positions.getX(i),
+        positions.getY(i),
+        positions.getZ(i)
+      );
+
+      // Size - use star data if available, otherwise use input
+      const size = this.starDataArray[i]?.size ?? starSize;
+      dummy.scale.setScalar(size);
+
+      // Random rotation for variety
+      dummy.rotation.z = Math.random() * Math.PI * 2;
+
+      dummy.updateMatrix();
+      this.object3d.setMatrixAt(i, dummy.matrix);
+
+      // Set per-instance color if stellar colors enabled
+      if (stellarColors && this.starDataArray[i]) {
+        this.object3d.setColorAt(i, this.starDataArray[i].color);
+      }
+    }
+
+    // Enable instance colors if using stellar colors
+    if (stellarColors) {
+      this.object3d.instanceColor!.needsUpdate = true;
+    }
+
+    this.object3d.instanceMatrix.needsUpdate = true;
     this.object3d.frustumCulled = false; // Stars span entire scene
   }
 
@@ -457,7 +482,7 @@ export class StarFieldComponent implements OnDestroy {
     }
 
     this.object3d = group;
-    this.material = null; // Materials are per-sprite
+    this.starMaterial = null; // Materials are per-sprite
   }
 
   /**
@@ -492,15 +517,16 @@ export class StarFieldComponent implements OnDestroy {
             spriteMat.opacity = star.brightness * twinkle;
           }
         });
-      } else if (this.object3d instanceof THREE.Points) {
-        // Twinkle for point-based stars
-        // For Points material, we can't easily animate per-star opacity
-        // Instead, we'll pulse the overall opacity slightly
-        const pointsMat = this.object3d.material as THREE.PointsNodeMaterial;
-        const baseOpacity = this.opacity();
-        const twinkle = Math.sin(elapsed * 0.5) * 0.1 + 0.9;
-        pointsMat.opacity = baseOpacity * twinkle;
-        pointsMat.needsUpdate = true;
+      } else if (this.object3d instanceof THREE.InstancedMesh) {
+        // Twinkle for instanced mesh stars
+        // For InstancedMesh, we can't easily animate per-instance opacity
+        // Instead, we'll pulse the overall material opacity slightly
+        if (this.starMaterial) {
+          const baseOpacity = this.opacity();
+          const twinkle = Math.sin(elapsed * 0.5) * 0.1 + 0.9;
+          this.starMaterial.opacity = baseOpacity * twinkle;
+          this.starMaterial.needsUpdate = true;
+        }
       }
     });
 
@@ -520,14 +546,18 @@ export class StarFieldComponent implements OnDestroy {
       this.twinkleCleanup = null;
     }
 
-    // Dispose geometry
+    // Dispose position data geometry
     this.geometry?.dispose();
     this.geometry = null;
 
-    // Dispose material(s)
-    if (this.material) {
-      this.material.dispose();
-      this.material = null;
+    // Dispose star geometry (for InstancedMesh)
+    this.starGeometry?.dispose();
+    this.starGeometry = null;
+
+    // Dispose star material
+    if (this.starMaterial) {
+      this.starMaterial.dispose();
+      this.starMaterial = null;
     }
 
     // Dispose sprite materials in group
@@ -539,14 +569,10 @@ export class StarFieldComponent implements OnDestroy {
       });
     }
 
-    // Dispose glow textures
+    // Dispose glow texture
     if (this.glowTexture) {
       this.glowTexture.dispose();
       this.glowTexture = null;
-    }
-    if (this.pointsGlowTexture) {
-      this.pointsGlowTexture.dispose();
-      this.pointsGlowTexture = null;
     }
 
     // Clear star data

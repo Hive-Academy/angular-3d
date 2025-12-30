@@ -2,12 +2,13 @@
  * TSL Natural Material Textures (Tier 2)
  *
  * GPU-accelerated procedural textures for natural surfaces.
+ * All textures support time-based animation via the 'speed' parameter.
  *
  * @module primitives/shaders/tsl-textures/materials
  */
 
-// eslint-disable-next-line @nx/enforce-module-boundaries
 import * as TSL from 'three/tsl';
+import { time } from 'three/tsl';
 import { Color } from 'three/webgpu';
 
 import { TSLFn, TSLNode, TslTextureParams, convertToNodes } from './types';
@@ -15,6 +16,7 @@ import { nativeFBM } from '../tsl-utilities';
 
 const {
   float,
+  vec3,
   mix,
   positionGeometry,
   If,
@@ -25,6 +27,7 @@ const {
   mul,
   div,
   sin,
+  cos,
   oneMinus,
 } = TSL;
 
@@ -34,7 +37,7 @@ const noise = (pos: TSLNode): TSLNode => {
 };
 
 // ============================================================================
-// tslMarble
+// tslMarble - Animated flowing marble veins
 // ============================================================================
 
 const marbleDefaults: TslTextureParams = {
@@ -42,6 +45,7 @@ const marbleDefaults: TslTextureParams = {
   scale: 1.2,
   thinness: 5,
   noise: 0.3,
+  speed: 0.2, // Slow flowing veins
   color: new Color(0x4545d3),
   background: new Color(0xf0f8ff),
   seed: 0,
@@ -49,14 +53,19 @@ const marbleDefaults: TslTextureParams = {
 
 /**
  * TSL Marble Texture
- * Creates veined marble patterns for stone surfaces.
+ * Creates animated veined marble patterns.
  */
 export const tslMarble = TSLFn((userParams: TslTextureParams = {}) => {
   const p = convertToNodes(userParams, marbleDefaults);
 
+  // Time-based flowing effect for veins
+  const t = time.mul(p['speed']);
+  const flow = vec3(sin(t), cos(t.mul(0.7)), sin(t.mul(1.2))).mul(0.15);
+
   const pos = positionGeometry
     .mul(exp(p['scale'] as TSLNode))
     .add(p['seed'])
+    .add(flow)
     .toVar();
 
   const noiseSum = add(
@@ -93,7 +102,7 @@ export const tslMarble = TSLFn((userParams: TslTextureParams = {}) => {
 });
 
 // ============================================================================
-// tslWood
+// tslWood - Animated wood grain
 // ============================================================================
 
 const woodDefaults: TslTextureParams = {
@@ -101,6 +110,7 @@ const woodDefaults: TslTextureParams = {
   scale: 2,
   rings: 10,
   noise: 0.3,
+  speed: 0.15, // Subtle grain movement
   color: new Color(0x8b4513),
   background: new Color(0xdeb887),
   seed: 0,
@@ -108,15 +118,23 @@ const woodDefaults: TslTextureParams = {
 
 /**
  * TSL Wood Grain Texture
- * Creates wood grain with ring patterns.
+ * Creates animated wood grain with ring patterns.
  */
 export const tslWood = TSLFn((userParams: TslTextureParams = {}) => {
   const p = convertToNodes(userParams, woodDefaults);
 
-  const pos = positionGeometry.mul(exp(p['scale'] as TSLNode)).add(p['seed']);
+  // Time-based subtle movement
+  const t = time.mul(p['speed']);
+  const sway = sin(t).mul(0.1);
+
+  const pos = positionGeometry
+    .mul(exp(p['scale'] as TSLNode))
+    .add(p['seed'])
+    .add(vec3(sway, 0, sway.mul(0.5)));
+
   const dist = pos.xz.length();
   const noiseVal = noise(pos.mul(0.5)).mul(p['noise']);
-  const rings = sin(dist.mul(p['rings']).add(noiseVal.mul(10)))
+  const rings = sin(dist.mul(p['rings']).add(noiseVal.mul(10)).add(t))
     .mul(0.5)
     .add(0.5);
 
@@ -124,13 +142,14 @@ export const tslWood = TSLFn((userParams: TslTextureParams = {}) => {
 });
 
 // ============================================================================
-// tslRust
+// tslRust - Animated spreading rust
 // ============================================================================
 
 const rustDefaults: TslTextureParams = {
   $name: 'Rust',
   scale: 2,
   intensity: 0.6,
+  speed: 0.1, // Slow spreading effect
   color: new Color(0xb7410e),
   background: new Color(0x5c4033),
   seed: 0,
@@ -138,12 +157,19 @@ const rustDefaults: TslTextureParams = {
 
 /**
  * TSL Rust/Oxidation Texture
- * Creates rust and corrosion patterns.
+ * Creates animated rust and corrosion patterns.
  */
 export const tslRust = TSLFn((userParams: TslTextureParams = {}) => {
   const p = convertToNodes(userParams, rustDefaults);
 
-  const pos = positionGeometry.mul(exp(p['scale'] as TSLNode)).add(p['seed']);
+  // Time-based spreading animation
+  const t = time.mul(p['speed']);
+  const spread = vec3(sin(t), cos(t.mul(0.8)), sin(t.mul(1.1))).mul(0.2);
+
+  const pos = positionGeometry
+    .mul(exp(p['scale'] as TSLNode))
+    .add(p['seed'])
+    .add(spread);
 
   const n1 = noise(pos).add(0.5);
   const n2 = noise(pos.mul(3)).mul(0.5).add(0.5);

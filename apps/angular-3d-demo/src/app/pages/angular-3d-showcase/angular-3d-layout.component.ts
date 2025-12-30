@@ -147,13 +147,22 @@ interface SectionTab {
 export default class Angular3dLayoutComponent {
   public readonly tabs: SectionTab[] = [
     { path: 'primitives', label: 'Primitives', icon: '🔷' },
+    { path: 'textures', label: 'Textures', icon: '🎨' },
     { path: 'text', label: 'Text', icon: '✏️' },
     { path: 'lighting', label: 'Lighting', icon: '💡' },
     { path: 'directives', label: 'Directives', icon: '⚡' },
     { path: 'postprocessing', label: 'Effects', icon: '✨' },
     { path: 'controls', label: 'Controls', icon: '🎮' },
     { path: 'performance', label: 'Performance', icon: '📊' },
+    // Scene demos
     { path: 'hero-space', label: 'Hero Space', icon: '🌍' },
     { path: 'clouds', label: 'Clouds', icon: '☁️' },
+    { path: 'metaball', label: 'Metaball', icon: '🫧' },
+    { path: 'cosmic-portal', label: 'Cosmic Portal', icon: '🌀' },
+    { path: 'crystal-grid', label: 'Crystal Grid', icon: '💎' },
+    { path: 'floating-geometry', label: 'Floating Geo', icon: '🔮' },
+    { path: 'particle-storm', label: 'Particles', icon: '⚡' },
+    { path: 'bubble-dream', label: 'Bubble Dream', icon: '🔵' },
+    { path: 'volumetric-caustics', label: 'Caustics', icon: '🌊' },
   ];
 }

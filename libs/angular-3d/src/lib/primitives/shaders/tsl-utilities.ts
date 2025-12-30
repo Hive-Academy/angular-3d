@@ -19,7 +19,6 @@
 
 // Import TSL as namespace (standard pattern from Three.js examples)
 
-// eslint-disable-next-line @nx/enforce-module-boundaries
 import * as TSL from 'three/tsl';
 import { Color, type UniformNode } from 'three/webgpu';
 
@@ -28,6 +27,7 @@ const {
   Fn,
   float,
   vec3,
+  vec4,
   uniform,
   mix,
   smoothstep,
@@ -38,6 +38,7 @@ const {
   dot,
   abs,
   normalize,
+  cross,
   positionWorld,
   cameraPosition,
   normalLocal,
@@ -818,6 +819,69 @@ export const tslRemapExp = TSLFn(
     return result;
   }
 );
+
+// ============================================================================
+// Quaternion and Euler Rotation Utilities
+// ============================================================================
+
+/**
+ * Convert Euler XYZ angles to quaternion
+ * Used internally by applyEuler for rotation calculations.
+ *
+ * @param eu - vec3 of Euler angles (x, y, z) in radians
+ * @returns vec4 quaternion (x, y, z, w)
+ */
+export const tslQuaternionFromEuler = TSLFn(([eu]: [TSLNode]) => {
+  const c1 = cos(eu.x.div(2));
+  const c2 = cos(eu.y.div(2));
+  const c3 = cos(eu.z.div(2));
+
+  const s1 = sin(eu.x.div(2));
+  const s2 = sin(eu.y.div(2));
+  const s3 = sin(eu.z.div(2));
+
+  return vec4(
+    add(mul(s1, c2, c3), mul(c1, s2, s3)),
+    sub(mul(c1, s2, c3), mul(s1, c2, s3)),
+    add(mul(c1, c2, s3), mul(s1, s2, c3)),
+    sub(mul(c1, c2, c3), mul(s1, s2, s3))
+  );
+});
+
+/**
+ * Apply quaternion rotation to a vector
+ * Used internally by applyEuler to rotate vectors.
+ *
+ * @param vec - vec3 to rotate
+ * @param quat - vec4 quaternion (x, y, z, w)
+ * @returns vec3 rotated vector
+ */
+export const tslApplyQuaternion = TSLFn(([vec, quat]: [TSLNode, TSLNode]) => {
+  const t = cross(quat.xyz, vec).mul(2).toVar();
+  return add(vec, t.mul(quat.w), cross(quat.xyz, t));
+});
+
+/**
+ * Apply Euler rotation to a vector
+ * Ported from tsl-textures library.
+ * Used for animated domain distortion in textures like photosphere.
+ *
+ * @param vec - vec3 vector to rotate
+ * @param eu - vec3 Euler angles (x, y, z) in radians
+ * @returns vec3 rotated vector
+ *
+ * @example
+ * ```typescript
+ * Loop(6, () => {
+ *   vec.assign(tslApplyEuler(vec, pos.mul(scale)));
+ *   scale.mulAssign(1.1);
+ * });
+ * ```
+ */
+export const tslApplyEuler = TSLFn(([vec, eu]: [TSLNode, TSLNode]) => {
+  const quat = tslQuaternionFromEuler(eu);
+  return tslApplyQuaternion(vec, quat);
+});
 
 /**
  * TSL Utilities Quick Reference:

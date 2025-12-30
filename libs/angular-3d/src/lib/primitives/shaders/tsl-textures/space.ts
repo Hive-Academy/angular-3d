@@ -7,12 +7,12 @@
  * @module primitives/shaders/tsl-textures/space
  */
 
-// eslint-disable-next-line @nx/enforce-module-boundaries
 import * as TSL from 'three/tsl';
+import { mx_worley_noise_float, mx_worley_noise_vec3, time } from 'three/tsl';
 import { Color } from 'three/webgpu';
 
 import { TSLFn, TSLNode, TslTextureParams, convertToNodes } from './types';
-import { tslHsl, tslToHsl, nativeFBM } from '../tsl-utilities';
+import { tslHsl, tslToHsl, nativeFBM, tslApplyEuler } from '../tsl-utilities';
 
 const {
   float,
@@ -23,12 +23,10 @@ const {
   If,
   Loop,
   exp,
-  pow,
   remap,
   abs,
   add,
   mul,
-  sin,
   select,
 } = TSL;
 
@@ -188,43 +186,46 @@ export const tslStars = TSLFn((userParams: TslTextureParams = {}) => {
 const causticsDefaults: TslTextureParams = {
   $name: 'Caustics',
   scale: 2,
-  time: 0,
-  intensity: 1,
-  sharpness: 2.5,
-  color: new Color(0xaaddff),
-  background: new Color(0x001133),
+  speed: 1, // Animation speed (0 = static, 1 = normal)
+  color: new Color(0x50a8c0),
+  seed: 0,
 };
 
 /**
  * TSL Caustics Texture
- * Creates animated underwater caustic light patterns.
+ * Creates animated underwater caustic light patterns using Worley noise.
+ * Matches the original tsl-textures implementation.
  */
 export const tslCausticsTexture = TSLFn((userParams: TslTextureParams = {}) => {
   const p = convertToNodes(userParams, causticsDefaults);
 
-  const pos = positionGeometry.xy.mul(exp(p['scale'] as TSLNode));
-  const t = (p['time'] as TSLNode).mul(0.3);
+  // Position scaled by exponential
+  const pos = positionGeometry
+    .mul(exp((p['scale'] as TSLNode).sub(1)))
+    .add(p['seed'])
+    .toVar();
 
-  const c1x = pos.x.add(sin(pos.y.add(t))).mul(2);
-  const c1y = pos.y.add(sin(pos.x.add(t.mul(0.8)))).mul(2);
-  const caustic1 = sin(c1x).mul(0.5).add(0.5);
-  const caustic2 = sin(c1y).mul(0.5).add(0.5);
+  // Time-based animation using TSL time uniform
+  const t = time
+    .mul(exp((p['speed'] as TSLNode).sub(1)))
+    .add(vec3(0, (2 * Math.PI) / 3, (4 * Math.PI) / 3))
+    .sin();
 
-  const c2x = pos.x
-    .mul(2.3)
-    .add(sin(pos.y.mul(1.7).add(t)))
-    .mul(2);
-  const c2y = pos.y
-    .mul(2.1)
-    .add(sin(pos.x.mul(1.9).add(t)))
-    .mul(2);
-  const caustic3 = sin(c2x).mul(0.5).add(0.5);
-  const caustic4 = sin(c2y).mul(0.5).add(0.5);
+  // Worley noise displacement
+  const worleyDisplacement = vec3(
+    mx_worley_noise_float(pos.add(t.xyz)),
+    mx_worley_noise_float(pos.add(t.yzx)),
+    mx_worley_noise_float(pos.add(t.zxy))
+  );
 
-  const rawCaustic = caustic1.mul(caustic2).mul(caustic3).mul(caustic4);
-  const causticValue = pow(rawCaustic, p['sharpness']).mul(p['intensity']);
+  // Final worley noise with displacement
+  const noiseResult = mx_worley_noise_vec3(pos.add(worleyDisplacement));
 
-  return mix(p['background'], p['color'], causticValue);
+  // Normalize to 0-1 range
+  const k = noiseResult.length().div(Math.sqrt(3));
+
+  // Apply color
+  return k.add((p['color'] as TSLNode).sub(0.5).mul(2));
 });
 
 // ============================================================================
@@ -242,6 +243,7 @@ const photosphereDefaults: TslTextureParams = {
 /**
  * TSL Photosphere Texture
  * Creates sun/star surface with granulation patterns.
+ * Uses Euler rotation for domain distortion like the original tsl-textures.
  */
 export const tslPhotosphere = TSLFn((userParams: TslTextureParams = {}) => {
   const p = convertToNodes(userParams, photosphereDefaults);
@@ -250,13 +252,9 @@ export const tslPhotosphere = TSLFn((userParams: TslTextureParams = {}) => {
   const pos = positionGeometry.toVar();
   const vec = vec3(pos).toVar();
 
+  // Apply Euler rotation for granulation distortion (matches original)
   Loop(6, () => {
-    const rotated = vec3(
-      vec.x.add(sin(vec.y.mul(scale)).mul(0.2)),
-      vec.y.add(sin(vec.z.mul(scale)).mul(0.2)),
-      vec.z.add(sin(vec.x.mul(scale)).mul(0.2))
-    );
-    vec.assign(rotated);
+    vec.assign(tslApplyEuler(vec, pos.mul(scale)));
     scale.mulAssign((p['seed'] as TSLNode).mul(scale).sin().mul(0.05).add(1.1));
   });
 

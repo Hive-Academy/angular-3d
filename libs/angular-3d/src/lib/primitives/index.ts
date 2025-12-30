@@ -44,3 +44,6 @@ export * from './cloud-layer.component';
 
 // Metaball ray-marching component
 export * from './metaball.component';
+
+// TSL Shaders & Textures
+export * from './shaders';

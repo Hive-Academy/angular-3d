@@ -95,6 +95,6 @@ import {
   ],
 })
 export class ParticleStormHeroSceneComponent {
-  readonly backgroundColor = 0x0a0a0f;
-  readonly particleColor = 0x00d4ff;
+  public readonly backgroundColor = 0x0a0a0f;
+  public readonly particleColor = 0x00d4ff;
 }

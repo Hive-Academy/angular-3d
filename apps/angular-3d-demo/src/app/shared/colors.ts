@@ -6,6 +6,7 @@
  */
 export const SCENE_COLORS = {
   // Primary palette
+  black: 0x000000,
   white: 0xffffff,
   indigo: 0x6366f1,
   neonGreen: 0xa1ff4f,

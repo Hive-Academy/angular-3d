@@ -137,6 +137,22 @@ export const appRoutes: Routes = [
           ).then((m) => m.BubbleDreamHeroSceneComponent),
         title: 'Bubble Dream | Angular-3D',
       },
+      {
+        path: 'textures',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/sections/tsl-textures-section.component'
+          ),
+        title: 'TSL Textures | Angular-3D',
+      },
+      {
+        path: 'volumetric-caustics',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/scenes/volumetric-caustics-scene.component'
+          ).then((m) => m.VolumetricCausticsSceneComponent),
+        title: 'Volumetric Caustics | Angular-3D',
+      },
     ],
   },
   {

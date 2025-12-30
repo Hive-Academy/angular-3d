@@ -4,6 +4,7 @@ import {
   OnDestroy,
   inject,
   input,
+  output,
   effect,
   signal,
   DestroyRef,
@@ -40,6 +41,8 @@ export class GltfModelComponent implements OnDestroy {
   public readonly colorOverride = input<string | number | undefined>(undefined);
   public readonly metalness = input<number | undefined>(undefined);
   public readonly roughness = input<number | undefined>(undefined);
+
+  public readonly loaded = output<THREE.Group>();
 
   private readonly gltfLoader = inject(GltfLoaderService);
   private readonly parentFn = inject(NG_3D_PARENT, { optional: true });
@@ -118,6 +121,9 @@ export class GltfModelComponent implements OnDestroy {
 
             // Register with SceneGraphStore for directive support (rotate3d, spaceFlight3d, etc.)
             this.sceneStore.register(this.objectId, this.group, 'group');
+
+            // Emit loaded event
+            this.loaded.emit(this.group);
           } else {
             console.warn('GltfModelComponent: Parent not ready');
           }

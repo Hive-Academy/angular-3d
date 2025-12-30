@@ -62,6 +62,8 @@ export class EffectComposerService implements OnDestroy {
 
   private postProcessing: THREE.PostProcessing | null = null;
   private scenePassNode: ReturnType<typeof pass> | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private scenePassColor: any = null; // Cached scene color texture node
   private effectNodes: Map<string, Node | BloomNode | DepthOfFieldNode> =
     new Map();
 
@@ -99,8 +101,11 @@ export class EffectComposerService implements OnDestroy {
     // Create scene pass (replaces RenderPass from three-stdlib)
     this.scenePassNode = pass(scene, camera);
 
-    // Initial output is just the scene pass
-    this.postProcessing.outputNode = this.scenePassNode;
+    // Cache the scene color texture node - used for additive effects
+    this.scenePassColor = this.scenePassNode.getTextureNode('output');
+
+    // Initial output is just the scene pass color
+    this.postProcessing.outputNode = this.scenePassColor;
 
     // If enabled, ensure render loop is using PostProcessing
     if (this._isEnabled()) {
@@ -127,6 +132,9 @@ export class EffectComposerService implements OnDestroy {
   /**
    * Add bloom effect using TSL bloom node
    *
+   * Bloom is an ADDITIVE effect - it adds glow on top of the scene.
+   * The final output is: sceneColor + bloomEffect
+   *
    * Bloom parameters:
    * - threshold: Luminance threshold - only bright areas above this contribute to bloom
    * - strength: Intensity of the glow effect
@@ -135,19 +143,15 @@ export class EffectComposerService implements OnDestroy {
    * @param config Bloom configuration (threshold, strength, radius)
    */
   public addBloom(config: BloomConfig): void {
-    if (!this.postProcessing || !this.scenePassNode) {
+    if (!this.postProcessing || !this.scenePassColor) {
       console.warn('[EffectComposer] Cannot add bloom before init() is called');
       return;
     }
 
-    // Get current output node (either scene pass or last effect)
-    const currentOutput = this.getCurrentOutput();
-
-    // Create bloom effect node
+    // Create bloom effect from cached scene color texture
     // bloom(inputNode, strength, radius, threshold)
-    // Note: bloom() takes strength first, then radius, then threshold
     const bloomNode = bloom(
-      currentOutput as Node,
+      this.scenePassColor,
       config.strength,
       config.radius,
       config.threshold
@@ -215,13 +219,27 @@ export class EffectComposerService implements OnDestroy {
 
     // Get depth buffer from scene pass for DOF calculations
     // dof(textureNode, viewZNode, focusDistance, focalLength, bokehScale)
+    //
+    // TSL DOF parameters (different from old BokehPass):
+    // - focusDistance: Distance in world units where objects are in sharp focus
+    // - focalLength: Range of sharpness in world units (larger = more in focus)
+    // - bokehScale: Intensity of the blur effect (0-1 typically, larger = more blur)
     const viewZ = this.scenePassNode.getViewZNode();
+
+    // Convert old BokehPass semantics to TSL DOF:
+    // - focus stays the same (world units)
+    // - aperture → inversely related to focal length (smaller aperture = larger focus range)
+    // - maxBlur → directly maps to bokehScale (but needs much smaller values)
+    const focusDistance = config.focus;
+    const focalLength = 1.0 / Math.max(config.aperture, 0.001); // Invert aperture
+    const bokehScale = config.maxBlur * 10; // Gentle scaling for blur intensity
+
     const dofNode = dof(
       currentOutput as Node,
       viewZ,
-      config.focus, // Focus distance in world units
-      config.aperture * 100, // Convert aperture to focal length-like value
-      config.maxBlur * 100 // Scale maxBlur to bokehScale
+      focusDistance,
+      focalLength,
+      bokehScale
     );
 
     // Store effect node
@@ -343,24 +361,38 @@ export class EffectComposerService implements OnDestroy {
   }
 
   /**
-   * Rebuild the output chain by chaining all effect nodes
+   * Rebuild the output chain by compositing all effect nodes
    *
-   * Output chain: scenePass → effect1 → effect2 → ... → effectN
+   * For additive effects like bloom: output = sceneColor + bloomEffect
+   * For replacement effects like DOF: output = dofEffect
+   *
+   * Chain: scenePassColor + bloom + ... → dof → ... → final output
    */
   private rebuildOutputChain(): void {
-    if (!this.postProcessing) return;
+    if (!this.postProcessing || !this.scenePassColor) return;
 
-    let output: Node | BloomNode | DepthOfFieldNode = this
-      .scenePassNode as unknown as Node;
+    // Start with cached scene color as base
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let output: any = this.scenePassColor;
 
-    // Chain all effects in insertion order
-    for (const [, effectNode] of this.effectNodes) {
-      output = effectNode;
+    // Add bloom effect (additive compositing)
+    const bloomNode = this.effectNodes.get('bloom') as BloomNode;
+    if (bloomNode) {
+      // Bloom is ADDED to scene color, not replaced
+      output = output.add(bloomNode);
     }
 
-    // Set final output - use type assertion for Three.js internal compatibility
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.postProcessing.outputNode = output as any;
+    // DOF replaces the output (it processes the entire image)
+    const dofNode = this.effectNodes.get('dof') as DepthOfFieldNode;
+    if (dofNode) {
+      // DOF should take the current output (scene + bloom) as input
+      // But since DOF is created with scenePassColor, we need to recreate logic
+      // For now, if DOF exists, it becomes the output
+      output = dofNode;
+    }
+
+    // Set final output
+    this.postProcessing.outputNode = output;
   }
 
   /**

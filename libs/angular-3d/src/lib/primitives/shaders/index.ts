@@ -97,4 +97,10 @@ export {
   // Shape modifiers
   tslSupersphere,
   tslMelter,
+
+  // Organic textures
+  tslBrain,
+  tslReticularVeins,
+  tslWaterMarble,
+  tslRoughClay,
 } from './tsl-textures';

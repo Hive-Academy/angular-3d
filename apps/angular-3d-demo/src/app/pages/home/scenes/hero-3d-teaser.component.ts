@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import {
   AmbientLightComponent,
   BloomEffectComponent,
@@ -9,6 +9,7 @@ import {
   Float3dDirective,
   FloatingSphereComponent,
   GltfModelComponent,
+  LightingPreset,
   NebulaComponent,
   NebulaVolumetricComponent,
   OrbitControlsComponent,
@@ -16,9 +17,11 @@ import {
   PointLightComponent,
   Rotate3dDirective,
   Scene3dComponent,
+  SceneLightingComponent,
   ScrollZoomCoordinatorDirective,
   SpaceFlight3dDirective,
   StarFieldComponent,
+  SvgIconComponent,
   ViewportPositionDirective,
   type SpaceFlightWaypoint,
 } from '@hive-academy/angular-3d';
@@ -45,6 +48,7 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
   standalone: true,
   imports: [
     Scene3dComponent,
+    SceneLightingComponent,
     AmbientLightComponent,
     DirectionalLightComponent,
     PointLightComponent,
@@ -64,38 +68,43 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
     FloatingSphereComponent,
     ScrollZoomCoordinatorDirective,
     ParticleTextComponent,
+    SvgIconComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
-      class="w-full h-full"
+      class="scene-container"
+      [style.background-color]="backgroundColor()"
       role="img"
       aria-label="Interactive 3D space scene with rotating Earth, twinkling stars, and camera controls"
     >
-      <a3d-scene-3d [cameraPosition]="[0, 0, 25]" [cameraFov]="75">
-        <!-- Scroll-Zoom Coordinator (observes zoom state, coordinates page scroll) -->
+      <!-- Lighting Mode Switcher UI -->
+      <div class="lighting-switcher">
+        <div class="switcher-label">Lighting Mode</div>
+        @for (preset of presetList; track preset) {
+        <button
+          class="preset-btn"
+          [class.active]="currentPreset() === preset"
+          (click)="setPreset(preset)"
+        >
+          {{ formatPresetName(preset) }}
+        </button>
+        }
+      </div>
 
+      <a3d-scene-3d [cameraPosition]="[0, 0, 25]" [cameraFov]="75">
         <!-- ================================ -->
-        <!-- LIGHTING SETUP - Clean Space Scene -->
+        <!-- CINEMATIC LIGHTING - Dynamic Preset -->
         <!-- ================================ -->
-        <a3d-ambient-light [color]="colors.white" [intensity]="0.2" />
-        <a3d-directional-light
-          [position]="[30, 15, 25]"
-          [color]="colors.white"
-          [intensity]="0.4"
-          [castShadow]="true"
-        />
-        <!-- Subtle blue accent for depth -->
-        <a3d-point-light
-          [position]="[-10, 5, 10]"
-          [color]="colors.cyan"
-          [intensity]="0.2"
+        <a3d-scene-lighting
+          [preset]="currentPreset()"
+          (backgroundColorChange)="onBackgroundColorChange($event)"
         />
 
         <!-- HDRI Environment for IBL on PBR materials -->
         <a3d-environment
           [preset]="'night'"
-          [intensity]="0.5"
+          [intensity]="0.3"
           [background]="false"
           [blur]="0.3"
         />
@@ -103,7 +112,7 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <!-- ================================ -->
         <!-- REALISTIC EARTH (GLTF Model with Rotation) -->
         <!-- Pushed further right for better text balance -->
-        <!-- ================================ -->
+        <!-- ================================ 
         <a3d-gltf-model
           [modelPath]="'3d/planet_earth/scene.gltf'"
           [viewportPosition]="{ x: '78%', y: '50%' }"
@@ -111,7 +120,7 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [scale]="2.3"
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 120, direction: 1 }"
-        />
+        />-->
 
         <!-- Hero Text - Left side, stacked vertically with proper spacing -->
         <a3d-particle-text
@@ -187,6 +196,23 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [loop]="true"
         />
 
+        <!-- ================================ -->
+        <!-- NestJS Logo (Formerly in Caustics) -->
+        <!-- ================================ -->
+        <!-- NestJS Logo with metallic finish -->
+        <a3d-svg-icon
+          svgPath="images/logos/nestjs.svg"
+          [position]="[0, 0, -2]"
+          [scale]="0.2"
+          [depth]="0.2"
+          color="#e0234e"
+          emissive="#e0234e"
+          [emissiveIntensity]="1.5"
+          [metalness]="0.85"
+          [roughness]="0.15"
+          rotate3d
+          [rotateConfig]="{ axis: 'y', speed: 30, direction: 1 }"
+        />
         <!-- ================================ -->
         <!-- FLOATING SPHERES (With Float3d Animation) -->
         <!-- Creates visual depth and "alive" feeling -->
@@ -277,26 +303,20 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [stellarColors]="true"
         />
 
-        <!-- Blue volumetric glow - inner illumination -->
-        <!-- Same top-right position, slightly forward for glow effect-->
+        <!-- Volumetric Nebula with Layered Billboards
         <a3d-nebula-volumetric
-          [position]="[90, 40, -100]"
-          [width]="180"
-          [height]="60"
-          [layers]="4"
-          [opacity]="0.9"
-          [primaryColor]="'#0088ff'"
-          [secondaryColor]="'#00d4ff'"
-          [tertiaryColor]="'#ff6bd4'"
-          [enableFlow]="false"
-          [flowSpeed]="0.8"
-          [noiseScale]="0.03"
+          [position]="[140, 70, -120]"
+          [width]="150"
+          [height]="50"
+          [opacity]="0.75"
+          [primaryColor]="'#3344aa'"
+          [secondaryColor]="'#160805ff'"
+          [enableFlow]="true"
+          [flowSpeed]="0.15"
+          [noiseScale]="3.5"
           [density]="1.2"
-          [edgeSoftness]="1.9"
-          [contrast]="1.0"
-          [glowIntensity]="20"
-          [colorIntensity]="2"
-        />
+          [glowIntensity]="0.6"
+        /> -->
 
         <a3d-orbit-controls
           scrollZoomCoordinator
@@ -315,15 +335,16 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         />
 
         <!-- ================================ -->
-        <!-- POST-PROCESSING - DOF + Bloom -->
-        <!-- ================================ -->
+        <!-- POST-PROCESSING - Bloom Only (DOF disabled pending fix) -->
+        <!-- ================================ 
         <a3d-effect-composer [enabled]="true">
-          <!-- Depth of Field - blurs distant stars, focuses on Earth -->
-          <a3d-dof-effect [focus]="20" [aperture]="0.015" [maxblur]="0.008" />
+          <a3d-dof-effect [focus]="20" [aperture]="0.3" [maxblur]="0.0002" />
+        </a3d-effect-composer>-->
 
-          <!-- Bloom for glowing effects -->
-          <a3d-bloom-effect [threshold]="0.5" [strength]="0.5" [radius]="0.5" />
-        </a3d-effect-composer>
+        <!-- Bloom for glowing effects 
+        <a3d-effect-composer [enabled]="true">
+          <a3d-bloom-effect [threshold]="0.2" [strength]="1.5" [radius]="0.4" />
+        </a3d-effect-composer>-->
       </a3d-scene-3d>
     </div>
   `,
@@ -334,12 +355,84 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         width: 100%;
         height: 100%;
       }
+
+      .scene-container {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        transition: background-color 0.5s ease;
+      }
+
+      .lighting-switcher {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 12px;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .switcher-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 4px;
+      }
+
+      .preset-btn {
+        padding: 8px 14px;
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.8);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: left;
+      }
+
+      .preset-btn:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+
+      .preset-btn.active {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        border-color: #8b5cf6;
+        color: white;
+      }
     `,
   ],
 })
 export class Hero3dTeaserComponent {
   public readonly colors = SCENE_COLORS;
   public readonly colorStrings = SCENE_COLOR_STRINGS;
+
+  /** Current lighting preset */
+  public readonly currentPreset = signal<LightingPreset>('cinematic-space');
+
+  /** Background color for the scene container (CSS hex) */
+  public readonly backgroundColor = signal<string>('#020208');
+
+  /** Available presets for the UI switcher */
+  public readonly presetList: LightingPreset[] = [
+    'cinematic-space',
+    'neon-cyberpunk',
+    'rim-light',
+    'three-point',
+    'dramatic',
+    'studio',
+  ];
+
   // ✅ Store orbit controls reference for scroll coordinator
   public orbitControlsInstance?: OrbitControls;
 
@@ -370,6 +463,26 @@ export class Hero3dTeaserComponent {
     { position: [-6, -5, -10], duration: 9, easing: 'easeInOut' },
     { position: [4, -3, -8], duration: 8, easing: 'easeInOut' },
   ];
+
+  /** Set the lighting preset */
+  public setPreset(preset: LightingPreset): void {
+    this.currentPreset.set(preset);
+  }
+
+  /** Handle background color change from SceneLightingComponent */
+  public onBackgroundColorChange(colorHex: number): void {
+    // Convert hex number to CSS hex string
+    const cssHex = '#' + colorHex.toString(16).padStart(6, '0');
+    this.backgroundColor.set(cssHex);
+  }
+
+  /** Format preset name for display */
+  public formatPresetName(preset: LightingPreset): string {
+    return preset
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
 
   /**
    * Handles zoom enable/disable changes from the scroll coordinator

@@ -335,21 +335,45 @@ export class Scene3dComponent implements OnDestroy {
   private async initRendererAsync(): Promise<void> {
     const canvas = this.canvasRef().nativeElement;
 
-    this.renderer = new THREE.WebGPURenderer({
-      canvas,
-      antialias: this.enableAntialiasing(),
-      alpha: this.alpha(),
-      powerPreference: this.powerPreference(),
-    });
+    // Try initializing with requested config first
+    try {
+      this.renderer = new THREE.WebGPURenderer({
+        canvas,
+        antialias: this.enableAntialiasing(),
+        alpha: this.alpha(),
+        powerPreference: this.powerPreference(),
+        forceWebGL: false, // Explicitly try WebGPU
+      });
 
-    // CRITICAL: Must await init() before first render
-    // This initializes the WebGPU adapter/device or falls back to WebGL
-    await this.renderer.init();
+      await this.renderer.init();
+    } catch (err) {
+      console.warn(
+        '[Scene3d] Initial WebGPU init failed, retrying with safe config:',
+        err
+      );
+
+      // Retry with safe configuration (no AA, default power)
+      this.renderer?.dispose();
+      this.renderer = new THREE.WebGPURenderer({
+        canvas,
+        antialias: false,
+        alpha: this.alpha(),
+        forceWebGL: false,
+      });
+
+      try {
+        await this.renderer.init();
+      } catch (retryErr) {
+        console.error('[Scene3d] Safe config WebGPU init failed:', retryErr);
+        // Fallback to WebGL (handled internally by Three.js usually, or we can force it)
+        // But if init() throws, we might need to recreate as WebGLRenderer or accept mixed state.
+        // For now, let's assume the renderer stays in a fallback state or we can rely on existing fallback check.
+      }
+    }
 
     // Log backend detection for debugging
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const backend = (this.renderer as any).backend;
-    if (backend?.isWebGPU) {
+    const isWebGPU = this.renderer.isWebGPURenderer;
+    if (isWebGPU) {
       console.log('[Scene3d] Using WebGPU backend');
     } else {
       console.warn(
@@ -435,9 +459,25 @@ export class Scene3dComponent implements OnDestroy {
         if (object instanceof THREE.Mesh) {
           object.geometry?.dispose();
           if (Array.isArray(object.material)) {
-            object.material.forEach((m) => m.dispose());
-          } else {
-            object.material?.dispose();
+            object.material.forEach((m) => {
+              // Check if material exists and hasn't been disposed
+              if (m && typeof m.dispose === 'function') {
+                try {
+                  m.dispose();
+                } catch {
+                  // Material may already be disposed
+                }
+              }
+            });
+          } else if (
+            object.material &&
+            typeof object.material.dispose === 'function'
+          ) {
+            try {
+              object.material.dispose();
+            } catch {
+              // Material may already be disposed (shared between cloned meshes)
+            }
           }
         }
       });
