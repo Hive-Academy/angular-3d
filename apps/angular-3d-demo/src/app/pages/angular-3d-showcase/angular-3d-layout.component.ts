@@ -164,5 +164,6 @@ export default class Angular3dLayoutComponent {
     { path: 'particle-storm', label: 'Particles', icon: '⚡' },
     { path: 'bubble-dream', label: 'Bubble Dream', icon: '🔵' },
     { path: 'volumetric-caustics', label: 'Caustics', icon: '🌊' },
+    { path: 'blueyard', label: 'Blueyard', icon: '📜' },
   ];
 }

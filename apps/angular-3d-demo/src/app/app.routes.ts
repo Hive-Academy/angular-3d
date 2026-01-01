@@ -153,6 +153,14 @@ export const appRoutes: Routes = [
           ).then((m) => m.VolumetricCausticsSceneComponent),
         title: 'Volumetric Caustics | Angular-3D',
       },
+      {
+        path: 'blueyard',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/scenes/blueyard-scene.component'
+          ).then((m) => m.BlueyardSceneComponent),
+        title: 'Blueyard Demo | Angular-3D',
+      },
     ],
   },
   {
