@@ -161,11 +161,13 @@ export class ParticleSystemComponent implements OnDestroy {
       });
     });
 
-    // Transform effect
-    effect(() => {
-      if (this.points) {
-        this.points.position.set(...this.position());
-      }
+    // Transform effect - must be inside afterNextRender to have injection context
+    afterNextRender(() => {
+      effect(() => {
+        if (this.points) {
+          this.points.position.set(...this.position());
+        }
+      });
     });
   }
 
