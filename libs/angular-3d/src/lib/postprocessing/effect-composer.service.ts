@@ -34,6 +34,17 @@ export interface BloomConfig {
 }
 
 /**
+ * Configuration for selective bloom effect
+ * Uses Three.js Layers to bloom only specific objects
+ */
+export interface SelectiveBloomConfig {
+  layer: number;
+  threshold: number;
+  strength: number;
+  radius: number;
+}
+
+/**
  * Configuration for depth of field effect
  */
 export interface DOFConfig {
@@ -56,6 +67,7 @@ export interface DOFConfig {
  * - WebGL: Transpile to GLSL shaders
  * - Y-flip correction: Native PostProcessing handles coordinate systems
  */
+// eslint-disable-next-line @angular-eslint/use-injectable-provided-in
 @Injectable()
 export class EffectComposerService implements OnDestroy {
   private readonly renderLoop = inject(RenderLoopService);
@@ -78,6 +90,10 @@ export class EffectComposerService implements OnDestroy {
 
   // Pending enable flag for enable() called before init()
   private pendingEnable = false;
+
+  // Selective bloom layer camera and config
+  private bloomLayerCamera: THREE.Camera | null = null;
+  private selectiveBloomConfig: SelectiveBloomConfig | null = null;
 
   /**
    * Initialize the PostProcessing pipeline with scene resources
@@ -194,6 +210,102 @@ export class EffectComposerService implements OnDestroy {
       bloomNode.dispose();
     }
     this.effectNodes.delete('bloom');
+    this.rebuildOutputChain();
+  }
+
+  /**
+   * Add selective bloom effect using layer-based rendering
+   *
+   * Only objects on the specified Three.js layer will be bloomed.
+   * Other objects in the scene will NOT be affected by bloom.
+   *
+   * This creates a true "neon" effect where only specific objects glow.
+   *
+   * @param config Selective bloom configuration (layer, threshold, strength, radius)
+   */
+  public addSelectiveBloom(config: SelectiveBloomConfig): void {
+    if (
+      !this.postProcessing ||
+      !this.scenePassColor ||
+      !this.camera ||
+      !this.scene
+    ) {
+      console.warn(
+        '[EffectComposer] Cannot add selective bloom before init() is called'
+      );
+      return;
+    }
+
+    // Store config for updates
+    this.selectiveBloomConfig = config;
+
+    // Create a camera that only sees the bloom layer
+    this.bloomLayerCamera = this.camera.clone();
+    this.bloomLayerCamera.layers.disableAll();
+    this.bloomLayerCamera.layers.enable(config.layer);
+
+    // Create a separate scene pass for bloom layer only
+    const bloomLayerPass = pass(this.scene, this.bloomLayerCamera);
+    const bloomLayerColor = bloomLayerPass.getTextureNode('output');
+
+    // Apply bloom to the layer-only render
+    const selectiveBloomNode = bloom(
+      bloomLayerColor,
+      config.strength,
+      config.radius,
+      config.threshold
+    );
+
+    // Store effect node
+    this.effectNodes.set('selectiveBloom', selectiveBloomNode);
+
+    // Rebuild output chain to include new effect
+    this.rebuildOutputChain();
+  }
+
+  /**
+   * Update selective bloom effect parameters
+   *
+   * @param config Updated selective bloom configuration
+   */
+  public updateSelectiveBloom(config: SelectiveBloomConfig): void {
+    const existingBloom = this.effectNodes.get('selectiveBloom') as BloomNode;
+    if (!existingBloom) return;
+
+    // Update bloom parameters
+    if (existingBloom.strength) {
+      existingBloom.strength.value = config.strength;
+    }
+    if (existingBloom.radius) {
+      existingBloom.radius.value = config.radius;
+    }
+    if (existingBloom.threshold) {
+      existingBloom.threshold.value = config.threshold;
+    }
+
+    // If layer changed, need to recreate
+    if (
+      this.selectiveBloomConfig &&
+      config.layer !== this.selectiveBloomConfig.layer
+    ) {
+      this.removeSelectiveBloom();
+      this.addSelectiveBloom(config);
+    }
+
+    this.selectiveBloomConfig = config;
+  }
+
+  /**
+   * Remove selective bloom effect
+   */
+  public removeSelectiveBloom(): void {
+    const bloomNode = this.effectNodes.get('selectiveBloom') as BloomNode;
+    if (bloomNode?.dispose) {
+      bloomNode.dispose();
+    }
+    this.effectNodes.delete('selectiveBloom');
+    this.bloomLayerCamera = null;
+    this.selectiveBloomConfig = null;
     this.rebuildOutputChain();
   }
 
@@ -365,8 +477,13 @@ export class EffectComposerService implements OnDestroy {
    *
    * For additive effects like bloom: output = sceneColor + bloomEffect
    * For replacement effects like DOF: output = dofEffect
+   * For custom effects: output = mix/blend with current output
    *
-   * Chain: scenePassColor + bloom + ... → dof → ... → final output
+   * Chain order:
+   * 1. Scene color (base)
+   * 2. Bloom effects (additive)
+   * 3. Custom effects (color manipulation - additive blend)
+   * 4. DOF (replacement - applied last as it processes the whole image)
    */
   private rebuildOutputChain(): void {
     if (!this.postProcessing || !this.scenePassColor) return;
@@ -375,11 +492,40 @@ export class EffectComposerService implements OnDestroy {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let output: any = this.scenePassColor;
 
+    // Reserved effect names that are handled specially
+    const reservedEffects = new Set(['bloom', 'selectiveBloom', 'dof']);
+
     // Add bloom effect (additive compositing)
     const bloomNode = this.effectNodes.get('bloom') as BloomNode;
     if (bloomNode) {
       // Bloom is ADDED to scene color, not replaced
       output = output.add(bloomNode);
+    }
+
+    // Add selective bloom (additive - only blooms objects on the specified layer)
+    const selectiveBloomNode = this.effectNodes.get(
+      'selectiveBloom'
+    ) as BloomNode;
+    if (selectiveBloomNode) {
+      // Selective bloom is added on top
+      output = output.add(selectiveBloomNode);
+    }
+
+    // Process custom effects (color grading, chromatic aberration, film grain, etc.)
+    // Custom effects are applied AFTER bloom but BEFORE DOF
+    // They are blended with the current output (typically as color modifications)
+    for (const [name, effectNode] of this.effectNodes) {
+      if (reservedEffects.has(name)) {
+        continue; // Skip reserved effects - already handled above
+      }
+
+      // Custom effects are TSL color transformation nodes
+      // They return a color value that should blend with the current output
+      // Using mix for subtle blending: output = mix(output, effectOutput, 0.5)
+      // Or multiply for color grading: output = output * effectOutput
+      // For most custom effects, we use additive blend (output + effectOffset)
+      // where effectOffset represents the color adjustment
+      output = output.add(effectNode);
     }
 
     // DOF replaces the output (it processes the entire image)
