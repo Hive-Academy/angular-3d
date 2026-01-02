@@ -44,6 +44,7 @@ import {
   effect,
   inject,
   input,
+  signal,
   afterNextRender,
 } from '@angular/core';
 import * as THREE from 'three/webgpu';
@@ -120,9 +121,12 @@ export class ParticleSystemComponent implements OnDestroy {
   public readonly position = input<[number, number, number]>([0, 0, 0]);
 
   private readonly parentFn = inject(NG_3D_PARENT, { optional: true });
-  private points!: THREE.Points;
-  private geometry!: THREE.BufferGeometry;
-  private material!: THREE.PointsNodeMaterial;
+  private points: THREE.Points | null = null;
+  private geometry: THREE.BufferGeometry | null = null;
+  private material: THREE.PointsNodeMaterial | null = null;
+
+  // Signal to track initialization
+  private readonly isInitialized = signal(false);
 
   // Computed positions based on distribution type
   private readonly positions = computed(() => {
@@ -142,33 +146,49 @@ export class ParticleSystemComponent implements OnDestroy {
   });
 
   public constructor() {
-    // Reactive effect for geometry and material generation
+    // Schedule initialization after render
     afterNextRender(() => {
-      effect((onCleanup) => {
-        // Dependencies to track
-        const positions = this.positions();
-        const color = this.color();
-        const size = this.size();
-        const opacity = this.opacity();
+      this.initialize();
+      this.isInitialized.set(true);
+    });
 
+    // Effect for rebuilding particles when inputs change
+    // This effect is in the constructor (injection context)
+    effect(() => {
+      // Read all reactive dependencies
+      const positions = this.positions();
+      const color = this.color();
+      const size = this.size();
+      const opacity = this.opacity();
+      const initialized = this.isInitialized();
+
+      // Only rebuild if initialized
+      if (initialized) {
         this.rebuildParticles(positions, { color, size, opacity });
-
-        onCleanup(() => {
-          // No explicit cleanup needed here as rebuildParticles handles geometry disposal
-          // and reuse of material variable. But for completeness, we could dispose.
-          // The main cleanup happens in ngOnDestroy.
-        });
-      });
+      }
     });
 
-    // Transform effect - must be inside afterNextRender to have injection context
-    afterNextRender(() => {
-      effect(() => {
-        if (this.points) {
-          this.points.position.set(...this.position());
-        }
-      });
+    // Effect for updating position
+    effect(() => {
+      const pos = this.position();
+      const initialized = this.isInitialized();
+
+      if (initialized && this.points) {
+        this.points.position.set(...pos);
+      }
     });
+  }
+
+  /**
+   * Initialize the particle system (runs after render)
+   */
+  private initialize(): void {
+    const positions = this.positions();
+    const color = this.color();
+    const size = this.size();
+    const opacity = this.opacity();
+
+    this.rebuildParticles(positions, { color, size, opacity });
   }
 
   private rebuildParticles(
@@ -179,7 +199,7 @@ export class ParticleSystemComponent implements OnDestroy {
     if (this.geometry) {
       this.geometry.dispose();
     }
-    // Dispose old material if needed (though we could reuse it, let's recreate for simplicity of updates)
+    // Dispose old material if needed
     if (this.material) {
       this.material.dispose();
     }
@@ -191,7 +211,7 @@ export class ParticleSystemComponent implements OnDestroy {
       new THREE.BufferAttribute(positions, 3)
     );
 
-    // Create new material with NodeMaterial pattern (direct property assignment)
+    // Create new material with NodeMaterial pattern
     this.material = new THREE.PointsNodeMaterial();
     this.material.color = new THREE.Color(options.color);
     this.material.size = options.size;
@@ -223,7 +243,7 @@ export class ParticleSystemComponent implements OnDestroy {
   }
 
   public ngOnDestroy(): void {
-    if (this.parentFn) {
+    if (this.parentFn && this.points) {
       const parent = this.parentFn();
       parent?.remove(this.points);
     }

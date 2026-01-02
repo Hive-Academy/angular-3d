@@ -7,8 +7,8 @@ import {
   signal,
   DestroyRef,
 } from '@angular/core';
-import { Text } from 'troika-three-text';
 import * as THREE from 'three/webgpu';
+import { TextGeometry, FontLoader, Font } from 'three-stdlib';
 import { NG_3D_PARENT } from '../../types/tokens';
 import { OBJECT_ID } from '../../tokens/object-id.token';
 import { RenderLoopService } from '../../render-loop/render-loop.service';
@@ -16,11 +16,12 @@ import { SceneService } from '../../canvas/scene.service';
 import { SceneGraphStore } from '../../store/scene-graph.store';
 
 /**
- * Production-grade 3D text component using troika-three-text SDF rendering.
+ * Production-grade 3D text component using Three.js TextGeometry.
  *
- * Provides sharp, scalable text at any zoom level with full Unicode support.
- * Text is rendered using SDF (Signed Distance Field) technique, ensuring crisp
- * quality regardless of camera distance or zoom level.
+ * Provides high-quality text rendering compatible with WebGPU.
+ * Uses TextGeometry for true geometry-based text rendering instead of SDF.
+ *
+ * WebGPU Compatible: ✅ (uses Three.js native TextGeometry)
  *
  * @example
  * Basic usage:
@@ -41,64 +42,21 @@ import { SceneGraphStore } from '../../store/scene-graph.store';
  * <a3d-troika-text
  *   text="Line 1&#10;Line 2&#10;Line 3"
  *   [fontSize]="0.3"
- *   [maxWidth]="5"
  *   textAlign="center"
- *   [lineHeight]="1.5"
  *   anchorX="center"
  *   anchorY="middle"
  * />
  * ```
  *
- * @example
- * Text with outline and custom font:
- * ```html
- * <a3d-troika-text
- *   text="OUTLINED"
- *   [fontSize]="0.8"
- *   color="#ffffff"
- *   font="/assets/fonts/Roboto-Bold.ttf"
- *   [outlineWidth]="0.05"
- *   outlineColor="#000000"
- * />
- * ```
- *
- * @example
- * Billboard text that always faces camera:
- * ```html
- * <a3d-troika-text
- *   text="BILLBOARD"
- *   [fontSize]="0.5"
- *   [billboard]="true"
- *   [position]="[0, 2, 0]"
- * />
- * ```
- *
- * @example
- * With animation directives:
- * ```html
- * <a3d-troika-text
- *   text="Floating Text"
- *   [fontSize]="0.3"
- *   a3dFloat3d
- *   [floatSpeed]="1.5"
- *   [floatIntensity]="0.2"
- * />
- * ```
- *
  * @remarks
- * - Text is rendered using SDF (Signed Distance Field) for sharp quality at all scales
+ * - Text is rendered using Three.js TextGeometry for sharp quality at all scales
  * - Font loading is async with loading state feedback via isLoading() signal
  * - Supports ng-content for directive composition (a3dFloat3d, a3dRotate3d)
- * - Integrates with bloom post-processing when using customMaterial
- * - Full Unicode support (Latin, Arabic, Chinese, Japanese, Emoji)
- * - Text updates are reactive via signal inputs
+ * - Full WebGPU and WebGL support
  * - All Three.js resources are properly disposed on component destruction
- *
- * @see https://protectwise.github.io/troika/troika-three-text/
  */
 @Component({
   selector: 'a3d-troika-text',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '<ng-content />',
   providers: [
@@ -133,23 +91,11 @@ export class TroikaTextComponent {
   public readonly color = input<string | number>('#ffffff');
 
   /**
-   * URL or path to custom font file (TTF, OTF, WOFF).
-   * If null, uses the default font.
+   * URL or path to custom font file (JSON format from Three.js fonts).
+   * If null, uses the default Helvetiker Bold font.
    * @default null
    */
   public readonly font = input<string | null>(null);
-
-  /**
-   * Font style: 'normal' or 'italic'.
-   * @default 'normal'
-   */
-  public readonly fontStyle = input<'normal' | 'italic'>('normal');
-
-  /**
-   * Font weight: 'normal', 'bold', or numeric (100-900).
-   * @default 'normal'
-   */
-  public readonly fontWeight = input<string | number>('normal');
 
   // ========================================
   // TRANSFORM PROPERTIES
@@ -178,58 +124,19 @@ export class TroikaTextComponent {
   // ========================================
 
   /**
-   * Maximum width for text wrapping in world units.
-   * Text will wrap to multiple lines if it exceeds this width.
-   * @default Infinity (no wrapping)
-   */
-  public readonly maxWidth = input<number>(Infinity);
-
-  /**
-   * Horizontal text alignment within the maxWidth.
-   * @default 'left'
-   */
-  public readonly textAlign = input<'left' | 'right' | 'center' | 'justify'>(
-    'left'
-  );
-
-  /**
-   * Horizontal anchor point as percentage string ('left', 'center', 'right')
-   * or numeric value (0 = left edge, 0.5 = center, 1 = right edge).
+   * Horizontal anchor point as string ('left', 'center', 'right') or numeric value (0-1).
    * @default 'left'
    */
   public readonly anchorX = input<number | string>('left');
 
   /**
-   * Vertical anchor point as percentage string ('top', 'middle', 'bottom')
-   * or numeric value (0 = top edge, 0.5 = middle, 1 = bottom edge).
+   * Vertical anchor point as string ('top', 'middle', 'bottom') or numeric value (0-1).
    * @default 'top'
    */
   public readonly anchorY = input<number | string>('top');
 
-  /**
-   * Line height as multiple of fontSize (number) or absolute value (string with units).
-   * @default 1.2
-   */
-  public readonly lineHeight = input<number | string>(1.2);
-
-  /**
-   * Letter spacing adjustment in world units.
-   * Positive values increase spacing, negative values decrease.
-   * @default 0
-   */
-  public readonly letterSpacing = input<number>(0);
-
-  /**
-   * CSS white-space behavior: 'normal' or 'nowrap'.
-   * @default 'normal'
-   */
-  public readonly whiteSpace = input<'normal' | 'nowrap'>('normal');
-
-  /**
-   * CSS overflow-wrap behavior: 'normal' or 'break-word'.
-   * @default 'normal'
-   */
-  public readonly overflowWrap = input<'normal' | 'break-word'>('normal');
+  // Note: maxWidth, textAlign, lineHeight, etc. are not supported with TextGeometry
+  // These were Troika-specific features. For multi-line text, use \n characters.
 
   // ========================================
   // VISUAL STYLING PROPERTIES
@@ -241,62 +148,22 @@ export class TroikaTextComponent {
    */
   public readonly fillOpacity = input<number>(1);
 
-  /**
-   * Outline/stroke width in world units (number) or as percentage string.
-   * Set to 0 to disable outline.
-   * @default 0
-   */
-  public readonly outlineWidth = input<number | string>(0);
-
-  /**
-   * Outline color as CSS string or numeric hex value.
-   * @default '#000000'
-   */
-  public readonly outlineColor = input<string | number>('#000000');
-
-  /**
-   * Outline blur radius in world units (number) or as percentage string.
-   * @default 0 (sharp outline)
-   */
-  public readonly outlineBlur = input<number | string>(0);
-
-  /**
-   * Outline opacity (0 = transparent, 1 = opaque).
-   * @default 1
-   */
-  public readonly outlineOpacity = input<number>(1);
-
   // ========================================
-  // ADVANCED RENDERING PROPERTIES
+  // 3D GEOMETRY PROPERTIES (NEW!)
   // ========================================
 
   /**
-   * Size of SDF glyph texture atlas in pixels.
-   * Higher values = better quality but more memory.
-   * @default 64
+   * Extrusion depth (thickness) of the text.
+   * Set to 0 for flat text, > 0 for 3D extruded text.
+   * @default 0.02 (slight depth for better lighting)
    */
-  public readonly sdfGlyphSize = input<number>(64);
+  public readonly depth = input<number>(0.02);
 
   /**
-   * Level of detail for glyph geometry (1-4).
-   * Higher values = smoother curves but more vertices.
-   * @default 1
+   * Enable beveled edges for smoother appearance.
+   * @default false
    */
-  public readonly glyphGeometryDetail = input<number>(1);
-
-  /**
-   * Enable GPU-accelerated SDF generation (requires WebGL2).
-   * Falls back to CPU if unavailable.
-   * @default true
-   */
-  public readonly gpuAccelerateSDF = input<boolean>(true);
-
-  /**
-   * Depth offset for depth testing.
-   * Useful for preventing z-fighting.
-   * @default 0
-   */
-  public readonly depthOffset = input<number>(0);
+  public readonly bevelEnabled = input<boolean>(false);
 
   // ========================================
   // BEHAVIOR PROPERTIES
@@ -308,13 +175,6 @@ export class TroikaTextComponent {
    * @default false
    */
   public readonly billboard = input<boolean>(false);
-
-  /**
-   * Custom Three.js material to override default material.
-   * Useful for glow effects, bloom integration, or custom shaders.
-   * @default null (uses troika's default material)
-   */
-  public readonly customMaterial = input<THREE.Material | null>(null);
 
   // ========================================
   // DEPENDENCY INJECTION
@@ -335,7 +195,7 @@ export class TroikaTextComponent {
    * Loading state signal - true while font is being loaded.
    * Useful for displaying loading indicators in UI.
    */
-  public readonly isLoading = signal(false);
+  public readonly isLoading = signal(true);
 
   /**
    * Load error signal - contains error message if font loading failed.
@@ -347,13 +207,19 @@ export class TroikaTextComponent {
   // INTERNAL STATE
   // ========================================
 
-  private textObject?: Text;
-  private cleanupRenderLoop?: () => void;
+  private textMesh?: THREE.Mesh;
+  private material?: THREE.MeshStandardNodeMaterial;
+  private loadedFont?: Font;
+  private cleanupBillboardLoop?: () => void;
+  private isCleanedUp = false;
 
   public constructor() {
-    // Effect: Initialize and update text
+    // Effect: Load font and create text
     effect((onCleanup) => {
       const textContent = this.text();
+      const fontUrl =
+        this.font() ||
+        'https://threejs.org/examples/fonts/helvetiker_bold.typeface.json';
       const parent = this.parent();
 
       if (!textContent || !parent) return;
@@ -361,118 +227,188 @@ export class TroikaTextComponent {
       this.isLoading.set(true);
       this.loadError.set(null);
 
-      // Create or update text object
-      if (!this.textObject) {
-        this.textObject = new Text();
-        this.updateAllTextProperties();
-
-        // Sync and add to parent
-        this.textObject.sync(() => {
-          if (this.textObject && parent) {
-            parent.add(this.textObject);
-            this.sceneStore.register(this.objectId, this.textObject, 'mesh');
+      // Load font if not cached
+      if (!this.loadedFont) {
+        const loader = new FontLoader();
+        loader.load(
+          fontUrl,
+          (font) => {
+            this.loadedFont = font;
+            this.createTextMesh(textContent, font, parent);
+            this.isLoading.set(false);
+          },
+          undefined,
+          (error) => {
+            console.error('Font loading error:', error);
+            this.loadError.set('Failed to load font');
             this.isLoading.set(false);
           }
-        });
+        );
       } else {
-        this.updateAllTextProperties();
-        this.textObject.sync(() => {
-          this.isLoading.set(false);
-        });
+        this.createTextMesh(textContent, this.loadedFont, parent);
+        this.isLoading.set(false);
       }
 
       onCleanup(() => {
-        if (this.textObject && parent) {
-          parent.remove(this.textObject);
-          this.sceneStore.remove(this.objectId);
-          this.textObject.dispose();
-          this.textObject = undefined;
-        }
+        this.cleanup(parent);
       });
     });
 
-    // Effect: Billboard rotation (optional)
+    // Effect: Update material color reactively
+    effect(() => {
+      if (!this.material) return;
+      this.material.color.set(this.color() as THREE.ColorRepresentation);
+      this.material.opacity = this.fillOpacity();
+    });
+
+    // Effect: Billboard rotation
     effect(() => {
       if (!this.billboard()) {
         // Billboard disabled - cleanup if active
-        if (this.cleanupRenderLoop) {
-          this.cleanupRenderLoop();
-          this.cleanupRenderLoop = undefined;
+        if (this.cleanupBillboardLoop) {
+          this.cleanupBillboardLoop();
+          this.cleanupBillboardLoop = undefined;
         }
         return;
       }
 
       const camera = this.sceneService.camera();
-      if (!camera || !this.textObject) return;
+      if (!camera || !this.textMesh) return;
 
       // Billboard enabled - register render loop callback
-      this.cleanupRenderLoop = this.renderLoop.registerUpdateCallback(() => {
-        if (this.textObject && camera) {
-          this.textObject.quaternion.copy(camera.quaternion);
+      this.cleanupBillboardLoop = this.renderLoop.registerUpdateCallback(() => {
+        if (this.textMesh && camera) {
+          this.textMesh.quaternion.copy(camera.quaternion);
         }
       });
     });
 
     // Cleanup
     this.destroyRef.onDestroy(() => {
-      this.cleanupRenderLoop?.();
+      this.cleanupBillboardLoop?.();
       this.sceneStore.remove(this.objectId);
-      if (this.textObject) {
-        this.textObject.dispose();
-      }
+      const parent = this.parent();
+      if (parent) this.cleanup(parent);
     });
   }
 
   /**
-   * Update all text properties from signal inputs.
-   * Called whenever text is created or signal inputs change.
-   * @private
+   * Create text mesh from font
    */
-  private updateAllTextProperties(): void {
-    if (!this.textObject) return;
+  private createTextMesh(
+    textContent: string,
+    font: Font,
+    parent: THREE.Object3D
+  ): void {
+    // Reset cleanup flag
+    this.isCleanedUp = false;
 
-    // Text content & font
-    this.textObject.text = this.text();
-    this.textObject.fontSize = this.fontSize();
-    this.textObject.color = this.color();
-    if (this.font()) this.textObject.font = this.font();
-    this.textObject.fontStyle = this.fontStyle();
-    this.textObject.fontWeight = this.fontWeight();
-
-    // Layout
-    this.textObject.maxWidth = this.maxWidth();
-    this.textObject.textAlign = this.textAlign();
-    this.textObject.anchorX = this.anchorX();
-    this.textObject.anchorY = this.anchorY();
-    this.textObject.lineHeight = this.lineHeight();
-    this.textObject.letterSpacing = this.letterSpacing();
-    this.textObject.whiteSpace = this.whiteSpace();
-    this.textObject.overflowWrap = this.overflowWrap();
-
-    // Styling
-    this.textObject.fillOpacity = this.fillOpacity();
-    this.textObject.outlineWidth = this.outlineWidth();
-    this.textObject.outlineColor = this.outlineColor();
-    this.textObject.outlineBlur = this.outlineBlur();
-    this.textObject.outlineOpacity = this.outlineOpacity();
-
-    // Advanced
-    this.textObject.sdfGlyphSize = this.sdfGlyphSize();
-    this.textObject.glyphGeometryDetail = this.glyphGeometryDetail();
-    this.textObject.gpuAccelerateSDF = this.gpuAccelerateSDF();
-    this.textObject.depthOffset = this.depthOffset();
-
-    // Custom material
-    if (this.customMaterial()) {
-      this.textObject.material = this.customMaterial()!;
+    // Remove existing mesh if any
+    if (this.textMesh) {
+      parent.remove(this.textMesh);
+      this.textMesh.geometry.dispose();
+      this.sceneStore.remove(this.objectId);
     }
 
-    // Transform
-    this.textObject.position.set(...this.position());
-    this.textObject.rotation.set(...this.rotation());
+    // Create TextGeometry
+    const geometry = new TextGeometry(textContent, {
+      font: font,
+      size: this.fontSize(),
+      height: this.depth(), // Extrusion depth
+      curveSegments: 12,
+      bevelEnabled: this.bevelEnabled(),
+      bevelThickness: 0.01,
+      bevelSize: 0.01,
+      bevelSegments: 3,
+    } as ConstructorParameters<typeof TextGeometry>[1]);
+
+    // Apply centering based on anchorX/anchorY
+    geometry.computeBoundingBox();
+    if (geometry.boundingBox) {
+      const centerOffset = new THREE.Vector3();
+
+      // Map anchorX
+      const anchorX = this.anchorX();
+      if (anchorX === 'left' || anchorX === 0) {
+        centerOffset.x = 0;
+      } else if (anchorX === 'center' || anchorX === 0.5) {
+        centerOffset.x =
+          -(geometry.boundingBox.max.x - geometry.boundingBox.min.x) / 2;
+      } else if (anchorX === 'right' || anchorX === 1) {
+        centerOffset.x = -(
+          geometry.boundingBox.max.x - geometry.boundingBox.min.x
+        );
+      } else if (typeof anchorX === 'number') {
+        centerOffset.x =
+          -(geometry.boundingBox.max.x - geometry.boundingBox.min.x) * anchorX;
+      }
+
+      // Map anchorY
+      const anchorY = this.anchorY();
+      if (anchorY === 'top' || anchorY === 0) {
+        centerOffset.y = 0;
+      } else if (anchorY === 'middle' || anchorY === 0.5) {
+        centerOffset.y =
+          -(geometry.boundingBox.max.y - geometry.boundingBox.min.y) / 2;
+      } else if (anchorY === 'bottom' || anchorY === 1) {
+        centerOffset.y = -(
+          geometry.boundingBox.max.y - geometry.boundingBox.min.y
+        );
+      } else if (typeof anchorY === 'number') {
+        centerOffset.y =
+          -(geometry.boundingBox.max.y - geometry.boundingBox.min.y) * anchorY;
+      }
+
+      geometry.translate(centerOffset.x, centerOffset.y, 0);
+    }
+
+    // Create material (WebGPU compatible)
+    this.material = new THREE.MeshStandardNodeMaterial();
+    this.material.color = new THREE.Color(
+      this.color() as THREE.ColorRepresentation
+    );
+    this.material.transparent = this.fillOpacity() < 1;
+    this.material.opacity = this.fillOpacity();
+    this.material.side = THREE.FrontSide;
+
+    // Create mesh
+    this.textMesh = new THREE.Mesh(geometry, this.material);
+
+    // Apply transforms
+    this.textMesh.position.set(...this.position());
+    this.textMesh.rotation.set(...this.rotation());
     const s = this.scale();
     const scale: [number, number, number] =
       typeof s === 'number' ? [s, s, s] : s;
-    this.textObject.scale.set(...scale);
+    this.textMesh.scale.set(...scale);
+
+    // Add to scene
+    parent.add(this.textMesh);
+    this.sceneStore.register(this.objectId, this.textMesh, 'mesh');
+  }
+
+  /**
+   * Cleanup resources
+   */
+  private cleanup(parent: THREE.Object3D): void {
+    // Prevent double cleanup
+    if (this.isCleanedUp || !this.textMesh) return;
+    this.isCleanedUp = true;
+
+    parent.remove(this.textMesh);
+    this.textMesh.geometry.dispose();
+
+    // Safely dispose material
+    if (this.material) {
+      try {
+        this.material.dispose();
+      } catch {
+        // Material may already be disposed
+      }
+    }
+
+    this.sceneStore.remove(this.objectId);
+    this.textMesh = undefined;
+    this.material = undefined;
   }
 }

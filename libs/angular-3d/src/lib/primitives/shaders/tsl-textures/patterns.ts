@@ -229,3 +229,41 @@ export const tslBricks = TSLFn((userParams: TslTextureParams = {}) => {
 
   return mix(p['background'], p['color'], isBrick);
 });
+
+// ============================================================================
+// tslFabric
+// ============================================================================
+
+const fabricDefaults: TslTextureParams = {
+  $name: 'Fabric',
+  scale: 10,
+  color1: new Color(0xdddddd),
+  color2: new Color(0x999999),
+};
+
+/**
+ * Procedural Fabric/Grid
+ * Woven pattern logic.
+ */
+export const tslFabric = TSLFn((userParams: TslTextureParams = {}) => {
+  const p = convertToNodes(userParams, fabricDefaults);
+
+  const uv = positionGeometry.xy.mul(p['scale'] as TSLNode);
+
+  // Basic basket weave pattern
+  const cx = floor(uv.x);
+  const cy = floor(uv.y);
+  const checker = mod(add(cx, cy), 2.0);
+
+  // Sub-thread gradients
+  const tx = fract(uv.x).sub(0.5).abs().mul(2);
+  const ty = fract(uv.y).sub(0.5).abs().mul(2);
+
+  // Mix based on weave orientation
+  const pattern = mix(tx, ty, checker);
+
+  // Shadowing for depth
+  const shadow = float(1.0).sub(pattern.mul(0.5));
+
+  return mix(p['color1'], p['color2'], checker).mul(shadow);
+});

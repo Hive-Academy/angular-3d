@@ -101,7 +101,7 @@ export class ParticleTextComponent {
   public readonly blendMode = input<'additive' | 'normal'>('additive');
   public readonly texturePath = input<string | undefined>(undefined); // Path to external smoke texture
   public readonly lineHeightMultiplier = input<number>(2.5); // Canvas height multiplier for text rendering
-
+  public readonly sampleStep = input<number>(2);
   // DI
   private readonly parent = inject(NG_3D_PARENT, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
@@ -288,7 +288,7 @@ export class ParticleTextComponent {
     const positions = this.textSampling.sampleTextPositions(
       text,
       fontSize,
-      1,
+      this.sampleStep(),
       multiplier
     );
 

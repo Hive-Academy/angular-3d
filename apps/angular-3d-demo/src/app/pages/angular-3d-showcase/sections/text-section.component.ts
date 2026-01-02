@@ -7,6 +7,7 @@ import {
   GlowTroikaTextComponent,
   ParticleTextComponent,
   BubbleTextComponent,
+  OrbitControlsComponent,
 } from '@hive-academy/angular-3d';
 import { SCENE_COLORS } from '../../../shared/colors';
 
@@ -28,6 +29,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
     GlowTroikaTextComponent,
     ParticleTextComponent,
     BubbleTextComponent,
+    OrbitControlsComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -48,6 +50,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
               class="aspect-video rounded-2xl overflow-hidden bg-background-dark shadow-xl"
             >
               <a3d-scene-3d [cameraPosition]="[0, 0, 8]">
+                <a3d-orbit-controls [enableDamping]="true" />
                 <a3d-ambient-light [intensity]="0.5" />
                 <a3d-directional-light
                   [position]="[3, 3, 3]"
@@ -57,6 +60,8 @@ import { SCENE_COLORS } from '../../../shared/colors';
                   text="Angular 3D"
                   [fontSize]="1.2"
                   [color]="colors.indigo"
+                  anchorX="center"
+                  anchorY="middle"
                 />
               </a3d-scene-3d>
             </div>
@@ -74,6 +79,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
               class="aspect-video rounded-2xl overflow-hidden bg-background-dark shadow-xl"
             >
               <a3d-scene-3d [cameraPosition]="[0, 0, 8]">
+                <a3d-orbit-controls [enableDamping]="true" />
                 <a3d-ambient-light [intensity]="0.5" />
                 <a3d-directional-light
                   [position]="[3, 3, 3]"
@@ -84,6 +90,8 @@ import { SCENE_COLORS } from '../../../shared/colors';
                   [fontSize]="1.2"
                   [glowColor]="colors.cyan"
                   [glowIntensity]="2"
+                  anchorX="center"
+                  anchorY="middle"
                 />
               </a3d-scene-3d>
             </div>
@@ -113,6 +121,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
               class="aspect-video rounded-2xl overflow-hidden bg-background-dark shadow-xl"
             >
               <a3d-scene-3d [cameraPosition]="[0, 0, 18]">
+                <a3d-orbit-controls [enableDamping]="true" />
                 <a3d-ambient-light [intensity]="0.5" />
                 <a3d-directional-light
                   [position]="[3, 3, 3]"
@@ -122,7 +131,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
                   text="Particles"
                   [fontScaleFactor]="0.07"
                   [fontSize]="55"
-                  [lineHeightMultiplier]="6.0"
+                  [lineHeightMultiplier]="12.0"
                   [particleColor]="colors.pink"
                 />
               </a3d-scene-3d>
@@ -140,6 +149,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
               class="aspect-video rounded-2xl overflow-hidden bg-background-dark shadow-xl"
             >
               <a3d-scene-3d [cameraPosition]="[0, 0, 18]">
+                <a3d-orbit-controls [enableDamping]="true" />
                 <a3d-ambient-light [intensity]="0.5" />
                 <a3d-directional-light
                   [position]="[3, 3, 3]"
@@ -150,6 +160,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
                   [fontSize]="60"
                   [lineHeightMultiplier]="3.0"
                   [fontScaleFactor]="0.07"
+                  [growSpeed]="0.01"
                 />
               </a3d-scene-3d>
             </div>

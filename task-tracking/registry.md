@@ -15,6 +15,7 @@
 | TASK_2025_030 | WebGPU Test Suite Fixes             | 📋 PENDING               | 2025-12-27 |
 | TASK_2025_031 | Complete WebGPU TSL Migration       | 🔄 Requirements Complete | 2025-12-28 |
 | TASK_2025_032 | Native TSL Procedural Textures      | 🔄 Batch 1 IN PROGRESS   | 2025-12-29 |
+| TASK_2025_033 | Blueyard.com Replication Analysis   | 🔄 Requirements Complete | 2026-01-01 |
 
 ## Task Dependencies
 

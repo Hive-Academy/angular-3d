@@ -1,34 +1,31 @@
 import {
-  Component,
   ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  effect,
   inject,
   input,
-  effect,
-  DestroyRef,
 } from '@angular/core';
+import {
+  abs,
+  add,
+  exp,
+  float,
+  mix,
+  mul,
+  positionLocal,
+  pow,
+  smoothstep,
+  uniform,
+  uv,
+  vec3,
+} from 'three/tsl';
 import * as THREE from 'three/webgpu';
 import { MeshBasicNodeMaterial } from 'three/webgpu';
-import {
-  float,
-  vec3,
-  uniform,
-  mix,
-  smoothstep,
-  positionLocal,
-  uv,
-  mul,
-  add,
-  pow,
-} from 'three/tsl';
-import { NG_3D_PARENT } from '../types/tokens';
-import { OBJECT_ID } from '../tokens/object-id.token';
 import { RenderLoopService } from '../render-loop/render-loop.service';
-import {
-  cloudDensity,
-  domainWarp,
-  nativeFBMVec3,
-  radialFalloff,
-} from './shaders/tsl-utilities';
+import { OBJECT_ID } from '../tokens/object-id.token';
+import { NG_3D_PARENT } from '../types/tokens';
+import { domainWarp, nativeFBMVec3 } from './shaders/tsl-utilities';
 
 /**
  * NebulaVolumetricComponent - Realistic TSL-Based Nebula Clouds
@@ -89,7 +86,7 @@ export class NebulaVolumetricComponent {
   public readonly primaryColor = input<string>('#0088ff'); // Bright blue
   public readonly secondaryColor = input<string>('#00d4ff'); // Cyan
   public readonly tertiaryColor = input<string>('#ff6bd4'); // Pink accent
-  public readonly enableFlow = input<boolean>(true); // Animate noise over time
+  public readonly enableFlow = input<boolean>(false); // Animate noise over time
   public readonly flowSpeed = input<number>(0.5); // Time multiplier for animation
 
   // Visual quality controls
@@ -99,6 +96,8 @@ export class NebulaVolumetricComponent {
   public readonly contrast = input<number>(1.0); // Bright/dim contrast (0.5 = low, 2.0 = high)
   public readonly glowIntensity = input<number>(3.0); // Glow strength in bright areas (1.0 - 5.0)
   public readonly colorIntensity = input<number>(1.8); // Color brightness multiplier (0.5 - 3.0)
+  public readonly centerFalloff = input<number>(1.5); // Exponential center falloff rate (0.5 = gradual, 3.0 = sharp core)
+  public readonly erosionStrength = input<number>(0.7); // Edge erosion strength (0.0 = none, 1.0 = maximum wispy)
 
   // DI
   private readonly parent = inject(NG_3D_PARENT);
@@ -112,6 +111,7 @@ export class NebulaVolumetricComponent {
   private renderLoopCleanup!: () => void;
 
   private isAddedToScene = false;
+  private isDestroyed = false;
 
   public constructor() {
     // Effect: Add group to parent when parent becomes available
@@ -134,6 +134,9 @@ export class NebulaVolumetricComponent {
       const layerCount = this.layers();
       const width = this.width();
       const height = this.height();
+
+      // Don't create layers if component is being destroyed
+      if (this.isDestroyed) return;
 
       // Clear existing layers
       this.clearLayers();
@@ -158,6 +161,10 @@ export class NebulaVolumetricComponent {
 
     // Cleanup
     this.destroyRef.onDestroy(() => {
+      // Prevent double cleanup
+      if (this.isDestroyed) return;
+      this.isDestroyed = true;
+
       // Cleanup render loop callback
       if (this.renderLoopCleanup) {
         this.renderLoopCleanup();
@@ -178,10 +185,27 @@ export class NebulaVolumetricComponent {
    */
   private clearLayers(): void {
     this.nebulaLayers.forEach((mesh) => {
+      if (!mesh) return;
+
       this.group.remove(mesh);
-      mesh.geometry.dispose();
-      if (mesh.material instanceof MeshBasicNodeMaterial) {
-        mesh.material.dispose();
+
+      // Safely dispose geometry
+      if (mesh.geometry) {
+        try {
+          mesh.geometry.dispose();
+        } catch {
+          // Geometry may already be disposed
+        }
+      }
+
+      // Safely dispose material - wrap in try-catch as WebGPU materials
+      // can fail during disposal if internal state is already cleaned up
+      if (mesh.material && mesh.material instanceof MeshBasicNodeMaterial) {
+        try {
+          mesh.material.dispose();
+        } catch {
+          // Material may already be disposed or in invalid state
+        }
       }
     });
     this.nebulaLayers.length = 0;
@@ -217,6 +241,8 @@ export class NebulaVolumetricComponent {
     const uContrast = uniform(float(this.contrast()));
     const uGlowIntensity = uniform(float(this.glowIntensity()));
     const uColorIntensity = uniform(float(this.colorIntensity()));
+    const uCenterFalloff = uniform(float(this.centerFalloff()));
+    const uErosionStrength = uniform(float(this.erosionStrength()));
     const uPrimaryColor = uniform(
       vec3(...new THREE.Color(this.primaryColor()).toArray())
     );
@@ -273,33 +299,86 @@ export class NebulaVolumetricComponent {
     const normalizedDensity = mul(add(smokeDensity, float(1.0)), float(0.5));
 
     // Apply density multiplier
-    const densityWithMult = mul(normalizedDensity, uDensity);
+    const baseDensity = mul(normalizedDensity, uDensity);
 
     // CRITICAL: Ultra-soft edge falloff with NO visible boundaries
     const centeredUv = add(uv(), vec3(-0.5, -0.5, 0));
     const distFromCenter = centeredUv.length();
 
+    // ========================================================================
+    // FIX #4: Center-weighted density with EXPONENTIAL decay (from report)
+    // Makes core bright and edges naturally thin - "nebula physics cheat"
+    // density *= exp(-r * centerFalloff)
+    // ========================================================================
+    const centerWeight = exp(mul(distFromCenter.negate(), uCenterFalloff));
+    const densityWithMult = mul(baseDensity, centerWeight);
+
+    // ========================================================================
+    // FIX #1: Improved radial falloff with wider smoothstep ranges
+    // Prevents visible geometry boundaries
+    // ========================================================================
     // Multi-stage radial falloff for extremely soft edges
+    // Wider ranges: start fading earlier, complete fade later
     const radialFalloff1 = float(1).sub(
-      smoothstep(float(0.0), float(0.6), distFromCenter)
+      smoothstep(float(0.15), float(0.55), distFromCenter)
     );
     const radialFalloff2 = float(1).sub(
-      smoothstep(float(0.0), float(0.5), distFromCenter)
+      smoothstep(float(0.1), float(0.48), distFromCenter)
     );
     const radialFalloff3 = float(1).sub(
-      smoothstep(float(0.0), float(0.4), distFromCenter)
+      smoothstep(float(0.05), float(0.42), distFromCenter)
     );
 
-    // Combine multiple falloff stages
+    // Combine multiple falloff stages with weighted blend
     const edgeFalloff = add(
-      add(mul(radialFalloff1, float(0.3)), mul(radialFalloff2, float(0.4))),
-      mul(radialFalloff3, float(0.3))
+      add(mul(radialFalloff1, float(0.35)), mul(radialFalloff2, float(0.4))),
+      mul(radialFalloff3, float(0.25))
     );
 
     // Configurable edge softness
     const softEdgeFalloff = pow(edgeFalloff, uEdgeSoftness);
 
-    // Strong noise-based irregularity for organic edges
+    // ========================================================================
+    // FIX #2: Turbulence-based edge erosion using abs() of noise
+    // Creates wispy, chaotic edges that break the silhouette
+    // erosion = smoothstep(0.2, 0.8, abs(noise))
+    // ========================================================================
+    // Primary erosion noise (low frequency for large wispy features)
+    const erosionNoise1 = nativeFBMVec3(
+      mul(warpedPos, float(0.8)),
+      float(3),
+      float(2.0),
+      float(0.5)
+    );
+    // Secondary erosion noise (higher frequency for detail)
+    const erosionNoise2 = nativeFBMVec3(
+      add(mul(warpedPos, float(1.5)), vec3(7.3, 3.1, 5.7)),
+      float(4),
+      float(2.0),
+      float(0.5)
+    );
+
+    // TURBULENCE: Use abs() to create sharp ridges and valleys
+    const turbulence1 = abs(erosionNoise1.x);
+    const turbulence2 = abs(erosionNoise2.x);
+
+    // Combine turbulence layers
+    const combinedTurbulence = add(
+      mul(turbulence1, float(0.6)),
+      mul(turbulence2, float(0.4))
+    );
+
+    // Erosion mask: erode where turbulence is low
+    const erosionMask = smoothstep(float(0.15), float(0.7), combinedTurbulence);
+
+    // Blend erosion based on strength parameter
+    const erosionFactor = mix(float(1.0), erosionMask, uErosionStrength);
+
+    // ========================================================================
+    // Combined edge falloff with erosion
+    // Multiply soft falloff with erosion for wispy irregular boundaries
+    // ========================================================================
+    // Add noise-based variation to prevent circular edges
     const edgeNoise1 = nativeFBMVec3(
       mul(warpedPos, float(1.2)),
       float(3),
@@ -317,9 +396,10 @@ export class NebulaVolumetricComponent {
       mul(add(mul(edgeNoise2.x, float(0.5)), float(0.5)), float(0.4))
     );
 
+    // Final edge falloff combines: soft radial + noise variation + turbulence erosion
     const finalEdgeFalloff = mul(
-      softEdgeFalloff,
-      add(float(0.2), mul(edgeNoise, float(0.8)))
+      mul(softEdgeFalloff, add(float(0.25), mul(edgeNoise, float(0.75)))),
+      erosionFactor
     );
 
     // Calculate base alpha - SIMPLIFIED for better visibility

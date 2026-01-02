@@ -8,12 +8,14 @@ import {
   DestroyRef,
 } from '@angular/core';
 import * as THREE from 'three/webgpu';
+import { color as tslColor, float, mul } from 'three/tsl';
 import { TextGeometry, FontLoader, Font } from 'three-stdlib';
 import { NG_3D_PARENT } from '../../types/tokens';
 import { OBJECT_ID } from '../../tokens/object-id.token';
 import { RenderLoopService } from '../../render-loop/render-loop.service';
 import { SceneService } from '../../canvas/scene.service';
 import { SceneGraphStore } from '../../store/scene-graph.store';
+import { tslFresnel } from '../shaders/tsl-utilities';
 
 /**
  * Premium 3D Extruded Text Component with proper emission for bloom.
@@ -158,6 +160,29 @@ export class ExtrudedText3DComponent {
   public readonly pulseSpeed = input<number>(0);
 
   /**
+   * Enable Fresnel edge glow effect.
+   * When enabled, text edges glow brighter at viewing angles,
+   * creating a neon-like effect without relying on bloom.
+   * @default false
+   */
+  public readonly edgeGlow = input<boolean>(false);
+
+  /**
+   * Edge glow intensity multiplier.
+   * Higher values = stronger edge glow effect.
+   * @default 2.0
+   */
+  public readonly edgeGlowIntensity = input<number>(2.0);
+
+  /**
+   * Bloom layer for selective bloom effect.
+   * When specified, the text mesh will be added to this layer.
+   * Use with a3d-selective-bloom-effect to bloom only the text.
+   * @default undefined (no layer, uses default layer 0)
+   */
+  public readonly bloomLayer = input<number | undefined>(undefined);
+
+  /**
    * Billboard mode - text always faces camera.
    * @default false
    */
@@ -186,6 +211,7 @@ export class ExtrudedText3DComponent {
   private loadedFont?: Font;
   private cleanupPulseLoop?: () => void;
   private cleanupBillboardLoop?: () => void;
+  private isCleanedUp = false;
 
   public constructor() {
     // Effect: Load font and create text
@@ -231,10 +257,16 @@ export class ExtrudedText3DComponent {
       if (!this.material) return;
 
       this.material.color.set(this.color() as THREE.ColorRepresentation);
-      this.material.emissive.set(
-        this.emissiveColor() as THREE.ColorRepresentation
+
+      // Update TSL emissiveNode reactively
+      const emissiveColorNode = tslColor(
+        new THREE.Color(this.emissiveColor() as THREE.ColorRepresentation)
       );
-      this.material.emissiveIntensity = this.emissiveIntensity();
+      this.material.emissiveNode = mul(
+        emissiveColorNode,
+        float(this.emissiveIntensity())
+      );
+
       this.material.metalness = this.metalness();
       this.material.roughness = this.roughness();
     });
@@ -296,6 +328,9 @@ export class ExtrudedText3DComponent {
     font: Font,
     parent: THREE.Object3D
   ): void {
+    // Reset cleanup flag when creating new mesh
+    this.isCleanedUp = false;
+
     // Remove existing mesh if any
     if (this.textMesh) {
       parent.remove(this.textMesh);
@@ -331,16 +366,39 @@ export class ExtrudedText3DComponent {
       geometry.translate(centerOffset.x, centerOffset.y, 0);
     }
 
-    // Create material with emission (CRITICAL for bloom!)
-    // Using MeshStandardNodeMaterial with direct property assignment for WebGPU
+    // Create material with TSL emissiveNode (CRITICAL for proper bloom!)
+    // Using MeshStandardNodeMaterial with emissiveNode for GPU-native emission
+    // This makes the TEXT ITSELF glow, not a surrounding halo
     this.material = new THREE.MeshStandardNodeMaterial();
     this.material.color = new THREE.Color(
       this.color() as THREE.ColorRepresentation
     );
-    this.material.emissive = new THREE.Color(
-      this.emissiveColor() as THREE.ColorRepresentation
+
+    // TSL emissiveNode: color node multiplied by intensity
+    // This is the proper way to do emission that works with TSL bloom
+    const emissiveColorNode = tslColor(
+      new THREE.Color(this.emissiveColor() as THREE.ColorRepresentation)
     );
-    this.material.emissiveIntensity = this.emissiveIntensity(); // HIGH value for bloom!
+    const baseEmissive = mul(
+      emissiveColorNode,
+      float(this.emissiveIntensity())
+    );
+
+    // Apply Fresnel edge glow if enabled
+    // This boosts emissive at edges for a neon-like effect
+    if (this.edgeGlow()) {
+      // Fresnel: power=2.0 (soft falloff), intensity=edgeGlowIntensity, bias=1.0 (always some glow)
+      const fresnelValue = tslFresnel(
+        float(2.0),
+        float(this.edgeGlowIntensity()),
+        float(1.0)
+      );
+      // Multiply emissive by fresnel boost for edge glow
+      this.material.emissiveNode = mul(baseEmissive, fresnelValue);
+    } else {
+      this.material.emissiveNode = baseEmissive;
+    }
+
     this.material.metalness = this.metalness();
     this.material.roughness = this.roughness();
     this.material.toneMapped = false; // Allow HDR values > 1.0
@@ -356,19 +414,38 @@ export class ExtrudedText3DComponent {
       typeof s === 'number' ? [s, s, s] : s;
     this.textMesh.scale.set(...scale);
 
+    // Apply bloom layer for selective bloom effect
+    // The mesh stays on layer 0 (default) for main render,
+    // but is also added to the bloom layer for selective bloom
+    const layer = this.bloomLayer();
+    if (layer !== undefined) {
+      this.textMesh.layers.enable(layer);
+    }
+
     // Add to scene
     parent.add(this.textMesh);
     this.sceneStore.register(this.objectId, this.textMesh, 'mesh');
   }
 
   private cleanup(parent: THREE.Object3D): void {
-    if (this.textMesh) {
-      parent.remove(this.textMesh);
-      this.textMesh.geometry.dispose();
-      this.material?.dispose();
-      this.sceneStore.remove(this.objectId);
-      this.textMesh = undefined;
-      this.material = undefined;
+    // Prevent double cleanup - can be called from both effect onCleanup and destroyRef
+    if (this.isCleanedUp || !this.textMesh) return;
+    this.isCleanedUp = true;
+
+    parent.remove(this.textMesh);
+    this.textMesh.geometry.dispose();
+
+    // Safely dispose material - check it exists and hasn't been disposed
+    if (this.material) {
+      try {
+        this.material.dispose();
+      } catch {
+        // Material may already be disposed, ignore errors
+      }
     }
+
+    this.sceneStore.remove(this.objectId);
+    this.textMesh = undefined;
+    this.material = undefined;
   }
 }

@@ -10,7 +10,7 @@ import {
   ExtrudedText3DComponent,
   StarFieldComponent,
   EffectComposerComponent,
-  BloomEffectComponent,
+  SelectiveBloomEffectComponent,
 } from '@hive-academy/angular-3d';
 
 /**
@@ -30,7 +30,7 @@ import {
     ExtrudedText3DComponent,
     StarFieldComponent,
     EffectComposerComponent,
-    BloomEffectComponent,
+    SelectiveBloomEffectComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -62,8 +62,8 @@ import {
         />
         }
 
-        <!-- PREMIUM 3D Extruded Text with proper emission for bloom -->
-        <!-- Scaled up for the larger scene (camera at z=6000) -->
+        <!-- PREMIUM 3D Extruded Text with SELECTIVE BLOOM -->
+        <!-- bloomLayer=1 makes only this text glow, clouds will NOT bloom -->
         <a3d-extruded-text-3d
           [text]="'FLYTHROUGH'"
           [fontSize]="80"
@@ -73,15 +73,19 @@ import {
           [bevelSize]="1"
           [bevelSegments]="5"
           [position]="[0, 100, 4000]"
-          [color]="textColor()"
+          [color]="emissiveColor()"
           [emissiveColor]="emissiveColor()"
-          [emissiveIntensity]="80"
-          [metalness]="0.2"
+          [emissiveIntensity]="5"
+          [metalness]="0.0"
           [roughness]="0.3"
-          [pulseSpeed]="0.2"
+          [pulseSpeed]="0.3"
+          [edgeGlow]="true"
+          [edgeGlowIntensity]="1.5"
+          [bloomLayer]="1"
         />
 
         <!-- Cloud Layer - moves past the static text -->
+        <!-- Clouds are NOT on bloom layer, so they won't glow -->
         <a3d-cloud-layer
           [textureUrl]="'/clouds/cloud10.png'"
           [cloudCount]="8000"
@@ -90,10 +94,15 @@ import {
           [mouseParallax]="true"
         />
 
-        <!-- Bloom Effect - HIGH threshold so only emissive text glows -->
-        <!-- Text emissive intensity is 80, clouds are ~1.0, threshold 2.0 isolates text -->
+        <!-- Selective Bloom - ONLY blooms objects on layer 1 (the text) -->
+        <!-- Clouds are not on layer 1, so they won't have bloom halo -->
         <a3d-effect-composer>
-          <a3d-bloom-effect [threshold]="2.0" [strength]="1.5" [radius]="0.6" />
+          <a3d-selective-bloom-effect
+            [layer]="1"
+            [threshold]="0"
+            [strength]="1.5"
+            [radius]="0.4"
+          />
         </a3d-effect-composer>
       </a3d-scene-3d>
 

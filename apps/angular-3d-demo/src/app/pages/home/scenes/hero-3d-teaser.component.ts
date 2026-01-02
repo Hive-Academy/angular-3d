@@ -8,8 +8,10 @@ import {
   EnvironmentComponent,
   Float3dDirective,
   FloatingSphereComponent,
+  FogComponent,
   GltfModelComponent,
   LightingPreset,
+  MouseTracking3dDirective,
   NebulaComponent,
   NebulaVolumetricComponent,
   OrbitControlsComponent,
@@ -69,6 +71,8 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
     ScrollZoomCoordinatorDirective,
     ParticleTextComponent,
     SvgIconComponent,
+    MouseTracking3dDirective,
+    FogComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -112,7 +116,7 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <!-- ================================ -->
         <!-- REALISTIC EARTH (GLTF Model with Rotation) -->
         <!-- Pushed further right for better text balance -->
-        <!-- ================================ 
+        <!-- ================================
         <a3d-gltf-model
           [modelPath]="'3d/planet_earth/scene.gltf'"
           [viewportPosition]="{ x: '78%', y: '50%' }"
@@ -121,6 +125,8 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           rotate3d
           [rotateConfig]="{ axis: 'y', speed: 120, direction: 1 }"
         />-->
+
+        <a3d-fog [color]="colors.black" />
 
         <!-- Hero Text - Left side, stacked vertically with proper spacing -->
         <a3d-particle-text
@@ -174,20 +180,8 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <!-- ================================ -->
         <!-- Mini Robot #1 - High altitude orbital path -->
         <a3d-gltf-model
-          [modelPath]="'3d/mini_robot.glb'"
-          [position]="[3, 6, -8]"
-          [scale]="0.05"
-          a3dSpaceFlight3d
-          [flightPath]="robot1FlightPath"
-          [rotationsPerCycle]="4"
-          [autoStart]="true"
-          [loop]="true"
-        />
-
-        <!-- Robo Head - Lower depth orbital path -->
-        <a3d-gltf-model
           [modelPath]="'3d/robo_head/scene.gltf'"
-          [position]="[4, -3, -6]"
+          [position]="[0, 0, -2]"
           [scale]="1"
           a3dSpaceFlight3d
           [flightPath]="robot2FlightPath"
@@ -196,63 +190,22 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
           [loop]="true"
         />
 
-        <!-- ================================ -->
-        <!-- NestJS Logo (Formerly in Caustics) -->
-        <!-- ================================ -->
-        <!-- NestJS Logo with metallic finish -->
-        <a3d-svg-icon
-          svgPath="images/logos/nestjs.svg"
-          [position]="[0, 0, -2]"
-          [scale]="0.2"
-          [depth]="0.2"
-          color="#e0234e"
-          emissive="#e0234e"
-          [emissiveIntensity]="1.5"
-          [metalness]="0.85"
-          [roughness]="0.15"
-          rotate3d
-          [rotateConfig]="{ axis: 'y', speed: 30, direction: 1 }"
-        />
-        <!-- ================================ -->
-        <!-- FLOATING SPHERES (With Float3d Animation) -->
-        <!-- Creates visual depth and "alive" feeling -->
-        <!-- ================================ -->
-        <!-- Large glowing sphere - top left -->
-        <a3d-floating-sphere
-          [position]="[-8, 6, -12]"
-          [args]="[0.6, 32, 16]"
-          [color]="colors.cyan"
-          [metalness]="0.9"
-          [roughness]="0.1"
-          [clearcoat]="1.0"
-          [transmission]="0.3"
+        <!-- Robo Head - Lower depth orbital path -->
+        <a3d-gltf-model
+          modelPath="3d/mini_robot.glb"
+          [scale]="[0.2, 0.2, 0.2]"
+          viewportPosition="center"
+          mouseTracking3d
+          [trackingConfig]="{
+            sensitivity: 0.8,
+            limit: 0.5,
+            damping: 0.05,
+            invertX: true,
+            translationRange: [10, 5],
+            invertPosX: true
+          }"
           float3d
-          [floatConfig]="{ height: 0.4, speed: 3000, ease: 'sine.inOut' }"
-        />
-
-        <!-- Medium sphere - bottom right -->
-        <a3d-floating-sphere
-          [position]="[7, -4, -10]"
-          [args]="[0.4, 32, 16]"
-          [color]="colors.magenta"
-          [metalness]="0.8"
-          [roughness]="0.2"
-          [clearcoat]="0.8"
-          [transmission]="0.2"
-          float3d
-          [floatConfig]="{ height: 0.3, speed: 2500, ease: 'sine.inOut' }"
-        />
-
-        <!-- Small sphere - top right -->
-        <a3d-floating-sphere
-          [position]="[10, 5, -8]"
-          [args]="[0.25, 24, 12]"
-          [color]="colors.purple"
-          [metalness]="0.7"
-          [roughness]="0.3"
-          [clearcoat]="0.6"
-          float3d
-          [floatConfig]="{ height: 0.5, speed: 2000, ease: 'sine.inOut' }"
+          [floatConfig]="{ height: 0.2, speed: 2 }"
         />
 
         <!-- Tiny sphere cluster - near earth -->
@@ -336,15 +289,19 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
 
         <!-- ================================ -->
         <!-- POST-PROCESSING - Bloom Only (DOF disabled pending fix) -->
-        <!-- ================================ 
+        <!-- ================================
         <a3d-effect-composer [enabled]="true">
           <a3d-dof-effect [focus]="20" [aperture]="0.3" [maxblur]="0.0002" />
         </a3d-effect-composer>-->
 
-        <!-- Bloom for glowing effects 
+        <!-- Bloom for glowing effects-->
         <a3d-effect-composer [enabled]="true">
-          <a3d-bloom-effect [threshold]="0.2" [strength]="1.5" [radius]="0.4" />
-        </a3d-effect-composer>-->
+          <a3d-bloom-effect
+            [threshold]="0.2"
+            [strength]="0.5"
+            [radius]="0.07"
+          />
+        </a3d-effect-composer>
       </a3d-scene-3d>
     </div>
   `,

@@ -12,7 +12,13 @@ import { mx_worley_noise_float, mx_worley_noise_vec3, time } from 'three/tsl';
 import { Color } from 'three/webgpu';
 
 import { TSLFn, TSLNode, TslTextureParams, convertToNodes } from './types';
-import { tslHsl, tslToHsl, nativeFBM, tslApplyEuler } from '../tsl-utilities';
+import {
+  tslHsl,
+  tslToHsl,
+  nativeFBM,
+  tslApplyEuler,
+  domainWarp,
+} from '../tsl-utilities';
 
 const {
   float,
@@ -260,4 +266,49 @@ export const tslPhotosphere = TSLFn((userParams: TslTextureParams = {}) => {
 
   const k = noise(vec).add(1).div(2);
   return mix(p['background'], p['color'], k);
+});
+
+// ============================================================================
+// tslGasGiant
+// ============================================================================
+
+const gasGiantDefaults: TslTextureParams = {
+  $name: 'Gas Giant',
+  scale: 2,
+  bands: 10,
+  color1: new Color(0xff0000), // Red
+  color2: new Color(0xffff00), // Yellow
+  color3: new Color(0x0000ff), // Blue
+  seed: 0,
+};
+
+/**
+ * Procedural Gas Giant
+ * Banded atmospheric noise
+ */
+export const tslGasGiant = TSLFn((userParams: TslTextureParams = {}) => {
+  const p = convertToNodes(userParams, gasGiantDefaults);
+
+  const pos = positionGeometry.mul(p['scale'] as TSLNode);
+
+  // Distortion (using domain warp from utilities)
+  const warped = domainWarp(pos, float(0.2));
+
+  // Banded noise (Y axis dominance)
+  const bands = p['bands'] as TSLNode;
+  const bandNoise = nativeFBM(
+    vec3(warped.x.mul(2), warped.y.mul(bands), warped.z.mul(2)),
+    float(6),
+    float(2.0),
+    float(0.5)
+  );
+
+  // Color mapping
+  const n = bandNoise.mul(0.5).add(0.5); // 0..1
+
+  // Tri-color gradient
+  const mix1 = mix(p['color1'], p['color2'], n.mul(2));
+  const mix2 = mix(p['color2'], p['color3'], n.sub(0.5).mul(2));
+
+  return select(n.lessThan(0.5), mix1, mix2);
 });

@@ -220,12 +220,34 @@ export class PlanetComponent implements OnDestroy {
   }
 
   private disposeResources(): void {
-    this.geometry?.dispose();
-    this.geometry = null;
-    this.material?.dispose();
-    this.material = null;
-    this.light?.dispose();
-    this.light = null;
+    // Wrap dispose calls in try-catch as WebGPU materials/geometry
+    // can fail during disposal if internal state is already cleaned up
+    if (this.geometry) {
+      try {
+        this.geometry.dispose();
+      } catch {
+        // Geometry may already be disposed
+      }
+      this.geometry = null;
+    }
+
+    if (this.material) {
+      try {
+        this.material.dispose();
+      } catch {
+        // Material may already be disposed or in invalid state
+      }
+      this.material = null;
+    }
+
+    if (this.light) {
+      try {
+        this.light.dispose();
+      } catch {
+        // Light may already be disposed
+      }
+      this.light = null;
+    }
   }
 
   public ngOnDestroy(): void {

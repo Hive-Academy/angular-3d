@@ -108,6 +108,7 @@ export interface RendererConfig {
         display: block;
         width: 100%;
         height: 100%;
+        background: transparent;
       }
 
       .scene-container {
@@ -115,6 +116,7 @@ export interface RendererConfig {
         height: 100%;
         position: relative;
         overflow: hidden;
+        background: transparent;
       }
 
       canvas {
@@ -124,6 +126,7 @@ export interface RendererConfig {
         width: 100%;
         height: 100%;
         display: block;
+        background: transparent;
       }
 
       .scene-content {
@@ -392,6 +395,11 @@ export class Scene3dComponent implements OnDestroy {
     if (this.enableShadows()) {
       this.renderer.shadowMap.enabled = true;
       this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    }
+
+    // Set clear color with alpha=0 for transparent backgrounds when alpha mode is enabled
+    if (this.alpha()) {
+      this.renderer.setClearColor(0x000000, 0);
     }
   }
 

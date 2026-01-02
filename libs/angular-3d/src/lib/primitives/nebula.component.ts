@@ -122,6 +122,7 @@ export class NebulaComponent implements OnDestroy {
   private group: THREE.Group;
   private sprites: THREE.Sprite[] = [];
   private renderLoopCleanup?: () => void;
+  private isDestroyed = false;
 
   public constructor() {
     this.group = new THREE.Group();
@@ -163,6 +164,9 @@ export class NebulaComponent implements OnDestroy {
       const effectiveMaxOpacity =
         legacyOpacity !== undefined ? legacyOpacity : maxOpacity;
 
+      // Don't rebuild if component is being destroyed
+      if (this.isDestroyed) return;
+
       this.rebuildNebula(
         count,
         radius,
@@ -174,6 +178,8 @@ export class NebulaComponent implements OnDestroy {
       );
 
       onCleanup(() => {
+        // Don't cleanup if component is already destroyed (handled by onDestroy)
+        if (this.isDestroyed) return;
         this.disposeResources();
       });
     });
@@ -205,6 +211,10 @@ export class NebulaComponent implements OnDestroy {
 
     // Cleanup on destroy
     this.destroyRef.onDestroy(() => {
+      // Prevent double cleanup
+      if (this.isDestroyed) return;
+      this.isDestroyed = true;
+
       if (this.renderLoopCleanup) {
         this.renderLoopCleanup();
       }
@@ -400,10 +410,18 @@ export class NebulaComponent implements OnDestroy {
   }
 
   private disposeResources(): void {
-    // Dispose sprites and materials
+    // Dispose sprites and materials with defensive checks
     for (const sprite of this.sprites) {
-      if (sprite.material instanceof SpriteNodeMaterial) {
-        sprite.material.dispose();
+      if (!sprite) continue;
+
+      // Safely dispose material - wrap in try-catch as WebGPU materials
+      // can fail during disposal if internal state is already cleaned up
+      if (sprite.material && sprite.material instanceof SpriteNodeMaterial) {
+        try {
+          sprite.material.dispose();
+        } catch {
+          // Material may already be disposed or in invalid state
+        }
       }
     }
     this.sprites = [];

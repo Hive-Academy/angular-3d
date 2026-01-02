@@ -70,12 +70,15 @@ import {
 
         <!-- Volumetric Nebula - Creates the "Portal" Effect -->
         <a3d-nebula-volumetric
-          [position]="[0, 0, -20]"
-          [width]="80"
-          [height]="40"
-          [primaryColor]="'#8b5cf6'"
-          [secondaryColor]="'#ec4899'"
-          [opacity]="0.3"
+          [position]="[140, 70, -120]"
+          [width]="150"
+          [height]="50"
+          [opacity]="0.75"
+          [primaryColor]="'#3344aa'"
+          [secondaryColor]="'#160805ff'"
+          [noiseScale]="3.5"
+          [density]="1.2"
+          [glowIntensity]="0.6"
         />
 
         <!-- Earth Planet - Left Side Focal Element -->
@@ -104,7 +107,6 @@ import {
           [textColor]="'#ffffff'"
           [glowIntensity]="3"
           [glowBlur]="'40%'"
-          [glowWidth]="'20%'"
         />
 
         <!-- Post-processing Effects -->

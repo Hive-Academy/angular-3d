@@ -23,7 +23,7 @@ import {
   tslWaterMarble,
   tslRoughClay,
   TSLNode,
-} from '@hive-academy/angular-3d';
+} from '@hive-academy/angular-3d'; // Assuming these are exported from lib
 import { Color } from 'three';
 
 interface TextureDemo {

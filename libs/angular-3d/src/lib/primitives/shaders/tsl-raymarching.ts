@@ -30,32 +30,50 @@
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import * as TSL from 'three/tsl';
 
-// Re-export commonly used TSL functions for convenience
-const {
-  Fn,
-  Loop,
-  float,
-  vec3,
-  vec4,
-  If,
-  min,
-  max,
-  abs,
-  length,
-  normalize,
-  smoothstep,
-  pow,
-  clamp,
-  Break,
-} = TSL;
-
 // TSL nodes use complex types - use generic node type for flexibility
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TSLNode = any;
 
-// TSL Fn helper with proper typing to avoid arg type mismatch
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const TSLFn = Fn as any;
+/**
+ * Helper to safely access TSL functions at runtime rather than module load time.
+ * This avoids race conditions where WebGPU context isn't ready when module loads.
+ */
+function getTSL() {
+  const {
+    Fn,
+    Loop,
+    float,
+    vec3,
+    vec4,
+    min,
+    max,
+    abs,
+    length,
+    normalize,
+    smoothstep,
+    pow,
+    clamp,
+    select,
+  } = TSL;
+
+  return {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Fn: Fn as any,
+    Loop,
+    float,
+    vec3,
+    vec4,
+    min,
+    max,
+    abs,
+    length,
+    normalize,
+    smoothstep,
+    pow,
+    clamp,
+    select,
+  };
+}
 
 // ============================================================================
 // Constants
@@ -77,6 +95,10 @@ export const RAY_MARCH_MAX_DIST = 100.0;
 // Signed Distance Functions (SDFs)
 // ============================================================================
 
+// Cached TSL function instances (created on first use)
+let _tslSphereDistance: TSLNode;
+let _tslSmoothUnion: TSLNode;
+
 /**
  * Sphere SDF - Distance from point to sphere surface
  *
@@ -93,11 +115,19 @@ export const RAY_MARCH_MAX_DIST = 100.0;
  * const dist = tslSphereDistance(positionLocal, vec3(0, 0, 0), float(0.5));
  * ```
  */
-export const tslSphereDistance = TSLFn(
-  ([point, center, radius]: [TSLNode, TSLNode, TSLNode]) => {
-    return length(point.sub(center)).sub(radius);
+export const tslSphereDistance = (
+  point: TSLNode,
+  center: TSLNode,
+  radius: TSLNode
+): TSLNode => {
+  if (!_tslSphereDistance) {
+    const { Fn, length } = getTSL();
+    _tslSphereDistance = Fn(([p, c, r]: [TSLNode, TSLNode, TSLNode]) => {
+      return length(p.sub(c)).sub(r);
+    });
   }
-);
+  return _tslSphereDistance(point, center, radius);
+};
 
 /**
  * Smooth Minimum (smin) - Smooth union of two distance fields
@@ -120,17 +150,28 @@ export const tslSphereDistance = TSLFn(
  * const blended = tslSmoothUnion(sphere1, sphere2, float(0.3));
  * ```
  */
-export const tslSmoothUnion = TSLFn(
-  ([d1, d2, k]: [TSLNode, TSLNode, TSLNode]) => {
-    // Polynomial smooth minimum (Inigo Quilez)
-    const h = max(k.sub(abs(d1.sub(d2))), float(0)).div(k);
-    return min(d1, d2).sub(h.mul(h).mul(k).mul(0.25));
+export const tslSmoothUnion = (
+  d1: TSLNode,
+  d2: TSLNode,
+  k: TSLNode
+): TSLNode => {
+  if (!_tslSmoothUnion) {
+    const { Fn, float, min, max, abs } = getTSL();
+    _tslSmoothUnion = Fn(([a, b, smoothK]: [TSLNode, TSLNode, TSLNode]) => {
+      // Polynomial smooth minimum (Inigo Quilez)
+      const h = max(smoothK.sub(abs(a.sub(b))), float(0)).div(smoothK);
+      return min(a, b).sub(h.mul(h).mul(smoothK).mul(0.25));
+    });
   }
-);
+  return _tslSmoothUnion(d1, d2, k);
+};
 
 // ============================================================================
 // Ray Marching Algorithm
 // ============================================================================
+
+// Cached TSL function instances for ray marching
+let _tslRayMarch: TSLNode;
 
 /**
  * Ray March - Sphere tracing through a signed distance field
@@ -165,49 +206,64 @@ export const tslSmoothUnion = TSLFn(
  * });
  * ```
  */
-export const tslRayMarch = TSLFn(
-  ([rayOrigin, rayDirection, sceneSDF, stepCount]: [
-    TSLNode,
-    TSLNode,
-    TSLNode,
-    TSLNode
-  ]) => {
-    // Initialize accumulated distance traveled
-    const t = float(0).toVar();
+export const tslRayMarch = (
+  rayOrigin: TSLNode,
+  rayDirection: TSLNode,
+  sceneSDF: TSLNode,
+  stepCount: TSLNode
+): TSLNode => {
+  if (!_tslRayMarch) {
+    const { Fn, Loop, float, select, min } = getTSL();
+    _tslRayMarch = Fn(
+      ([origin, direction, sdf, steps]: [
+        TSLNode,
+        TSLNode,
+        TSLNode,
+        TSLNode
+      ]) => {
+        // Initialize accumulated distance traveled
+        const t = float(0).toVar();
+        // Use a large value initially - we'll track when we hit
+        // Use 999999 to indicate "no hit found yet"
+        const resultT = float(999999).toVar();
 
-    // Ray marching loop using TSL Loop node
-    // Pattern based on Three.js webgpu_volume_cloud example
-    Loop(stepCount, ({ i }) => {
-      // Current position along ray
-      const currentPos = rayOrigin.add(rayDirection.mul(t));
+        // Ray marching loop - simplified approach
+        Loop(steps, () => {
+          // Current position along ray
+          const currentPos = origin.add(direction.mul(t));
 
-      // Sample distance field at current position
-      const distance = sceneSDF(currentPos);
+          // Sample distance field at current position
+          const distance = sdf(currentPos);
 
-      // Check if we hit the surface (within epsilon tolerance)
-      If(distance.lessThan(float(RAY_MARCH_EPSILON)), () => {
-        // Surface hit - exit loop early and return positive distance
-        Break();
-      });
+          // If we're close to surface and this is the closest hit so far, record it
+          // Use min to track the first t value where distance < EPSILON
+          const isHit = distance.lessThan(float(RAY_MARCH_EPSILON));
+          const isFirstHit = resultT.greaterThan(float(999998));
+          const shouldRecord = isHit.and(isFirstHit);
+          resultT.assign(select(shouldRecord, t, resultT));
 
-      // Check if we've exceeded maximum distance
-      If(t.greaterThan(float(RAY_MARCH_MAX_DIST)), () => {
-        // No hit - exit loop and return negative to indicate miss
-        t.assign(float(-1));
-        Break();
-      });
+          // Always advance (even after hit - but result is captured)
+          // Use safe step to prevent getting stuck
+          const safeStep = distance.max(float(0.001));
+          // Only advance if not past max distance
+          const newT = t.add(safeStep);
+          t.assign(select(t.lessThan(float(RAY_MARCH_MAX_DIST)), newT, t));
+        });
 
-      // Advance ray by the safe distance (sphere tracing principle)
-      t.addAssign(distance);
-    });
-
-    return t;
+        // Return hit distance, or -1 if no hit was found
+        return select(resultT.lessThan(float(999998)), resultT, float(-1));
+      }
+    );
   }
-);
+  return _tslRayMarch(rayOrigin, rayDirection, sceneSDF, stepCount);
+};
 
 // ============================================================================
 // Surface Normal Calculation
 // ============================================================================
+
+// Cached TSL function instances for normal calculation
+let _tslNormal: TSLNode;
 
 /**
  * Calculate Surface Normal via Central Difference Gradient
@@ -235,36 +291,42 @@ export const tslRayMarch = TSLFn(
  * const diffuse = max(dot(normal, lightDir), float(0));
  * ```
  */
-export const tslNormal = TSLFn(
-  ([point, sceneSDF, epsilon]: [TSLNode, TSLNode, TSLNode]) => {
-    // Use default epsilon if not provided
-    const eps = epsilon || float(0.001);
+export const tslNormal = (
+  point: TSLNode,
+  sceneSDF: TSLNode,
+  epsilon?: TSLNode
+): TSLNode => {
+  if (!_tslNormal) {
+    const { Fn, float, vec3, normalize } = getTSL();
+    _tslNormal = Fn(([pt, sdf, eps]: [TSLNode, TSLNode, TSLNode]) => {
+      // Use default epsilon if not provided
+      const epsVal = eps || float(0.001);
 
-    // Sample SDF at offset positions along each axis
-    const offsetX = vec3(eps, float(0), float(0));
-    const offsetY = vec3(float(0), eps, float(0));
-    const offsetZ = vec3(float(0), float(0), eps);
+      // Sample SDF at offset positions along each axis
+      const offsetX = vec3(epsVal, float(0), float(0));
+      const offsetY = vec3(float(0), epsVal, float(0));
+      const offsetZ = vec3(float(0), float(0), epsVal);
 
-    // Central difference gradient calculation
-    // gradient.x = (f(x+eps) - f(x-eps)) / (2*eps)
-    const gradX = sceneSDF(point.add(offsetX)).sub(
-      sceneSDF(point.sub(offsetX))
-    );
-    const gradY = sceneSDF(point.add(offsetY)).sub(
-      sceneSDF(point.sub(offsetY))
-    );
-    const gradZ = sceneSDF(point.add(offsetZ)).sub(
-      sceneSDF(point.sub(offsetZ))
-    );
+      // Central difference gradient calculation
+      // gradient.x = (f(x+eps) - f(x-eps)) / (2*eps)
+      const gradX = sdf(pt.add(offsetX)).sub(sdf(pt.sub(offsetX)));
+      const gradY = sdf(pt.add(offsetY)).sub(sdf(pt.sub(offsetY)));
+      const gradZ = sdf(pt.add(offsetZ)).sub(sdf(pt.sub(offsetZ)));
 
-    // Combine gradients into normal vector and normalize
-    return normalize(vec3(gradX, gradY, gradZ));
+      // Combine gradients into normal vector and normalize
+      return normalize(vec3(gradX, gradY, gradZ));
+    });
   }
-);
+  return _tslNormal(point, sceneSDF, epsilon);
+};
 
 // ============================================================================
 // Lighting Utilities for Ray Marched Surfaces
 // ============================================================================
+
+// Cached TSL function instances for lighting
+let _tslAmbientOcclusion: TSLNode;
+let _tslSoftShadow: TSLNode;
 
 /**
  * Ambient Occlusion via Distance Field Sampling
@@ -285,37 +347,43 @@ export const tslNormal = TSLFn(
  * const finalColor = baseColor.mul(ao);
  * ```
  */
-export const tslAmbientOcclusion = TSLFn(
-  ([point, normal, sceneSDF, sampleCount]: [
-    TSLNode,
-    TSLNode,
-    TSLNode,
-    TSLNode
-  ]) => {
-    const occ = float(0).toVar();
-    const weight = float(1).toVar();
+export const tslAmbientOcclusion = (
+  point: TSLNode,
+  normal: TSLNode,
+  sceneSDF: TSLNode,
+  sampleCount: TSLNode
+): TSLNode => {
+  if (!_tslAmbientOcclusion) {
+    const { Fn, Loop, float } = getTSL();
+    _tslAmbientOcclusion = Fn(
+      ([pt, norm, sdf, samples]: [TSLNode, TSLNode, TSLNode, TSLNode]) => {
+        const occ = float(0).toVar();
+        const weight = float(1).toVar();
 
-    // Sample along the normal at increasing distances
-    Loop(sampleCount, ({ i }) => {
-      const iFloat = float(i);
+        // Sample along the normal at increasing distances
+        Loop(samples, ({ i }: { i: TSLNode }) => {
+          const iFloat = float(i);
 
-      // Distance increases quadratically for better near-surface detail
-      const dist = float(0.01).add(float(0.015).mul(iFloat).mul(iFloat));
+          // Distance increases quadratically for better near-surface detail
+          const dist = float(0.01).add(float(0.015).mul(iFloat).mul(iFloat));
 
-      // Sample SDF at offset position
-      const h = sceneSDF(point.add(normal.mul(dist)));
+          // Sample SDF at offset position
+          const h = sdf(pt.add(norm.mul(dist)));
 
-      // Accumulate occlusion (difference between expected and actual distance)
-      occ.addAssign(dist.sub(h).mul(weight));
+          // Accumulate occlusion (difference between expected and actual distance)
+          occ.addAssign(dist.sub(h).mul(weight));
 
-      // Reduce weight for distant samples (exponential falloff)
-      weight.mulAssign(0.85);
-    });
+          // Reduce weight for distant samples (exponential falloff)
+          weight.mulAssign(0.85);
+        });
 
-    // Clamp result to valid range [0, 1]
-    return float(1).sub(occ).clamp(0, 1);
+        // Clamp result to valid range [0, 1]
+        return float(1).sub(occ).clamp(0, 1);
+      }
+    );
   }
-);
+  return _tslAmbientOcclusion(point, normal, sceneSDF, sampleCount);
+};
 
 /**
  * Soft Shadows via Ray Marching
@@ -341,44 +409,67 @@ export const tslAmbientOcclusion = TSLFn(
  * const diffuse = max(dot(normal, lightDir), float(0)).mul(shadow);
  * ```
  */
-export const tslSoftShadow = TSLFn(
-  ([rayOrigin, rayDirection, sceneSDF, minT, maxT, softness]: [
-    TSLNode,
-    TSLNode,
-    TSLNode,
-    TSLNode,
-    TSLNode,
-    TSLNode
-  ]) => {
-    const result = float(1).toVar();
-    const t = minT.toVar();
+export const tslSoftShadow = (
+  rayOrigin: TSLNode,
+  rayDirection: TSLNode,
+  sceneSDF: TSLNode,
+  minT: TSLNode,
+  maxT: TSLNode,
+  softness: TSLNode
+): TSLNode => {
+  if (!_tslSoftShadow) {
+    const { Fn, Loop, float, min, select } = getTSL();
+    _tslSoftShadow = Fn(
+      ([origin, direction, sdf, tMin, tMax, soft]: [
+        TSLNode,
+        TSLNode,
+        TSLNode,
+        TSLNode,
+        TSLNode,
+        TSLNode
+      ]) => {
+        const result = float(1).toVar();
+        const t = tMin.toVar();
+        const stopped = float(0).toVar();
 
-    // Ray march toward light
-    Loop(float(20), ({ i }) => {
-      // Stop if we've reached max distance
-      If(t.greaterThanEqual(maxT), () => {
-        Break();
-      });
+        // Ray march toward light
+        Loop(float(20), () => {
+          // Check stop conditions
+          const reachedMax = t.greaterThanEqual(tMax);
+          const h = sdf(origin.add(direction.mul(t)));
+          const hitSurface = h.lessThan(float(RAY_MARCH_EPSILON));
 
-      // Sample distance field
-      const h = sceneSDF(rayOrigin.add(rayDirection.mul(t)));
+          // Mark as stopped if any condition met
+          const shouldStop = reachedMax.or(hitSurface).and(stopped.equal(0));
+          stopped.assign(select(shouldStop, float(1), stopped));
 
-      // Check for hard shadow (hit surface)
-      If(h.lessThan(float(RAY_MARCH_EPSILON)), () => {
-        result.assign(0);
-        Break();
-      });
+          // Set result to 0 for hard shadow (only on first hit)
+          result.assign(
+            select(hitSurface.and(stopped.equal(1)), float(0), result)
+          );
 
-      // Update soft shadow factor (penumbra calculation)
-      result.assign(min(result, softness.mul(h).div(t)));
+          // Update soft shadow factor (only if not stopped)
+          const penumbra = min(result, soft.mul(h).div(t));
+          result.assign(select(stopped.equal(0), penumbra, result));
 
-      // Advance ray by the safe distance
-      t.addAssign(h);
-    });
+          // Advance ray by the safe distance (only if not stopped)
+          const newT = t.add(h);
+          t.assign(select(stopped.equal(0), newT, t));
+        });
 
-    return result;
+        return result;
+      }
+    );
   }
-);
+  return _tslSoftShadow(
+    rayOrigin,
+    rayDirection,
+    sceneSDF,
+    minT,
+    maxT,
+    softness
+  );
+};
 
 // ============================================================================
 // Export Documentation

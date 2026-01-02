@@ -8,7 +8,7 @@
  */
 
 import * as TSL from 'three/tsl';
-import { time } from 'three/tsl';
+import { time, mx_noise_float } from 'three/tsl';
 import { Color } from 'three/webgpu';
 
 import { TSLFn, TSLNode, TslTextureParams, convertToNodes } from './types';
@@ -178,4 +178,36 @@ export const tslRust = TSLFn((userParams: TslTextureParams = {}) => {
   const rustLevel = n1.mul(n2).mul(n3).mul(p['intensity']);
 
   return mix(p['background'], p['color'], rustLevel);
+});
+
+// ============================================================================
+// tslConcrete
+// ============================================================================
+
+const concreteDefaults: TslTextureParams = {
+  $name: 'Concrete',
+  scale: 1,
+  roughness: 0.5,
+  color1: new Color(0x808080), // Grey
+  color2: new Color(0x606060), // Darker grey
+  seed: 0,
+};
+
+/**
+ * Procedural Concrete/Asphalt
+ * Rough surface with high frequency noise speckles.
+ */
+export const tslConcrete = TSLFn((userParams: TslTextureParams = {}) => {
+  const p = convertToNodes(userParams, concreteDefaults);
+
+  const pos = positionGeometry.mul(p['scale'] as TSLNode).add(p['seed']);
+
+  // High frequency noise for grain
+  const noise1 = mx_noise_float(pos.mul(50));
+  const noise2 = mx_noise_float(pos.mul(100).add(100));
+
+  // Combine for granular look
+  const grain = noise1.mul(noise2).mul(p['roughness']).add(0.5);
+
+  return mix(p['color1'], p['color2'], grain.clamp(0, 1));
 });

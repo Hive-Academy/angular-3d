@@ -720,6 +720,34 @@ export const tslVnoise = TSLFn(([v]: [TSLNode]) => {
 // ============================================================================
 
 /**
+ * TSL Apply Euler Rotation
+ * Rotates a vector by an Euler rotation (X, Y, Z order).
+ *
+ * @param vector - Vector to rotate
+ * @param euler - Euler angles (vec3)
+ * @returns Rotated vector
+ */
+export const applyEuler = TSLFn(([vector, euler]: [TSLNode, TSLNode]) => {
+  const rotated = vector.toVar();
+  const x = euler.x;
+  const y = euler.y;
+  const z = euler.z;
+
+  const matX = tslMatRotX(x);
+  const matY = tslMatRotY(y);
+  const matZ = tslMatRotZ(z);
+
+  // Apply rotations in XYZ order (standard)
+  /*
+     Note: Order matters. Standard is usually local X, then parent Y, then parent Z.
+     Or intrinsic Z -> Y -> X?
+     Three.js Euler default is XYZ.
+     Matrix multiplication happens right to left for column vectors: Mz * My * Mx * v
+  */
+  return matZ.mul(matY).mul(matX).mul(vec4(rotated, 1)).xyz;
+});
+
+/**
  * TSL X-Axis Rotation Matrix
  * Creates a 4x4 rotation matrix for rotation around the X-axis.
  *

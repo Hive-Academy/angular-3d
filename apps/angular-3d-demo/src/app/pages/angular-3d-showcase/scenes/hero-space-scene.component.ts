@@ -152,25 +152,23 @@ import {
         />
 
         <a3d-nebula-volumetric
-          [position]="[8, 4, -8]"
-          [width]="50"
-          [height]="25"
-          [primaryColor]="'#8b5cf6'"
-          [secondaryColor]="'#d946ef'"
-          [opacity]="0.2"
-        />
-
-        <a3d-nebula
-          [opacity]="0.2"
-          [cloudCount]="3"
-          [position]="[8, 4, -8]"
-          [colorPalette]="['#8b5cf6', '#ec4899', '#06b6d4']"
+          [position]="[8, 4, -80]"
+          [width]="250"
+          [height]="80"
+          [opacity]="0.75"
+          [primaryColor]="'#3344aa'"
+          [secondaryColor]="'#160805ff'"
+          [enableFlow]="true"
+          [flowSpeed]="0.15"
+          [noiseScale]="3.5"
+          [density]="1.2"
+          [glowIntensity]="0.6"
+          [centerFalloff]="1.2"
+          [erosionStrength]="0.65"
         />
 
         <!-- Post-processing effects -->
         <a3d-effect-composer>
-          <!-- DOF for cinematic focus on Earth -->
-          <a3d-dof-effect [focus]="18" [aperture]="0.012" [maxblur]="0.005" />
           <!-- Bloom for atmospheric glow -->
           <a3d-bloom-effect [threshold]="0.7" [strength]="0.5" [radius]="0.4" />
         </a3d-effect-composer>

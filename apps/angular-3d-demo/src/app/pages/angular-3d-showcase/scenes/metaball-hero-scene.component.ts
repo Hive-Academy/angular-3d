@@ -8,35 +8,75 @@ import {
   Scene3dComponent,
   MetaballComponent,
   MetaballPreset,
+  TroikaTextComponent,
+  SphereComponent,
+  Rotate3dDirective,
+  NodeMaterialDirective,
+  AmbientLightComponent,
+  PointLightComponent,
+  OrbitControlsComponent,
+  tslPhotosphere,
+  StarFieldComponent,
+  ViewportPositionDirective,
 } from '@hive-academy/angular-3d';
 
 /**
- * Metaball Hero Scene - Interactive Ray-Marched Metaballs Demo
+ * Metaball Hero Section - Immersive Production Hero
  *
  * Features:
- * - Ray-marched metaballs with SDF blending
- * - Interactive cursor sphere that follows mouse/touch
- * - 6 color presets: moody, cosmic, neon, sunset, holographic, minimal
- * - Adaptive quality for mobile devices
- * - TailwindCSS styled preset selector
+ * - Ray-marched metaballs as central focal point
+ * - Photosphere background for depth
+ * - Centered hero text with proper camera distance
+ * - 6 themed presets with matching lighting
+ * - Interactive orbit controls
  */
 @Component({
   selector: 'app-metaball-hero-scene',
-  imports: [Scene3dComponent, MetaballComponent],
+  imports: [
+    Scene3dComponent,
+    MetaballComponent,
+    TroikaTextComponent,
+    SphereComponent,
+    Rotate3dDirective,
+    NodeMaterialDirective,
+    AmbientLightComponent,
+    PointLightComponent,
+    OrbitControlsComponent,
+    StarFieldComponent,
+    ViewportPositionDirective,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
       class="relative overflow-hidden"
       [style.background]="backgroundColorHex()"
-      style="height: calc(100vh - 180px);"
+      style="width: 100%; height: 100vh; min-height: 600px;"
     >
       <a3d-scene-3d
         [cameraPosition]="[0, 0, 1]"
-        [cameraFov]="75"
+        [cameraFov]="60"
         [enableAntialiasing]="true"
-        [alpha]="true"
         [backgroundColor]="backgroundColor()"
       >
+        <!-- Lighting Setup -->
+        <a3d-ambient-light [intensity]="0.2" />
+
+        <a3d-point-light
+          [position]="[10, 5, 10]"
+          [intensity]="1.2"
+          [color]="lightColor()"
+        />
+
+        <!-- Deep space star field background -->
+        <a3d-star-field
+          [starCount]="2000"
+          [radius]="15"
+          [size]="0.01"
+          [stellarColors]="true"
+          [multiSize]="true"
+        />
+
+        <!-- Main metaball effect (center, at origin) -->
         <a3d-metaball
           [preset]="selectedPreset()"
           [sphereCount]="6"
@@ -45,11 +85,44 @@ import {
           [animationSpeed]="0.6"
           [movementScale]="1.2"
         />
+
+        <!-- Hero headline (centered in viewport) -->
+        <a3d-troika-text
+          text="Where matter becomes thought"
+          [fontSize]="0.08"
+          viewportPosition="center"
+          [viewportOffset]="{ offsetY: 0.2 }"
+          [viewportZ]="0.1"
+          [color]="'#ffffff'"
+          anchorX="center"
+          anchorY="middle"
+        />
+
+        <!-- Subtext (centered below) -->
+        <a3d-troika-text
+          [text]="subtextContent()"
+          [fontSize]="0.025"
+          viewportPosition="center"
+          [viewportOffset]="{ offsetY: -0.2 }"
+          [viewportZ]="0.1"
+          [color]="'#aaaaaa'"
+          anchorX="center"
+          anchorY="middle"
+        />
+
+        <!-- Orbit Controls -->
+        <a3d-orbit-controls
+          [enableDamping]="true"
+          [dampingFactor]="0.05"
+          [autoRotate]="false"
+          [minDistance]="5"
+          [maxDistance]="20"
+        />
       </a3d-scene-3d>
 
-      <!-- Preset Selector UI -->
+      <!-- Preset Selector UI (bottom-center) -->
       <div
-        class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-wrap justify-center gap-2 px-4"
+        class="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-wrap justify-center gap-2 px-4"
       >
         @for (preset of presets; track preset) {
         <button
@@ -63,22 +136,14 @@ import {
         </button>
         }
       </div>
-
-      <!-- Scene Title -->
-      <div class="absolute top-4 left-4 z-20">
-        <h2 class="text-white/90 text-lg font-semibold tracking-wide">
-          Metaball Shader
-        </h2>
-        <p class="text-white/60 text-sm mt-1">
-          Ray-marched SDF with cursor interaction
-        </p>
-      </div>
     </div>
   `,
   styles: [
     `
       :host {
         display: block;
+        width: 100%;
+        height: 100%;
       }
 
       .preset-button {
@@ -124,6 +189,14 @@ import {
 })
 export class MetaballHeroSceneComponent {
   /**
+   * Photosphere texture node for glowing background sphere
+   */
+  protected readonly photosphereNode = tslPhotosphere({
+    scale: 2,
+    color: { r: 1, g: 0.6, b: 0.2 },
+  });
+
+  /**
    * Currently selected preset
    */
   public readonly selectedPreset = signal<MetaballPreset>('holographic');
@@ -139,6 +212,21 @@ export class MetaballHeroSceneComponent {
     'holographic',
     'minimal',
   ];
+
+  /**
+   * Light color that matches the preset theme
+   */
+  public readonly lightColor = computed(() => {
+    const colors: Record<MetaballPreset, string> = {
+      moody: '#ffffff',
+      cosmic: '#88aaff',
+      neon: '#00ffcc',
+      sunset: '#ff6622',
+      holographic: '#ccaaff',
+      minimal: '#ffffff',
+    };
+    return colors[this.selectedPreset()];
+  });
 
   /**
    * Background color as hex number for Scene3dComponent
@@ -168,6 +256,27 @@ export class MetaballHeroSceneComponent {
       minimal: '#0a0a0a',
     };
     return presetColors[this.selectedPreset()];
+  });
+
+  /**
+   * Subtext content showing live metaball stats
+   */
+  public readonly subtextContent = computed(() => {
+    const preset = this.selectedPreset();
+    const presetDescriptions: Record<MetaballPreset, string> = {
+      moody:
+        'vessel: (0.00, 0.00) • field: 0.12u • merges: dynamic • theme: moody shadows',
+      cosmic:
+        'vessel: (0.00, 0.00) • field: 0.12u • merges: dynamic • theme: cosmic blue',
+      neon: 'vessel: (0.00, 0.00) • field: 0.12u • merges: dynamic • theme: neon glow',
+      sunset:
+        'vessel: (0.00, 0.00) • field: 0.12u • merges: dynamic • theme: sunset warmth',
+      holographic:
+        'vessel: (0.00, 0.00) • field: 0.12u • merges: dynamic • theme: holographic',
+      minimal:
+        'vessel: (0.00, 0.00) • field: 0.12u • merges: dynamic • theme: minimal',
+    };
+    return presetDescriptions[preset];
   });
 
   /**

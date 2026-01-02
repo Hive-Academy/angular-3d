@@ -7,17 +7,11 @@
  *
  * Visual Reference (blueyard.com):
  * - Warm cream/peach gradient backgrounds (light theme)
- * - Glass-like translucent sphere with internal glow
- * - Sparkling particle corona emanating from sphere
+ * - HUGE glass-like sphere with internal glow (like a sun)
+ * - Dense sparkling particle halo around sphere
+ * - Inner particles that glow within the sphere
+ * - Sphere moves to top-right as user scrolls
  * - Dark text on light backgrounds
- * - Sphere positioned in lower viewport
- *
- * Section Themes:
- * 1. Landing - Warm peach/cream (#FFF5E6 -> #FFDAB9)
- * 2. Computing - Soft lavender (#F5F0FF -> #E6D9FF)
- * 3. Engineering - Cool sky blue (#F0F7FF -> #D6EBFF)
- * 4. Biology - Fresh mint (#F0FFF7 -> #D6FFF0)
- * 5. Crypto - Soft rose (#FFF0F5 -> #FFD6E6)
  */
 
 import {
@@ -92,82 +86,71 @@ interface SectionConfig {
 
       <!-- 3D Scene Layer -->
       <div class="scene-layer">
-        <a3d-scene-3d [cameraPosition]="[0, -1, 8]" [cameraFov]="50">
-          <!-- Soft ambient lighting -->
-          <a3d-ambient-light [intensity]="0.6" [color]="'#ffffff'" />
+        <a3d-scene-3d [cameraPosition]="[0, 0, 12]" [cameraFov]="60">
+          <!-- Soft ambient lighting - ONLY light source for natural look -->
+          <a3d-ambient-light [intensity]="0.4" [color]="'#ffffff'" />
 
-          <!-- Main directional light from above -->
-          <a3d-directional-light
-            [position]="[5, 10, 8]"
-            [intensity]="1.0"
-            [color]="'#ffffff'"
-          />
-
-          <!-- Rim light for glass effect -->
-          <a3d-directional-light
-            [position]="[-5, 2, -5]"
-            [intensity]="0.5"
-            [color]="'#FFE4C4'"
-          />
-
-          <!-- Inner glow point light -->
-          <a3d-point-light
-            [position]="spherePosition()"
-            [intensity]="2.0"
-            [color]="currentGlowColor()"
-            [distance]="10"
-          />
-
-          <!-- Main Glass Sphere - Positioned lower, glossy -->
+          <!-- HUGE Main Sphere - Sun-like, moves to top-right -->
           <a3d-sphere
             [position]="spherePosition()"
-            [args]="[2.5, 128, 128]"
+            [args]="[5, 128, 128]"
             [color]="currentSphereColor()"
             [emissive]="currentGlowColor()"
-            [emissiveIntensity]="0.4"
-            [metalness]="0.1"
-            [roughness]="0.2"
+            [emissiveIntensity]="2.2"
+            [metalness]="0.2"
+            [roughness]="0.1"
           />
 
-          <!-- Primary Particle Corona - Dense inner particles -->
+          <!-- Inner Particles - Dense glow INSIDE the sphere -->
           <a3d-particle-system
-            [count]="8000"
-            [spread]="3.5"
-            [size]="0.015"
-            [color]="'#ffffff'"
-            [opacity]="0.9"
-            distribution="sphere"
-            [position]="particlePosition()"
-          />
-
-          <!-- Secondary Particle Layer - Scattered outer glow -->
-          <a3d-particle-system
-            [count]="4000"
-            [spread]="5"
-            [size]="0.02"
+            [count]="20000"
+            [spread]="4.5"
+            [size]="0.06"
             [color]="currentGlowColor()"
+            [opacity]="1.0"
+            distribution="sphere"
+            [position]="spherePosition()"
+          />
+
+          <!-- Corona Particles - Halo around the sphere -->
+          <a3d-particle-system
+            [count]="15000"
+            [spread]="6"
+            [size]="0.05"
+            [color]="'#ffffff'"
+            [opacity]="1.0"
+            distribution="sphere"
+            [position]="particleHaloPosition()"
+          />
+
+          <!-- Outer Glow Particles - Wider atmospheric glow -->
+          <a3d-particle-system
+            [count]="10000"
+            [spread]="9"
+            [size]="0.04"
+            [color]="currentGlowColor()"
+            [opacity]="0.8"
+            distribution="sphere"
+            [position]="particleHaloPosition()"
+          />
+
+          <!-- Scattered Sparkles - Wide field -->
+          <a3d-particle-system
+            [count]="5000"
+            [spread]="15"
+            [size]="0.03"
+            [color]="'#ffffff'"
             [opacity]="0.6"
             distribution="sphere"
-            [position]="particlePosition()"
+            [position]="[0, 0, 0]"
           />
 
-          <!-- Tertiary Particle Layer - Wide atmosphere -->
-          <a3d-particle-system
-            [count]="2000"
-            [spread]="8"
-            [size]="0.025"
-            [color]="'#ffffff'"
-            [opacity]="0.3"
-            distribution="sphere"
-            [position]="[0, -1, 0]"
-          />
-
-          <!-- Bloom for glow effect -->
+          <!-- Strong Bloom for glow effect -->
           <a3d-effect-composer>
             <a3d-bloom-effect
-              [threshold]="0.3"
-              [strength]="1.2"
-              [radius]="0.8"
+              [threshold]="0.15"
+              [strength]="2.5"
+              [radius]="1.2"
             />
           </a3d-effect-composer>
         </a3d-scene-3d>
@@ -210,7 +193,7 @@ interface SectionConfig {
         position: fixed;
         inset: 0;
         z-index: 0;
-        transition: background 1s ease-out;
+        transition: background 1.2s ease-out;
       }
 
       .scene-layer {
@@ -218,6 +201,7 @@ interface SectionConfig {
         inset: 0;
         z-index: 1;
         pointer-events: none;
+        background: transparent;
       }
 
       .section-overlay {
@@ -226,7 +210,7 @@ interface SectionConfig {
         display: flex;
         align-items: flex-start;
         justify-content: center;
-        padding-top: 15vh;
+        padding-top: 10vh;
         z-index: 10;
         pointer-events: none;
       }
@@ -245,25 +229,25 @@ interface SectionConfig {
         font-weight: 500;
         letter-spacing: 0.3em;
         text-transform: uppercase;
-        opacity: 0.5;
+        opacity: 0.4;
         margin-bottom: 1.5rem;
-        color: #666;
+        color: #555;
       }
 
       .section-title {
         font-family: 'Georgia', 'Times New Roman', serif;
-        font-size: clamp(2rem, 6vw, 3.5rem);
+        font-size: clamp(1.8rem, 5vw, 3rem);
         font-weight: 400;
-        line-height: 1.2;
+        line-height: 1.3;
         margin: 0 0 1.5rem;
         color: #1a1a1a;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.01em;
       }
 
       .section-subtitle {
-        font-size: clamp(1rem, 2.5vw, 1.25rem);
+        font-size: clamp(0.9rem, 2vw, 1.1rem);
         font-weight: 300;
-        opacity: 0.7;
+        opacity: 0.6;
         margin: 0;
         line-height: 1.6;
         color: #333;
@@ -272,11 +256,11 @@ interface SectionConfig {
       /* Responsive adjustments */
       @media (max-width: 768px) {
         .section-overlay {
-          padding-top: 10vh;
+          padding-top: 8vh;
         }
 
         .section-content {
-          padding: 1.5rem;
+          padding: 1rem;
         }
 
         .section-number {
@@ -302,7 +286,7 @@ export class BlueyardSceneComponent {
       gradientStart: '#FFF8F0',
       gradientEnd: '#FFE4C4',
       sphereColor: '#FFDAB9',
-      glowColor: '#FFB07C',
+      glowColor: '#FF8C50',
     },
     {
       id: 'computing',
@@ -311,7 +295,7 @@ export class BlueyardSceneComponent {
       gradientStart: '#F8F5FF',
       gradientEnd: '#E6D9FF',
       sphereColor: '#DDD6FE',
-      glowColor: '#A78BFA',
+      glowColor: '#8B5CF6',
     },
     {
       id: 'engineering',
@@ -320,7 +304,7 @@ export class BlueyardSceneComponent {
       gradientStart: '#F0F7FF',
       gradientEnd: '#DBEAFE',
       sphereColor: '#BFDBFE',
-      glowColor: '#60A5FA',
+      glowColor: '#3B82F6',
     },
     {
       id: 'biology',
@@ -329,7 +313,7 @@ export class BlueyardSceneComponent {
       gradientStart: '#F0FDF4',
       gradientEnd: '#D1FAE5',
       sphereColor: '#A7F3D0',
-      glowColor: '#34D399',
+      glowColor: '#10B981',
     },
     {
       id: 'crypto',
@@ -338,7 +322,7 @@ export class BlueyardSceneComponent {
       gradientStart: '#FFF1F2',
       gradientEnd: '#FFE4E6',
       sphereColor: '#FECDD3',
-      glowColor: '#FB7185',
+      glowColor: '#F43F5E',
     },
   ];
 
@@ -353,7 +337,7 @@ export class BlueyardSceneComponent {
   public readonly currentStep = signal<number>(0);
 
   /**
-   * Time signal for animations
+   * Time signal for subtle animations
    */
   public readonly time = signal<number>(0);
 
@@ -367,25 +351,39 @@ export class BlueyardSceneComponent {
   });
 
   /**
-   * Sphere position - stays in lower half of viewport, subtle movement
+   * Sphere position - starts at bottom center, moves to top-right like a rising sun
    */
   public readonly spherePosition = computed((): [number, number, number] => {
     const p = this.progress();
     const t = this.time();
-    // Sphere positioned low, with gentle floating motion
-    const baseY = -1.5;
-    const floatY = Math.sin(t * 0.5) * 0.15;
-    const scrollY = p * 0.5; // Subtle rise with scroll
-    return [0, baseY + floatY + scrollY, 0];
+
+    // Start: bottom center (0, -6, 0)
+    // End: top right (4, 4, -2)
+    const startX = 0;
+    const startY = -6;
+    const endX = 4;
+    const endY = 4;
+
+    // Interpolate position based on scroll progress
+    const x = startX + (endX - startX) * p;
+    const y = startY + (endY - startY) * p;
+
+    // Add subtle floating animation
+    const floatY = Math.sin(t * 0.3) * 0.1;
+    const floatX = Math.cos(t * 0.2) * 0.05;
+
+    return [x + floatX, y + floatY, -2];
   });
 
   /**
-   * Particle position follows sphere
+   * Particle halo position - centered slightly above the sphere
    */
-  public readonly particlePosition = computed((): [number, number, number] => {
-    const [x, y, z] = this.spherePosition();
-    return [x, y + 0.3, z];
-  });
+  public readonly particleHaloPosition = computed(
+    (): [number, number, number] => {
+      const [x, y, z] = this.spherePosition();
+      return [x, y + 0.5, z];
+    }
+  );
 
   /**
    * Current sphere color based on active section
@@ -403,7 +401,7 @@ export class BlueyardSceneComponent {
     return this.sections[step]?.glowColor ?? this.sections[0].glowColor;
   });
 
-  constructor() {
+  public constructor() {
     afterNextRender(() => {
       // Start animation loop for time-based effects
       const startTime = performance.now();

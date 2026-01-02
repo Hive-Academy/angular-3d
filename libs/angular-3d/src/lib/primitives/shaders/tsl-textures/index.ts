@@ -20,13 +20,20 @@ export {
   tslStars,
   tslCausticsTexture,
   tslPhotosphere,
+  tslGasGiant,
 } from './space';
 
 // Natural materials (Tier 2)
-export { tslMarble, tslWood, tslRust } from './materials';
+export { tslMarble, tslWood, tslRust, tslConcrete } from './materials';
 
 // Patterns (Tier 3)
-export { tslPolkaDots, tslGrid, tslVoronoiCells, tslBricks } from './patterns';
+export {
+  tslPolkaDots,
+  tslGrid,
+  tslVoronoiCells,
+  tslBricks,
+  tslFabric,
+} from './patterns';
 
 // Shape modifiers
 export { tslSupersphere, tslMelter } from './shapes';

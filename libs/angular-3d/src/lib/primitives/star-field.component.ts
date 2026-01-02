@@ -546,32 +546,57 @@ export class StarFieldComponent implements OnDestroy {
       this.twinkleCleanup = null;
     }
 
-    // Dispose position data geometry
-    this.geometry?.dispose();
-    this.geometry = null;
+    // Dispose position data geometry - wrap in try-catch for WebGPU safety
+    if (this.geometry) {
+      try {
+        this.geometry.dispose();
+      } catch {
+        // Geometry may already be disposed
+      }
+      this.geometry = null;
+    }
 
     // Dispose star geometry (for InstancedMesh)
-    this.starGeometry?.dispose();
-    this.starGeometry = null;
+    if (this.starGeometry) {
+      try {
+        this.starGeometry.dispose();
+      } catch {
+        // Geometry may already be disposed
+      }
+      this.starGeometry = null;
+    }
 
-    // Dispose star material
+    // Dispose star material - wrap in try-catch as WebGPU materials
+    // can fail during disposal if internal state is already cleaned up
     if (this.starMaterial) {
-      this.starMaterial.dispose();
+      try {
+        this.starMaterial.dispose();
+      } catch {
+        // Material may already be disposed or in invalid state
+      }
       this.starMaterial = null;
     }
 
     // Dispose sprite materials in group
     if (this.object3d instanceof THREE.Group) {
       this.object3d.children.forEach((sprite) => {
-        if (sprite instanceof THREE.Sprite) {
-          sprite.material.dispose();
+        if (sprite instanceof THREE.Sprite && sprite.material) {
+          try {
+            sprite.material.dispose();
+          } catch {
+            // Material may already be disposed or in invalid state
+          }
         }
       });
     }
 
     // Dispose glow texture
     if (this.glowTexture) {
-      this.glowTexture.dispose();
+      try {
+        this.glowTexture.dispose();
+      } catch {
+        // Texture may already be disposed
+      }
       this.glowTexture = null;
     }
 

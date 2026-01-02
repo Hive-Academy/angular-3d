@@ -6,6 +6,8 @@ import {
   ParticleTextComponent,
   EffectComposerComponent,
   BloomEffectComponent,
+  OrbitControlsComponent,
+  Float3dDirective,
 } from '@hive-academy/angular-3d';
 
 /**
@@ -27,6 +29,8 @@ import {
     ParticleTextComponent,
     EffectComposerComponent,
     BloomEffectComponent,
+    OrbitControlsComponent,
+    Float3dDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -47,6 +51,14 @@ import {
           [radius]="50"
           [size]="0.03"
           [stellarColors]="true"
+          float3d
+          [floatConfig]="{
+            height: 0.8,
+            speed: 3000,
+            delay: 500,
+            ease: 'power1.inOut',
+            autoStart: true
+          }"
         />
 
         <!-- Layer 2: Distant background stars -->
@@ -56,25 +68,44 @@ import {
           [size]="0.02"
           [opacity]="0.6"
           [stellarColors]="true"
+          float3d
+          [floatConfig]="{
+            height: 0.8,
+            speed: 3000,
+            delay: 500,
+            ease: 'power1.inOut',
+            autoStart: true
+          }"
         />
 
         <!-- Particle text hero element -->
         <a3d-particle-text
           [text]="'PARTICLE STORM'"
           [fontSize]="80"
-          [fontScaleFactor]="0.06"
+          [sampleStep]="3"
+          [fontScaleFactor]="0.08"
           [particleColor]="particleColor"
           [opacity]="0.25"
-          [maxParticleScale]="0.12"
-          [particlesPerPixel]="2"
-          [position]="[0, 0, 0]"
+          [maxParticleScale]="0.4"
+          [particlesPerPixel]="0.7"
+          [position]="[0, 4, -10]"
           [skipInitialGrowth]="true"
+          [lineHeightMultiplier]="2.5"
         />
 
-        <!-- Strong bloom for intense glow effect -->
         <a3d-effect-composer>
-          <a3d-bloom-effect [threshold]="0.6" [strength]="0.8" [radius]="0.5" />
+          <a3d-bloom-effect [threshold]="0.8" [strength]="0.6" [radius]="0.4" />
         </a3d-effect-composer>
+
+        <!-- Interactive Controls with Auto-Rotation -->
+        <a3d-orbit-controls
+          [autoRotate]="false"
+          [autoRotateSpeed]="0.3"
+          [enableDamping]="true"
+          [dampingFactor]="0.05"
+          [minDistance]="15"
+          [maxDistance]="50"
+        />
       </a3d-scene-3d>
 
       <!-- Scene info overlay -->

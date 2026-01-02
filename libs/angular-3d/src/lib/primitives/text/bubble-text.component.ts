@@ -15,7 +15,7 @@ import { TextSamplingService } from '../../services/text-sampling.service';
 import { OBJECT_ID } from '../../tokens/object-id.token';
 import { NG_3D_PARENT } from '../../types/tokens';
 import { tslFresnel, tslIridescence } from '../shaders/tsl-utilities';
-// eslint-disable-next-line @nx/enforce-module-boundaries
+
 import * as TSL from 'three/tsl';
 
 const { float, vec3, color, mix } = TSL;
@@ -131,20 +131,33 @@ export class BubbleTextComponent {
       this.animateBubbles();
     });
 
-    // Cleanup
+    // Cleanup on destroy
     this.destroyRef.onDestroy(() => {
       cleanup?.();
       const parent = this.parent?.();
       if (this.instancedMesh && parent) {
         parent.remove(this.instancedMesh);
         this.instancedMesh.geometry.dispose();
-        (this.instancedMesh.material as MeshStandardNodeMaterial).dispose();
+        // Safely dispose material
+        const material = this.instancedMesh
+          .material as MeshStandardNodeMaterial;
+        if (material) {
+          try {
+            material.dispose();
+          } catch {
+            // Material may already be disposed
+          }
+        }
       }
       if (this.bubbleGeometry) {
         this.bubbleGeometry.dispose();
       }
       if (this.bubbleMaterial) {
-        this.bubbleMaterial.dispose();
+        try {
+          this.bubbleMaterial.dispose();
+        } catch {
+          // Material may already be disposed
+        }
       }
     });
   }
