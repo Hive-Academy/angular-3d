@@ -97,14 +97,7 @@ export const appRoutes: Routes = [
           ).then((m) => m.MetaballHeroSceneComponent),
         title: 'Metaball Hero | Angular-3D',
       },
-      {
-        path: 'cosmic-portal',
-        loadComponent: () =>
-          import(
-            './pages/angular-3d-showcase/scenes/cosmic-portal-hero-scene.component'
-          ).then((m) => m.CosmicPortalHeroSceneComponent),
-        title: 'Cosmic Portal | Angular-3D',
-      },
+
       {
         path: 'crystal-grid',
         loadComponent: () =>
@@ -149,9 +142,9 @@ export const appRoutes: Routes = [
         path: 'volumetric-caustics',
         loadComponent: () =>
           import(
-            './pages/angular-3d-showcase/scenes/volumetric-caustics-scene.component'
-          ).then((m) => m.VolumetricCausticsSceneComponent),
-        title: 'Volumetric Caustics | Angular-3D',
+            './pages/angular-3d-showcase/scenes/marble-hero-scene.component'
+          ).then((m) => m.MarbleHeroSceneComponent),
+        title: 'Marble Hero | Angular-3D',
       },
       {
         path: 'blueyard',
