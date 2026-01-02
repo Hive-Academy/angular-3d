@@ -8,6 +8,7 @@ export * from './gltf-model.component';
 export * from './group.component';
 export * from './nebula.component';
 export * from './particle-system.component';
+export * from './sparkle-corona.component';
 export * from './planet.component';
 export * from './polyhedron.component';
 export * from './star-field.component';
