@@ -9,9 +9,6 @@ import {
   MetaballComponent,
   MetaballPreset,
   TroikaTextComponent,
-  SphereComponent,
-  Rotate3dDirective,
-  NodeMaterialDirective,
   AmbientLightComponent,
   PointLightComponent,
   OrbitControlsComponent,
@@ -36,9 +33,6 @@ import {
     Scene3dComponent,
     MetaballComponent,
     TroikaTextComponent,
-    SphereComponent,
-    Rotate3dDirective,
-    NodeMaterialDirective,
     AmbientLightComponent,
     PointLightComponent,
     OrbitControlsComponent,
@@ -53,7 +47,7 @@ import {
       style="width: 100%; height: 100vh; min-height: 600px;"
     >
       <a3d-scene-3d
-        [cameraPosition]="[0, 0, 1]"
+        [cameraPosition]="[0, 0, 10]"
         [cameraFov]="60"
         [enableAntialiasing]="true"
         [backgroundColor]="backgroundColor()"
@@ -76,7 +70,7 @@ import {
           [multiSize]="true"
         />
 
-        <!-- Main metaball effect (center, at origin) -->
+        <!-- Main metaball effect (fullscreen mode for hero section) -->
         <a3d-metaball
           [preset]="selectedPreset()"
           [sphereCount]="6"
@@ -84,39 +78,40 @@ import {
           [mouseProximityEffect]="true"
           [animationSpeed]="0.6"
           [movementScale]="1.2"
+          [fullscreen]="true"
         />
 
-        <!-- Hero headline (centered in viewport) -->
+        <!-- Hero headline (centered in viewport, scaled for camera z=10) -->
         <a3d-troika-text
           text="Where matter becomes thought"
-          [fontSize]="0.08"
+          [fontSize]="0.8"
           viewportPosition="center"
-          [viewportOffset]="{ offsetY: 0.2 }"
-          [viewportZ]="0.1"
+          [viewportOffset]="{ offsetY: 2 }"
+          [viewportZ]="1"
           [color]="'#ffffff'"
           anchorX="center"
           anchorY="middle"
         />
 
-        <!-- Subtext (centered below) -->
+        <!-- Subtext (centered below, scaled for camera z=10) -->
         <a3d-troika-text
           [text]="subtextContent()"
-          [fontSize]="0.025"
+          [fontSize]="0.25"
           viewportPosition="center"
-          [viewportOffset]="{ offsetY: -0.2 }"
-          [viewportZ]="0.1"
+          [viewportOffset]="{ offsetY: -2 }"
+          [viewportZ]="1"
           [color]="'#aaaaaa'"
           anchorX="center"
           anchorY="middle"
         />
 
-        <!-- Orbit Controls -->
+        <!-- Orbit Controls (adjusted distances for new camera position z=10) -->
         <a3d-orbit-controls
           [enableDamping]="true"
           [dampingFactor]="0.05"
           [autoRotate]="false"
           [minDistance]="5"
-          [maxDistance]="20"
+          [maxDistance]="30"
         />
       </a3d-scene-3d>
 
