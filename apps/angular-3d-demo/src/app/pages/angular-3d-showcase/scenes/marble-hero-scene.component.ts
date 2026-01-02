@@ -12,7 +12,9 @@
  */
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  AmbientLightComponent,
   MarbleSphereComponent,
+  NebulaVolumetricComponent,
   OrbitControlsComponent,
   PointLightComponent,
   Scene3dComponent,
@@ -26,58 +28,107 @@ import {
   selector: 'app-marble-hero-content',
   standalone: true,
   imports: [
+    AmbientLightComponent,
     SpotLightComponent,
     PointLightComponent,
     OrbitControlsComponent,
     MarbleSphereComponent,
+    NebulaVolumetricComponent,
   ],
   template: `
-    <!-- Marble sphere with default emerald/teal colors -->
+    <!-- Main marble sphere (emerald/teal) - center right -->
     <a3d-marble-sphere
-      [radius]="0.2"
-      [position]="[0, 0.25, 0]"
+      [radius]="0.35"
+      [position]="[0.15, 0.2, 0]"
       [colorA]="'#001a13'"
       [colorB]="'#66e5b3'"
       [edgeColor]="'#4cd9a8'"
-      [animationSpeed]="0.3"
+      [edgeIntensity]="0.8"
+      [animationSpeed]="0.5"
       [iterations]="16"
     />
 
-    <!-- Main spotlight for volumetric feel -->
-    <a3d-spot-light
-      [position]="[0.5, 0.7, 0.5]"
-      [angle]="Math.PI / 4"
-      [penumbra]="0.9"
-      [decay]="2"
-      [distance]="3"
-      [intensity]="4"
-      [castShadow]="true"
-      [color]="spotlightColor"
+    <!-- Second marble sphere (purple/magenta) - top left, smaller -->
+    <a3d-marble-sphere
+      [radius]="0.18"
+      [position]="[-0.35, 0.55, -0.1]"
+      [colorA]="'#1a0020'"
+      [colorB]="'#d946ef'"
+      [edgeColor]="'#f0abfc'"
+      [edgeIntensity]="0.9"
+      [animationSpeed]="0.7"
+      [iterations]="12"
     />
 
-    <!-- Teal accent light -->
+    <!-- Subtle smoke/fog effect using nebula -->
+    <a3d-nebula-volumetric
+      [position]="[0, 0.1, -0.2]"
+      [width]="1.5"
+      [height]="0.8"
+      [primaryColor]="'#0a1a15'"
+      [secondaryColor]="'#1a3a30'"
+      [tertiaryColor]="'#0d2520'"
+      [opacity]="0.15"
+      [density]="0.4"
+      [flowSpeed]="0.08"
+      [enableFlow]="true"
+      [layers]="2"
+    />
+
+    <!-- Ambient light for base illumination -->
+    <a3d-ambient-light [color]="ambientColor" [intensity]="0.3" />
+
+    <!-- Key light - warm white from top right -->
+    <a3d-spot-light
+      [position]="[0.8, 1.0, 0.6]"
+      [angle]="Math.PI / 5"
+      [penumbra]="0.8"
+      [decay]="1.5"
+      [distance]="4"
+      [intensity]="6"
+      [castShadow]="true"
+      [color]="keyLightColor"
+    />
+
+    <!-- Fill light - teal accent from left -->
     <a3d-point-light
-      [position]="[0.5, 0.3, 0.3]"
+      [position]="[-0.6, 0.4, 0.4]"
       [color]="tealAccent"
+      [intensity]="3"
+      [distance]="3"
+    />
+
+    <!-- Rim light - purple accent from behind -->
+    <a3d-point-light
+      [position]="[0.2, 0.3, -0.5]"
+      [color]="purpleAccent"
       [intensity]="2"
       [distance]="2"
     />
 
-    <!-- Cool backlight -->
+    <!-- Cool backlight for depth -->
     <a3d-point-light
-      [position]="[-0.5, 0.2, -0.3]"
+      [position]="[-0.4, 0.1, -0.4]"
       [color]="coolBacklight"
-      [intensity]="1"
+      [intensity]="1.5"
       [distance]="2"
+    />
+
+    <!-- Top highlight for the smaller marble -->
+    <a3d-point-light
+      [position]="[-0.3, 0.8, 0.2]"
+      [color]="pinkHighlight"
+      [intensity]="2"
+      [distance]="1.5"
     />
 
     <!-- Auto-rotating orbit controls -->
     <a3d-orbit-controls
-      [target]="[0, 0.25, 0]"
+      [target]="[0, 0.3, 0]"
       [maxDistance]="1.5"
       [minDistance]="0.4"
       [autoRotate]="true"
-      [autoRotateSpeed]="0.6"
+      [autoRotateSpeed]="0.4"
       [enableDamping]="true"
     />
   `,
@@ -86,10 +137,13 @@ import {
 export class MarbleHeroContentComponent {
   protected readonly Math = Math;
 
-  // Light colors as component properties (Angular templates can't parse hex directly)
-  protected readonly spotlightColor = 0xffffff;
-  protected readonly tealAccent = 0x00897b;
+  // Light colors
+  protected readonly ambientColor = 0x1a2a25;
+  protected readonly keyLightColor = 0xfff8f0; // Warm white
+  protected readonly tealAccent = 0x00bfa5;
+  protected readonly purpleAccent = 0xd946ef;
   protected readonly coolBacklight = 0x26a69a;
+  protected readonly pinkHighlight = 0xf0abfc;
 }
 
 /**
