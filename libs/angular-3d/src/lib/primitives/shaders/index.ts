@@ -70,6 +70,18 @@ export {
   tslSoftShadow,
 } from './tsl-raymarching';
 
+// Marble raymarching effects
+export {
+  // Functions
+  tslMarbleRaymarch,
+  tslGlossyFresnel,
+  createMarbleMaterial,
+
+  // Types and constants
+  type MarbleMaterialConfig,
+  MARBLE_DEFAULTS,
+} from './tsl-marble';
+
 // TSL Procedural Textures
 export {
   // Types and helpers
