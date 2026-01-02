@@ -46,5 +46,8 @@ export * from './cloud-layer.component';
 // Metaball ray-marching component
 export * from './metaball.component';
 
+// Marble sphere component (raymarched volumetric interior)
+export * from './marble-sphere.component';
+
 // TSL Shaders & Textures
 export * from './shaders';
