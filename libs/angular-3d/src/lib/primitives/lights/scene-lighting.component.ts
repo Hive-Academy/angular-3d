@@ -342,6 +342,12 @@ export class SceneLightingComponent implements OnDestroy {
   /** Override ambient light color (hex number) */
   public readonly ambientColor = input<number | undefined>(undefined);
 
+  /** Override key light (first light) intensity */
+  public readonly keyIntensity = input<number | undefined>(undefined);
+
+  /** Override fill light (second light) intensity */
+  public readonly fillIntensity = input<number | undefined>(undefined);
+
   /** Emits the background color when preset changes */
   public readonly backgroundColorChange = output<number>();
 
@@ -370,6 +376,22 @@ export class SceneLightingComponent implements OnDestroy {
         if (overrideColor !== undefined) {
           this.ambientLight.color.set(overrideColor);
         }
+      }
+    });
+
+    // Reactive effect for key light intensity override
+    effect(() => {
+      const keyOverride = this.keyIntensity();
+      if (keyOverride !== undefined && this.lights.length > 0) {
+        this.lights[0].intensity = keyOverride;
+      }
+    });
+
+    // Reactive effect for fill light intensity override
+    effect(() => {
+      const fillOverride = this.fillIntensity();
+      if (fillOverride !== undefined && this.lights.length > 1) {
+        this.lights[1].intensity = fillOverride;
       }
     });
 
