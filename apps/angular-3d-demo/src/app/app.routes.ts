@@ -26,7 +26,14 @@ export const appRoutes: Routes = [
           ),
         title: 'Primitives | Angular-3D',
       },
-
+      {
+        path: 'particles',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/sections/particles-section.component'
+          ),
+        title: 'Particle Systems | Angular-3D',
+      },
       {
         path: 'text',
         loadComponent: () =>
@@ -137,6 +144,14 @@ export const appRoutes: Routes = [
             './pages/angular-3d-showcase/sections/tsl-textures-section.component'
           ),
         title: 'TSL Textures | Angular-3D',
+      },
+      {
+        path: 'backgrounds',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/sections/backgrounds-section.component'
+          ).then((m) => m.BackgroundsSectionComponent),
+        title: 'Background Shaders | Angular-3D',
       },
       {
         path: 'marble-hero',

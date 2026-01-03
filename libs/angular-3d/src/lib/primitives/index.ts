@@ -31,3 +31,6 @@ export * from './text';
 
 // TSL Shaders & Textures
 export * from './shaders';
+
+// Background shader components (ray marching, procedural textures)
+export * from './backgrounds';

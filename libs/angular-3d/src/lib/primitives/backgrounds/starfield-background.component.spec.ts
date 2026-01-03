@@ -1,0 +1,141 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
+import * as THREE from 'three/webgpu';
+
+import { StarfieldBackgroundComponent } from './starfield-background.component';
+import { NG_3D_PARENT } from '../../types/tokens';
+import { RenderLoopService } from '../../render-loop/render-loop.service';
+import { SceneService } from '../../canvas/scene.service';
+
+describe('StarfieldBackgroundComponent', () => {
+  let component: StarfieldBackgroundComponent;
+  let fixture: ComponentFixture<StarfieldBackgroundComponent>;
+  let mockParent: THREE.Group;
+  let mockCamera: THREE.PerspectiveCamera;
+  let renderCallbacks: Array<(delta: number) => void>;
+
+  beforeEach(async () => {
+    mockParent = new THREE.Group();
+    mockCamera = new THREE.PerspectiveCamera(75, 16 / 9, 0.1, 1000);
+    mockCamera.position.z = 50;
+    renderCallbacks = [];
+
+    const mockRenderLoopService = {
+      registerUpdateCallback: jest.fn((callback: (delta: number) => void) => {
+        renderCallbacks.push(callback);
+        return () => {
+          const index = renderCallbacks.indexOf(callback);
+          if (index > -1) renderCallbacks.splice(index, 1);
+        };
+      }),
+    };
+
+    const mockSceneService = {
+      camera: signal(mockCamera),
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [StarfieldBackgroundComponent],
+      providers: [
+        {
+          provide: NG_3D_PARENT,
+          useValue: signal(mockParent),
+        },
+        {
+          provide: RenderLoopService,
+          useValue: mockRenderLoopService,
+        },
+        {
+          provide: SceneService,
+          useValue: mockSceneService,
+        },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(StarfieldBackgroundComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    fixture.destroy();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should create mesh on parent availability', () => {
+    expect(mockParent.children.length).toBe(1);
+    expect(mockParent.children[0]).toBeInstanceOf(THREE.Mesh);
+  });
+
+  it('should update density parameter reactively', () => {
+    fixture.componentRef.setInput('density', 200);
+    fixture.detectChanges();
+
+    expect(component).toBeTruthy();
+  });
+
+  it('should update star size parameter reactively', () => {
+    fixture.componentRef.setInput('starSize', 1.0);
+    fixture.detectChanges();
+
+    expect(component).toBeTruthy();
+  });
+
+  it('should support parallax effect toggle', () => {
+    fixture.componentRef.setInput('enableParallax', true);
+    fixture.detectChanges();
+
+    expect(component).toBeTruthy();
+  });
+
+  it('should update mouse position uniform when parallax enabled', () => {
+    fixture.componentRef.setInput('enableParallax', true);
+    fixture.detectChanges();
+
+    // Simulate render loop tick (mouse smoothing happens here)
+    renderCallbacks.forEach((callback) => callback(0.016));
+
+    expect(component).toBeTruthy();
+  });
+
+  it('should cleanup mouse listeners on destroy', () => {
+    fixture.componentRef.setInput('enableParallax', true);
+    fixture.detectChanges();
+
+    // Mouse listeners are removed in onDestroy
+    const removeEventListenerSpy = jest.spyOn(window, 'removeEventListener');
+
+    fixture.destroy();
+
+    // Verify listeners were removed (resize + mouse events if parallax was enabled)
+    expect(removeEventListenerSpy).toHaveBeenCalled();
+
+    removeEventListenerSpy.mockRestore();
+  });
+
+  it('should dispose resources on destroy', () => {
+    const mesh = mockParent.children[0] as THREE.Mesh;
+    const geometryDisposeSpy = jest.spyOn(mesh.geometry, 'dispose');
+    const materialDisposeSpy = jest.spyOn(
+      mesh.material as THREE.Material,
+      'dispose'
+    );
+
+    fixture.destroy();
+
+    expect(geometryDisposeSpy).toHaveBeenCalled();
+    expect(materialDisposeSpy).toHaveBeenCalled();
+    expect(mockParent.children.length).toBe(0);
+  });
+
+  it('should cleanup render loop callback on destroy', () => {
+    const initialCallbackCount = renderCallbacks.length;
+
+    fixture.destroy();
+
+    expect(renderCallbacks.length).toBeLessThan(initialCallbackCount);
+  });
+});

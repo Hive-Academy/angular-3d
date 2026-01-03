@@ -45,3 +45,12 @@ export {
   tslWaterMarble,
   tslRoughClay,
 } from './organic';
+
+// BlueYard-style particles (starfield approach with coral colors + animation)
+export {
+  tslBlueYardParticles,
+  tslBlueYardParticlesEmissive,
+} from './blueyard-particles';
+
+// Volumetric particle cloud (multi-scale particles with depth variation)
+export { tslVolumetricParticleCloud } from './volumetric-particle-cloud';

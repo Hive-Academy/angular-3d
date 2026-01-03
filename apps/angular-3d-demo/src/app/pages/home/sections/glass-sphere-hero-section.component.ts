@@ -26,8 +26,7 @@ import {
   Scene3dComponent,
   SceneLightingComponent,
   MarbleSphereComponent,
-  MarbleParticleSystemComponent,
-  SparkleCoronaComponent,
+  ParticleCloudComponent,
 } from '@hive-academy/angular-3d';
 
 @Component({
@@ -38,8 +37,7 @@ import {
     Scene3dComponent,
     SceneLightingComponent,
     MarbleSphereComponent,
-    MarbleParticleSystemComponent,
-    SparkleCoronaComponent,
+    ParticleCloudComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -68,42 +66,47 @@ import {
             [keyIntensity]="1.2"
           />
 
-          <!-- Volumetric Marble Sphere with BlueYard coral colors -->
+          <!-- Glass Sphere Shell with particle clouds -->
           <a3d-marble-sphere
             [radius]="4.5"
             [position]="spherePosition()"
-            [colorA]="'#8b2a00'"
-            [colorB]="'#ff9575'"
-            [edgeColor]="'#ffaa88'"
-            [edgeIntensity]="0.8"
-            [roughness]="0.15"
-            [iterations]="16"
-            [animationSpeed]="0.3"
-          />
+            [roughness]="0.05"
+            [metalness]="0.0"
+            [colorA]="'#fde8d7'"
+            [colorB]="'#ff8866'"
+            [edgeColor]="'#ff6644'"
+            [edgeIntensity]="1.2"
+            [edgePower]="2.0"
+            [baseTexture]="'none'"
+          >
+            <!-- Interior Particle Cloud - Dense with HARD boundary constraint -->
+            <a3d-particle-cloud
+              [count]="40000"
+              [size]="0.08"
+              [radiusMin]="0"
+              [radiusMax]="4.3"
+              [position]="[0, 0, 0]"
+              [distribution]="'density-gradient'"
+              [colorGradient]="['#ffffff', '#ffccaa', '#ff8866']"
+              [opacity]="0.8"
+              [animated]="true"
+              [animationSpeed]="0.3"
+            />
 
-          <!-- Interior particles (dense cloud inside sphere) -->
-          <a3d-marble-particle-system
-            [radius]="4.2"
-            [particleCount]="8000"
-            [color]="'#ff9575'"
-            [size]="0.08"
-            [opacity]="0.6"
-            [blending]="'additive'"
-            [enableTwinkle]="true"
-            [twinkleSpeed]="0.8"
-            [position]="spherePosition()"
-          />
-
-          <!-- Outer sparkle corona for additional glow -->
-          <a3d-sparkle-corona
-            [count]="3000"
-            [innerRadius]="4.5"
-            [outerRadius]="7.0"
-            [baseSize]="0.04"
-            [position]="spherePosition()"
-            [twinkleSpeed]="1.2"
-            [colorWeights]="{ white: 0.3, peach: 0.5, gold: 0.2 }"
-          />
+            <!-- Exterior Particle Cloud - Sparse background particles -->
+            <a3d-particle-cloud
+              [count]="8000"
+              [size]="0.03"
+              [radiusMin]="4.7"
+              [radiusMax]="9.0"
+              [position]="[0, 0, 0]"
+              [distribution]="'uniform'"
+              [colorGradient]="['#ffe8cc', '#ffccaa']"
+              [opacity]="0.3"
+              [animated]="true"
+              [animationSpeed]="0.15"
+            />
+          </a3d-marble-sphere>
         </a3d-scene-3d>
       </div>
 

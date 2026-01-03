@@ -97,13 +97,19 @@ export interface MarbleMaterialConfig {
   edgePower?: number;
   /** Fresnel intensity (default: 0.6) */
   edgeIntensity?: number;
+  /** Optional TSL texture node for interior surface (replaces or blends with gradient) */
+  interiorTexture?: TSLNode;
+  /** Texture blend mode: 'replace' (use texture only) or 'mix' (blend with gradient) */
+  textureBlendMode?: 'replace' | 'mix';
+  /** Texture blend amount (0-1, only used in 'mix' mode) */
+  textureBlendAmount?: number;
 }
 
 /**
  * Default marble material configuration
  * Matches the reference implementation's emerald/teal color scheme
  */
-export const MARBLE_DEFAULTS: Required<MarbleMaterialConfig> = {
+export const MARBLE_DEFAULTS = {
   colorA: '#001a13', // Dark emerald
   colorB: '#66e5b3', // Bright teal-green
   edgeColor: '#4cd9a8', // Teal edge glow
@@ -114,6 +120,9 @@ export const MARBLE_DEFAULTS: Required<MarbleMaterialConfig> = {
   smoothing: 0.15,
   edgePower: 3.0,
   edgeIntensity: 0.6,
+  interiorTexture: undefined,
+  textureBlendMode: 'replace' as const,
+  textureBlendAmount: 0.5,
 };
 
 // ============================================================================
@@ -331,8 +340,8 @@ export function createMarbleMaterial(config: MarbleMaterialConfig = {}): {
   const colorBNode = vec3(colorBVal.r, colorBVal.g, colorBVal.b);
   const edgeColorNode = vec3(edgeColorVal.r, edgeColorVal.g, edgeColorVal.b);
 
-  // Create raymarched interior color
-  const colorNode = tslMarbleRaymarch(
+  // Create raymarched interior gradient
+  const marbleGradient = tslMarbleRaymarch(
     float(iterations),
     float(cfg.depth),
     colorANode,
@@ -341,6 +350,30 @@ export function createMarbleMaterial(config: MarbleMaterialConfig = {}): {
     float(cfg.noiseScale),
     float(cfg.smoothing)
   );
+
+  // Blend with interior texture if provided
+  let colorNode: TSLNode;
+  if (cfg.interiorTexture) {
+    if (cfg.textureBlendMode === 'mix') {
+      // Mix mode: blend texture with marble gradient
+      colorNode = mix(
+        marbleGradient,
+        cfg.interiorTexture,
+        float(cfg.textureBlendAmount)
+      );
+    } else {
+      // Replace mode: modulate texture by marble depth for volumetric feel
+      // The marble gradient provides depth, texture provides color/pattern
+      const depthFactor = pow(
+        marbleGradient.dot(vec3(0.333, 0.333, 0.333)),
+        float(0.7)
+      );
+      colorNode = cfg.interiorTexture.mul(depthFactor.add(0.3));
+    }
+  } else {
+    // No texture: use marble gradient as-is
+    colorNode = marbleGradient;
+  }
 
   // Create fresnel edge glow
   const emissiveNode = tslGlossyFresnel(

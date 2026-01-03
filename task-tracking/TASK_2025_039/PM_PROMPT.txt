@@ -1,0 +1,39 @@
+You are project-manager for TASK_2025_039.
+
+**Task Folder**: D:\projects\angular-3d-workspace\task-tracking\TASK_2025_039\
+
+**User Request**:
+Create a comprehensive particle systems showcase page for the Angular 3D demo app.
+
+### Requirements:
+1. Create ParticlesSectionComponent showcasing all 4 particle systems:
+   - ParticleSystemComponent (a3d-particle-system): 3 distribution types (sphere, box, cone)
+   - MarbleParticleSystemComponent (a3d-marble-particle-system): Interior cloud effect with/without twinkle
+   - GpuParticleSphereComponent (a3d-gpu-particle-sphere): High-count (65k) noise-based animation
+   - SparkleCoronaComponent (a3d-sparkle-corona): Shell distribution with multi-color sparkles
+
+2. Add route to angular-3d-layout.component.ts:
+   - Path: 'particles'
+   - Title: 'Particle Systems'
+
+3. Refactor marble-hero-scene.component.ts:
+   - Remove MarbleParticleSystemComponent (move to showcase)
+   - Remove 2 particle system instances from template
+   - Update documentation
+
+### Design Guidelines:
+- Follow same structure as other section components
+- Grid layout for side-by-side examples
+- Each example: 3D scene container, labels, code snippets, descriptions
+- Use SCENE_COLORS for theming
+- Proper cleanup with DestroyRef
+- ChangeDetectionStrategy.OnPush
+
+### Expected Files:
+1. NEW: apps/angular-3d-demo/src/app/pages/angular-3d-showcase/sections/particles-section.component.ts
+2. MODIFY: apps/angular-3d-demo/src/app/pages/angular-3d-showcase/angular-3d-layout.component.ts
+3. MODIFY: apps/angular-3d-demo/src/app/pages/angular-3d-showcase/scenes/marble-hero-scene.component.ts
+
+**Your Task**: Create comprehensive task-description.md with requirements, acceptance criteria, technical constraints, and success metrics.
+
+Follow your agent instructions in .claude/agents/project-manager.md

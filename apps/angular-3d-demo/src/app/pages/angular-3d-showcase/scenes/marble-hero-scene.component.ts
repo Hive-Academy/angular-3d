@@ -1,15 +1,18 @@
 /**
- * Marble Hero Scene - Example Hero Section with 3D Background
+ * Glass Bubble Hero Scene - Example Hero Section with 3D Background
  *
  * Demonstrates how to combine <a3d-marble-sphere> with HTML overlays
  * for a hero section with 3D background.
  *
  * Key patterns demonstrated:
- * 1. Using MarbleSphereComponent for animated marble effect
+ * 1. Using MarbleSphereComponent for pure transparent glass bubbles
  * 2. Layering HTML content above 3D canvas with image background
- * 3. Environment-based reflections on glossy marbles
- * 4. Auto-rotating orbit controls for ambient movement
- * 5. Dramatic lighting setup for product visualization
+ * 3. Environment-based reflections on glossy glass (metalness=1.0)
+ * 4. Static bubble positioning with ultra-smooth surfaces (roughness=0.01)
+ * 5. Dramatic spotlight for shadows and surface highlights
+ * 6. Fill lighting for balanced illumination
+ * 7. Realistic glass bubble effect reflecting background environment
+ * 8. Immediate entrance animations (not scroll-triggered) for hero text
  */
 import {
   AfterViewInit,
@@ -18,17 +21,15 @@ import {
   DestroyRef,
   ElementRef,
   inject,
-  OnDestroy,
 } from '@angular/core';
 import {
   AmbientLightComponent,
   MarbleSphereComponent,
-  MarbleParticleSystemComponent,
   OrbitControlsComponent,
   PointLightComponent,
   Scene3dComponent,
-  SpotLightComponent,
   SceneService,
+  SpotLightComponent,
 } from '@hive-academy/angular-3d';
 import { GsapCoreService } from '@hive-academy/angular-gsap';
 import * as THREE from 'three/webgpu';
@@ -41,151 +42,90 @@ import * as THREE from 'three/webgpu';
   standalone: true,
   imports: [
     AmbientLightComponent,
-    SpotLightComponent,
-    PointLightComponent,
     OrbitControlsComponent,
     MarbleSphereComponent,
-    MarbleParticleSystemComponent,
+    PointLightComponent,
+    SpotLightComponent,
   ],
   template: `
     <!-- Environment reflections loaded from JPG background -->
 
-    <!-- Main marble sphere (emerald/teal) - center right -->
+    <!-- Main glass bubble (transparent) - center right -->
     <a3d-marble-sphere
       [radius]="0.35"
       [position]="[0.2, 0.15, 0]"
-      [colorA]="'#ff6644'"
-      [colorB]="'#ff8866'"
-      [edgeColor]="'#ffcc99'"
-      [edgeIntensity]="1.0"
-      [animationSpeed]="0.4"
+      [edgeColor]="'#ffffff'"
+      [edgeIntensity]="0.2"
       [iterations]="16"
-      [roughness]="0.05"
-    >
-      <!-- Interior particles (dense coral/orange cloud) -->
-      <a3d-marble-particle-system
-        [radius]="0.3"
-        [particleCount]="5000"
-        [color]="'#ff8866'"
-        [size]="0.012"
-        [opacity]="0.5"
-        [blending]="'additive'"
-        [enableTwinkle]="true"
-        [twinkleSpeed]="0.3"
-      />
+      [roughness]="0.01"
+      [metalness]="1.0"
+    />
 
-      <!-- Surface glow particles (bright peach halo) -->
-      <a3d-marble-particle-system
-        [radius]="0.34"
-        [particleCount]="800"
-        [color]="'#fff4cc'"
-        [size]="0.018"
-        [opacity]="0.7"
-        [blending]="'additive'"
-        [enableTwinkle]="true"
-        [twinkleSpeed]="0.5"
-      />
-    </a3d-marble-sphere>
-
-    <!-- Second marble sphere (purple/magenta) - top left, smaller -->
+    <!-- Second glass bubble (transparent) - top left -->
     <a3d-marble-sphere
       [radius]="0.18"
       [position]="[-0.35, 0.5, -0.1]"
-      [colorA]="'#1a0025'"
-      [colorB]="'#ff66d4'"
-      [edgeColor]="'#ff99e6'"
-      [edgeIntensity]="1.0"
-      [animationSpeed]="0.6"
+      [edgeColor]="'#ffffff'"
+      [edgeIntensity]="0.2"
       [iterations]="12"
-      [roughness]="0.05"
+      [roughness]="0.01"
+      [metalness]="1.0"
     />
 
-    <!-- Third marble sphere (cyan) - bottom left, tiny accent -->
+    <!-- Third glass bubble (transparent) - bottom left -->
     <a3d-marble-sphere
       [radius]="0.08"
       [position]="[-0.5, -0.1, 0.15]"
-      [colorA]="'#001525'"
-      [colorB]="'#00ffff'"
-      [edgeColor]="'#66ffff'"
-      [edgeIntensity]="1.2"
-      [animationSpeed]="0.8"
+      [edgeColor]="'#ffffff'"
+      [edgeIntensity]="0.2"
       [iterations]="10"
-      [roughness]="0.03"
+      [roughness]="0.01"
+      [metalness]="1.0"
     />
 
-    <!-- Ambient light for base illumination -->
-    <a3d-ambient-light [color]="ambientColor" [intensity]="0.4" />
-
-    <!-- Key light - cool white from top (simulating ceiling light) -->
+    <!-- Dramatic spotlight from top-right for shadows and highlights -->
     <a3d-spot-light
-      [position]="[0, 1.2, 0.5]"
+      [position]="[3, 5, 3]"
+      [intensity]="15"
       [angle]="Math.PI / 4"
-      [penumbra]="0.9"
-      [decay]="1.2"
-      [distance]="5"
-      [intensity]="8"
+      [penumbra]="0.5"
+      [decay]="2"
+      [distance]="20"
       [castShadow]="true"
-      [color]="keyLightColor"
+      [color]="whiteLight"
     />
 
-    <!-- Fill light - cyan accent from left -->
+    <!-- Soft ambient light for overall scene -->
+    <a3d-ambient-light [color]="whiteLight" [intensity]="0.3" />
+
+    <!-- Fill light from opposite side (no shadows) -->
     <a3d-point-light
-      [position]="[-0.8, 0.3, 0.5]"
-      [color]="cyanAccent"
-      [intensity]="4"
-      [distance]="3"
+      [position]="[-3, 2, -2]"
+      [intensity]="5"
+      [distance]="10"
+      [color]="whiteLight"
     />
 
-    <!-- Rim light - bright cyan from behind -->
-    <a3d-point-light
-      [position]="[0.3, 0.2, -0.6]"
-      [color]="cyanRim"
-      [intensity]="3"
-      [distance]="2"
-    />
-
-    <!-- Top accent light for the smaller marble -->
-    <a3d-point-light
-      [position]="[-0.3, 0.8, 0.2]"
-      [color]="pinkHighlight"
-      [intensity]="2.5"
-      [distance]="1.5"
-    />
-
-    <!-- Floor reflection light (simulating ground bounce) -->
-    <a3d-point-light
-      [position]="[0, -0.5, 0.3]"
-      [color]="floorBounce"
-      [intensity]="1.5"
-      [distance]="2"
-    />
-
-    <!-- Auto-rotating orbit controls -->
+    <!-- Static orbit controls (no auto-rotation) -->
     <a3d-orbit-controls
       [target]="[0, 0.25, 0]"
       [maxDistance]="1.5"
       [minDistance]="0.4"
-      [autoRotate]="true"
-      [autoRotateSpeed]="0.3"
+      [autoRotate]="false"
       [enableDamping]="true"
     />
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MarbleHeroContentComponent implements AfterViewInit {
-  protected readonly Math = Math;
-
   private readonly sceneService = inject(SceneService);
   private readonly destroyRef = inject(DestroyRef);
   private envTexture: THREE.Texture | null = null;
 
-  // Light colors - matching the dark room blue theme
-  protected readonly ambientColor = 0x0a1525; // Dark blue ambient
-  protected readonly keyLightColor = 0xc0e0ff; // Cool white with blue tint
-  protected readonly cyanAccent = 0x00b8ff; // Bright cyan
-  protected readonly cyanRim = 0x00d4ff; // Cyan rim light
-  protected readonly pinkHighlight = 0xff66d4; // Pink/magenta accent
-  protected readonly floorBounce = 0x1a3a4d; // Subtle blue floor reflection
+  // Light color for simple white lighting
+  protected readonly whiteLight = 0xffffff;
+  // Math for template expressions
+  protected readonly Math = Math;
 
   public ngAfterViewInit(): void {
     // Load environment map after scene is initialized
@@ -264,9 +204,9 @@ export class MarbleHeroContentComponent implements AfterViewInit {
 
       <!-- HTML Overlay Content -->
       <div class="hero-overlay">
-        <h1 class="hero-title">Magical Marble</h1>
+        <h1 class="hero-title">Glass Bubbles</h1>
         <p class="hero-subtitle">
-          Raymarched volumetric interior with glossy glass shell
+          Realistic glass bubbles with environment reflections
         </p>
         <div class="hero-cta">
           <button class="cta-button">Get Started</button>
@@ -379,99 +319,70 @@ export class MarbleHeroContentComponent implements AfterViewInit {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MarbleHeroSceneComponent implements AfterViewInit, OnDestroy {
+export class MarbleHeroSceneComponent implements AfterViewInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly gsapCore = inject(GsapCoreService);
   private readonly elementRef = inject(ElementRef);
-  private scrollTimeline: gsap.core.Timeline | null = null;
 
   public ngAfterViewInit(): void {
-    // Setup scroll-triggered animations after view is initialized
+    // Setup entrance animations after view is initialized
     this.setupScrollAnimations();
   }
 
-  public ngOnDestroy(): void {
-    // Cleanup GSAP scroll trigger
-    if (this.scrollTimeline) {
-      this.scrollTimeline.scrollTrigger?.kill();
-      this.scrollTimeline.kill();
-      this.scrollTimeline = null;
-    }
-  }
-
   /**
-   * Setup GSAP ScrollTrigger animations for marble and text
+   * Setup GSAP entrance animations for text (plays immediately on load)
    */
   private setupScrollAnimations(): void {
     const gsap = this.gsapCore.gsap;
-    const ScrollTrigger = this.gsapCore.scrollTrigger;
 
-    if (!gsap || !ScrollTrigger) {
+    if (!gsap) {
       console.warn('[MarbleHeroScene] GSAP not available');
       return;
     }
 
     const container =
       this.elementRef.nativeElement.querySelector('.hero-container');
-    const marbleScene = container?.querySelector('a3d-scene-3d');
     const title = container?.querySelector('.hero-title');
     const subtitle = container?.querySelector('.hero-subtitle');
     const cta = container?.querySelector('.hero-cta');
 
-    if (!container || !marbleScene || !title || !subtitle || !cta) {
+    if (!container || !title || !subtitle || !cta) {
       console.warn('[MarbleHeroScene] Required elements not found');
       return;
     }
 
-    // Initially hide text elements
+    // Set initial state (hidden, slightly below)
     gsap.set([title, subtitle, cta], { opacity: 0, y: 30 });
 
-    // Create scroll timeline
-    this.scrollTimeline = gsap.timeline({
-      scrollTrigger: {
-        trigger: container,
-        start: 'top top',
-        end: '+=100vh',
-        scrub: 1, // 1 second smoothing
-        markers: false, // Set to true for debugging
-      },
-    });
+    // Create entrance timeline that plays immediately
+    const timeline = gsap.timeline({ delay: 0.3 }); // Small delay after page load
 
-    // Marble transformation: Note - we can't directly animate Three.js objects from GSAP
-    // in the template. Instead, we'd need to expose the marble mesh reference or
-    // use a directive. For now, we'll focus on text reveal which works perfectly.
-
-    // Progressive text reveal with stagger
-    this.scrollTimeline
-      .to(
-        title,
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.3,
-          ease: 'power2.out',
-        },
-        0.4
-      ) // Start at 40% of scroll
+    timeline
+      .to(title, {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        ease: 'power2.out',
+      })
       .to(
         subtitle,
         {
           opacity: 1,
           y: 0,
-          duration: 0.3,
+          duration: 0.8,
           ease: 'power2.out',
         },
-        0.5
-      ) // Start at 50% of scroll
+        '-=0.4'
+      ) // Overlap by 0.4s
       .to(
         cta,
         {
           opacity: 1,
           y: 0,
-          duration: 0.3,
+          duration: 0.8,
           ease: 'power2.out',
         },
-        0.6
-      ); // Start at 60% of scroll
+        '-=0.4'
+      ); // Overlap by 0.4s
   }
 }
