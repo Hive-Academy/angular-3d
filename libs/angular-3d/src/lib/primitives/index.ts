@@ -1,20 +1,23 @@
 // @hive-academy/angular-3d - Primitives module
-// Planet, StarField, Nebula, Lights, TroikaText, GltfModel, etc.
+// Geometry, Particles, Space, Effects, Scene, Loaders, Lights, Text
 
-export * from './box.component';
-export * from './cylinder.component';
-export * from './fog.component';
-export * from './gltf-model.component';
-export * from './group.component';
-export * from './nebula.component';
-export * from './particle-system.component';
-export * from './sparkle-corona.component';
-export * from './planet.component';
-export * from './polyhedron.component';
-export * from './star-field.component';
-export * from './svg-icon.component';
-export * from './torus.component';
-export * from './sphere.component';
+// Geometry primitives (box, sphere, cylinder, torus, polyhedron, floating-sphere)
+export * from './geometry';
+
+// Particle systems (particle-system, sparkle-corona)
+export * from './particles';
+
+// Space-themed components (planet, star-field, nebula, cloud-layer)
+export * from './space';
+
+// Visual effects (metaball, marble-sphere, background-cubes)
+export * from './effects';
+
+// Scene organization (group, fog, environment, background-cube, instanced-mesh)
+export * from './scene';
+
+// Asset loaders (gltf-model, svg-icon)
+export * from './loaders';
 
 // Light components
 export * from './lights/ambient-light.component';
@@ -25,29 +28,6 @@ export * from './lights/spot-light.component';
 
 // Troika text components (SDF-based high-quality text)
 export * from './text';
-
-// Volumetric components
-export * from './nebula-volumetric.component';
-
-// Physical material primitives
-export * from './floating-sphere.component';
-
-// Background decoration components
-export * from './background-cube.component';
-export * from './background-cubes.component';
-
-// Instancing and environment components
-export * from './instanced-mesh.component';
-export * from './environment.component';
-
-// Cloud components
-export * from './cloud-layer.component';
-
-// Metaball ray-marching component
-export * from './metaball.component';
-
-// Marble sphere component (raymarched volumetric interior)
-export * from './marble-sphere.component';
 
 // TSL Shaders & Textures
 export * from './shaders';

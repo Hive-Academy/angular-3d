@@ -2,28 +2,28 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
   AmbientLightComponent,
   BloomEffectComponent,
-  DepthOfFieldEffectComponent,
   DirectionalLightComponent,
   EffectComposerComponent,
   EnvironmentComponent,
-  NebulaComponent,
   NebulaVolumetricComponent,
+  NodeMaterialDirective,
   OrbitControlsComponent,
-  PlanetComponent,
-  Rotate3dDirective,
   Scene3dComponent,
+  SphereComponent,
   StarFieldComponent,
+  tslWaterMarble,
 } from '@hive-academy/angular-3d';
 
 /**
- * Hero Space Scene - Cinematic Earth and Moon showcase
+ * Hero Space Scene - Procedural Planet Showcase
  *
- * A clean 3D space scene featuring:
- * - Textured Earth with realistic surface and IBL reflections
- * - Textured Moon orbiting in the distance
- * - Multi-layer star fields for depth
- * - HDRI environment for realistic reflections
- * - DOF effect for cinematic focus
+ * A cinematic 3D space scene featuring TSL-generated procedural planets:
+ * - Earth-like planet with procedural land, water, and snow
+ * - Gas Giant with Jupiter-like banded atmosphere
+ * - Sun with photosphere granulation patterns
+ * - Mouse tracking for interactive planet rotation
+ * - Multi-layer star fields with parallax rotation
+ * - Volumetric nebula backdrop with edge pulse animation
  * - Bloom effects for atmospheric glow
  */
 @Component({
@@ -33,14 +33,12 @@ import {
     AmbientLightComponent,
     DirectionalLightComponent,
     StarFieldComponent,
-    PlanetComponent,
-    Rotate3dDirective,
+    SphereComponent,
+    NodeMaterialDirective,
     OrbitControlsComponent,
     BloomEffectComponent,
     EnvironmentComponent,
     EffectComposerComponent,
-    DepthOfFieldEffectComponent,
-    NebulaComponent,
     NebulaVolumetricComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -52,7 +50,7 @@ import {
       <a3d-scene-3d
         [cameraPosition]="[0, 2, 18]"
         [cameraFov]="60"
-        [frameloop]="'demand'"
+        [frameloop]="'always'"
       >
         <!-- Ambient fill light -->
         <a3d-ambient-light [intensity]="0.12" />
@@ -78,67 +76,52 @@ import {
           [background]="false"
         />
 
-        <!-- Multi-Layer Star Fields for depth parallax -->
-        <!-- Layer 1: Close stars (larger, brighter) -->
+        <!-- Multi-Layer Star Fields for depth parallax with gentle rotation -->
+        <!-- Layer 1: Close stars (larger, brighter) - slow rotation -->
         <a3d-star-field
-          [starCount]="4000"
+          [starCount]="2000"
           [radius]="40"
           [size]="0.035"
           [multiSize]="true"
           [stellarColors]="true"
+          [enableRotation]="true"
+          [rotationSpeed]="0.008"
+          [rotationAxis]="'y'"
         />
 
-        <!-- Layer 2: Mid-range stars -->
+        <!-- Layer 2: Mid-range stars - slightly slower rotation -->
         <a3d-star-field
-          [starCount]="3000"
+          [starCount]="1500"
           [radius]="55"
           [size]="0.025"
           [multiSize]="true"
           [stellarColors]="true"
+          [enableRotation]="true"
+          [rotationSpeed]="0.005"
+          [rotationAxis]="'y'"
         />
 
-        <!-- Layer 3: Distant stars (smaller, dimmer) -->
+        <!-- Layer 3: Distant stars (smaller, dimmer) - slowest rotation for parallax -->
         <a3d-star-field
-          [starCount]="3500"
+          [starCount]="1500"
           [radius]="70"
           [size]="0.018"
           [opacity]="0.5"
           [multiSize]="true"
           [stellarColors]="true"
+          [enableRotation]="true"
+          [rotationSpeed]="0.003"
+          [rotationAxis]="'y'"
         />
 
-        <!-- EARTH - Main focal point, slightly off-center -->
-        <a3d-planet
-          [position]="[-2, 0, 0]"
-          [radius]="4"
-          [segments]="128"
-          [textureUrl]="'/earth.jpg'"
-          [metalness]="0.1"
-          [roughness]="0.8"
-          [emissive]="'#001122'"
-          [emissiveIntensity]="0.03"
-          [glowIntensity]="0.5"
-          [glowColor]="'#4da6ff'"
-          [glowDistance]="12"
-          rotate3d
-          [rotateConfig]="{ axis: 'y', speed: 3 }"
-        />
-
-        <!-- MOON - Upper right, smaller and distant -->
-        <a3d-planet
-          [position]="[8, 4, -8]"
-          [radius]="1.2"
-          [segments]="64"
-          [textureUrl]="'/moon.jpg'"
-          [metalness]="0.05"
-          [roughness]="0.95"
-          [emissive]="'#111111'"
-          [emissiveIntensity]="0.01"
-          [glowIntensity]="0.15"
-          [glowColor]="'#aaaacc'"
-          [glowDistance]="5"
-          rotate3d
-          [rotateConfig]="{ axis: 'y', speed: 2 }"
+        <!-- Glossy animated marble sphere -->
+        <a3d-sphere
+          [args]="[4, 32, 32]"
+          [position]="[0, 0, 0]"
+          [roughness]="0.1"
+          [metalness]="0.0"
+          a3dNodeMaterial
+          [colorNode]="marbleTexture"
         />
 
         <!-- Interactive controls -->
@@ -147,8 +130,7 @@ import {
           [dampingFactor]="0.03"
           [minDistance]="10"
           [maxDistance]="40"
-          [autoRotate]="true"
-          [autoRotateSpeed]="0.3"
+          [autoRotate]="false"
         />
 
         <a3d-nebula-volumetric
@@ -158,13 +140,15 @@ import {
           [opacity]="0.75"
           [primaryColor]="'#3344aa'"
           [secondaryColor]="'#160805ff'"
-          [enableFlow]="true"
-          [flowSpeed]="0.15"
+          [enableFlow]="false"
           [noiseScale]="3.5"
           [density]="1.2"
           [glowIntensity]="0.6"
           [centerFalloff]="1.2"
           [erosionStrength]="0.65"
+          [enableEdgePulse]="true"
+          [edgePulseSpeed]="0.3"
+          [edgePulseAmount]="0.2"
         />
 
         <!-- Post-processing effects -->
@@ -206,4 +190,11 @@ import {
     `,
   ],
 })
-export class HeroSpaceSceneComponent {}
+export class HeroSpaceSceneComponent {
+  // TSL animated water marble texture - glossy with internal animation
+  protected readonly marbleTexture = tslWaterMarble({
+    scale: 2,
+    turbulence: 0.6,
+    speed: 0.5,
+  });
+}

@@ -5,12 +5,12 @@ import {
   signal,
 } from '@angular/core';
 import {
-  Scene3dComponent,
   CloudLayerComponent,
-  ExtrudedText3DComponent,
-  StarFieldComponent,
   EffectComposerComponent,
+  GlowTroikaTextComponent,
+  Scene3dComponent,
   SelectiveBloomEffectComponent,
+  StarFieldComponent,
 } from '@hive-academy/angular-3d';
 
 /**
@@ -27,7 +27,7 @@ import {
   imports: [
     Scene3dComponent,
     CloudLayerComponent,
-    ExtrudedText3DComponent,
+    GlowTroikaTextComponent,
     StarFieldComponent,
     EffectComposerComponent,
     SelectiveBloomEffectComponent,
@@ -64,31 +64,23 @@ import {
 
         <!-- PREMIUM 3D Extruded Text with SELECTIVE BLOOM -->
         <!-- bloomLayer=1 makes only this text glow, clouds will NOT bloom -->
-        <a3d-extruded-text-3d
-          [text]="'FLYTHROUGH'"
-          [fontSize]="80"
-          [depth]="15"
-          [bevelEnabled]="true"
-          [bevelThickness]="2"
-          [bevelSize]="1"
-          [bevelSegments]="5"
+        <a3d-glow-troika-text
+          [text]="'COSMIC PORTAL'"
+          [fontSize]="2"
           [position]="[0, 100, 4000]"
-          [color]="emissiveColor()"
-          [emissiveColor]="emissiveColor()"
-          [emissiveIntensity]="5"
-          [metalness]="0.0"
-          [roughness]="0.3"
-          [pulseSpeed]="0.3"
-          [edgeGlow]="true"
-          [edgeGlowIntensity]="1.5"
-          [bloomLayer]="1"
+          [anchorX]="'center'"
+          [anchorY]="'middle'"
+          [glowColor]="'#ec4899'"
+          [textColor]="'#ffffff'"
+          [glowIntensity]="3"
+          [glowBlur]="'40%'"
         />
 
         <!-- Cloud Layer - moves past the static text -->
         <!-- Clouds are NOT on bloom layer, so they won't glow -->
         <a3d-cloud-layer
           [textureUrl]="'/clouds/cloud10.png'"
-          [cloudCount]="8000"
+          [cloudCount]="10000"
           [fogColor]="fogColor()"
           [speed]="0.03"
           [mouseParallax]="true"

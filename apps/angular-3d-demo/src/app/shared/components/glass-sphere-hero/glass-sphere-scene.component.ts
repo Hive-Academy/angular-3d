@@ -42,7 +42,11 @@ import {
   vec3,
 } from 'three/tsl';
 
-import { SceneService, SparkleCoronaComponent } from '@hive-academy/angular-3d';
+import {
+  SceneService,
+  SparkleCoronaComponent,
+  Scene3dComponent,
+} from '@hive-academy/angular-3d';
 
 /**
  * GlassSphereSceneComponent - Child component for 3D glass sphere scene
@@ -52,18 +56,24 @@ import { SceneService, SparkleCoronaComponent } from '@hive-academy/angular-3d';
 @Component({
   selector: 'app-glass-sphere-scene',
   standalone: true,
-  imports: [SparkleCoronaComponent],
+  imports: [SparkleCoronaComponent, Scene3dComponent],
   template: `
-    <!-- SparkleCorona follows sphere position -->
-    <a3d-sparkle-corona
-      [count]="3000"
-      [innerRadius]="2.55"
-      [outerRadius]="3.0"
-      [baseSize]="0.02"
-      [position]="spherePosition()"
-      [twinkleSpeed]="2.0"
-      [colorWeights]="{ white: 0.5, peach: 0.3, gold: 0.2 }"
-    />
+    <a3d-scene-3d
+      [cameraPosition]="[0, 0, 12]"
+      [cameraFov]="50"
+      [backgroundColor]="null"
+    >
+      <!-- SparkleCorona for particle effect -->
+      <a3d-sparkle-corona
+        [count]="5000"
+        [innerRadius]="3.5"
+        [outerRadius]="6.0"
+        [baseSize]="0.05"
+        [position]="spherePosition()"
+        [twinkleSpeed]="1.5"
+        [colorWeights]="{ white: 0.4, peach: 0.4, gold: 0.2 }"
+      />
+    </a3d-scene-3d>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -89,22 +99,40 @@ export class GlassSphereSceneComponent implements OnDestroy {
    * Easing: ease-out cubic for smooth deceleration
    */
   public readonly spherePosition = computed((): [number, number, number] => {
-    // Clamp scroll progress to 0-1 range to handle edge cases
-    const p = Math.max(0, Math.min(1, this.scrollProgress()));
-
-    const startX = 0;
-    const startY = -4;
-    const endX = 5;
-    const endY = 3;
+    // Scroll-based sphere position animation
+    // BlueYard reference: Sphere starts on LEFT side, moves to top-right corner
+    const startX = -5; // LEFT side of screen (visible on left half)
+    const startY = -1; // Slightly below center
+    const endX = 6; // Top-right corner
+    const endY = 4;
 
     // Ease-out cubic: 1 - (1 - p)^3
-    // Fast start, slow end - feels natural for scroll animations
+    const p = Math.max(0, Math.min(1, this.scrollProgress()));
     const eased = 1 - Math.pow(1 - p, 3);
 
     const x = startX + (endX - startX) * eased;
     const y = startY + (endY - startY) * eased;
 
     return [x, y, 0];
+  });
+
+  /**
+   * Computed sphere scale based on scroll progress
+   *
+   * Implements marble-to-sun transformation:
+   * Start: 1.0 (full size - prominent marble)
+   * End: 0.3 (small size - sun in corner)
+   */
+  public readonly sphereScale = computed((): number => {
+    const p = Math.max(0, Math.min(1, this.scrollProgress()));
+
+    // Ease-out cubic for smooth transition
+    const eased = 1 - Math.pow(1 - p, 3);
+
+    // Scale from 1.0 to 0.3 (sun size)
+    const startScale = 1.0;
+    const endScale = 0.3;
+    return startScale + (endScale - startScale) * eased;
   });
 
   public constructor() {
@@ -139,11 +167,13 @@ export class GlassSphereSceneComponent implements OnDestroy {
       }
     });
 
-    // Effect to update sphere position when scrollProgress changes
+    // Effect to update sphere position and scale when scrollProgress changes
     effect(() => {
       const position = this.spherePosition();
+      const scale = this.sphereScale();
       if (this.sphere) {
         this.sphere.position.set(...position);
+        this.sphere.scale.setScalar(scale);
       }
     });
   }
@@ -159,7 +189,9 @@ export class GlassSphereSceneComponent implements OnDestroy {
       // Task 2.3: Create glass sphere with TSL material
       this.createGlassSphere(scene);
 
-      console.log('[GlassSphereScene] Scene setup complete');
+      console.log(
+        '[GlassSphereScene] Scene setup complete - coral sphere with particles'
+      );
     } catch (error) {
       console.error('[GlassSphereScene] Error during setup:', error);
     }
@@ -260,7 +292,8 @@ export class GlassSphereSceneComponent implements OnDestroy {
    */
   private createGlassSphere(scene: THREE.Scene): void {
     // Sphere geometry with high segments for smooth surface
-    const geometry = new THREE.SphereGeometry(2.5, 64, 64);
+    // Radius 4.5 to match BlueYard prominence
+    const geometry = new THREE.SphereGeometry(4.5, 64, 64);
 
     // MeshStandardNodeMaterial for PBR rendering with TSL nodes
     const material = new THREE.MeshStandardNodeMaterial({
@@ -270,9 +303,9 @@ export class GlassSphereSceneComponent implements OnDestroy {
       opacity: 0.95,
     });
 
-    // Subtle warm white base color
-    // Not pure white, slightly warm to match the environment
-    material.colorNode = vec3(1.0, 0.98, 0.95);
+    // Strong coral/pink base color matching BlueYard design
+    // This creates the warm glow that makes particles visible
+    material.colorNode = vec3(1.0, 0.75, 0.65);
 
     // TSL Fresnel edge glow for glass rim effect
     // Pattern from volumetric-caustics-scene.component.ts:339-345
@@ -287,10 +320,10 @@ export class GlassSphereSceneComponent implements OnDestroy {
       // Higher power = thinner glow line
       const fresnelPower = pow(rim, float(2.5));
 
-      // Warm peach edge glow color
-      // RGB: (1.0, 0.85, 0.7) - subtle warm tint
-      // Intensity: 0.15 - SUBTLE, not sun-like!
-      const edgeGlow = vec3(1.0, 0.85, 0.7).mul(fresnelPower).mul(0.15);
+      // Strong coral edge glow matching BlueYard design
+      // RGB: (1.0, 0.6, 0.5) - warm coral rim
+      // Intensity: 0.4 - prominent glow
+      const edgeGlow = vec3(1.0, 0.6, 0.5).mul(fresnelPower).mul(0.4);
 
       return edgeGlow;
     });

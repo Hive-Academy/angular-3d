@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import { OBJECT_ID } from '../../tokens/object-id.token';
 import { DirectionalLightDirective } from '../../directives/lights/directional-light.directive';
-import { TransformDirective } from '../../directives/transform.directive';
+import { TransformDirective } from '../../directives/core/transform.directive';
 
 /**
  * DirectionalLightComponent - Declarative Directional Light

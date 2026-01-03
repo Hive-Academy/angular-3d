@@ -139,20 +139,12 @@ export const appRoutes: Routes = [
         title: 'TSL Textures | Angular-3D',
       },
       {
-        path: 'volumetric-caustics',
+        path: 'marble-hero',
         loadComponent: () =>
           import(
             './pages/angular-3d-showcase/scenes/marble-hero-scene.component'
           ).then((m) => m.MarbleHeroSceneComponent),
         title: 'Marble Hero | Angular-3D',
-      },
-      {
-        path: 'blueyard',
-        loadComponent: () =>
-          import(
-            './pages/angular-3d-showcase/scenes/blueyard-scene.component'
-          ).then((m) => m.BlueyardSceneComponent),
-        title: 'Blueyard Demo | Angular-3D',
       },
     ],
   },

@@ -8,6 +8,7 @@ import {
   BloomEffectComponent,
   OrbitControlsComponent,
   Float3dDirective,
+  NebulaVolumetricComponent,
 } from '@hive-academy/angular-3d';
 
 /**
@@ -31,6 +32,7 @@ import {
     BloomEffectComponent,
     OrbitControlsComponent,
     Float3dDirective,
+    NebulaVolumetricComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -44,13 +46,16 @@ import {
         <!-- Ambient lighting for subtle visibility -->
         <a3d-ambient-light [intensity]="0.1" />
 
-        <!-- Multi-layer star fields for depth -->
-        <!-- Layer 1: Dense foreground stars -->
+        <!-- Multi-layer star fields for depth with rotation -->
+        <!-- Layer 1: Dense foreground stars - slow clockwise rotation -->
         <a3d-star-field
           [starCount]="3000"
           [radius]="50"
           [size]="0.03"
           [stellarColors]="true"
+          [enableRotation]="true"
+          [rotationSpeed]="0.015"
+          [rotationAxis]="'z'"
           float3d
           [floatConfig]="{
             height: 0.8,
@@ -61,13 +66,16 @@ import {
           }"
         />
 
-        <!-- Layer 2: Distant background stars -->
+        <!-- Layer 2: Distant background stars - counter-clockwise rotation for parallax -->
         <a3d-star-field
           [starCount]="2000"
           [radius]="70"
           [size]="0.02"
           [opacity]="0.6"
           [stellarColors]="true"
+          [enableRotation]="true"
+          [rotationSpeed]="-0.008"
+          [rotationAxis]="'z'"
           float3d
           [floatConfig]="{
             height: 0.8,
@@ -78,16 +86,37 @@ import {
           }"
         />
 
+        <!-- Volumetric nebula backdrop - electric storm colors -->
+        <a3d-nebula-volumetric
+          [position]="[0, -20, -80]"
+          [width]="180"
+          [height]="90"
+          [opacity]="0.6"
+          [primaryColor]="'#00d4ff'"
+          [secondaryColor]="'#6b21a8'"
+          [tertiaryColor]="'#06b6d4'"
+          [enableFlow]="true"
+          [flowSpeed]="0.25"
+          [noiseScale]="2.5"
+          [density]="1.3"
+          [glowIntensity]="0.8"
+          [centerFalloff]="1.0"
+          [erosionStrength]="0.75"
+          [enableEdgePulse]="true"
+          [edgePulseSpeed]="0.4"
+          [edgePulseAmount]="0.25"
+        />
+
         <!-- Particle text hero element -->
         <a3d-particle-text
           [text]="'PARTICLE STORM'"
-          [fontSize]="80"
-          [sampleStep]="3"
-          [fontScaleFactor]="0.08"
+          [fontSize]="60"
+          [sampleStep]="2"
+          [fontScaleFactor]="0.06"
           [particleColor]="particleColor"
           [opacity]="0.25"
-          [maxParticleScale]="0.4"
-          [particlesPerPixel]="0.7"
+          [maxParticleScale]="0.6"
+          [particlesPerPixel]="0.6"
           [position]="[0, 4, -10]"
           [skipInitialGrowth]="true"
           [lineHeightMultiplier]="2.5"
@@ -109,9 +138,9 @@ import {
       </a3d-scene-3d>
 
       <!-- Scene info overlay -->
-      <div class="absolute bottom-4 left-4 z-20 text-cyan-400/70 text-sm">
+      <div class="absolute bottom-4 left-4 z-20 text-lime-400/70 text-sm">
         <p class="font-medium">Particle Storm</p>
-        <p class="text-xs text-cyan-300/50">
+        <p class="text-xs text-lime-300/50">
           Volumetric particle text with bloom
         </p>
       </div>
@@ -127,5 +156,5 @@ import {
 })
 export class ParticleStormHeroSceneComponent {
   public readonly backgroundColor = 0x0a0a0f;
-  public readonly particleColor = 0x00d4ff;
+  public readonly particleColor = 0xa1ff4f; // Neon green - contrasts with cyan/purple nebula
 }

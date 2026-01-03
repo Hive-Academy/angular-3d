@@ -2,9 +2,34 @@
 
 **Task ID**: TASK_2025_033
 **Created**: 2026-01-01
-**Updated**: 2026-01-01
-**Type**: RESEARCH
-**Status**: ✅ RESEARCH COMPLETE
+**Updated**: 2026-01-02
+**Type**: RESEARCH → FEATURE
+**Status**: 🔄 ARCHITECTURE PHASE
+
+---
+
+## Expanded Scope (2026-01-02)
+
+**Original**: Blueyard.com Replication Analysis (Research only)
+**Expanded**: Production-quality Glass Sphere Hero Component
+
+### New Requirements:
+
+1. **Glossy glass sphere** with environment map reflections (like volumetric-caustics-scene)
+2. **Sparkle particle corona** - shell distribution, NOT volume fill
+3. **Multi-color sparkle variation** - white, peach, gold
+4. **Twinkling animation** on particles
+5. **Subtle internal glow** - NOT emissive sun effect
+6. **Light cream/peach gradient background** - CSS layer behind transparent canvas
+7. **Scroll-driven sphere movement** - rises from bottom to top-right
+8. **Reusable shared component** - replace current hero-3d-teaser.component.ts
+
+### Technical Reference:
+
+- **Working Example**: `volumetric-caustics-scene.component.ts` (has proper env map + MeshStandardNodeMaterial)
+- **Broken Implementation**: `blueyard-scene.component.ts` (wrong materials, wrong particles, too much bloom)
+
+---
 
 ## User Request
 

@@ -158,12 +158,10 @@ export default class Angular3dLayoutComponent {
     { path: 'hero-space', label: 'Hero Space', icon: '🌍' },
     { path: 'clouds', label: 'Clouds', icon: '☁️' },
     { path: 'metaball', label: 'Metaball', icon: '🫧' },
-    { path: 'cosmic-portal', label: 'Cosmic Portal', icon: '🌀' },
     { path: 'crystal-grid', label: 'Crystal Grid', icon: '💎' },
     { path: 'floating-geometry', label: 'Floating Geo', icon: '🔮' },
     { path: 'particle-storm', label: 'Particles', icon: '⚡' },
     { path: 'bubble-dream', label: 'Bubble Dream', icon: '🔵' },
-    { path: 'volumetric-caustics', label: 'Caustics', icon: '🌊' },
-    { path: 'blueyard', label: 'Blueyard', icon: '📜' },
+    { path: 'marble-hero', label: 'Marble Hero', icon: '🔮' },
   ];
 }

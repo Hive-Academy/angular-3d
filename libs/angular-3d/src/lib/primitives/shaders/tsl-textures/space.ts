@@ -36,9 +36,10 @@ const {
   select,
 } = TSL;
 
-/** Noise wrapper using MaterialX FBM */
+/** Noise wrapper using MaterialX FBM - optimized for performance */
 const noise = (pos: TSLNode): TSLNode => {
-  return nativeFBM(pos, float(4), float(2.0), float(0.5));
+  // Reduced from 4 to 2 octaves for better performance
+  return nativeFBM(pos, float(2), float(2.0), float(0.5));
 };
 
 // ============================================================================
@@ -75,7 +76,8 @@ export const tslPlanet = TSLFn((userParams: TslTextureParams = {}) => {
   const scale = exp((p['scale'] as TSLNode).sub(2)).toVar();
   const power = float(2).toVar();
 
-  Loop((p['iterations'] as TSLNode).add(10), () => {
+  // Reduced from iterations+10 to just iterations for performance
+  Loop(p['iterations'] as TSLNode, () => {
     k.addAssign(mul(power, noise(positionGeometry.mul(scale).add(p['seed']))));
     sum.addAssign(power);
     scale.mulAssign(1.5);
@@ -294,11 +296,11 @@ export const tslGasGiant = TSLFn((userParams: TslTextureParams = {}) => {
   // Distortion (using domain warp from utilities)
   const warped = domainWarp(pos, float(0.2));
 
-  // Banded noise (Y axis dominance)
+  // Banded noise (Y axis dominance) - reduced octaves for performance
   const bands = p['bands'] as TSLNode;
   const bandNoise = nativeFBM(
     vec3(warped.x.mul(2), warped.y.mul(bands), warped.z.mul(2)),
-    float(6),
+    float(3),
     float(2.0),
     float(0.5)
   );

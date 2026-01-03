@@ -36,13 +36,11 @@ import {
   ScrollAnimationDirective,
   ViewportAnimationDirective,
 } from '@hive-academy/angular-gsap';
-import { Scene3dComponent } from '@hive-academy/angular-3d';
 import { GlassSphereSceneComponent } from './glass-sphere-scene.component';
 
 @Component({
   selector: 'app-glass-sphere-hero',
   imports: [
-    Scene3dComponent,
     ScrollAnimationDirective,
     ViewportAnimationDirective,
     GlassSphereSceneComponent,
@@ -58,17 +56,8 @@ import { GlassSphereSceneComponent } from './glass-sphere-scene.component';
       <div
         class="gradient-layer absolute inset-0 z-0"
         [style.background]="gradient()"
-      ></div>
-
-      <!-- Layer 2: 3D Scene with transparent canvas (z-index: 1) -->
-      <div class="scene-layer absolute inset-0 z-[1] pointer-events-none">
-        <a3d-scene-3d
-          [cameraPosition]="[0, 0, 12]"
-          [cameraFov]="50"
-          [backgroundColor]="null"
-        >
-          <app-glass-sphere-scene [scrollProgress]="scrollProgress()" />
-        </a3d-scene-3d>
+      >
+        <app-glass-sphere-scene [scrollProgress]="scrollProgress()" />
       </div>
 
       <!-- Layer 3: Hero Content with GSAP animations (z-index: 10) -->

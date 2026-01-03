@@ -1,45 +1,61 @@
 /**
- * Color constants for 3D scenes
+ * Color definitions for 3D scenes
  *
- * Using number literals (0xRRGGBB) for Three.js color inputs.
- * These are decimal representations of hex colors.
+ * Single source of truth - hex strings that can be converted to numbers.
+ * Three.js accepts both hex strings and numbers for colors.
  */
-export const SCENE_COLORS = {
-  // Primary palette
-  black: 0x000000,
-  white: 0xffffff,
-  indigo: 0x6366f1,
-  neonGreen: 0xa1ff4f,
-  pink: 0xec4899,
-  amber: 0xf59e0b,
-  emerald: 0x10b981,
-  violet: 0x8b5cf6,
-  red: 0xef4444,
-  blue: 0x3b82f6,
-  teal: 0x14b8a6,
-  orange: 0xf97316,
-  cyan: 0x06b6d4,
+const COLOR_DEFINITIONS = {
+  // Neutrals
+  black: '#000000',
+  white: '#ffffff',
+  softGray: '#9ca3af',
 
-  // Space scene specific
-  deepBlue: 0x2244ff,
-  softGray: 0x9ca3af,
-  skyBlue: 0x0088ff,
-  magenta: 0xd946ef,
-  mintGreen: 0x4fffdf,
-  hotPink: 0xff6bd4,
-  purple: 0x8b5cf6,
+  // Primary palette (Tailwind-inspired)
+  red: '#ef4444',
+  orange: '#f97316',
+  amber: '#f59e0b',
+  emerald: '#10b981',
+  teal: '#14b8a6',
+  cyan: '#06b6d4',
+  blue: '#3b82f6',
+  indigo: '#6366f1',
+  violet: '#8b5cf6',
+  pink: '#ec4899',
+  magenta: '#d946ef',
+
+  // Space/neon accents
+  neonGreen: '#a1ff4f',
+  mintGreen: '#4fffdf',
+  hotPink: '#ff6bd4',
+  skyBlue: '#0088ff',
+  deepBlue: '#2244ff',
+  electricPurple: '#6b21a8',
 } as const;
 
 /**
- * Color strings for components that require CSS hex format (e.g., NebulaVolumetricComponent)
+ * Convert hex string to number for Three.js
  */
-export const SCENE_COLOR_STRINGS = {
-  skyBlue: '#0088ff',
-  neonGreen: '#a1ff4f',
-  white: '#ffffff',
-  purple: '#8b5cf6',
-  hotPink: '#ff6bd4',
-  cyan: '#06b6d4',
-} as const;
+function hexToNumber(hex: string): number {
+  return parseInt(hex.slice(1), 16);
+}
 
-export type SceneColor = (typeof SCENE_COLORS)[keyof typeof SCENE_COLORS];
+/**
+ * Color strings for components that require CSS hex format
+ * (e.g., NebulaVolumetricComponent, CSS styles)
+ */
+export const SCENE_COLOR_STRINGS = COLOR_DEFINITIONS;
+
+/**
+ * Color numbers for Three.js components that prefer numeric input
+ * (e.g., MeshBasicMaterial, lights)
+ */
+export const SCENE_COLORS = Object.fromEntries(
+  Object.entries(COLOR_DEFINITIONS).map(([key, value]) => [
+    key,
+    hexToNumber(value),
+  ])
+) as { [K in keyof typeof COLOR_DEFINITIONS]: number };
+
+export type SceneColorName = keyof typeof COLOR_DEFINITIONS;
+export type SceneColor = (typeof SCENE_COLORS)[SceneColorName];
+export type SceneColorString = (typeof SCENE_COLOR_STRINGS)[SceneColorName];
