@@ -73,11 +73,44 @@ interface NavigationCategory {
         </button>
 
         <!-- Sidebar Navigation (Embedded) -->
-        <aside class="embedded-sidebar" [class.open]="sidebarOpen()">
+        <aside
+          class="embedded-sidebar"
+          [class.open]="sidebarOpen()"
+          [class.collapsed]="sidebarCollapsed()"
+        >
           <!-- Sidebar Header -->
           <div class="sidebar-header">
-            <h2 class="sidebar-title">Components</h2>
-            <p class="sidebar-subtitle">Browse library features</p>
+            <div class="sidebar-header-content">
+              <div class="sidebar-title-group">
+                <h2 class="sidebar-title">Components</h2>
+                <p class="sidebar-subtitle">Browse library features</p>
+              </div>
+              <button
+                class="collapse-button"
+                (click)="toggleSidebarCollapse()"
+                [attr.aria-label]="
+                  sidebarCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'
+                "
+                title="Toggle sidebar"
+              >
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path
+                    d="M15 5L10 10L15 15"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M9 5L4 10L9 15"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <!-- Scrollable Navigation -->
@@ -142,8 +175,35 @@ interface NavigationCategory {
         <div class="sidebar-overlay" (click)="closeSidebar()"></div>
         }
 
+        <!-- Collapsed Sidebar Toggle (appears when sidebar is collapsed) -->
+        @if (sidebarCollapsed()) {
+        <button
+          class="collapsed-toggle"
+          (click)="toggleSidebarCollapse()"
+          aria-label="Expand sidebar"
+          title="Show sidebar"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path
+              d="M5 5L10 10L5 15"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M11 5L16 10L11 15"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
+        }
+
         <!-- Main Content Area -->
-        <main class="showcase-content">
+        <main class="showcase-content" [class.expanded]="sidebarCollapsed()">
           <router-outlet />
         </main>
       </div>
@@ -164,7 +224,7 @@ interface NavigationCategory {
           #0a0a0f 100%
         );
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 3rem 1rem;
+        padding: 5rem 1rem;
       }
 
       .text-gradient-primary {
@@ -252,7 +312,16 @@ interface NavigationCategory {
         top: 1rem;
         max-height: calc(100vh - 2rem);
         overflow: hidden;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+        /* Collapsed state (desktop) */
+        &.collapsed {
+          width: 0;
+          min-width: 0;
+          opacity: 0;
+          pointer-events: none;
+          transform: translateX(-100%);
+        }
 
         @media (max-width: 1024px) {
           position: fixed;
@@ -266,6 +335,18 @@ interface NavigationCategory {
 
           &.open {
             transform: translateX(0);
+          }
+
+          /* Don't apply collapsed state on mobile */
+          &.collapsed {
+            width: 280px;
+            min-width: 280px;
+            opacity: 1;
+            transform: translateX(-120%);
+
+            &.open {
+              transform: translateX(0);
+            }
           }
         }
       }
@@ -299,6 +380,18 @@ interface NavigationCategory {
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
 
+      .sidebar-header-content {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+      }
+
+      .sidebar-title-group {
+        flex: 1;
+        min-width: 0;
+      }
+
       .sidebar-title {
         font-size: 1.25rem;
         font-weight: 700;
@@ -310,6 +403,36 @@ interface NavigationCategory {
         font-size: 0.8125rem;
         color: rgba(255, 255, 255, 0.5);
         margin: 0;
+      }
+
+      .collapse-button {
+        flex-shrink: 0;
+        width: 2rem;
+        height: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(99, 102, 241, 0.15);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: 0.5rem;
+        color: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: rgba(99, 102, 241, 0.25);
+          border-color: rgba(99, 102, 241, 0.5);
+          color: white;
+          transform: scale(1.05);
+        }
+
+        &:active {
+          transform: scale(0.95);
+        }
+
+        svg {
+          transition: transform 0.2s ease;
+        }
       }
 
       /* Sidebar Navigation */
@@ -473,6 +596,55 @@ interface NavigationCategory {
         flex: 1;
       }
 
+      /* Collapsed Sidebar Toggle Button */
+      .collapsed-toggle {
+        position: sticky;
+        top: 1rem;
+        left: 0;
+        z-index: 30;
+        width: 3rem;
+        height: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(99, 102, 241, 0.2);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(99, 102, 241, 0.4);
+        border-radius: 0 0.75rem 0.75rem 0;
+        border-left: none;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 4px 0 12px rgba(99, 102, 241, 0.2);
+        animation: slideIn 0.3s ease;
+
+        &:hover {
+          background: rgba(99, 102, 241, 0.3);
+          border-color: rgba(99, 102, 241, 0.6);
+          width: 3.5rem;
+          box-shadow: 4px 0 16px rgba(99, 102, 241, 0.3);
+        }
+
+        &:active {
+          transform: scale(0.95);
+        }
+
+        @media (max-width: 1024px) {
+          display: none;
+        }
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
       /* Main Content */
       .showcase-content {
         flex: 1;
@@ -482,9 +654,23 @@ interface NavigationCategory {
         border-radius: 1rem;
         padding: 2rem;
         min-height: 600px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+        /* Expanded state (when sidebar is collapsed) */
+        &.expanded {
+          margin-left: -2rem; /* Remove gap space */
+          width: calc(100% + 2rem); /* Expand to fill sidebar space */
+        }
 
         @media (max-width: 768px) {
           padding: 1rem;
+        }
+
+        @media (max-width: 1024px) {
+          &.expanded {
+            margin-left: 0;
+            width: 100%;
+          }
         }
       }
     `,
@@ -495,6 +681,11 @@ export default class Angular3dLayoutComponent {
    * Sidebar open/close state (for mobile)
    */
   public readonly sidebarOpen = signal(false);
+
+  /**
+   * Sidebar collapsed state (desktop - completely hidden)
+   */
+  public readonly sidebarCollapsed = signal(false);
 
   /**
    * Categorized navigation structure
@@ -552,6 +743,8 @@ export default class Angular3dLayoutComponent {
         { path: 'particle-storm', label: 'Storm', icon: '⚡' },
         { path: 'bubble-dream', label: 'Bubbles', icon: '🔵' },
         { path: 'marble-hero', label: 'Marble', icon: '🪨' },
+        { path: 'hexagonal-hero', label: 'Hex Hero', icon: '◇' },
+        { path: 'hexagonal-features', label: 'Hex Features', icon: '⬡' },
       ],
     },
   ];
@@ -587,5 +780,12 @@ export default class Angular3dLayoutComponent {
     if (typeof window !== 'undefined' && window.innerWidth <= 1024) {
       this.closeSidebar();
     }
+  }
+
+  /**
+   * Toggle sidebar collapse (desktop - completely hide/show)
+   */
+  public toggleSidebarCollapse(): void {
+    this.sidebarCollapsed.update((collapsed) => !collapsed);
   }
 }

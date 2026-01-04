@@ -25,11 +25,27 @@ const COLOR_DEFINITIONS = {
 
   // Space/neon accents
   neonGreen: '#a1ff4f',
+  neonCyan: '#00ffff',
+  neonPurple: '#b24bf3',
+  neonPink: '#ff10f0',
+  neonOrange: '#ff9500',
   mintGreen: '#4fffdf',
   hotPink: '#ff6bd4',
   skyBlue: '#0088ff',
   deepBlue: '#2244ff',
+  purple: '#9333ea',
   electricPurple: '#6b21a8',
+
+  // Honey/Natural tones
+  honeyGold: '#ffb03b',
+  lightHoney: '#ffd89b',
+  darkHoney: '#d4860d',
+  cream: '#fff8e7',
+  warmWhite: '#faf6f0',
+
+  // Background base colors
+  darkBlueGray: '#222244',
+  darkNavy: '#1a1a33',
 } as const;
 
 /**

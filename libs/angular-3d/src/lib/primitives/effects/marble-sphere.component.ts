@@ -44,6 +44,7 @@ import {
 import {
   tslBrain,
   tslCausticsTexture,
+  tslFireClouds,
   tslGasGiant,
   tslMarble,
   tslPhotosphere,
@@ -56,11 +57,6 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TSLNode = any;
 
-/** Holds mesh reference to avoid circular dependency */
-class MeshRef {
-  public mesh: THREE.Object3D | null = null;
-}
-
 @Component({
   selector: 'a3d-marble-sphere',
   standalone: true,
@@ -70,12 +66,6 @@ class MeshRef {
     {
       provide: OBJECT_ID,
       useFactory: () => `marble-sphere-${crypto.randomUUID()}`,
-    },
-    MeshRef,
-    {
-      provide: NG_3D_PARENT,
-      useFactory: (ref: MeshRef) => () => ref.mesh,
-      deps: [MeshRef],
     },
   ],
 })
@@ -158,6 +148,7 @@ export class MarbleSphereComponent {
     | 'marble'
     | 'wood'
     | 'brain'
+    | 'fireClouds'
   >('none');
 
   /** Base texture scale parameter */
@@ -197,7 +188,6 @@ export class MarbleSphereComponent {
 
   private readonly parent = inject(NG_3D_PARENT);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly meshRef = inject(MeshRef);
 
   /** Internal mesh - exposed for NG_3D_PARENT provider */
   public mesh: THREE.Mesh | null = null;
@@ -294,9 +284,6 @@ export class MarbleSphereComponent {
     // Create mesh
     this.mesh = new THREE.Mesh(this.geometry, this.material);
 
-    // Set mesh reference so children can attach via NG_3D_PARENT
-    this.meshRef.mesh = this.mesh;
-
     // Set position
     const [x, y, z] = this.position();
     this.mesh.position.set(x, y, z);
@@ -320,7 +307,6 @@ export class MarbleSphereComponent {
       this.material = null;
     }
     this.mesh = null;
-    this.meshRef.mesh = null;
   }
 
   /**
@@ -336,6 +322,7 @@ export class MarbleSphereComponent {
       | 'marble'
       | 'wood'
       | 'brain'
+      | 'fireClouds'
   ): TSLNode {
     const scale = this.baseTextureScale();
     const color = new Color(this.baseTextureColor());
@@ -405,6 +392,15 @@ export class MarbleSphereComponent {
           scale,
           color1: color,
           color2: color2,
+        });
+
+      case 'fireClouds':
+        return tslFireClouds({
+          scale,
+          speed: speed,
+          flameColor: color, // Deep orange
+          smokeColor: color2, // Smoked white
+          turbulence: density, // Use density as turbulence control
         });
 
       default:

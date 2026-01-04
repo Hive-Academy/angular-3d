@@ -56,7 +56,9 @@ export type LightingPreset =
   | 'cinematic-space'
   | 'neon-cyberpunk'
   | 'rim-light'
-  | 'three-point';
+  | 'three-point'
+  | 'golden-hour'
+  | 'coral-glow';
 
 /** Light configuration for presets */
 interface LightConfig {
@@ -298,6 +300,88 @@ const LIGHT_PRESETS: Record<LightingPreset, LightConfig> = {
       },
     ],
   },
+
+  /**
+   * Golden Hour - Warm, soft lighting reminiscent of sunset/sunrise
+   * Features: Warm peach background, golden orange key, soft coral fill
+   * Best for: Warm hero sections, organic scenes, approachable aesthetics
+   */
+  'golden-hour': {
+    backgroundColor: 0xffd4a3,
+    ambientColor: 0xffe4cc,
+    ambientIntensity: 0.5,
+    lights: [
+      // Warm key light from upper left (simulates sun)
+      {
+        type: 'directional',
+        color: 0xffaa66,
+        intensity: 1.5,
+        position: [12, 15, 10],
+        castShadow: true,
+      },
+      // Soft peach fill from right
+      {
+        type: 'point',
+        color: 0xffccaa,
+        intensity: 0.8,
+        position: [8, 5, 8],
+        castShadow: false,
+      },
+      // Warm backlight for rim glow
+      {
+        type: 'point',
+        color: 0xffddbb,
+        intensity: 0.6,
+        position: [-5, 8, -6],
+        castShadow: false,
+      },
+    ],
+  },
+
+  /**
+   * Coral Glow - Optimized for coral/peach spheres with particle clouds
+   * Features: Soft warm background, bright coral accents, no harsh shadows
+   * Best for: Coral sphere scenes, warm particle effects, soft organic visuals
+   */
+  'coral-glow': {
+    backgroundColor: 0xfde8d7,
+    ambientColor: 0xfff5ee,
+    ambientIntensity: 0.6,
+    lights: [
+      // Bright coral key from above
+      {
+        type: 'point',
+        color: 0xff8866,
+        intensity: 1.8,
+        position: [0, 12, 10],
+        castShadow: false,
+      },
+      // Warm orange accent from left
+      {
+        type: 'point',
+        color: 0xffaa77,
+        intensity: 1.2,
+        position: [-10, 5, 8],
+        castShadow: false,
+      },
+      // Cream highlight from right
+      {
+        type: 'point',
+        color: 0xffddcc,
+        intensity: 1.0,
+        position: [10, 3, 6],
+        castShadow: false,
+      },
+      // Golden backlight for depth
+      {
+        type: 'directional',
+        color: 0xffcc99,
+        intensity: 0.7,
+        position: [0, 5, -12],
+        castShadow: false,
+      },
+    ],
+  },
 };
 
 @Component({
@@ -313,6 +397,8 @@ export class SceneLightingComponent implements OnDestroy {
     'neon-cyberpunk',
     'rim-light',
     'three-point',
+    'golden-hour',
+    'coral-glow',
     'studio',
     'outdoor',
     'dramatic',

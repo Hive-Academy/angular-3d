@@ -161,6 +161,22 @@ export const appRoutes: Routes = [
           ).then((m) => m.MarbleHeroSceneComponent),
         title: 'Marble Hero | Angular-3D',
       },
+      {
+        path: 'hexagonal-hero',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/scenes/hexagonal-hero-demo.component'
+          ).then((m) => m.HexagonalHeroDemoComponent),
+        title: 'Hexagonal Hero | Angular-3D',
+      },
+      {
+        path: 'hexagonal-features',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/scenes/hexagonal-features-demo.component'
+          ).then((m) => m.HexagonalFeaturesDemoComponent),
+        title: 'Hexagonal Features | Angular-3D',
+      },
     ],
   },
   {

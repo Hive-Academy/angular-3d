@@ -1,29 +1,15 @@
-/**
- * BackgroundsSectionComponent - Showcase for Background Shader Components
- *
- * Demonstrates the 4 background shader components:
- * - RayMarchedBackgroundComponent (metaball-style with SDF ray marching)
- * - CausticsBackgroundComponent (procedural caustics texture)
- * - VolumetricBackgroundComponent (fog/cloud with volumetric scattering)
- * - StarfieldBackgroundComponent (space stars with optional parallax)
- *
- * Features:
- * - Live examples with configurable parameters
- * - Side-by-side comparisons of different techniques
- * - Interactive controls for real-time parameter adjustments
- * - Performance metrics display
- */
-
-import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
+  AmbientLightComponent,
+  BloomEffectComponent,
+  DirectionalLightComponent,
+  EffectComposerComponent,
+  HexagonalBackgroundInstancedComponent,
+  OrbitControlsComponent,
   Scene3dComponent,
-  RayMarchedBackgroundComponent,
-  CausticsBackgroundComponent,
-  VolumetricBackgroundComponent,
-  StarfieldBackgroundComponent,
 } from '@hive-academy/angular-3d';
-import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
+import { SCENE_COLORS } from '../../../shared/colors';
 
 @Component({
   selector: 'app-backgrounds-section',
@@ -32,10 +18,12 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
   imports: [
     CommonModule,
     Scene3dComponent,
-    RayMarchedBackgroundComponent,
-    CausticsBackgroundComponent,
-    VolumetricBackgroundComponent,
-    StarfieldBackgroundComponent,
+    HexagonalBackgroundInstancedComponent,
+    OrbitControlsComponent,
+    AmbientLightComponent,
+    DirectionalLightComponent,
+    BloomEffectComponent,
+    EffectComposerComponent,
   ],
   template: `
     <section class="py-16 bg-gradient-to-br from-gray-900 to-black">
@@ -43,370 +31,415 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
         <!-- Section Header -->
         <div class="text-center mb-12">
           <h2 class="text-4xl font-bold text-white mb-4">
-            Background Shader Components
+            Live Hexagonal Cloud Backgrounds
           </h2>
           <p class="text-xl text-gray-400 max-w-3xl mx-auto">
-            Advanced shader-based backgrounds using TSL ray marching and procedural textures.
-            Lightweight, GPU-accelerated, and responsive.
+            Mesmerizing 3D hexagonal clouds with continuous depth bobbing,
+            rotation wobble, and color pulsing. Optimized with InstancedMesh
+            rendering (single draw call). Inspired by live-clouds effect.
           </p>
         </div>
 
-        <!-- Ray Marched Background Example -->
-        <div class="mb-16">
-          <h3 class="text-2xl font-semibold text-white mb-4">
-            Ray Marched Background
-            <span class="text-sm text-gray-400 ml-2">(SDF Metaballs)</span>
-          </h3>
-          <p class="text-gray-400 mb-6">
-            Interactive metaball background using signed distance functions and ray marching.
-            Features smooth blob blending, mouse interaction, and adaptive quality (64 steps desktop, 16 mobile).
-          </p>
+        <!-- Demo Scenes -->
+        <div class="space-y-12 mb-12">
+          <!-- Scene 1: Live-Clouds Style (Cyan/Green/Pink) -->
+          <div class="bg-gray-800 rounded-lg overflow-hidden shadow-2xl">
+            <div class="h-[600px] relative">
+              <a3d-scene-3d
+                [cameraPosition]="[0, -3, 4]"
+                [backgroundColor]="darkMagenta"
+              >
+                <!-- Lighting -->
+                <a3d-ambient-light
+                  [color]="colorNums.white"
+                  [intensity]="0.5"
+                />
+                <a3d-directional-light
+                  [color]="colorNums.blue"
+                  [intensity]="1.5"
+                  [position]="[100, -50, 50]"
+                />
 
-          <div class="grid md:grid-cols-3 gap-6">
-            <!-- Cosmic Preset -->
-            <div class="bg-gray-800 rounded-lg overflow-hidden">
-              <div class="h-64 relative">
-                <a3d-scene-3d
-                  [cameraPosition]="[0, 0, 50]"
-                  [backgroundColor]="colorNums.black"
-                >
-                  <a3d-ray-marched-background
-                    preset="cosmic"
-                    [sphereCount]="6"
-                    [smoothness]="0.3"
-                    [enableMouse]="true"
-                    viewportPosition="center"
-                    [viewportZ]="-20"
-                  />
-                </a3d-scene-3d>
-              </div>
-              <div class="p-4">
-                <h4 class="text-white font-semibold mb-2">Cosmic Preset</h4>
-                <p class="text-gray-400 text-sm">
-                  Blue-purple theme with 6 animated spheres
-                </p>
-              </div>
+                <!-- Instanced Hexagonal Cloud -->
+                <a3d-hexagonal-background-instanced
+                  [circleCount]="10"
+                  [colorPalette]="[
+                    colorNums.cyan,
+                    colorNums.mintGreen,
+                    colorNums.hotPink,
+                    colorNums.white
+                  ]"
+                  [hexRadius]="0.5"
+                  [hexHeight]="0.1"
+                  [baseColor]="colorNums.darkBlueGray"
+                  [roughness]="0.75"
+                  [metalness]="0.25"
+                  [animationSpeed]="0.5"
+                  [depthAmplitude]="0.125"
+                  [rotationAmplitude]="0.0625"
+                  [bloomLayer]="1"
+                />
+
+                <!-- NOTE: Reference achieves neon look through shader alone, no bloom! -->
+
+                <a3d-orbit-controls [enableDamping]="true" />
+              </a3d-scene-3d>
             </div>
-
-            <!-- Minimal Preset -->
-            <div class="bg-gray-800 rounded-lg overflow-hidden">
-              <div class="h-64 relative">
-                <a3d-scene-3d
-                  [cameraPosition]="[0, 0, 50]"
-                  [backgroundColor]="colorNums.black"
-                >
-                  <a3d-ray-marched-background
-                    preset="minimal"
-                    [sphereCount]="3"
-                    [smoothness]="0.5"
-                    [enableMouse]="true"
-                    viewportPosition="center"
-                    [viewportZ]="-20"
-                  />
-                </a3d-scene-3d>
-              </div>
-              <div class="p-4">
-                <h4 class="text-white font-semibold mb-2">Minimal Preset</h4>
-                <p class="text-gray-400 text-sm">
-                  Monochrome theme with 3 subtle spheres
-                </p>
-              </div>
-            </div>
-
-            <!-- Neon Preset -->
-            <div class="bg-gray-800 rounded-lg overflow-hidden">
-              <div class="h-64 relative">
-                <a3d-scene-3d
-                  [cameraPosition]="[0, 0, 50]"
-                  [backgroundColor]="colorNums.black"
-                >
-                  <a3d-ray-marched-background
-                    preset="neon"
-                    [sphereCount]="8"
-                    [smoothness]="0.2"
-                    [enableMouse]="true"
-                    viewportPosition="center"
-                    [viewportZ]="-20"
-                  />
-                </a3d-scene-3d>
-              </div>
-              <div class="p-4">
-                <h4 class="text-white font-semibold mb-2">Neon Preset</h4>
-                <p class="text-gray-400 text-sm">
-                  Cyan-green theme with 8 dynamic spheres
-                </p>
-              </div>
+            <div class="p-6">
+              <h4 class="text-white font-bold text-lg mb-2">
+                Live Clouds - Cyan/Green/Pink Palette
+              </h4>
+              <p class="text-gray-400">
+                Circular dome of ~331 hexagons with continuous depth bobbing,
+                rotation wobble, and color pulsing. Optimized with InstancedMesh
+                (single draw call). Orbit to explore the 3D structure.
+              </p>
             </div>
           </div>
-        </div>
 
-        <!-- Caustics Background Example -->
-        <div class="mb-16">
-          <h3 class="text-2xl font-semibold text-white mb-4">
-            Caustics Background
-            <span class="text-sm text-gray-400 ml-2">(Procedural Texture)</span>
-          </h3>
-          <p class="text-gray-400 mb-6">
-            Animated caustics patterns (light through water) using procedural textures.
-            Customizable color, scale, and animation speed. Lightweight (60+ FPS).
-          </p>
+          <!-- Scene 2: Live-Clouds Style (Red/Green/Blue) -->
+          <div class="bg-gray-800 rounded-lg overflow-hidden shadow-2xl">
+            <div class="h-[600px] relative">
+              <a3d-scene-3d
+                [cameraPosition]="[0, -3, 4]"
+                [backgroundColor]="darkMagenta"
+              >
+                <!-- Lighting -->
+                <a3d-ambient-light
+                  [color]="colorNums.white"
+                  [intensity]="0.6"
+                />
+                <a3d-directional-light
+                  [color]="colorNums.blue"
+                  [intensity]="1.8"
+                  [position]="[100, -50, 50]"
+                />
 
-          <div class="grid md:grid-cols-2 gap-6">
-            <!-- Blue Caustics -->
-            <div class="bg-gray-800 rounded-lg overflow-hidden">
-              <div class="h-64 relative">
-                <a3d-scene-3d
-                  [cameraPosition]="[0, 0, 50]"
-                  [backgroundColor]="colorNums.black"
-                >
-                  <a3d-caustics-background
-                    [scale]="2"
-                    [animationSpeed]="1"
-                    [color]="colors.cyan"
-                    viewportPosition="center"
-                    [viewportZ]="-30"
-                  />
-                </a3d-scene-3d>
-              </div>
-              <div class="p-4">
-                <h4 class="text-white font-semibold mb-2">Ocean Blue</h4>
-                <p class="text-gray-400 text-sm">
-                  Scale: 2, Speed: 1.0, Color: cyan
-                </p>
-              </div>
+                <!-- Instanced Hexagonal Cloud -->
+                <a3d-hexagonal-background-instanced
+                  [circleCount]="12"
+                  [colorPalette]="[
+                    colorNums.red,
+                    colorNums.emerald,
+                    colorNums.blue,
+                    colorNums.white
+                  ]"
+                  [hexRadius]="0.5"
+                  [hexHeight]="0.1"
+                  [baseColor]="colorNums.darkNavy"
+                  [roughness]="0.8"
+                  [metalness]="0.3"
+                  [animationSpeed]="0.7"
+                  [depthAmplitude]="0.15"
+                  [rotationAmplitude]="0.08"
+                  [bloomLayer]="1"
+                />
+
+                <!-- NOTE: Reference achieves neon look through shader alone, no bloom! -->
+
+                <a3d-orbit-controls [enableDamping]="true" />
+              </a3d-scene-3d>
             </div>
-
-            <!-- Green Caustics -->
-            <div class="bg-gray-800 rounded-lg overflow-hidden">
-              <div class="h-64 relative">
-                <a3d-scene-3d
-                  [cameraPosition]="[0, 0, 50]"
-                  [backgroundColor]="colorNums.black"
-                >
-                  <a3d-caustics-background
-                    [scale]="3"
-                    [animationSpeed]="1.5"
-                    [color]="colors.mintGreen"
-                    viewportPosition="center"
-                    [viewportZ]="-30"
-                  />
-                </a3d-scene-3d>
-              </div>
-              <div class="p-4">
-                <h4 class="text-white font-semibold mb-2">Neon Green</h4>
-                <p class="text-gray-400 text-sm">
-                  Scale: 3, Speed: 1.5, Color: mintGreen
-                </p>
-              </div>
+            <div class="p-6">
+              <h4 class="text-white font-bold text-lg mb-2">
+                Live Clouds - RGB Spectrum (Larger Grid)
+              </h4>
+              <p class="text-gray-400">
+                Larger dome with ~469 hexagons. Faster animation and more
+                pronounced movement. Classic RGB color palette with blue-tinted
+                lighting creates a futuristic atmosphere.
+              </p>
             </div>
           </div>
-        </div>
 
-        <!-- Volumetric Background Example -->
-        <div class="mb-16">
-          <h3 class="text-2xl font-semibold text-white mb-4">
-            Volumetric Background
-            <span class="text-sm text-gray-400 ml-2">(Fog & Clouds)</span>
-          </h3>
-          <p class="text-gray-400 mb-6">
-            Atmospheric volumetric fog with adjustable density and scattering.
-            Optional depth fade for perspective. Targets 30 FPS mobile, 60 FPS desktop.
-          </p>
+          <!-- Scene 3: NEW - Static Cyan Edges + Diamond Shape -->
+          <div class="bg-gray-800 rounded-lg overflow-hidden shadow-2xl">
+            <div class="h-[600px] relative">
+              <a3d-scene-3d
+                [cameraPosition]="[0, -3, 4]"
+                [backgroundColor]="darkMagenta"
+              >
+                <a3d-ambient-light
+                  [color]="colorNums.white"
+                  [intensity]="0.5"
+                />
+                <a3d-directional-light
+                  [color]="colorNums.blue"
+                  [intensity]="1.5"
+                  [position]="[100, -50, 50]"
+                />
 
-          <div class="grid md:grid-cols-2 gap-6">
-            <!-- Light Fog -->
-            <div class="bg-gray-800 rounded-lg overflow-hidden">
-              <div class="h-64 relative">
-                <a3d-scene-3d
-                  [cameraPosition]="[0, 0, 50]"
-                  [backgroundColor]="colorNums.black"
-                >
-                  <a3d-volumetric-background
-                    [density]="0.05"
-                    [scattering]="0.4"
-                    [depthFade]="true"
-                    [animationSpeed]="0.8"
-                    viewportPosition="center"
-                    [viewportZ]="-25"
-                  />
-                </a3d-scene-3d>
-              </div>
-              <div class="p-4">
-                <h4 class="text-white font-semibold mb-2">Light Fog</h4>
-                <p class="text-gray-400 text-sm">
-                  Density: 0.05, Scattering: 0.4, Depth Fade: Yes
-                </p>
-              </div>
+                <!-- NEW: Diamond shape with static cyan edges -->
+                <a3d-hexagonal-background-instanced
+                  [circleCount]="10"
+                  [shape]="'diamond'"
+                  [edgeColor]="colorNums.cyan"
+                  [edgePulse]="false"
+                  [hoverColor]="colorNums.hotPink"
+                  [baseColor]="colorNums.darkBlueGray"
+                  [hexRadius]="0.5"
+                  [hexHeight]="0.1"
+                  [mouseInfluenceRadius]="3.0"
+                  [bloomLayer]="1"
+                />
+
+                <a3d-orbit-controls [enableDamping]="true" />
+              </a3d-scene-3d>
             </div>
-
-            <!-- Dense Clouds -->
-            <div class="bg-gray-800 rounded-lg overflow-hidden">
-              <div class="h-64 relative">
-                <a3d-scene-3d
-                  [cameraPosition]="[0, 0, 50]"
-                  [backgroundColor]="colorNums.black"
-                >
-                  <a3d-volumetric-background
-                    [density]="0.2"
-                    [scattering]="0.7"
-                    [depthFade]="true"
-                    [animationSpeed]="1.2"
-                    viewportPosition="center"
-                    [viewportZ]="-25"
-                  />
-                </a3d-scene-3d>
-              </div>
-              <div class="p-4">
-                <h4 class="text-white font-semibold mb-2">Dense Clouds</h4>
-                <p class="text-gray-400 text-sm">
-                  Density: 0.2, Scattering: 0.7, Depth Fade: Yes
-                </p>
-              </div>
+            <div class="p-6">
+              <h4 class="text-white font-bold text-lg mb-2">
+                Diamond Grid - Static Cyan Edges
+              </h4>
+              <p class="text-gray-400">
+                Diamond-shaped instances with static cyan edge glow (no
+                pulsing). Move mouse to reveal hot pink faces. Demonstrates
+                separate edge/face color control and geometry flexibility.
+              </p>
             </div>
           </div>
-        </div>
 
-        <!-- Starfield Background Example -->
-        <div class="mb-16">
-          <h3 class="text-2xl font-semibold text-white mb-4">
-            Starfield Background
-            <span class="text-sm text-gray-400 ml-2">(Space Stars)</span>
-          </h3>
-          <p class="text-gray-400 mb-6">
-            Procedural starfield with optional mouse parallax effect for depth perception.
-            Customizable density, star size, and parallax strength. Lightweight (60+ FPS).
-          </p>
+          <!-- Scene 4: NEW - Glowing Neon with Bloom Effect -->
+          <div class="bg-gray-800 rounded-lg overflow-hidden shadow-2xl">
+            <div class="h-[600px] relative">
+              <a3d-scene-3d
+                [cameraPosition]="[0, -3, 4]"
+                [backgroundColor]="colorNums.black"
+              >
+                <a3d-ambient-light
+                  [color]="colorNums.white"
+                  [intensity]="0.3"
+                />
+                <a3d-directional-light
+                  [color]="colorNums.purple"
+                  [intensity]="1.0"
+                  [position]="[100, -50, 50]"
+                />
 
-          <div class="grid md:grid-cols-2 gap-6">
-            <!-- Static Starfield -->
-            <div class="bg-gray-800 rounded-lg overflow-hidden">
-              <div class="h-64 relative">
-                <a3d-scene-3d
-                  [cameraPosition]="[0, 0, 50]"
-                  [backgroundColor]="colorNums.black"
-                >
-                  <a3d-starfield-background
-                    [density]="100"
-                    [starSize]="0.5"
-                    [enableParallax]="false"
-                    viewportPosition="center"
-                    [viewportZ]="-40"
+                <!-- NEW: Octagon shape with neon purple edges + BLOOM -->
+                <a3d-hexagonal-background-instanced
+                  [circleCount]="10"
+                  [shape]="'octagon'"
+                  [edgeColor]="colorNums.neonPurple"
+                  [edgePulse]="true"
+                  [hoverColor]="colorNums.neonOrange"
+                  [baseColor]="colorNums.black"
+                  [hexRadius]="0.5"
+                  [hexHeight]="0.1"
+                  [mouseInfluenceRadius]="3.0"
+                  [bloomLayer]="1"
+                />
+
+                <!-- Effect Composer with Bloom -->
+                <a3d-effect-composer>
+                  <a3d-bloom-effect
+                    [strength]="1.5"
+                    [threshold]="0.5"
+                    [radius]="0.4"
                   />
-                </a3d-scene-3d>
-              </div>
-              <div class="p-4">
-                <h4 class="text-white font-semibold mb-2">Static Stars</h4>
-                <p class="text-gray-400 text-sm">
-                  Density: 100, Star Size: 0.5, Parallax: Off
-                </p>
-              </div>
+                </a3d-effect-composer>
+
+                <a3d-orbit-controls [enableDamping]="true" />
+              </a3d-scene-3d>
             </div>
+            <div class="p-6">
+              <h4 class="text-white font-bold text-lg mb-2">
+                Neon Octagons with Bloom Glow
+              </h4>
+              <p class="text-gray-400">
+                Octagon-shaped grid with pulsing neon purple edges enhanced by
+                bloom post-processing. Creates an intense cyberpunk aesthetic.
+                Move mouse to reveal orange glow. This demonstrates the full
+                power of custom colors + bloom effects.
+              </p>
+            </div>
+          </div>
 
-            <!-- Parallax Starfield -->
-            <div class="bg-gray-800 rounded-lg overflow-hidden">
-              <div class="h-64 relative">
-                <a3d-scene-3d
-                  [cameraPosition]="[0, 0, 50]"
-                  [backgroundColor]="colorNums.black"
-                >
-                  <a3d-starfield-background
-                    [density]="150"
-                    [starSize]="0.7"
-                    [enableParallax]="true"
-                    [parallaxStrength]="0.3"
-                    viewportPosition="center"
-                    [viewportZ]="-40"
-                  />
-                </a3d-scene-3d>
-              </div>
-              <div class="p-4">
-                <h4 class="text-white font-semibold mb-2">Parallax Stars</h4>
-                <p class="text-gray-400 text-sm">
-                  Density: 150, Star Size: 0.7, Parallax: 0.3
-                </p>
-              </div>
+          <!-- Scene 5: NEW - Golden Honeycomb (Light Theme) -->
+          <div class="bg-gray-800 rounded-lg overflow-hidden shadow-2xl">
+            <div class="h-[600px] relative">
+              <a3d-scene-3d
+                [cameraPosition]="[0, -3, 4]"
+                [backgroundColor]="colorNums.warmWhite"
+              >
+                <!-- Warm, natural lighting -->
+                <a3d-ambient-light
+                  [color]="colorNums.warmWhite"
+                  [intensity]="1.2"
+                />
+                <a3d-directional-light
+                  [color]="colorNums.amber"
+                  [intensity]="0.8"
+                  [position]="[100, -50, 50]"
+                />
+
+                <!-- Golden Honeycomb: Light theme with honey colors -->
+                <a3d-hexagonal-background-instanced
+                  [circleCount]="10"
+                  [shape]="'hexagon'"
+                  [edgeColor]="colorNums.honeyGold"
+                  [edgePulse]="false"
+                  [hoverColor]="colorNums.darkHoney"
+                  [baseColor]="colorNums.cream"
+                  [hexRadius]="0.5"
+                  [hexHeight]="0.1"
+                  [roughness]="0.3"
+                  [metalness]="0.1"
+                  [mouseInfluenceRadius]="3.0"
+                  [bloomLayer]="0"
+                />
+
+                <a3d-orbit-controls [enableDamping]="true" />
+              </a3d-scene-3d>
+            </div>
+            <div class="p-6">
+              <h4 class="text-white font-bold text-lg mb-2">
+                Golden Honeycomb - Natural Light Theme
+              </h4>
+              <p class="text-gray-400">
+                True honeycomb aesthetic with warm golden edges and cream faces.
+                Static honey-gold borders create a natural, organic appearance.
+                Move mouse to reveal darker honey glow. Perfect for light-themed
+                interfaces and natural product showcases.
+              </p>
             </div>
           </div>
         </div>
 
         <!-- Code Examples -->
-        <div class="mt-12 bg-gray-800 rounded-lg p-6">
-          <h3 class="text-xl font-semibold text-white mb-4">Usage Examples</h3>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <!-- Example 1: Dark Neon Theme -->
+          <div class="bg-gray-800 rounded-lg p-6">
+            <h3 class="text-xl font-semibold text-white mb-4">
+              Dark Neon Theme
+            </h3>
+            <pre
+              class="bg-gray-900 text-gray-300 p-4 rounded overflow-x-auto text-sm"
+            ><code>&lt;a3d-scene-3d [backgroundColor]="0x000000"&gt;
+  &lt;a3d-ambient-light [intensity]="0.3" /&gt;
+  &lt;a3d-directional-light
+    [intensity]="1.0"
+    [position]="[100, -50, 50]"
+  /&gt;
 
-          <div class="space-y-6">
-            <!-- Ray Marched -->
-            <div>
-              <h4 class="text-white font-semibold mb-2">Ray Marched Background</h4>
-              <pre class="bg-gray-900 text-gray-300 p-4 rounded overflow-x-auto text-sm"><code>&lt;a3d-ray-marched-background
-  preset="cosmic"
-  [sphereCount]="6"
-  [smoothness]="0.3"
-  [enableMouse]="true"
-  viewportPosition="center"
-  [viewportZ]="-20"
-/&gt;</code></pre>
-            </div>
+  &lt;a3d-hexagonal-background-instanced
+    [shape]="'octagon'"
+    [edgeColor]="0xb24bf3"
+    [edgePulse]="true"
+    [hoverColor]="0xff9500"
+    [baseColor]="0x000000"
+    [bloomLayer]="1"
+  /&gt;
 
-            <!-- Caustics -->
-            <div>
-              <h4 class="text-white font-semibold mb-2">Caustics Background</h4>
-              <pre class="bg-gray-900 text-gray-300 p-4 rounded overflow-x-auto text-sm"><code>&lt;a3d-caustics-background
-  [scale]="2"
-  [animationSpeed]="1.5"
-  [color]="colors.cyan"
-  viewportPosition="center"
-  [viewportZ]="-30"
-/&gt;</code></pre>
-            </div>
+  &lt;a3d-effect-composer&gt;
+    &lt;a3d-bloom-effect
+      [threshold]="0.5"
+      [strength]="1.5"
+    /&gt;
+  &lt;/a3d-effect-composer&gt;
+&lt;/a3d-scene-3d&gt;</code></pre>
+          </div>
 
-            <!-- Volumetric -->
-            <div>
-              <h4 class="text-white font-semibold mb-2">Volumetric Background</h4>
-              <pre class="bg-gray-900 text-gray-300 p-4 rounded overflow-x-auto text-sm"><code>&lt;a3d-volumetric-background
-  [density]="0.1"
-  [scattering]="0.5"
-  [depthFade]="true"
-  viewportPosition="center"
-  [viewportZ]="-25"
-/&gt;</code></pre>
-            </div>
+          <!-- Example 2: Golden Honeycomb -->
+          <div class="bg-gray-800 rounded-lg p-6">
+            <h3 class="text-xl font-semibold text-white mb-4">
+              Golden Honeycomb
+            </h3>
+            <pre
+              class="bg-gray-900 text-gray-300 p-4 rounded overflow-x-auto text-sm"
+            ><code>&lt;a3d-scene-3d [backgroundColor]="0xfaf6f0"&gt;
+  &lt;a3d-ambient-light
+    [color]="0xfaf6f0"
+    [intensity]="1.2"
+  /&gt;
+  &lt;a3d-directional-light
+    [color]="0xf59e0b"
+    [intensity]="0.8"
+    [position]="[100, -50, 50]"
+  /&gt;
 
-            <!-- Starfield -->
-            <div>
-              <h4 class="text-white font-semibold mb-2">Starfield Background</h4>
-              <pre class="bg-gray-900 text-gray-300 p-4 rounded overflow-x-auto text-sm"><code>&lt;a3d-starfield-background
-  [density]="100"
-  [starSize]="0.5"
-  [enableParallax]="true"
-  [parallaxStrength]="0.3"
-  viewportPosition="center"
-  [viewportZ]="-40"
-/&gt;</code></pre>
-            </div>
+  &lt;a3d-hexagonal-background-instanced
+    [shape]="'hexagon'"
+    [edgeColor]="0xffb03b"
+    [edgePulse]="false"
+    [hoverColor]="0xd4860d"
+    [baseColor]="0xfff8e7"
+    [roughness]="0.3"
+    [metalness]="0.1"
+  /&gt;
+&lt;/a3d-scene-3d&gt;</code></pre>
           </div>
         </div>
 
-        <!-- Performance Notes -->
-        <div class="mt-8 bg-blue-900 bg-opacity-30 border border-blue-700 rounded-lg p-6">
+        <!-- Features List -->
+        <div
+          class="bg-blue-900 bg-opacity-30 border border-blue-700 rounded-lg p-6"
+        >
           <h3 class="text-xl font-semibold text-blue-300 mb-3">
-            Performance & Optimization
+            Features & Effects
           </h3>
           <ul class="text-blue-200 space-y-2">
             <li class="flex items-start">
-              <span class="mr-2">•</span>
-              <span><strong>Ray Marched:</strong> Adaptive quality (64 steps desktop, 16 mobile). Sphere count clamped to 10 max.</span>
+              <span class="mr-2">🌀</span>
+              <span
+                ><strong>Circular Dome Layout:</strong> Radial hexagonal grid in
+                6-fold symmetry</span
+              >
             </li>
             <li class="flex items-start">
-              <span class="mr-2">•</span>
-              <span><strong>Caustics:</strong> Lightweight procedural texture (60+ FPS all devices).</span>
+              <span class="mr-2">⚡</span>
+              <span
+                ><strong>InstancedMesh Optimization:</strong> Single draw call
+                for hundreds of hexagons</span
+              >
             </li>
             <li class="flex items-start">
-              <span class="mr-2">•</span>
-              <span><strong>Volumetric:</strong> Device-aware quality (2 AO samples mobile, 6 desktop).</span>
+              <span class="mr-2">🌊</span>
+              <span
+                ><strong>Continuous Depth Bobbing:</strong> Sine wave animation
+                creates organic movement</span
+              >
             </li>
             <li class="flex items-start">
-              <span class="mr-2">•</span>
-              <span><strong>Starfield:</strong> Minimal overhead, parallax uses smooth lerp interpolation.</span>
+              <span class="mr-2">🎭</span>
+              <span
+                ><strong>Rotation Wobble:</strong> Subtle rotation on X and Y
+                axes</span
+              >
+            </li>
+            <li class="flex items-start">
+              <span class="mr-2">🎨</span>
+              <span
+                ><strong>Custom Edge Colors:</strong> Static or pulsing neon
+                edge glow with edgeColor input</span
+              >
+            </li>
+            <li class="flex items-start">
+              <span class="mr-2">🖱️</span>
+              <span
+                ><strong>Interactive Mouse Hover:</strong> Faces light up with
+                custom color when cursor approaches</span
+              >
+            </li>
+            <li class="flex items-start">
+              <span class="mr-2">🔷</span>
+              <span
+                ><strong>Geometry Flexibility:</strong> Hexagon, diamond,
+                octagon, or square shapes</span
+              >
+            </li>
+            <li class="flex items-start">
+              <span class="mr-2">✨</span>
+              <span
+                ><strong>Bloom Post-Processing:</strong> Intense glow effects
+                with effect composer integration</span
+              >
+            </li>
+            <li class="flex items-start">
+              <span class="mr-2">🎬</span>
+              <span
+                ><strong>WebGPU Compatible:</strong> TSL-based shaders for
+                modern rendering</span
+              >
             </li>
           </ul>
         </div>
@@ -415,7 +448,9 @@ import { SCENE_COLORS, SCENE_COLOR_STRINGS } from '../../../shared/colors';
   `,
 })
 export class BackgroundsSectionComponent {
-  // Expose shared colors to template (strings for color inputs, numbers for backgroundColor)
-  protected readonly colors = SCENE_COLOR_STRINGS;
+  // Expose colors for template
   protected readonly colorNums = SCENE_COLORS;
+
+  // Dark magenta background matching reference (0x220011)
+  protected readonly darkMagenta = 0x220011;
 }

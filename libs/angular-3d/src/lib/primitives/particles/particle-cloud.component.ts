@@ -41,7 +41,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
-  afterNextRender,
+  effect,
   inject,
   input,
 } from '@angular/core';
@@ -101,12 +101,19 @@ export class ParticleCloudComponent {
     color: THREE.Color;
   }> = [];
   private particleUpdateCleanup: (() => void) | null = null;
+  private isCreated = false;
 
   constructor() {
-    afterNextRender(() => {
-      this.createParticles();
-      if (this.animated()) {
-        this.setupAnimation();
+    // Use effect to wait for parent to become available
+    // This handles the case where parent mesh isn't created yet
+    effect(() => {
+      const parent = this.parent();
+      if (parent && !this.isCreated) {
+        this.isCreated = true;
+        this.createParticles();
+        if (this.animated()) {
+          this.setupAnimation();
+        }
       }
     });
   }
@@ -126,17 +133,24 @@ export class ParticleCloudComponent {
     this.particlesGeometry = new THREE.PlaneGeometry(1, 1);
 
     // Create TSL material with circular falloff
+    // Note: varyingProperty('vec3', 'vInstanceColor') doesn't work in WebGPU
+    // Use single color from palette instead (middle color for best average)
     const centeredUV = sub(uv(), vec2(0.5, 0.5));
     const dist = length(centeredUV);
-    const circularAlpha = sub(float(1.0), smoothstep(float(0.0), float(0.7), dist));
+    const circularAlpha = sub(
+      float(1.0),
+      smoothstep(float(0.0), float(0.7), dist)
+    );
 
     this.particlesMaterial = new MeshBasicNodeMaterial();
     this.particlesMaterial.transparent = true;
     this.particlesMaterial.depthWrite = false;
     this.particlesMaterial.blending = THREE.AdditiveBlending;
     this.particlesMaterial.side = THREE.DoubleSide;
-    this.particlesMaterial.opacityNode = circularAlpha;
-    this.particlesMaterial.vertexColors = true;
+    // Use single color - WebGPU compatible approach
+    this.particlesMaterial.color =
+      colors[Math.floor(colors.length / 2)] || colors[0];
+    this.particlesMaterial.opacityNode = mul(circularAlpha, float(baseOpacity));
 
     // Create instanced mesh
     this.particlesMesh = new THREE.InstancedMesh(
@@ -148,7 +162,6 @@ export class ParticleCloudComponent {
 
     // Setup instances
     const matrix = new THREE.Matrix4();
-    const colorBuffer = new Float32Array(count * 4); // RGBA
     this.particleData = [];
 
     for (let i = 0; i < count; i++) {
@@ -156,9 +169,6 @@ export class ParticleCloudComponent {
       const x = positions[idx];
       const y = positions[idx + 1];
       const z = positions[idx + 2];
-
-      const distFromCenter = Math.sqrt(x * x + y * y + z * z);
-      const normalizedDist = (distFromCenter - radiusMin) / (radiusMax - radiusMin);
 
       // Size variation (60% tiny, 25% medium, 15% large)
       const sizeRandom = Math.random();
@@ -171,29 +181,20 @@ export class ParticleCloudComponent {
         sizeVariation = particleSize * (1.5 + Math.random() * 1.5); // Large
       }
 
-      // Color from gradient based on size
-      const colorIndex = Math.min(
-        Math.floor(normalizedDist * colors.length),
-        colors.length - 1
-      );
-      const particleColor = colors[colorIndex];
-
-      // Opacity variation
-      const opacityFalloff = 1.0 - normalizedDist * 0.5;
-      const finalOpacity = opacityFalloff * baseOpacity * (0.7 + Math.random() * 0.3);
-
-      // Set per-instance color (RGBA)
-      colorBuffer[i * 4] = particleColor.r;
-      colorBuffer[i * 4 + 1] = particleColor.g;
-      colorBuffer[i * 4 + 2] = particleColor.b;
-      colorBuffer[i * 4 + 3] = finalOpacity;
-
       // Set transform
       matrix.makeScale(sizeVariation, sizeVariation, sizeVariation);
       matrix.setPosition(x, y, z);
       this.particlesMesh.setMatrixAt(i, matrix);
 
-      // Store animation data
+      // Store animation data (color stored for potential future use)
+      const distFromCenter = Math.sqrt(x * x + y * y + z * z);
+      const normalizedDist =
+        (distFromCenter - radiusMin) / (radiusMax - radiusMin);
+      const colorIndex = Math.min(
+        Math.floor(normalizedDist * colors.length),
+        colors.length - 1
+      );
+
       this.particleData.push({
         velocity: new THREE.Vector3(
           (Math.random() - 0.5) * 0.0001,
@@ -205,12 +206,10 @@ export class ParticleCloudComponent {
           Math.random() * 100,
           Math.random() * 100
         ),
-        color: particleColor,
+        color: colors[colorIndex],
       });
     }
 
-    // Set instance colors
-    this.particlesMesh.instanceColor = new THREE.InstancedBufferAttribute(colorBuffer, 4);
     this.particlesMesh.instanceMatrix.needsUpdate = true;
 
     // Apply position offset
@@ -285,11 +284,14 @@ export class ParticleCloudComponent {
 
         // Noise-based motion
         const noiseX =
-          Math.sin((position.y + data.noiseOffset.x) * 5 + time * noiseSpeed) * 0.0005;
+          Math.sin((position.y + data.noiseOffset.x) * 5 + time * noiseSpeed) *
+          0.0005;
         const noiseY =
-          Math.sin((position.z + data.noiseOffset.y) * 5 + time * noiseSpeed) * 0.0005;
+          Math.sin((position.z + data.noiseOffset.y) * 5 + time * noiseSpeed) *
+          0.0005;
         const noiseZ =
-          Math.sin((position.x + data.noiseOffset.z) * 5 + time * noiseSpeed) * 0.0005;
+          Math.sin((position.x + data.noiseOffset.z) * 5 + time * noiseSpeed) *
+          0.0005;
 
         data.velocity.x += noiseX;
         data.velocity.y += noiseY;

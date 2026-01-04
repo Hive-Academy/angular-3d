@@ -54,3 +54,6 @@ export {
 
 // Volumetric particle cloud (multi-scale particles with depth variation)
 export { tslVolumetricParticleCloud } from './volumetric-particle-cloud';
+
+// Fire clouds (animated fire/smoke effect)
+export { tslFireClouds } from './fire-clouds';

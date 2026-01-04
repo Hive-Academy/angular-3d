@@ -14,6 +14,7 @@ import {
   MarbleMaterialConfig,
 } from '../shaders/tsl-marble';
 import { tslCausticsTexture, tslPhotosphere } from '../shaders/tsl-textures';
+import * as TSL from 'three/tsl';
 
 /**
  * CoralSphereComponent - Warm Peachy Sphere with Outward Particle Corona
@@ -64,8 +65,8 @@ export class CoralSphereComponent {
   /** Number of particles in system (default: 800) */
   readonly particleCount = input<number>(800);
 
-  /** Particle size (default: 0.015) */
-  readonly particleSize = input<number>(0.015);
+  /** Particle size (default: 0.08) */
+  readonly particleSize = input<number>(0.08);
 
   /** Outward flow speed (units/second, default: 0.3) */
   readonly flowSpeed = input<number>(0.3);
@@ -96,7 +97,10 @@ export class CoralSphereComponent {
   // Sphere mesh
   private sphereMesh: THREE.Mesh | null = null;
   private sphereGeometry: THREE.SphereGeometry | null = null;
-  private sphereMaterial: THREE.MeshStandardNodeMaterial | null = null;
+  private sphereMaterial:
+    | THREE.MeshStandardMaterial
+    | THREE.MeshStandardNodeMaterial
+    | null = null;
 
   // Particle system
   private particlePoints: THREE.Points | null = null;
@@ -162,49 +166,17 @@ export class CoralSphereComponent {
     // Create geometry
     this.sphereGeometry = new THREE.SphereGeometry(radius, 64, 64);
 
-    // Create animated interior texture
-    const textureType = this.interiorTexture();
-    const interiorTexture =
-      textureType === 'caustics'
-        ? tslCausticsTexture({
-            scale: 2,
-            speed: 0.5,
-            color: new THREE.Color('#ffd4a3'), // Warm peachy
-          })
-        : tslPhotosphere({
-            scale: 2,
-            color: new THREE.Color('#ffd4a3'),
-            background: new THREE.Color('#ffe8d7'),
-          });
-
-    // Create marble material config
-    const marbleConfig: MarbleMaterialConfig = {
-      colorA: '#ffd4a3', // Warm peachy base
-      colorB: '#ffe8d7', // Light peachy
-      edgeColor: '#ffaa77', // Coral edge glow
-      edgeIntensity: 3.0, // Strong glow
-      edgePower: 2.0, // Soft falloff
-      interiorTexture: interiorTexture,
-      textureBlendMode: 'replace',
-      iterations: 16,
-      depth: 0.8,
-    };
-
-    // Create marble material nodes
-    const marble = createMarbleMaterial(marbleConfig);
-
-    // Create material
-    this.sphereMaterial = new THREE.MeshStandardNodeMaterial({
-      metalness: marble.metalness,
-      roughness: marble.roughness,
+    // ULTRA SIMPLE TEST: Just solid color, NO TSL, NO texture
+    // If this doesn't show peachy, something else is broken
+    this.sphereMaterial = new THREE.MeshStandardMaterial({
+      color: new THREE.Color('#ffd4a3'), // Bright peachy color
+      metalness: 0.2,
+      roughness: 0.8,
       transparent: true,
       opacity: this.opacity(),
       side: THREE.DoubleSide,
-      depthWrite: false, // Allow particles behind/inside to be visible
+      depthWrite: false,
     });
-
-    this.sphereMaterial.colorNode = marble.colorNode;
-    this.sphereMaterial.emissiveNode = marble.emissiveNode;
 
     // Create mesh
     this.sphereMesh = new THREE.Mesh(this.sphereGeometry, this.sphereMaterial);
@@ -295,9 +267,10 @@ export class CoralSphereComponent {
 
     // Create material
     this.particleMaterial = new THREE.PointsNodeMaterial();
-    this.particleMaterial.size = size * 50; // Scale for visibility
+    this.particleMaterial.size = size * 100; // Increased from 50 for better visibility
     this.particleMaterial.sizeAttenuation = true;
     this.particleMaterial.transparent = true;
+    this.particleMaterial.opacity = 0.9; // High base opacity
     this.particleMaterial.depthWrite = false;
     this.particleMaterial.blending = THREE.AdditiveBlending;
     this.particleMaterial.vertexColors = true;

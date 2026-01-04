@@ -129,6 +129,9 @@ export class MarbleParticleSystemComponent {
   /** Position offset as [x, y, z] */
   public readonly position = input<[number, number, number]>([0, 0, 0]);
 
+  /** Uniform scale multiplier (default: 1) */
+  public readonly scale = input<number>(1);
+
   // ============================================================================
   // Internal State
   // ============================================================================
@@ -176,6 +179,7 @@ export class MarbleParticleSystemComponent {
       const blending = this.blending();
       const enableTwinkle = this.enableTwinkle();
       const position = this.position();
+      const scale = this.scale();
 
       this.rebuildParticles(
         radius,
@@ -184,7 +188,8 @@ export class MarbleParticleSystemComponent {
         opacity,
         blending,
         enableTwinkle,
-        position
+        position,
+        scale
       );
 
       // Add to parent
@@ -213,7 +218,8 @@ export class MarbleParticleSystemComponent {
     opacity: number,
     blending: ParticleBlending,
     enableTwinkle: boolean,
-    position: [number, number, number]
+    position: [number, number, number],
+    scale: number
   ): void {
     // Dispose old resources
     this.disposeResources();
@@ -288,8 +294,9 @@ export class MarbleParticleSystemComponent {
     this.instancedMesh.instanceMatrix.needsUpdate = true;
     this.instancedMesh.frustumCulled = false;
 
-    // Set overall position
+    // Set overall position and scale
     this.instancedMesh.position.set(position[0], position[1], position[2]);
+    this.instancedMesh.scale.setScalar(scale);
 
     // Setup twinkle animation if enabled
     if (enableTwinkle) {

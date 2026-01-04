@@ -24,7 +24,7 @@ import {
 import {
   Scene3dComponent,
   SceneLightingComponent,
-  CoralSphereComponent,
+  MarbleSphereComponent,
 } from '@hive-academy/angular-3d';
 
 @Component({
@@ -34,7 +34,7 @@ import {
     ViewportAnimationDirective,
     Scene3dComponent,
     SceneLightingComponent,
-    CoralSphereComponent,
+    MarbleSphereComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -56,13 +56,22 @@ import {
           [cameraFov]="50"
           [backgroundColor]="null"
         >
-          <!-- Coral Sphere with outward particle corona -->
-          <a3d-coral-sphere
+          <!-- Marble Sphere with animated fire clouds texture -->
+          <a3d-marble-sphere
             [radius]="4.5"
             [position]="spherePosition()"
-            [scale]="sphereScale()"
-            [interiorTexture]="'caustics'"
-            [opacity]="0.15"
+            [colorA]="'#ffd4a3'"
+            [colorB]="'#ffe8d7'"
+            [edgeColor]="'#ffaa77'"
+            [edgeIntensity]="2.0"
+            [baseTexture]="'fireClouds'"
+            [baseTextureColor]="'#ff6600'"
+            [baseTextureColor2]="'#f5f5dc'"
+            [baseTextureScale]="2.0"
+            [baseTextureDensity]="3.0"
+            [baseTextureSpeed]="0.5"
+            [roughness]="0.7"
+            [metalness]="0.2"
           />
         </a3d-scene-3d>
       </div>
