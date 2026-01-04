@@ -1,13 +1,12 @@
 /**
- * GlassSphereHeroSectionComponent - BlueYard-style Hero Section
+ * GlassSphereHeroSectionComponent - Warm Peachy Hero Section
  *
  * Self-contained hero section with volumetric 3D sphere.
  * Uses GSAP ScrollTrigger for scroll-driven animations.
  *
  * Features:
- * - MarbleSphereComponent for volumetric interior (TSL raymarching)
- * - MarbleParticleSystemComponent for interior particle cloud
- * - Strong fresnel edge glow
+ * - CoralSphereComponent with outward particle corona
+ * - Warm peachy marble interior with animated caustics
  * - Scroll-driven sphere position and scale via ScrollTrigger
  * - ViewportAnimation for staggered content entry
  */
@@ -25,8 +24,7 @@ import {
 import {
   Scene3dComponent,
   SceneLightingComponent,
-  MarbleSphereComponent,
-  ParticleCloudComponent,
+  CoralSphereComponent,
 } from '@hive-academy/angular-3d';
 
 @Component({
@@ -36,8 +34,7 @@ import {
     ViewportAnimationDirective,
     Scene3dComponent,
     SceneLightingComponent,
-    MarbleSphereComponent,
-    ParticleCloudComponent,
+    CoralSphereComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -59,54 +56,14 @@ import {
           [cameraFov]="50"
           [backgroundColor]="null"
         >
-          <!-- Studio lighting for proper material visibility -->
-          <a3d-scene-lighting
-            [preset]="'studio'"
-            [ambientIntensity]="0.6"
-            [keyIntensity]="1.2"
-          />
-
-          <!-- Glass Sphere Shell with particle clouds -->
-          <a3d-marble-sphere
+          <!-- Coral Sphere with outward particle corona -->
+          <a3d-coral-sphere
             [radius]="4.5"
             [position]="spherePosition()"
-            [roughness]="0.05"
-            [metalness]="0.0"
-            [colorA]="'#fde8d7'"
-            [colorB]="'#ff8866'"
-            [edgeColor]="'#ff6644'"
-            [edgeIntensity]="1.2"
-            [edgePower]="2.0"
-            [baseTexture]="'none'"
-          >
-            <!-- Interior Particle Cloud - Dense with HARD boundary constraint -->
-            <a3d-particle-cloud
-              [count]="40000"
-              [size]="0.08"
-              [radiusMin]="0"
-              [radiusMax]="4.3"
-              [position]="[0, 0, 0]"
-              [distribution]="'density-gradient'"
-              [colorGradient]="['#ffffff', '#ffccaa', '#ff8866']"
-              [opacity]="0.8"
-              [animated]="true"
-              [animationSpeed]="0.3"
-            />
-
-            <!-- Exterior Particle Cloud - Sparse background particles -->
-            <a3d-particle-cloud
-              [count]="8000"
-              [size]="0.03"
-              [radiusMin]="4.7"
-              [radiusMax]="9.0"
-              [position]="[0, 0, 0]"
-              [distribution]="'uniform'"
-              [colorGradient]="['#ffe8cc', '#ffccaa']"
-              [opacity]="0.3"
-              [animated]="true"
-              [animationSpeed]="0.15"
-            />
-          </a3d-marble-sphere>
+            [scale]="sphereScale()"
+            [interiorTexture]="'caustics'"
+            [opacity]="0.15"
+          />
         </a3d-scene-3d>
       </div>
 
