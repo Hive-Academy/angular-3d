@@ -289,7 +289,7 @@ export class HexagonalBackgroundInstancedComponent {
   }
 
   private createInstancedHexagons(): void {
-    const hexRadius = this.hexRadius();
+    const _hexRadius = this.hexRadius();
     const hexHeight = this.hexHeight();
     const circleCount = this.circleCount();
     const colors = this.colorPalette().map((c) => new THREE.Color(c));
@@ -502,7 +502,7 @@ export class HexagonalBackgroundInstancedComponent {
     dummy: THREE.Object3D,
     pos: THREE.Vector3,
     idx: number,
-    colors: THREE.Color[],
+    _colors: THREE.Color[],
     colorPhases: number[]
   ): void {
     // Set position

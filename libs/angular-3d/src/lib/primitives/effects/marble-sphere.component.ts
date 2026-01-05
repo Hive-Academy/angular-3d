@@ -34,28 +34,12 @@ import {
 } from '@angular/core';
 import * as THREE from 'three/webgpu';
 
-import { Color } from 'three/webgpu';
 import { OBJECT_ID } from '../../tokens/object-id.token';
 import { NG_3D_PARENT } from '../../types/tokens';
 import {
   createMarbleMaterial,
   type MarbleMaterialConfig,
 } from '../shaders/tsl-marble';
-import {
-  tslBrain,
-  tslCausticsTexture,
-  tslFireClouds,
-  tslGasGiant,
-  tslMarble,
-  tslPhotosphere,
-  tslPlanet,
-  tslStars,
-  tslWood,
-} from '../shaders/tsl-textures';
-
-// TSL node type
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type TSLNode = any;
 
 @Component({
   selector: 'a3d-marble-sphere',
@@ -134,45 +118,6 @@ export class MarbleSphereComponent {
   public readonly depth = input<number>(0.8);
 
   // ============================================================================
-  // Base Texture Layer Inputs
-  // ============================================================================
-
-  /** Base texture type for interior (replaces or blends with gradient) */
-  public readonly baseTexture = input<
-    | 'none'
-    | 'stars'
-    | 'caustics'
-    | 'planet'
-    | 'photosphere'
-    | 'gasGiant'
-    | 'marble'
-    | 'wood'
-    | 'brain'
-    | 'fireClouds'
-  >('none');
-
-  /** Base texture scale parameter */
-  public readonly baseTextureScale = input<number>(2);
-
-  /** Base texture color (for textures that support it) */
-  public readonly baseTextureColor = input<string | number>('#ffffff');
-
-  /** Base texture secondary color (for gradients) */
-  public readonly baseTextureColor2 = input<string | number>('#000000');
-
-  /** Base texture density/intensity parameter */
-  public readonly baseTextureDensity = input<number>(2);
-
-  /** Base texture animation speed */
-  public readonly baseTextureSpeed = input<number>(0.5);
-
-  /** Texture blend mode: 'replace' (modulate by depth) or 'mix' (blend with gradient) */
-  public readonly textureBlendMode = input<'replace' | 'mix'>('replace');
-
-  /** Texture blend amount (0-1, only used in 'mix' mode) */
-  public readonly textureBlendAmount = input<number>(0.5);
-
-  // ============================================================================
   // Shadow Inputs
   // ============================================================================
 
@@ -246,14 +191,6 @@ export class MarbleSphereComponent {
     const segments = this.segments();
     this.geometry = new THREE.SphereGeometry(radius, segments, segments);
 
-    // Create base texture if specified
-    let interiorTexture: TSLNode | undefined = undefined;
-    const textureType = this.baseTexture();
-
-    if (textureType !== 'none') {
-      interiorTexture = this.createTslTexture(textureType);
-    }
-
     // Create material config from inputs
     const config: MarbleMaterialConfig = {
       colorA: this.colorA(),
@@ -264,10 +201,6 @@ export class MarbleSphereComponent {
       timeScale: this.animationSpeed(),
       edgePower: this.edgePower(),
       edgeIntensity: this.edgeIntensity(),
-      // NEW: Pass interior texture
-      interiorTexture: interiorTexture,
-      textureBlendMode: this.textureBlendMode(),
-      textureBlendAmount: this.textureBlendAmount(),
     };
 
     // Create marble material nodes
@@ -307,104 +240,5 @@ export class MarbleSphereComponent {
       this.material = null;
     }
     this.mesh = null;
-  }
-
-  /**
-   * Create a TSL texture node based on type and input parameters
-   */
-  private createTslTexture(
-    type:
-      | 'stars'
-      | 'caustics'
-      | 'planet'
-      | 'photosphere'
-      | 'gasGiant'
-      | 'marble'
-      | 'wood'
-      | 'brain'
-      | 'fireClouds'
-  ): TSLNode {
-    const scale = this.baseTextureScale();
-    const color = new Color(this.baseTextureColor());
-    const color2 = new Color(this.baseTextureColor2());
-    const density = this.baseTextureDensity();
-    const speed = this.baseTextureSpeed();
-
-    switch (type) {
-      case 'stars':
-        return tslStars({
-          scale,
-          density,
-          color,
-          background: color2,
-          variation: 0.2,
-        });
-
-      case 'caustics':
-        return tslCausticsTexture({
-          scale,
-          speed,
-          color,
-        });
-
-      case 'planet':
-        return tslPlanet({
-          scale,
-          iterations: 5,
-          colorDeep: color2,
-          colorShallow: color,
-          levelSea: 0.3,
-          balanceWater: 0.3,
-        });
-
-      case 'photosphere':
-        return tslPhotosphere({
-          scale,
-          color,
-          background: color2,
-        });
-
-      case 'gasGiant':
-        return tslGasGiant({
-          scale,
-          bands: 10,
-          color1: color2,
-          color2: color,
-          color3: new Color(0x0000ff),
-        });
-
-      case 'marble':
-        return tslMarble({
-          scale,
-          color1: color2,
-          color2: color,
-        });
-
-      case 'wood':
-        return tslWood({
-          scale,
-          color1: color2,
-          color2: color,
-        });
-
-      case 'brain':
-        return tslBrain({
-          scale,
-          color1: color,
-          color2: color2,
-        });
-
-      case 'fireClouds':
-        return tslFireClouds({
-          scale,
-          speed: speed,
-          flameColor: color, // Deep orange
-          smokeColor: color2, // Smoked white
-          turbulence: density, // Use density as turbulence control
-        });
-
-      default:
-        throw new Error(`Unknown texture type: ${type}`);
-    }
   }
 }

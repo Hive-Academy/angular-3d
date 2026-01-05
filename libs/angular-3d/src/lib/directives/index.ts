@@ -23,8 +23,6 @@ export * from './geometries/polyhedron-geometry.directive';
 // Material directives
 export * from './materials/standard-material.directive';
 export * from './materials/physical-material.directive';
-export * from './materials/lambert-material.directive';
-export * from './materials/shader-material.directive';
 export * from './materials/node-material.directive';
 
 // Light directives

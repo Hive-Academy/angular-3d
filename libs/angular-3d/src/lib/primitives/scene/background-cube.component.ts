@@ -3,35 +3,32 @@ import { OBJECT_ID } from '../../tokens/object-id.token';
 import { MeshDirective } from '../../directives/core/mesh.directive';
 import { BoxGeometryDirective } from '../../directives/geometries/box-geometry.directive';
 import { TransformDirective } from '../../directives/core/transform.directive';
-import { LambertMaterialDirective } from '../../directives/materials/lambert-material.directive';
-import { ColorRepresentation } from 'three/webgpu';
+import { StandardMaterialDirective } from '../../directives/materials/standard-material.directive';
 
 /**
  * BackgroundCubeComponent - Simple cube primitive for background decoration
  *
- * Uses hostDirectives composition pattern with MeshLambertMaterial for optimal performance.
+ * Uses hostDirectives composition pattern with MeshStandardMaterial.
  * This component is designed for background decorations and environment elements.
  *
- * Performance optimizations:
- * - Uses MeshLambertMaterial (faster than Standard/Physical)
+ * Features:
  * - Designed to work with Float3dDirective and Performance3dDirective (applied by consumer)
- * - Supports shadow casting/receiving
+ * - Supports emissive glow effects
  *
  * @example
  * ```html
  * <a3d-background-cube
  *   [position]="[5, 2, -10]"
- *   [size]="[1.5, 1.5, 1.5]"
+ *   [args]="[1.5, 1.5, 1.5]"
  *   [color]="'#4a90e2'"
- *   [transparent]="true"
- *   [opacity]="0.8"
+ *   [emissive]="'#4a90e2'"
+ *   [emissiveIntensity]="2"
  *   a3dFloat3d
  *   a3dPerformance3d />
  * ```
  */
 @Component({
   selector: 'a3d-background-cube',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '<ng-content />',
   providers: [
@@ -48,14 +45,8 @@ import { ColorRepresentation } from 'three/webgpu';
       inputs: ['position', 'rotation', 'scale'],
     },
     {
-      directive: LambertMaterialDirective,
-      inputs: [
-        'color',
-        'emissive',
-        'emissiveIntensity',
-        'transparent',
-        'opacity',
-      ],
+      directive: StandardMaterialDirective,
+      inputs: ['color', 'emissive', 'emissiveIntensity'],
     },
   ],
 })
@@ -88,29 +79,17 @@ export class BackgroundCubeComponent {
    * Material color (hex number or CSS color string)
    * Default: 0x4a90e2 (blue)
    */
-  public readonly color = input<ColorRepresentation>(0x4a90e2);
+  public readonly color = input<number | string>(0x4a90e2);
 
   /**
    * Emissive color (self-illumination color)
    * Default: 0x000000 (no emission)
    */
-  public readonly emissive = input<ColorRepresentation>(0x000000);
+  public readonly emissive = input<number | string>(0x000000);
 
   /**
    * Emissive intensity multiplier
    * Default: 0
    */
   public readonly emissiveIntensity = input<number>(0);
-
-  /**
-   * Enable transparency rendering
-   * Default: false
-   */
-  public readonly transparent = input<boolean>(false);
-
-  /**
-   * Opacity level (0 = fully transparent, 1 = fully opaque)
-   * Default: 1
-   */
-  public readonly opacity = input<number>(1);
 }

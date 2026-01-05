@@ -2,12 +2,14 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { GlassSphereHeroSectionComponent } from './sections/glass-sphere-hero-section.component';
 import { LibraryOverviewSectionComponent } from './sections/library-overview-section.component';
 import { CtaSectionComponent } from './sections/cta-section.component';
+import { ClaudeSkillsShowcaseSectionComponent } from './sections/claude-skills-showcase-section.component';
 
 /**
  * Home Page Component
  *
- * Landing page with three sections:
+ * Landing page with four sections:
  * - Glass Sphere Hero (self-contained scroll animation)
+ * - Claude Skills Showcase (AI-enhanced development)
  * - CTA section
  * - Library Overview (hijacked scroll)
  */
@@ -15,11 +17,16 @@ import { CtaSectionComponent } from './sections/cta-section.component';
   selector: 'app-home',
   imports: [
     GlassSphereHeroSectionComponent,
+    ClaudeSkillsShowcaseSectionComponent,
     LibraryOverviewSectionComponent,
     CtaSectionComponent,
   ],
   template: `
     <app-glass-sphere-hero-section />
+
+    <section class="min-h-screen">
+      <app-claude-skills-showcase-section />
+    </section>
 
     <section class="min-h-screen">
       <app-cta-section />

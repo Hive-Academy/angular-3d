@@ -1,14 +1,15 @@
 /**
- * GlassSphereHeroSectionComponent - Warm Peachy Hero Section
+ * SunHeroSectionComponent - Stunning Space Sun Hero
  *
- * Self-contained hero section with volumetric 3D sphere.
- * Uses GSAP ScrollTrigger for scroll-driven animations.
+ * Self-contained hero section with volumetric sun rising from bottom.
+ * Creates a dramatic space scene with realistic sun effect.
  *
  * Features:
- * - CoralSphereComponent with outward particle corona
- * - Warm peachy marble interior with animated caustics
- * - Scroll-driven sphere position and scale via ScrollTrigger
- * - ViewportAnimation for staggered content entry
+ * - Volumetric ray-marched sun with multi-color gradient
+ * - Corona glow extending beyond sun surface
+ * - Dark space background with subtle star field
+ * - Bloom effect for luminous sun glow
+ * - Sun positioned at center-bottom (rising sun effect)
  */
 import {
   ChangeDetectionStrategy,
@@ -23,8 +24,10 @@ import {
 } from '@hive-academy/angular-gsap';
 import {
   Scene3dComponent,
-  SceneLightingComponent,
-  MarbleSphereComponent,
+  FireSphereComponent,
+  StarFieldComponent,
+  EffectComposerComponent,
+  BloomEffectComponent,
 } from '@hive-academy/angular-3d';
 
 @Component({
@@ -33,8 +36,10 @@ import {
     ScrollAnimationDirective,
     ViewportAnimationDirective,
     Scene3dComponent,
-    SceneLightingComponent,
-    MarbleSphereComponent,
+    FireSphereComponent,
+    StarFieldComponent,
+    EffectComposerComponent,
+    BloomEffectComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -45,40 +50,55 @@ import {
       scrollAnimation
       [scrollConfig]="scrollConfig"
     >
-      <!-- Layer 1: CSS Gradient Background -->
+      <!-- Layer 1: Dark Space Background -->
       <div
         class="gradient-layer absolute inset-0 z-0"
-        style="background: linear-gradient(to bottom, #fde8d7, #e8a080)"
+        style="background: linear-gradient(to bottom, #020208, #0a0a18)"
       >
         <!-- 3D Scene -->
         <a3d-scene-3d
-          [cameraPosition]="[0, 0, 12]"
-          [cameraFov]="50"
-          [backgroundColor]="null"
+          [cameraPosition]="[0, 0, 14]"
+          [cameraFov]="60"
+          [backgroundColor]="spaceBackgroundColor"
         >
-          <!-- Marble Sphere with animated fire clouds texture -->
-          <a3d-marble-sphere
-            [radius]="4.5"
-            [position]="spherePosition()"
-            [colorA]="'#ffd4a3'"
-            [colorB]="'#ffe8d7'"
-            [edgeColor]="'#ffaa77'"
-            [edgeIntensity]="2.0"
-            [baseTexture]="'fireClouds'"
-            [baseTextureColor]="'#ff6600'"
-            [baseTextureColor2]="'#f5f5dc'"
-            [baseTextureScale]="2.0"
-            [baseTextureDensity]="3.0"
-            [baseTextureSpeed]="0.5"
-            [roughness]="0.7"
-            [metalness]="0.2"
+          <!-- Subtle Star Field - not too many stars -->
+          <a3d-star-field
+            [starCount]="1500"
+            [radius]="80"
+            [enableTwinkle]="true"
+            [multiSize]="true"
           />
+
+          <!-- Sun Sphere - positioned at center-bottom (rising sun) -->
+          <a3d-fire-sphere
+            [radius]="5"
+            [position]="sunPosition()"
+            [sunMode]="true"
+            [fireMagnitude]="0.35"
+            [fireSpeed]="0.25"
+            [fireNoiseScale]="0.6"
+            [showShell]="false"
+            [showCorona]="true"
+            [coronaScale]="1.4"
+            [coronaColor]="'#ff3300'"
+            [coronaIntensity]="0.5"
+            [particleCount]="0"
+          />
+
+          <!-- Bloom for luminous sun glow -->
+          <a3d-effect-composer [enabled]="true">
+            <a3d-bloom-effect
+              [threshold]="0.3"
+              [strength]="0.8"
+              [radius]="0.4"
+            />
+          </a3d-effect-composer>
         </a3d-scene-3d>
       </div>
 
-      <!-- Layer 2: Hero Content -->
+      <!-- Layer 2: Hero Content (updated for dark theme) -->
       <div
-        class="content-layer pt-32 relative z-10 flex flex-col items-center justify-center min-h-screen text-center px-4 sm:px-6 md:px-8 max-w-5xl mx-auto"
+        class="content-layer pt-24 relative z-10 flex flex-col items-center justify-start min-h-screen text-center px-4 sm:px-6 md:px-8 max-w-5xl mx-auto"
         scrollAnimation
         [scrollConfig]="{
           animation: 'custom',
@@ -86,7 +106,7 @@ import {
           end: 'bottom 60%',
           scrub: 1.2,
           from: { opacity: 1, y: 0 },
-          to: { opacity: 0.7, y: -100 }
+          to: { opacity: 0, y: -150 }
         }"
       >
         <!-- Badge -->
@@ -101,17 +121,17 @@ import {
           }"
         >
           <span
-            class="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 bg-amber-900/10 backdrop-blur-md rounded-full text-xs sm:text-sm font-medium border border-amber-900/20 shadow-lg"
+            class="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 bg-orange-500/10 backdrop-blur-md rounded-full text-xs sm:text-sm font-medium border border-orange-500/30 shadow-lg shadow-orange-500/10"
           >
             <span class="relative flex h-2 w-2 sm:h-3 sm:w-3">
               <span
-                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"
+                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-500 opacity-75"
               ></span>
               <span
-                class="relative inline-flex rounded-full h-2 w-2 sm:h-3 sm:w-3 bg-amber-500"
+                class="relative inline-flex rounded-full h-2 w-2 sm:h-3 sm:w-3 bg-orange-500"
               ></span>
             </span>
-            <span class="text-amber-900">Angular 3D</span>
+            <span class="text-orange-300">Angular 3D</span>
           </span>
         </div>
 
@@ -126,11 +146,11 @@ import {
             threshold: 0.1
           }"
         >
-          <span class="block p-2 text-amber-950 drop-shadow-sm">
+          <span class="block p-2 text-white drop-shadow-lg">
             Build Stunning
           </span>
           <span
-            class="block bg-gradient-to-r from-amber-600 via-orange-500 to-rose-500 bg-clip-text text-transparent"
+            class="block bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent"
           >
             3D Experiences
           </span>
@@ -138,7 +158,7 @@ import {
 
         <!-- Subtitle -->
         <p
-          class="text-base font-medium sm:text-lg md:text-xl text-amber-900/70 max-w-3xl mx-auto mb-4 sm:mb-6 leading-relaxed"
+          class="text-base font-medium sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto mb-4 sm:mb-6 leading-relaxed"
           viewportAnimation
           [viewportConfig]="{
             animation: 'fadeIn',
@@ -164,7 +184,7 @@ import {
         >
           @for (pill of featurePills; track pill) {
           <span
-            class="px-3 sm:px-4 py-1.5 sm:py-2 bg-amber-500/20 text-amber-800 rounded-full text-xs sm:text-sm font-semibold border border-amber-500/30"
+            class="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/5 text-orange-300 rounded-full text-xs sm:text-sm font-semibold border border-white/10"
           >
             {{ pill }}
           </span>
@@ -184,16 +204,16 @@ import {
         >
           <a
             href="/angular-3d-showcase"
-            class="group relative px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full font-bold text-sm sm:text-base md:text-lg hover:scale-105 transition-all duration-300 shadow-xl shadow-amber-500/30"
+            class="group relative px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full font-bold text-sm sm:text-base md:text-lg hover:scale-105 transition-all duration-300 shadow-xl shadow-orange-500/30"
           >
             <span class="relative z-10">Get Started</span>
             <div
-              class="absolute inset-0 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 blur-xl opacity-50 group-hover:opacity-75 transition-opacity"
+              class="absolute inset-0 rounded-full bg-gradient-to-r from-orange-500 to-red-500 blur-xl opacity-50 group-hover:opacity-75 transition-opacity"
             ></div>
           </a>
           <a
             href="/angular-3d-showcase"
-            class="px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-amber-900/5 backdrop-blur-md text-amber-900 rounded-full font-bold text-sm sm:text-base md:text-lg border border-amber-900/20 hover:bg-amber-900/10 hover:border-amber-900/40 transition-all duration-300"
+            class="px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-white/5 backdrop-blur-md text-white rounded-full font-bold text-sm sm:text-base md:text-lg border border-white/20 hover:bg-white/10 hover:border-white/40 transition-all duration-300"
           >
             See Examples
           </a>
@@ -201,7 +221,7 @@ import {
 
         <!-- Scroll Indicator -->
         <div
-          class="flex flex-col items-center gap-2 sm:gap-3 text-amber-900/50"
+          class="flex flex-col items-center gap-2 sm:gap-3 text-white/40"
           viewportAnimation
           [viewportConfig]="{
             animation: 'fadeIn',
@@ -214,10 +234,10 @@ import {
             >Scroll to explore</span
           >
           <div
-            class="w-5 h-8 sm:w-6 sm:h-10 border-2 border-amber-900/30 rounded-full flex justify-center pt-1.5 sm:pt-2"
+            class="w-5 h-8 sm:w-6 sm:h-10 border-2 border-white/30 rounded-full flex justify-center pt-1.5 sm:pt-2"
           >
             <div
-              class="w-1 h-2.5 sm:w-1.5 sm:h-3 bg-amber-900/50 rounded-full animate-bounce"
+              class="w-1 h-2.5 sm:w-1.5 sm:h-3 bg-white/50 rounded-full animate-bounce"
             ></div>
           </div>
         </div>
@@ -260,7 +280,10 @@ export class GlassSphereHeroSectionComponent {
   /** Feature pills for hero section */
   protected readonly featurePills = ['WebGPU', 'TSL Shaders', 'Signals'];
 
-  /** ScrollTrigger config for sphere animation */
+  /** Dark space background color (hex number for Three.js) */
+  protected readonly spaceBackgroundColor = 0x020208;
+
+  /** ScrollTrigger config for sun animation */
   public readonly scrollConfig: ScrollAnimationConfig = {
     animation: 'custom',
     start: 'top top',
@@ -271,19 +294,22 @@ export class GlassSphereHeroSectionComponent {
     onUpdate: (progress) => this.scrollProgress.set(progress),
   };
 
-  /** Sphere position: left-center → top-right on scroll */
-  public readonly spherePosition = computed((): [number, number, number] => {
+  /**
+   * Sun position: center-bottom (rising sun effect)
+   * Starts at y=-7 (half visible at bottom) → rises to y=3 on scroll
+   */
+  public readonly sunPosition = computed((): [number, number, number] => {
     const p = Math.max(0, Math.min(1, this.scrollProgress()));
     const eased = 1 - Math.pow(1 - p, 3);
-    const x = -5 + 11 * eased; // -5 → 6
-    const y = -1 + 5 * eased; // -1 → 4
+    const x = 0; // Center horizontally
+    const y = -7 + 10 * eased; // -7 → 3 (rises from bottom)
     return [x, y, 0];
   });
 
-  /** Sphere scale: 1.0 → 0.3 on scroll */
-  public readonly sphereScale = computed((): number => {
+  /** Sun scale: 1.0 → 0.6 on scroll */
+  public readonly sunScale = computed((): number => {
     const p = Math.max(0, Math.min(1, this.scrollProgress()));
     const eased = 1 - Math.pow(1 - p, 3);
-    return 1.0 - 0.7 * eased;
+    return 1.0 - 0.4 * eased;
   });
 }

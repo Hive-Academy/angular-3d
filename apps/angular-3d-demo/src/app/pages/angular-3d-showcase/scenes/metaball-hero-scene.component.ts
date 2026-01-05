@@ -6,7 +6,9 @@ import {
 } from '@angular/core';
 import {
   Scene3dComponent,
-  MetaballComponent,
+  MetaballSceneComponent,
+  MetaballSphereComponent,
+  MetaballCursorComponent,
   MetaballPreset,
   AmbientLightComponent,
   PointLightComponent,
@@ -29,7 +31,9 @@ import {
   selector: 'app-metaball-hero-scene',
   imports: [
     Scene3dComponent,
-    MetaballComponent,
+    MetaballSceneComponent,
+    MetaballSphereComponent,
+    MetaballCursorComponent,
     AmbientLightComponent,
     PointLightComponent,
     OrbitControlsComponent,
@@ -54,32 +58,48 @@ import {
             [color]="lightColor()"
           />
 
-          <!-- Main metaball effect (fullscreen mode for hero section) -->
-          <a3d-metaball
+          <!-- Compositional Metaball Scene -->
+          <a3d-metaball-scene
             [preset]="selectedPreset()"
-            [sphereCount]="6"
             [smoothness]="0.6"
             [mouseProximityEffect]="true"
             [animationSpeed]="0.4"
             [movementScale]="1"
             [fullscreen]="true"
-            [fixedTopLeftRadius]="1.4"
-            [fixedBottomRightRadius]="1.4"
-            [smallTopLeftRadius]="0.5"
-            [smallBottomRightRadius]="0.55"
-            [mouseSmoothness]="0.05"
-            [cursorGlowRadius]="0.5"
-            [cursorGlowIntensity]="0.25"
-          />
+          >
+            <!-- Fixed corner spheres (radii halved for corrected coord system) -->
+            <a3d-metaball-sphere positionPreset="top-left" [radius]="0.7" />
+            <a3d-metaball-sphere [position]="[0.25, 0.72]" [radius]="0.25" />
+            <a3d-metaball-sphere positionPreset="bottom-right" [radius]="0.7" />
+            <a3d-metaball-sphere [position]="[0.72, 0.25]" [radius]="0.28" />
 
-          <!-- Orbit Controls for optional interactivity 
-          <a3d-orbit-controls
-            [enableDamping]="true"
-            [dampingFactor]="0.05"
-            [autoRotate]="false"
-            [minDistance]="9"
-            [maxDistance]="30"
-          />-->
+            <!-- Animated orbiting spheres -->
+            <a3d-metaball-sphere
+              [orbit]="{ radius: 0.15, speed: 0.4 }"
+              [radius]="0.06"
+            />
+            <a3d-metaball-sphere
+              [orbit]="{ radius: 0.22, speed: 0.52, phase: 3.14 }"
+              [radius]="0.09"
+            />
+            <a3d-metaball-sphere
+              [orbit]="{ radius: 0.3, speed: 0.64, phase: 1.1 }"
+              [radius]="0.06"
+            />
+            <a3d-metaball-sphere
+              [orbit]="{ radius: 0.22, speed: 0.76, phase: 2.2 }"
+              [radius]="0.09"
+            />
+
+            <!-- Cursor follower with glow -->
+            <a3d-metaball-cursor
+              [radiusMin]="0.04"
+              [radiusMax]="0.08"
+              [glowRadius]="0.25"
+              [glowIntensity]="0.35"
+              [smoothness]="1.0"
+            />
+          </a3d-metaball-scene>
         </a3d-scene-3d>
       </div>
 

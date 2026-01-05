@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
   AmbientLightComponent,
+  BackgroundCubesComponent,
   BloomEffectComponent,
   DirectionalLightComponent,
   EffectComposerComponent,
@@ -19,6 +20,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
     CommonModule,
     Scene3dComponent,
     HexagonalBackgroundInstancedComponent,
+    BackgroundCubesComponent,
     OrbitControlsComponent,
     AmbientLightComponent,
     DirectionalLightComponent,
@@ -300,6 +302,64 @@ import { SCENE_COLORS } from '../../../shared/colors';
                 Static honey-gold borders create a natural, organic appearance.
                 Move mouse to reveal darker honey glow. Perfect for light-themed
                 interfaces and natural product showcases.
+              </p>
+            </div>
+          </div>
+
+          <!-- Scene 6: NEW - Floating Background Cubes -->
+          <div class="bg-gray-800 rounded-lg overflow-hidden shadow-2xl">
+            <div class="h-[600px] relative">
+              <a3d-scene-3d
+                [cameraPosition]="[0, 0, 15]"
+                [backgroundColor]="colorNums.black"
+              >
+                <!-- Lighting -->
+                <a3d-ambient-light
+                  [color]="colorNums.white"
+                  [intensity]="0.4"
+                />
+                <a3d-directional-light
+                  [color]="colorNums.purple"
+                  [intensity]="1.2"
+                  [position]="[10, 10, 10]"
+                />
+
+                <!-- Background Cubes - Distributed around viewport -->
+                <a3d-background-cubes
+                  [count]="100"
+                  [colorPalette]="[
+                    colorNums.purple,
+                    colorNums.cyan,
+                    colorNums.hotPink,
+                    colorNums.neonPurple
+                  ]"
+                  [exclusionZone]="{ x: 6, y: 4 }"
+                  [sizeRange]="{ min: 0.5, max: 1.5 }"
+                  [depthRange]="{ min: -20, max: -5 }"
+                  [viewportBounds]="{ x: 20, y: 12 }"
+                />
+
+                <!-- Effect Composer with Bloom -->
+                <a3d-effect-composer>
+                  <a3d-bloom-effect
+                    [strength]="1.0"
+                    [threshold]="0.6"
+                    [radius]="0.3"
+                  />
+                </a3d-effect-composer>
+
+                <a3d-orbit-controls [enableDamping]="true" />
+              </a3d-scene-3d>
+            </div>
+            <div class="p-6">
+              <h4 class="text-white font-bold text-lg mb-2">
+                Floating Background Cubes - Zone Distribution
+              </h4>
+              <p class="text-gray-400">
+                100 floating cubes distributed around an exclusion zone (center
+                clear area). Uses MeshStandardMaterial with color glow. Cubes
+                are randomly placed in top, bottom, left, and right zones to
+                surround your content.
               </p>
             </div>
           </div>

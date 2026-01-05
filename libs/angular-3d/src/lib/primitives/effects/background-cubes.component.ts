@@ -5,7 +5,6 @@ import {
   computed,
 } from '@angular/core';
 import { BackgroundCubeComponent } from '../scene/background-cube.component';
-import { ColorRepresentation } from 'three/webgpu';
 
 /**
  * CubeConfig - Configuration for a single background cube
@@ -14,7 +13,7 @@ interface CubeConfig {
   id: string;
   position: [number, number, number];
   size: [number, number, number];
-  color: ColorRepresentation;
+  color: number | string;
   rotation: [number, number, number];
 }
 
@@ -46,14 +45,11 @@ interface ZoneConfig {
  *   [colorPalette]="[0x7b3ab3, 0x6a2ba7, 0x8a2be2]"
  *   [exclusionZone]="{ x: 12, y: 8 }"
  *   [sizeRange]="{ min: 0.8, max: 2.6 }"
- *   [depthRange]="{ min: -28, max: -8 }"
- *   [transparent]="true"
- *   [opacity]="0.7" />
+ *   [depthRange]="{ min: -28, max: -8 }" />
  * ```
  */
 @Component({
   selector: 'a3d-background-cubes',
-  standalone: true,
   imports: [BackgroundCubeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -63,8 +59,6 @@ interface ZoneConfig {
       [args]="cube.size"
       [color]="cube.color"
       [rotation]="cube.rotation"
-      [transparent]="transparent()"
-      [opacity]="opacity()"
     />
     }
   `,
@@ -80,7 +74,7 @@ export class BackgroundCubesComponent {
    * Array of colors to randomly select from
    * Default: Purple/blue gradient palette
    */
-  public readonly colorPalette = input<ColorRepresentation[]>([
+  public readonly colorPalette = input<(number | string)[]>([
     0x7b3ab3, 0x6a2ba7, 0x8a2be2,
   ]);
 
@@ -120,18 +114,6 @@ export class BackgroundCubesComponent {
     x: 30,
     y: 20,
   });
-
-  /**
-   * Enable transparency for all cubes
-   * Default: true
-   */
-  public readonly transparent = input<boolean>(true);
-
-  /**
-   * Opacity for all cubes (0 = fully transparent, 1 = fully opaque)
-   * Default: 0.7
-   */
-  public readonly opacity = input<number>(0.7);
 
   /**
    * Computed cube configurations

@@ -1,14 +1,14 @@
 /**
  * TSL Fire Clouds Texture
  *
- * Creates animated fire/smoke effect with upward-flowing turbulent flames.
+ * Creates animated fire effect emanating radially from sphere center to edges.
  * Features customizable colors, turbulence, and animation speed.
  *
  * Key features:
- * - Upward-flowing flames (realistic fire physics)
+ * - Radial fire emanation from center (hottest core to cooler edges)
  * - Turbulent FBM noise for organic flame shapes
- * - Smooth color gradient from hot core to cool smoke
- * - Time-based animation with flickering
+ * - Smooth color gradient: white-hot core → orange flames → smoke edges
+ * - Time-based animation with flickering and swirling motion
  * - Highly configurable parameters
  *
  * @module primitives/shaders/tsl-textures/fire-clouds
@@ -33,6 +33,7 @@ const {
   cos,
   mul,
   sub,
+  length,
 } = TSL;
 
 // ============================================================================
@@ -43,36 +44,37 @@ const fireCloudsDefaults: TslTextureParams = {
   $name: 'Fire Clouds',
   scale: 2.0, // Base scale for noise patterns
   speed: 0.5, // Overall animation speed
-  flowSpeed: 0.8, // Upward flow speed (flames rise)
+  flowSpeed: 0.8, // Radial expansion speed (flames expand from center)
   turbulence: 3.0, // Turbulence intensity (higher = more chaotic)
-  flameHeight: 2.0, // Vertical gradient strength
+  flameHeight: 2.0, // (Unused - kept for backwards compatibility)
   flickerSpeed: 8.0, // Flicker/pulse speed
   flickerAmount: 0.15, // Flicker intensity
-  // Colors
-  coreColor: new Color('#ffffff'), // White-hot core
-  flameColor: new Color('#ff6600'), // Deep orange flames
-  smokeColor: new Color('#f5f5dc'), // Smoked white/beige
-  darkColor: new Color('#331100'), // Dark red-brown base
+  // Colors - Radial gradient from center to edge
+  coreColor: new Color('#ffffff'), // White-hot core (center)
+  flameColor: new Color('#ff6600'), // Deep orange flames (mid-radius)
+  smokeColor: new Color('#f5f5dc'), // Smoked white/beige (outer edge)
+  darkColor: new Color('#cc4400'), // Bright orange-red base (darkest areas)
   seed: 0,
 };
 
 /**
  * TSL Fire Clouds Texture
  *
- * Creates realistic animated fire/smoke effect with upward flow.
- * Uses layered FBM noise for turbulent flame patterns.
+ * Creates realistic animated fire effect emanating radially from sphere center.
+ * Uses layered FBM noise for turbulent flame patterns with radial intensity gradient.
  *
- * Color gradient: dark base → deep orange flames → white-hot core → smoked white smoke
+ * Color gradient: white-hot core (center) → deep orange flames → smoked edges (surface)
  *
  * @example
  * ```typescript
  * const fire = tslFireClouds({
  *   scale: 2.0,
  *   speed: 0.5,
- *   flowSpeed: 0.8,
+ *   flowSpeed: 0.8,           // Radial expansion speed
  *   turbulence: 3.0,
- *   flameColor: new Color('#ff6600'),  // Deep orange
- *   smokeColor: new Color('#f5f5dc'),  // Smoked white
+ *   coreColor: new Color('#ffffff'),   // White-hot center
+ *   flameColor: new Color('#ff6600'),  // Deep orange mid-radius
+ *   smokeColor: new Color('#f5f5dc'),  // Smoked white edges
  * });
  * material.colorNode = fire;
  * ```
@@ -86,26 +88,37 @@ export const tslFireClouds = TSLFn((userParams: TslTextureParams = {}) => {
   const baseScale = (p['scale'] as TSLNode).mul(2.0);
 
   // ========================================================================
-  // UPWARD FLOW - Flames rise over time
+  // RADIAL OUTWARD FLOW - Flames expand from center outward
   // ========================================================================
 
-  // Vertical flow (flames move upward)
-  const flowSpeed = p['flowSpeed'] as TSLNode;
-  const upwardFlow = t.mul(flowSpeed);
+  // CRITICAL: Normalize position first (sphere vertices range from -radius to +radius)
+  // Without normalization, large spheres sample noise at huge coordinates (all same value = dark)
+  const normalizedPos = positionGeometry.normalize();
 
-  // Add horizontal drift for natural movement
-  const horizontalDrift = vec3(
-    sin(t.mul(0.3)).mul(0.2),
-    float(0),
-    cos(t.mul(0.25)).mul(0.2)
+  // RADIAL EXPANSION - Flames expand from center like a real fire sphere
+  const flowSpeed = p['flowSpeed'] as TSLNode;
+
+  // CRITICAL: Calculate distance from sphere CENTER (0,0,0) once for both flow and gradient
+  // For normalized position, length ranges from 0 (center) to 1 (surface)
+  const distanceFromSphereCenter = length(normalizedPos);
+
+  // Radial expansion: move texture outward from center over time
+  const radialFlow = t.mul(flowSpeed).mul(0.5);
+
+  // Add swirling/circulation around the sphere
+  const circulationSpeed = t.mul(0.4);
+  const swirl = vec3(
+    sin(circulationSpeed.add(normalizedPos.y.mul(3.0))).mul(0.3),
+    cos(circulationSpeed.add(normalizedPos.x.mul(3.0))).mul(0.3),
+    sin(circulationSpeed.add(normalizedPos.z.mul(3.0))).mul(0.3)
   );
 
-  // Position with upward flow
-  const flowingPos = positionGeometry
+  // Position with radial outward flow (from center outward)
+  const flowingPos = normalizedPos
     .mul(baseScale)
-    .add(p['seed'])
-    .add(horizontalDrift);
-  flowingPos.y.addAssign(upwardFlow); // Move texture upward over time
+    .add(normalizedPos.mul(radialFlow)) // Push texture outward radially
+    .add(swirl) // Add circulation
+    .add(p['seed']);
 
   // ========================================================================
   // TURBULENT NOISE - Multiple octaves for flame detail
@@ -130,22 +143,38 @@ export const tslFireClouds = TSLFn((userParams: TslTextureParams = {}) => {
     .add(noise2.mul(0.3))
     .add(noise3.mul(0.2));
 
-  // Apply turbulence multiplier
-  const turbulentNoise = combinedNoise.mul(turbulence);
+  // Apply turbulence multiplier and ADD base intensity to ensure visibility
+  const turbulentNoise = combinedNoise.mul(turbulence).add(0.3); // +0.3 base intensity
 
   // ========================================================================
-  // VERTICAL GRADIENT - Flames fade upward into smoke
+  // RADIAL GRADIENT - Fire emanates from CENTER to EDGES
   // ========================================================================
 
-  // Vertical position (-1 to 1 typically)
-  const verticalPos = positionGeometry.y;
+  // Create radial gradient using distance from center in texture space
+  // This simulates volumetric depth where center = bright core, edges = dim
+  const textureDepth = length(flowingPos);
 
-  // Height gradient (bottom = hot flames, top = cool smoke)
-  const flameHeight = p['flameHeight'] as TSLNode;
-  const heightFactor = verticalPos.mul(flameHeight).add(1.0).clamp(0, 2);
+  // Strong radial falloff: bright core → dim edges
+  const depthFactor = textureDepth.div(baseScale.mul(1.5)).clamp(0, 2);
+  const radialIntensity = float(2.0).sub(depthFactor).clamp(0, 1);
 
-  // Invert for flame intensity (bottom hot, top cool)
-  const flameIntensity = float(2.0).sub(heightFactor).clamp(0, 1);
+  // Apply strong power curve for concentrated core
+  const coreIntensity = pow(radialIntensity, float(2.5)); // 2.5 = sharp bright core
+
+  // ========================================================================
+  // FLAME STREAMS - Create gaps with noise threshold
+  // ========================================================================
+
+  // Combine turbulent noise with core intensity
+  let flamePattern = turbulentNoise.mul(coreIntensity);
+
+  // CRITICAL: Threshold to create gaps (flame streams instead of solid sphere)
+  // Below threshold = transparent/invisible, above = visible flames
+  const flameThreshold = float(0.4); // Adjust this to control flame density
+  const thresholdMask = flamePattern.sub(flameThreshold).clamp(0, 1);
+
+  // Apply threshold mask to create distinct flame streams
+  const flameIntensity = flamePattern.mul(thresholdMask);
 
   // ========================================================================
   // FLICKERING - Random intensity variation
@@ -175,11 +204,12 @@ export const tslFireClouds = TSLFn((userParams: TslTextureParams = {}) => {
   // FINAL INTENSITY - Combine all factors
   // ========================================================================
 
-  // Turbulent noise modulated by flame intensity and flicker
-  let intensity = turbulentNoise.mul(flameIntensity).mul(flickerMultiplier);
+  // Apply flicker to flame intensity
+  let intensity = flameIntensity.mul(flickerMultiplier);
 
   // Use power curve to create sharp flame edges and bright cores
-  intensity = abs(intensity).pow(float(1.5));
+  // Reduced power from 1.5 to 1.2 for more visible mid-tones
+  intensity = abs(intensity).pow(float(1.2));
 
   // Clamp to valid range
   const clampedIntensity = intensity.clamp(0, 1);
@@ -188,10 +218,10 @@ export const tslFireClouds = TSLFn((userParams: TslTextureParams = {}) => {
   // COLOR GRADIENT - Dark → Orange → White → Smoke
   // ========================================================================
 
-  // Color thresholds
-  const darkToFlame = float(0.3); // Dark to orange transition
-  const flameToCorelow = float(0.6); // Orange to white-hot transition
-  const coreToSmoke = float(0.85); // White-hot to smoke transition
+  // Color thresholds - adjusted for more visible orange flames
+  const darkToFlame = float(0.2); // Dark to orange transition (was 0.3)
+  const flameToCorelow = float(0.5); // Orange to white-hot transition (was 0.6)
+  const coreToSmoke = float(0.8); // White-hot to smoke transition (was 0.85)
 
   // Calculate blend factors
   const darkFlameMix = clampedIntensity.div(darkToFlame).clamp(0, 1);
@@ -212,6 +242,9 @@ export const tslFireClouds = TSLFn((userParams: TslTextureParams = {}) => {
   const flameCoreColor = darkFlameColor.mix(vec3(p['coreColor']), flameCoreMix);
   const finalColor = flameCoreColor.mix(vec3(p['smokeColor']), coreSmokeMix);
 
-  // Apply intensity for brightness
-  return finalColor.mul(clampedIntensity);
+  // CRITICAL FIX: Return color directly without multiplying by intensity again
+  // The intensity is already incorporated through the color gradient blending above
+  // Multiplying by intensity again was causing double-darkening (intensity squared effect)
+  // This was making the fire texture appear nearly black inside the sphere
+  return finalColor;
 });
