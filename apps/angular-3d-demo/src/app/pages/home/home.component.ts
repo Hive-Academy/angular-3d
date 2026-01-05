@@ -25,16 +25,16 @@ import { ClaudeSkillsShowcaseSectionComponent } from './sections/claude-skills-s
     <app-glass-sphere-hero-section />
 
     <section class="min-h-screen">
-      <app-claude-skills-showcase-section />
-    </section>
-
-    <section class="min-h-screen">
       <app-cta-section />
     </section>
 
     <section class="min-h-screen">
-      <app-library-overview-section />
+      <app-claude-skills-showcase-section />
     </section>
+
+    <!-- <section class="min-h-screen">
+      <app-library-overview-section />
+    </section> -->
   `,
   styles: [
     `

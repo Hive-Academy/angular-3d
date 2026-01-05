@@ -265,9 +265,10 @@ export class FireSphereComponent {
 
     // Create volumetric fire/sun fragment node
     // Pass sunMode to use built-in multi-color gradient
+    // Reduced iterations (25) for better performance with big flames
     const volumetricNode = createVolumetricFireNode(
       this.volumetricFireUniforms,
-      40, // iterations
+      25, // iterations - reduced for performance
       isSunMode // sunMode - uses realistic sun colors when true
     );
 

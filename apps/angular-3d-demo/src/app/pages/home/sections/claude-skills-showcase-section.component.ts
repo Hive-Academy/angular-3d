@@ -103,15 +103,6 @@ import {
             [ior]="1.4"
             [clearcoat]="1.0"
             [clearcoatRoughness]="0.0"
-            mouseTracking3d
-            [trackingConfig]="{
-              sensitivity: 0.8,
-              limit: 0.5,
-              damping: 0.05,
-              invertX: true,
-              translationRange: [10, 5],
-              invertPosX: true
-            }"
           />
           <a3d-spot-light
             [position]="[-12, 14, -8]"
@@ -138,15 +129,6 @@ import {
             [ior]="1.4"
             [clearcoat]="1.0"
             [clearcoatRoughness]="0.0"
-            mouseTracking3d
-            [trackingConfig]="{
-              sensitivity: 0.8,
-              limit: 0.5,
-              damping: 0.05,
-              invertX: true,
-              translationRange: [10, 5],
-              invertPosX: true
-            }"
           />
           <a3d-spot-light
             [position]="[12, 14, -7]"
@@ -173,15 +155,6 @@ import {
             [ior]="1.4"
             [clearcoat]="1.0"
             [clearcoatRoughness]="0.0"
-            mouseTracking3d
-            [trackingConfig]="{
-              sensitivity: 0.8,
-              limit: 0.5,
-              damping: 0.05,
-              invertY: true,
-              translationRange: [10, 5],
-              invertPosY: true
-            }"
           />
           <a3d-spot-light
             [position]="[-9, -4, -6]"
@@ -208,15 +181,6 @@ import {
             [ior]="1.4"
             [clearcoat]="1.0"
             [clearcoatRoughness]="0.0"
-            mouseTracking3d
-            [trackingConfig]="{
-              sensitivity: 0.8,
-              limit: 0.5,
-              damping: 0.05,
-              invertY: true,
-              translationRange: [10, 5],
-              invertPosY: true
-            }"
           />
           <a3d-spot-light
             [position]="[12, -6, -9]"

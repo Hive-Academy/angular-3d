@@ -70,15 +70,20 @@ const localize = Fn(([worldPos, invMatrix]: [TSLNode, TSLNode]) => {
 });
 
 /**
- * Procedural sun texture sampler with multi-color gradient
- * Creates realistic sun surface with granulation and color temperature gradient
+ * Procedural sun texture sampler - PERFORMANCE OPTIMIZED
+ * Creates bold sun with 4-5 large flame tendrils
+ *
+ * Optimizations:
+ * - Single turbulence pass (not two)
+ * - Lower frequency noise for bigger flame shapes
+ * - Simplified core texture
  *
  * @param p - Local position (in sphere's local space)
  * @param sphereRadius - Actual sphere radius for proper scaling
  * @param noiseScale - Noise scale [x, y, z, timeSpeed]
  * @param lacunarity - FBM frequency multiplier
  * @param gain - FBM amplitude multiplier
- * @param magnitude - Turbulence intensity
+ * @param magnitude - Turbulence intensity (higher = longer flames)
  * @param seed - Random seed for variation
  */
 const samplerSphericalFire = Fn(
@@ -99,58 +104,68 @@ const samplerSphericalFire = Fn(
     const animP = vec3(p).toVar('animP');
     const timeOffset = seed.add(time).mul(noiseScale.w);
 
-    // Apply noise scaling
-    animP.assign(p.mul(vec3(noiseScale.x, noiseScale.y, noiseScale.z)));
+    // LOW FREQUENCY noise scaling for BIG flame shapes (fewer, larger flames)
+    animP.assign(p.mul(vec3(noiseScale.x, noiseScale.y, noiseScale.z).mul(0.4)));
     // Add time-based animation (fire flows outward)
-    animP.addAssign(normalize(p).mul(timeOffset.mul(0.5)));
+    animP.addAssign(normalize(p).mul(timeOffset.mul(0.4)));
 
-    // Sample primary turbulence for flame shapes
+    // ========================================
+    // SINGLE TURBULENCE PASS - optimized for performance
+    // Low frequency = 4-5 big flame tendrils instead of many small ones
+    // ========================================
     const turbulenceValue = turbulence3(animP, lacunarity, gain);
 
-    // Sample secondary noise for surface granulation (higher frequency)
-    const granulationP = p.mul(vec3(2.5, 2.5, 2.5)).add(time.mul(0.1));
-    const granulation = mx_noise_float(granulationP).mul(0.15).add(0.85);
+    // ========================================
+    // SIMPLE CORE TEXTURE - darker variation without extra noise
+    // ========================================
+    // Use existing turbulence for core texture (no extra noise call)
+    const coreTexture = turbulenceValue.mul(0.3).add(0.7);
 
-    // RADIAL GRADIENT with turbulence for organic edge
-    const radialGradient = normalizedDist.add(turbulenceValue.mul(magnitude));
+    // ========================================
+    // RADIAL GRADIENT - MUCH BIGGER FLAMES
+    // ========================================
+    // High magnitude creates long flame tendrils
+    const radialGradient = normalizedDist.add(turbulenceValue.mul(magnitude.mul(2.5)));
 
-    // Sun fills entire sphere with soft corona edge
-    // Fire extends to 95% of radius with soft falloff beyond
-    const fireIntensity = smoothstep(float(1.1), float(0.0), radialGradient);
+    // Fire intensity - small core, flames extend FAR outward
+    const coreSize = float(0.25); // Very small core
+    const flameReach = float(1.8); // Flames reach 1.8x radius
+    const fireIntensity = smoothstep(flameReach, coreSize, radialGradient);
 
-    // Apply granulation for mottled surface texture
-    const texturedIntensity = fireIntensity.mul(granulation);
+    // Apply core texture for variation
+    const texturedIntensity = fireIntensity.mul(coreTexture);
 
-    // Soft threshold for continuous sun surface (not flames with gaps)
-    const sunSurface = smoothstep(float(0.1), float(0.6), texturedIntensity);
+    // Soft threshold for smooth flames
+    const sunSurface = smoothstep(float(0.1), float(0.7), texturedIntensity);
 
     // ========================================
     // MULTI-COLOR GRADIENT (center → edge)
-    // Based on sun's temperature gradient
     // ========================================
-    // Core: bright yellow-white (6000K)
-    const coreColor = vec3(1.0, 1.0, 0.85);
-    // Inner: golden yellow (5500K)
-    const innerColor = vec3(1.0, 0.85, 0.4);
-    // Mid: orange (5000K)
-    const midColor = vec3(1.0, 0.55, 0.1);
-    // Outer: red-orange (4500K) - corona edge
-    const outerColor = vec3(0.9, 0.25, 0.0);
+    // Core: warm golden (not pure white)
+    const coreColor = vec3(1.0, 0.92, 0.65);
+    // Inner: golden yellow
+    const innerColor = vec3(1.0, 0.75, 0.3);
+    // Mid: deep orange
+    const midColor = vec3(1.0, 0.45, 0.1);
+    // Outer: red-orange for flame tips
+    const outerColor = vec3(0.9, 0.2, 0.0);
 
-    // Create smooth color transitions based on distance from center
-    const colorT = clamp(normalizedDist.mul(1.2), float(0.0), float(1.0));
+    // Color based on distance - faster transition for smaller core
+    const colorT = clamp(normalizedDist.mul(2.5), float(0.0), float(1.0));
 
-    // 4-stop gradient using nested mix
-    const color1 = mix(coreColor, innerColor, smoothstep(float(0.0), float(0.3), colorT));
-    const color2 = mix(color1, midColor, smoothstep(float(0.3), float(0.6), colorT));
-    const finalColor = mix(color2, outerColor, smoothstep(float(0.6), float(1.0), colorT));
+    // Gradient with smaller bright core
+    const color1 = mix(coreColor, innerColor, smoothstep(float(0.0), float(0.12), colorT));
+    const color2 = mix(color1, midColor, smoothstep(float(0.12), float(0.35), colorT));
+    const finalColor = mix(color2, outerColor, smoothstep(float(0.35), float(0.75), colorT));
 
-    // Apply intensity to color
-    const coloredSun = finalColor.mul(sunSurface);
+    // Apply core texture darkness
+    const texturedColor = finalColor.mul(coreTexture.mul(0.3).add(0.7));
 
-    // Alpha: sun surface with soft corona fade
-    // Corona extends slightly beyond sphere (up to 1.15x radius)
-    const coronaFade = smoothstep(float(1.15), float(0.8), normalizedDist);
+    // Final colored sun
+    const coloredSun = texturedColor.mul(sunSurface);
+
+    // Alpha with extended flame fade
+    const coronaFade = smoothstep(float(1.8), float(0.6), normalizedDist);
     const alpha = sunSurface.mul(coronaFade);
 
     return vec4(coloredSun.x, coloredSun.y, coloredSun.z, alpha);
