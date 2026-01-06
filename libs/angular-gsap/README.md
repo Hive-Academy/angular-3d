@@ -1,5 +1,8 @@
 # @hive-academy/angular-gsap
 
+[![npm version](https://img.shields.io/npm/v/@hive-academy/angular-gsap.svg)](https://www.npmjs.com/package/@hive-academy/angular-gsap)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../LICENSE)
+
 > 🎬 **GSAP-powered scroll animations for Angular applications**
 
 A modern Angular library providing declarative, scroll-triggered animations using GSAP and ScrollTrigger. Create stunning scroll experiences with minimal code.
@@ -420,6 +423,12 @@ export class StoryComponent {
   }
 }
 ```
+
+---
+
+## 🎬 Live Demo
+
+> 🚀 Coming soon - Live demo application showcasing all animation types
 
 ---
 
