@@ -19,14 +19,14 @@ export const appConfig: ApplicationConfig = {
     }),
 
     // Lenis smooth scroll with configuration
-    // Optimized for 3D content - lerp 0.1 provides smooth scrolling
-    // without interfering with Three.js render loops
+    // PERF: useGsapTicker: false prevents dual RAF loop conflict
+    // Lenis uses native RAF, Three.js uses setAnimationLoop - they don't compete
     provideLenis({
       lerp: 0.1,
       wheelMultiplier: 1,
       touchMultiplier: 2,
       smoothWheel: true,
-      useGsapTicker: true,
+      useGsapTicker: false, // Use native RAF to avoid conflict with Three.js
     }),
   ],
 };

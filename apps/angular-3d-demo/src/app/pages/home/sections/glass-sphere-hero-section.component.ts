@@ -81,14 +81,14 @@ import {
 
           <!-- Sun - FIXED at center-bottom (volumetric with large separated flames) -->
           <a3d-fire-sphere
-            [radius]="6"
+            [radius]="8"
             [position]="sunPosition"
             [quality]="'quality'"
             [sunMode]="true"
             [fireSpeed]="0.35"
             [fireMagnitude]="1.7"
             [fireNoiseScale]="0.4"
-            [lacunarity]="2.5"
+            [lacunarity]="1.2"
             [iterations]="24"
           />
 
