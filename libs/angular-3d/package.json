@@ -1,13 +1,42 @@
 {
   "name": "@hive-academy/angular-3d",
   "version": "0.0.1",
+  "description": "Declarative Three.js components for Angular - Build stunning 3D experiences with familiar Angular patterns",
+  "keywords": [
+    "angular",
+    "three.js",
+    "threejs",
+    "3d",
+    "webgl",
+    "webgpu",
+    "angular-library",
+    "declarative",
+    "components",
+    "graphics",
+    "visualization",
+    "3d-graphics",
+    "angular-threejs",
+    "scene",
+    "renderer"
+  ],
+  "homepage": "https://github.com/hive-academy/angular-3d-workspace#readme",
+  "bugs": {
+    "url": "https://github.com/hive-academy/angular-3d-workspace/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hive-academy/angular-3d-workspace.git",
+    "directory": "libs/angular-3d"
+  },
+  "license": "MIT",
+  "author": "Hive Academy",
   "peerDependencies": {
     "@angular/core": "~20.3.0",
+    "@angular/common": "~20.3.0",
     "three": "^0.182.0",
     "three-stdlib": "^2.35.0",
     "gsap": "^3.14.2",
     "rxjs": "~7.8.0",
-    "@angular/common": "~20.3.0",
     "maath": "^0.10.8",
     "troika-three-text": "^0.52.4"
   },

@@ -1,6 +1,35 @@
 {
   "name": "@hive-academy/angular-gsap",
   "version": "0.0.1",
+  "description": "GSAP-powered scroll animations for Angular - Declarative scroll-triggered animations with ScrollTrigger integration",
+  "keywords": [
+    "angular",
+    "gsap",
+    "scrolltrigger",
+    "scroll-animation",
+    "animation",
+    "angular-library",
+    "scroll",
+    "parallax",
+    "viewport",
+    "intersection-observer",
+    "angular-gsap",
+    "greensock",
+    "scroll-effects",
+    "hijacked-scroll",
+    "lenis"
+  ],
+  "homepage": "https://github.com/hive-academy/angular-3d-workspace#readme",
+  "bugs": {
+    "url": "https://github.com/hive-academy/angular-3d-workspace/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hive-academy/angular-3d-workspace.git",
+    "directory": "libs/angular-gsap"
+  },
+  "license": "MIT",
+  "author": "Hive Academy",
   "peerDependencies": {
     "@angular/common": "^20.3.0",
     "@angular/core": "^20.3.0",
