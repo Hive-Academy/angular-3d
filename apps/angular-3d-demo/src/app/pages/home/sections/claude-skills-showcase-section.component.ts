@@ -90,11 +90,12 @@ import {
           <!-- ============ CORNER BUBBLE SPHERES ============ -->
 
           <!-- Top-Left Corner Bubble -->
+          <!-- Top-Left: Reduced segments 32->24 for performance -->
           <a3d-floating-sphere
             float3d
             [floatConfig]="{ height: 0.6, speed: 4000 }"
             [position]="[-15, 10, -15]"
-            [args]="[2, 32, 32]"
+            [args]="[2, 24, 24]"
             [color]="'#e879f9'"
             [metalness]="0.0"
             [roughness]="0.0"
@@ -116,11 +117,12 @@ import {
           />
 
           <!-- Top-Right Corner Bubble -->
+          <!-- Top-Right: Reduced segments 32->24 for performance -->
           <a3d-floating-sphere
             float3d
             [floatConfig]="{ height: 0.8, speed: 5000 }"
             [position]="[15, 10, -14]"
-            [args]="[2.5, 32, 32]"
+            [args]="[2.5, 24, 24]"
             [color]="'#a855f7'"
             [metalness]="0.0"
             [roughness]="0.0"
@@ -142,11 +144,12 @@ import {
           />
 
           <!-- Bottom-Left Corner Bubble -->
+          <!-- Bottom-Left: Reduced segments 32->24 for performance -->
           <a3d-floating-sphere
             float3d
             [floatConfig]="{ height: 0.5, speed: 3500 }"
             [position]="[-12, -8, -13]"
-            [args]="[1.8, 32, 32]"
+            [args]="[1.8, 24, 24]"
             [color]="'#f472b6'"
             [metalness]="0.0"
             [roughness]="0.0"
@@ -168,11 +171,12 @@ import {
           />
 
           <!-- Bottom-Right Corner Bubble -->
+          <!-- Bottom-Right: Reduced segments 32->24 for performance -->
           <a3d-floating-sphere
             float3d
             [floatConfig]="{ height: 0.7, speed: 4500 }"
             [position]="[15, -10, -16]"
-            [args]="[2.2, 32, 32]"
+            [args]="[2.2, 24, 24]"
             [color]="'#d946ef'"
             [metalness]="0.0"
             [roughness]="0.0"

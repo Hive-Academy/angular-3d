@@ -4,7 +4,7 @@ import {
   provideZoneChangeDetection,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideGsap } from '@hive-academy/angular-gsap';
+import { provideGsap, provideLenis } from '@hive-academy/angular-gsap';
 import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
@@ -19,12 +19,14 @@ export const appConfig: ApplicationConfig = {
     }),
 
     // Lenis smooth scroll with configuration
-    // provideLenis({
-    //   lerp: 0.1,
-    //   wheelMultiplier: 1,
-    //   touchMultiplier: 2,
-    //   smoothWheel: true,
-    //   useGsapTicker: true,
-    // }),
+    // Optimized for 3D content - lerp 0.1 provides smooth scrolling
+    // without interfering with Three.js render loops
+    provideLenis({
+      lerp: 0.1,
+      wheelMultiplier: 1,
+      touchMultiplier: 2,
+      smoothWheel: true,
+      useGsapTicker: true,
+    }),
   ],
 };

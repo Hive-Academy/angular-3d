@@ -1,11 +1,11 @@
 /**
  * SunHeroSectionComponent - Stunning Space Sun Hero
  *
- * Self-contained hero section with volumetric sun fixed at center-bottom.
- * Creates a dramatic space scene with realistic sun effect.
+ * Self-contained hero section with optimized sun effect fixed at center-bottom.
+ * Creates a dramatic space scene with smooth 60fps performance.
  *
  * Features:
- * - Volumetric ray-marched sun with multi-color gradient
+ * - Texture-based sun shader (fast, 60fps friendly)
  * - Sun FIXED at center-bottom (no scroll animation)
  * - Simple parallax effect on hero content only
  * - Dark space background with subtle star field
@@ -61,20 +61,16 @@ import {
             [multiSize]="true"
           />
 
-          <!-- Sun - FIXED at center-bottom (no scroll animation) -->
+          <!-- Sun - FIXED at center-bottom (volumetric for flame tendrils) -->
           <a3d-fire-sphere
             [radius]="6"
             [position]="sunPosition"
+            [quality]="'quality'"
             [sunMode]="true"
-            [fireMagnitude]="0.6"
-            [fireSpeed]="0.15"
-            [fireNoiseScale]="0.35"
-            [showShell]="false"
-            [showCorona]="true"
-            [coronaScale]="1.6"
-            [coronaColor]="'#ff2200'"
-            [coronaIntensity]="0.35"
-            [particleCount]="0"
+            [fireSpeed]="0.4"
+            [fireMagnitude]="0.5"
+            [fireNoiseScale]="0.6"
+            [iterations]="12"
           />
 
           <!-- Bloom for luminous sun glow -->
