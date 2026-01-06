@@ -11,19 +11,19 @@ import {
 import { DOCUMENT } from '@angular/common';
 import { SceneGraphStore } from '../../store/scene-graph.store';
 import { OBJECT_ID } from '../../tokens/object-id.token';
-import type { Object3D } from 'three/webgpu';
-import { Vector2, Euler, Vector3 } from 'three/webgpu';
+import type { Object3D, Camera } from 'three/webgpu';
+import { Vector2, Euler, Vector3, Raycaster, Plane } from 'three/webgpu';
 
 export interface MouseTrackingConfig {
   /** Movement sensitivity (default: 0.5) */
   sensitivity?: number;
-  /** Damping factor 0-1 (default: 0.1) */
+  /** Damping factor 0-1 (default: 0.1) - lower = smoother */
   damping?: number;
   /** Max rotation in radians (default: Math.PI / 4) */
   limit?: number;
-  /** Invert X axis (default: false) */
+  /** Invert X axis rotation (default: false) */
   invertX?: boolean;
-  /** Invert Y axis (default: false) */
+  /** Invert Y axis rotation (default: false) */
   invertY?: boolean;
   /** Translation range [x, y] in units (default: [0, 0] / disabled) */
   translationRange?: [number, number];
@@ -31,34 +31,84 @@ export interface MouseTrackingConfig {
   invertPosX?: boolean;
   /** Invert Y axis position (default: false) */
   invertPosY?: boolean;
+
+  // --- NEW: Cursor Following Mode ---
+  /**
+   * When true, object follows cursor in world space using camera unprojection.
+   * Overrides translationRange behavior - object moves directly to cursor position.
+   * Similar to metaball cursor tracking.
+   */
+  followCursor?: boolean;
+  /**
+   * Depth (Z distance from camera) for cursor unprojection (default: 10).
+   * Larger values = cursor movement covers more world space.
+   */
+  cursorDepth?: number;
+  /**
+   * Lock Z position to maintain original depth (default: true).
+   * When false, Z will be set based on cursorDepth.
+   */
+  lockZ?: boolean;
+  /**
+   * Interpolation smoothness for cursor following (0-1, default: 0.1).
+   * Set to 1.0 for instant following (no interpolation).
+   */
+  smoothness?: number;
+  /**
+   * Offset from cursor world position [x, y, z] (default: [0, 0, 0]).
+   * Useful for positioning objects relative to cursor.
+   */
+  cursorOffset?: [number, number, number];
+  /**
+   * Disable rotation when following cursor (default: false).
+   * Set to true if you only want position tracking.
+   */
+  disableRotation?: boolean;
 }
 
 @Directive({
   selector: '[mouseTracking3d]',
-  standalone: true,
 })
 export class MouseTracking3dDirective implements OnDestroy {
   private readonly sceneStore = inject(SceneGraphStore);
   private readonly objectId = inject(OBJECT_ID, { optional: true });
   private readonly ngZone = inject(NgZone);
   private readonly document = inject(DOCUMENT);
-  private readonly elementRef = inject(ElementRef); // The host DOM element (likely a comment if on a component)
+  private readonly elementRef = inject(ElementRef);
 
   public readonly trackingConfig = input<MouseTrackingConfig | undefined>(
     undefined
   );
 
-  // Optional container to track mouse within (defaults to window/document)
-  // We'll use document for global tracking as requested
-
   private object3D: Object3D | null = null;
+  private camera: Camera | null = null;
+
+  // Mouse state (normalized -1 to 1)
   private mouse = new Vector2();
+  private targetMouse = new Vector2();
+
+  // Rotation state
   private targetRotation = new Euler();
   private currentRotation = new Euler();
+
+  // Position state
   private basePosition: Vector3 | null = null;
+  private targetPosition = new Vector3();
+  private currentPosition = new Vector3();
+
+  // Cursor following utilities
+  private raycaster = new Raycaster();
+  private cursorPlane = new Plane(new Vector3(0, 0, 1), 0);
+  private intersectionPoint = new Vector3();
+
+  // Animation & visibility
   private rafId: number | null = null;
   private observer: IntersectionObserver | null = null;
   private isVisible = false;
+
+  // Touch support
+  private readonly boundOnTouchStart = this.onTouchStart.bind(this);
+  private readonly boundOnTouchMove = this.onTouchMove.bind(this);
 
   public constructor() {
     effect(() => {
@@ -68,9 +118,17 @@ export class MouseTracking3dDirective implements OnDestroy {
           // Store initial rotation as base
           this.currentRotation.copy(this.object3D.rotation);
           this.targetRotation.copy(this.object3D.rotation);
-          // Store initial position as base (eagerly if available, otherwise latently in tick)
+          // Store initial position as base
           this.basePosition = this.object3D.position.clone();
+          this.currentPosition.copy(this.object3D.position);
+          this.targetPosition.copy(this.object3D.position);
         }
+      }
+
+      // Try to get camera from scene store
+      const cam = this.sceneStore.camera();
+      if (cam) {
+        this.camera = cam as Camera;
       }
     });
 
@@ -86,8 +144,6 @@ export class MouseTracking3dDirective implements OnDestroy {
   }
 
   private setupIntersectionObserver(): void {
-    // We try to observe the parent element since this directive might be on a virtual element (component)
-    // or the canvas container. We'll try to find a relevant parent.
     const targetElement =
       this.elementRef.nativeElement.parentElement || this.document.body;
 
@@ -95,10 +151,6 @@ export class MouseTracking3dDirective implements OnDestroy {
       (entries) => {
         entries.forEach((entry) => {
           this.isVisible = entry.isIntersecting;
-          if (!this.isVisible) {
-            // Reset to center/base when out of view? Or just stop updating?
-            // Let's stop updating to save perf
-          }
         });
       },
       { threshold: 0 }
@@ -109,13 +161,26 @@ export class MouseTracking3dDirective implements OnDestroy {
 
   private startTracking(): void {
     this.ngZone.runOutsideAngular(() => {
+      // Mouse events
       this.document.addEventListener('mousemove', this.onMouseMove);
+
+      // Touch events
+      this.document.addEventListener('touchstart', this.boundOnTouchStart, {
+        passive: false,
+      });
+      this.document.addEventListener('touchmove', this.boundOnTouchMove, {
+        passive: false,
+      });
+
       this.tick();
     });
   }
 
   private stopTracking(): void {
     this.document.removeEventListener('mousemove', this.onMouseMove);
+    this.document.removeEventListener('touchstart', this.boundOnTouchStart);
+    this.document.removeEventListener('touchmove', this.boundOnTouchMove);
+
     if (this.rafId) {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
@@ -123,66 +188,145 @@ export class MouseTracking3dDirective implements OnDestroy {
   }
 
   private onMouseMove = (event: MouseEvent) => {
+    this.updateMousePosition(event.clientX, event.clientY);
+  };
+
+  private onTouchStart(event: TouchEvent): void {
+    if (event.touches.length > 0) {
+      const touch = event.touches[0];
+      this.updateMousePosition(touch.clientX, touch.clientY);
+    }
+  }
+
+  private onTouchMove(event: TouchEvent): void {
+    if (event.touches.length > 0) {
+      const touch = event.touches[0];
+      this.updateMousePosition(touch.clientX, touch.clientY);
+    }
+  }
+
+  private updateMousePosition(clientX: number, clientY: number): void {
     if (!this.isVisible) return;
 
-    // Normalize mouse position -1 to 1
     const width = window.innerWidth;
     const height = window.innerHeight;
 
-    this.mouse.x = (event.clientX / width) * 2 - 1;
-    this.mouse.y = -(event.clientY / height) * 2 + 1;
-  };
+    // Normalize to -1 to 1 range (NDC)
+    this.targetMouse.x = (clientX / width) * 2 - 1;
+    this.targetMouse.y = -(clientY / height) * 2 + 1;
+  }
+
+  /**
+   * Convert NDC mouse coordinates to world position using camera unprojection.
+   * Projects a ray from camera through mouse position and intersects with a plane.
+   */
+  private unprojectToWorld(ndc: Vector2, depth: number): Vector3 {
+    if (!this.camera) {
+      // Fallback: simple aspect-ratio based conversion (similar to metaball)
+      const aspect = window.innerWidth / window.innerHeight;
+      return new Vector3(ndc.x * aspect * depth * 0.5, ndc.y * depth * 0.5, 0);
+    }
+
+    // Set up raycaster from camera through mouse position
+    this.raycaster.setFromCamera(ndc, this.camera);
+
+    // Create a plane at the specified depth, facing the camera
+    const cameraDirection = new Vector3();
+    this.camera.getWorldDirection(cameraDirection);
+
+    // Position plane at depth distance from camera
+    const planeOrigin = this.camera.position
+      .clone()
+      .add(cameraDirection.multiplyScalar(depth));
+    this.cursorPlane.setFromNormalAndCoplanarPoint(
+      cameraDirection.negate(),
+      planeOrigin
+    );
+
+    // Intersect ray with plane
+    const intersection = this.raycaster.ray.intersectPlane(
+      this.cursorPlane,
+      this.intersectionPoint
+    );
+
+    return intersection || new Vector3(0, 0, 0);
+  }
 
   private tick = () => {
     if (this.object3D && this.isVisible) {
       const config = this.trackingConfig() || {};
-      const sensitivity = config.sensitivity ?? 0.5;
       const damping = config.damping ?? 0.1;
-
-      // --- ROTATION LOGIC ---
-      const limit = config.limit ?? Math.PI / 4;
-      const invertX = config.invertX ?? false;
-      const invertY = config.invertY ?? false;
-
-      const targetRotY =
-        this.mouse.x * limit * sensitivity * (invertX ? -1 : 1);
-      const targetRotX =
-        this.mouse.y * limit * sensitivity * (invertY ? -1 : 1);
-
+      const smoothness = config.smoothness ?? damping;
       const obj = this.object3D;
 
-      const nextRotX = obj.rotation.x + (targetRotX - obj.rotation.x) * damping;
-      const nextRotY = obj.rotation.y + (targetRotY - obj.rotation.y) * damping;
+      // Smooth mouse interpolation
+      this.mouse.x += (this.targetMouse.x - this.mouse.x) * smoothness;
+      this.mouse.y += (this.targetMouse.y - this.mouse.y) * smoothness;
 
-      obj.rotation.x = nextRotX;
-      obj.rotation.y = nextRotY;
+      // --- ROTATION LOGIC ---
+      if (!config.disableRotation) {
+        const sensitivity = config.sensitivity ?? 0.5;
+        const limit = config.limit ?? Math.PI / 4;
+        const invertX = config.invertX ?? false;
+        const invertY = config.invertY ?? false;
 
-      // --- POSITION LOGIC ---
-      const translationRange = config.translationRange ?? [0, 0]; // [xRange, yRange]
-      const invertPosX = config.invertPosX ?? false;
-      const invertPosY = config.invertPosY ?? false;
+        const targetRotY =
+          this.mouse.x * limit * sensitivity * (invertX ? -1 : 1);
+        const targetRotX =
+          this.mouse.y * limit * sensitivity * (invertY ? -1 : 1);
 
-      // Lazy init base position (double check if not caught in constructor effect)
-      if (!this.basePosition) {
-        this.basePosition = obj.position.clone();
+        obj.rotation.x += (targetRotX - obj.rotation.x) * damping;
+        obj.rotation.y += (targetRotY - obj.rotation.y) * damping;
       }
 
-      const xRange = translationRange[0];
-      const yRange = translationRange[1];
+      // --- CURSOR FOLLOWING MODE ---
+      if (config.followCursor) {
+        const cursorDepth = config.cursorDepth ?? 10;
+        const lockZ = config.lockZ ?? true;
+        const offset = config.cursorOffset ?? [0, 0, 0];
 
-      if (xRange > 0 || yRange > 0) {
-        const targetPosX =
-          this.basePosition.x + this.mouse.x * xRange * (invertPosX ? -1 : 1);
-        const targetPosY =
-          this.basePosition.y + this.mouse.y * yRange * (invertPosY ? -1 : 1);
+        // Get world position under cursor
+        const worldPos = this.unprojectToWorld(this.mouse, cursorDepth);
 
-        const nextPosX =
-          obj.position.x + (targetPosX - obj.position.x) * damping;
-        const nextPosY =
-          obj.position.y + (targetPosY - obj.position.y) * damping;
+        // Apply offset
+        this.targetPosition.set(
+          worldPos.x + offset[0],
+          worldPos.y + offset[1],
+          lockZ && this.basePosition
+            ? this.basePosition.z
+            : worldPos.z + offset[2]
+        );
 
-        obj.position.x = nextPosX;
-        obj.position.y = nextPosY;
+        // Smooth interpolation to target
+        obj.position.x += (this.targetPosition.x - obj.position.x) * smoothness;
+        obj.position.y += (this.targetPosition.y - obj.position.y) * smoothness;
+        if (!lockZ) {
+          obj.position.z +=
+            (this.targetPosition.z - obj.position.z) * smoothness;
+        }
+      }
+      // --- LEGACY TRANSLATION RANGE MODE ---
+      else {
+        const translationRange = config.translationRange ?? [0, 0];
+        const invertPosX = config.invertPosX ?? false;
+        const invertPosY = config.invertPosY ?? false;
+
+        if (!this.basePosition) {
+          this.basePosition = obj.position.clone();
+        }
+
+        const xRange = translationRange[0];
+        const yRange = translationRange[1];
+
+        if (xRange > 0 || yRange > 0) {
+          const targetPosX =
+            this.basePosition.x + this.mouse.x * xRange * (invertPosX ? -1 : 1);
+          const targetPosY =
+            this.basePosition.y + this.mouse.y * yRange * (invertPosY ? -1 : 1);
+
+          obj.position.x += (targetPosX - obj.position.x) * damping;
+          obj.position.y += (targetPosY - obj.position.y) * damping;
+        }
       }
     }
 

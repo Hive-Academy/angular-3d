@@ -23,6 +23,12 @@ import {
   EffectComposerComponent,
   BloomEffectComponent,
   NebulaVolumetricComponent,
+  SvgIconComponent,
+  SpotLightComponent,
+  MouseTracking3dDirective,
+  AmbientLightComponent,
+  DirectionalLightComponent,
+  GltfModelComponent,
 } from '@hive-academy/angular-3d';
 import { SCENE_COLORS } from '../../../shared/colors';
 
@@ -37,6 +43,12 @@ import { SCENE_COLORS } from '../../../shared/colors';
     EffectComposerComponent,
     BloomEffectComponent,
     NebulaVolumetricComponent,
+    SvgIconComponent,
+    SpotLightComponent,
+    MouseTracking3dDirective,
+    AmbientLightComponent,
+    DirectionalLightComponent,
+    GltfModelComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -56,6 +68,14 @@ import { SCENE_COLORS } from '../../../shared/colors';
           [cameraFov]="55"
           [backgroundColor]="spaceBackgroundColor"
         >
+          <!-- Scene Lighting for Metallic Materials -->
+          <a3d-ambient-light color="#ffeedd" [intensity]="0.4" />
+          <a3d-directional-light
+            [position]="[10, 15, 10]"
+            color="white"
+            [intensity]="1.5"
+          />
+
           <!-- Subtle Star Field -->
           <a3d-star-field
             [starCount]="1200"
@@ -110,6 +130,58 @@ import { SCENE_COLORS } from '../../../shared/colors';
             [edgePulseSpeed]="0.3"
             [edgePulseAmount]="0.2"
           />
+
+          <!-- Floating Angular Logo at Center with Spotlight 
+          <a3d-svg-icon
+            [svgPath]="'/images/logos/angular-gold.svg'"
+            [position]="angularLogoPosition"
+            [scale]="0.07"
+            [depth]="0.6"
+            [metalness]="0.3"
+            [roughness]="0.4"
+            [emissiveIntensity]="0.6"
+            [bevelEnabled]="true"
+            [bevelThickness]="0.04"
+            [bevelSize]="0.03"
+            mouseTracking3d
+            [trackingConfig]="{
+              sensitivity: 0.8,
+              limit: 0.5,
+              damping: 0.05,
+              invertX: true,
+              translationRange: [10, 5],
+              invertPosX: true
+            }"
+          />-->
+
+          <a3d-gltf-model
+            modelPath="3d/mini_robot.glb"
+            [scale]="[0.07, 0.07, 0.07]"
+            [position]="angularLogoPosition"
+            mouseTracking3d
+            [trackingConfig]="{
+              followCursor: true,
+              cursorDepth: 20,
+              smoothness: 0.08,
+              lockZ: true,
+              disableRotation: false,
+              sensitivity: 0.3,
+              limit: 0.4,
+              damping: 0.05
+            }"
+          />
+
+          <!-- Cinematic Spotlight on Angular Logo
+          <a3d-spot-light
+            [position]="spotlightPosition"
+            [target]="angularLogoPosition"
+            [color]="spotlightColor"
+            [intensity]="15"
+            [distance]="50"
+            [angle]="0.6"
+            [penumbra]="0.5"
+            [decay]="1.2"
+          /> -->
 
           <!-- Bloom for luminous sun glow -->
           <a3d-effect-composer [enabled]="true">
@@ -291,4 +363,15 @@ export class GlassSphereHeroSectionComponent {
    * Centered horizontally (x=0)
    */
   protected readonly sunPosition: [number, number, number] = [0, -9, 0];
+
+  /** Angular logo position: centered, floating above sun */
+  protected readonly angularLogoPosition: [number, number, number] = [
+    -25, 8, -8,
+  ];
+
+  /** Spotlight position: above and in front of the logo */
+  protected readonly spotlightPosition: [number, number, number] = [-20, 18, 5];
+
+  /** Warm spotlight color (cinematic golden light) */
+  protected readonly spotlightColor = '#ffeedd';
 }

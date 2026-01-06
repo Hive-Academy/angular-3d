@@ -10,12 +10,20 @@ import {
 import * as THREE from 'three/webgpu';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import { NG_3D_PARENT } from '../../types/tokens';
+import { OBJECT_ID } from '../../tokens/object-id.token';
+import { SceneGraphStore } from '../../store/scene-graph.store';
 
 @Component({
   selector: 'a3d-svg-icon',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
+  providers: [
+    {
+      provide: OBJECT_ID,
+      useFactory: () => `svg-icon-${crypto.randomUUID()}`,
+    },
+  ],
 })
 export class SvgIconComponent implements OnDestroy {
   // Transformation inputs
@@ -35,7 +43,8 @@ export class SvgIconComponent implements OnDestroy {
   public readonly bevelSize = input<number>(0.01);
 
   // Material inputs
-  public readonly color = input<string | number>(0xffd700);
+  public readonly color = input<string | number | undefined>(undefined);
+  public readonly useNativeColors = input<boolean>(true);
   public readonly metalness = input<number>(0.7);
   public readonly roughness = input<number>(0.2);
   public readonly emissive = input<string | number>(0x000000);
@@ -48,6 +57,8 @@ export class SvgIconComponent implements OnDestroy {
 
   // Parent injection
   private readonly parentFn = inject(NG_3D_PARENT, { optional: true });
+  private readonly sceneStore = inject(SceneGraphStore);
+  private readonly objectId = inject(OBJECT_ID, { optional: true });
 
   // SVG loader
   private readonly svgLoader = new SVGLoader();
@@ -72,15 +83,12 @@ export class SvgIconComponent implements OnDestroy {
     // Material update effect
     effect(() => {
       if (this.materials.length > 0) {
-        const color = this.color();
         const metalness = this.metalness();
         const roughness = this.roughness();
         const emissive = this.emissive();
         const emissiveIntensity = this.emissiveIntensity();
 
         this.materials.forEach((material) => {
-          // NodeMaterial pattern: assign Color objects directly
-          material.color = new THREE.Color(color);
           material.metalness = metalness;
           material.roughness = roughness;
           material.emissive = new THREE.Color(emissive);
@@ -99,6 +107,11 @@ export class SvgIconComponent implements OnDestroy {
       const scale: [number, number, number] =
         typeof s === 'number' ? [s, s, s] : s;
       this.group.scale.set(scale[0], scale[1], scale[2]);
+
+      // Register with SceneGraphStore for directive access (e.g., MouseTracking3dDirective)
+      if (this.objectId) {
+        this.sceneStore.register(this.objectId, this.group, 'group');
+      }
 
       // Add to parent
       if (this.parentFn) {
@@ -163,6 +176,16 @@ export class SvgIconComponent implements OnDestroy {
         data.paths.forEach((path) => {
           const shapes = SVGLoader.createShapes(path);
 
+          // Get fill color from SVG path (if useNativeColors is enabled)
+          const nativeFillColor = path.userData?.['style']?.['fill'];
+          const useNative =
+            this.useNativeColors() &&
+            nativeFillColor &&
+            nativeFillColor !== 'none';
+          const colorToUse = useNative
+            ? nativeFillColor
+            : this.color() ?? 0xffd700; // Default gold if no color specified
+
           shapes.forEach((shape) => {
             let geometry: THREE.BufferGeometry;
 
@@ -174,7 +197,7 @@ export class SvgIconComponent implements OnDestroy {
 
             // Create material with NodeMaterial pattern (direct property assignment)
             const material = new THREE.MeshStandardNodeMaterial();
-            material.color = new THREE.Color(this.color());
+            material.color = new THREE.Color(colorToUse);
             material.metalness = this.metalness();
             material.roughness = this.roughness();
             material.emissive = new THREE.Color(this.emissive());
