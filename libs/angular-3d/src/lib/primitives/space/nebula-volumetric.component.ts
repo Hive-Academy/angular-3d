@@ -83,9 +83,9 @@ export class NebulaVolumetricComponent {
   public readonly height = input<number>(60);
   public readonly layers = input<number>(2); // Number of TSL material planes
   public readonly opacity = input<number>(0.6);
-  public readonly primaryColor = input<string>('#0088ff'); // Bright blue
-  public readonly secondaryColor = input<string>('#00d4ff'); // Cyan
-  public readonly tertiaryColor = input<string>('#ff6bd4'); // Pink accent
+  public readonly primaryColor = input<number>(0x0088ff); // Bright blue
+  public readonly secondaryColor = input<number>(0x00d4ff); // Cyan
+  public readonly tertiaryColor = input<number>(0xff6bd4); // Pink accent
   public readonly enableFlow = input<boolean>(false); // Animate noise over time
   public readonly flowSpeed = input<number>(0.5); // Time multiplier for animation
 

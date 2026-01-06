@@ -12,6 +12,7 @@ import {
   Scene3dComponent,
   SpotLightComponent,
 } from '@hive-academy/angular-3d';
+import { SCENE_COLORS } from '../../../shared/colors';
 
 /**
  * Claude Skills Showcase Section
@@ -90,20 +91,20 @@ import {
           <!-- ============ CORNER BUBBLE SPHERES ============ -->
 
           <!-- Top-Left Corner Bubble -->
-          <!-- Top-Left: Reduced segments 32->24 for performance -->
+          <!-- PERF: Removed transmission, using metalness+clearcoat for shine instead -->
           <a3d-floating-sphere
             float3d
             [floatConfig]="{ height: 0.6, speed: 4000 }"
             [position]="[-15, 10, -15]"
-            [args]="[2, 24, 24]"
+            [args]="[2, 16, 16]"
             [color]="'#e879f9'"
-            [metalness]="0.0"
-            [roughness]="0.0"
-            [transmission]="0.9"
-            [thickness]="0.5"
-            [ior]="1.4"
+            [metalness]="0.3"
+            [roughness]="0.1"
+            [transmission]="0"
+            [thickness]="0"
+            [ior]="1.0"
             [clearcoat]="1.0"
-            [clearcoatRoughness]="0.0"
+            [clearcoatRoughness]="0.1"
           />
           <a3d-spot-light
             [position]="[-12, 14, -8]"
@@ -117,20 +118,20 @@ import {
           />
 
           <!-- Top-Right Corner Bubble -->
-          <!-- Top-Right: Reduced segments 32->24 for performance -->
+          <!-- PERF: Removed transmission, using metalness+clearcoat for shine instead -->
           <a3d-floating-sphere
             float3d
             [floatConfig]="{ height: 0.8, speed: 5000 }"
             [position]="[15, 10, -14]"
-            [args]="[2.5, 24, 24]"
+            [args]="[2.5, 16, 16]"
             [color]="'#a855f7'"
-            [metalness]="0.0"
-            [roughness]="0.0"
-            [transmission]="0.9"
-            [thickness]="0.5"
-            [ior]="1.4"
+            [metalness]="0.3"
+            [roughness]="0.1"
+            [transmission]="0"
+            [thickness]="0"
+            [ior]="1.0"
             [clearcoat]="1.0"
-            [clearcoatRoughness]="0.0"
+            [clearcoatRoughness]="0.1"
           />
           <a3d-spot-light
             [position]="[12, 14, -7]"
@@ -144,20 +145,20 @@ import {
           />
 
           <!-- Bottom-Left Corner Bubble -->
-          <!-- Bottom-Left: Reduced segments 32->24 for performance -->
+          <!-- PERF: Removed transmission, using metalness+clearcoat for shine instead -->
           <a3d-floating-sphere
             float3d
             [floatConfig]="{ height: 0.5, speed: 3500 }"
             [position]="[-12, -8, -13]"
-            [args]="[1.8, 24, 24]"
+            [args]="[1.8, 16, 16]"
             [color]="'#f472b6'"
-            [metalness]="0.0"
-            [roughness]="0.0"
-            [transmission]="0.9"
-            [thickness]="0.5"
-            [ior]="1.4"
+            [metalness]="0.3"
+            [roughness]="0.1"
+            [transmission]="0"
+            [thickness]="0"
+            [ior]="1.0"
             [clearcoat]="1.0"
-            [clearcoatRoughness]="0.0"
+            [clearcoatRoughness]="0.1"
           />
           <a3d-spot-light
             [position]="[-9, -4, -6]"
@@ -171,20 +172,20 @@ import {
           />
 
           <!-- Bottom-Right Corner Bubble -->
-          <!-- Bottom-Right: Reduced segments 32->24 for performance -->
+          <!-- PERF: Removed transmission, using metalness+clearcoat for shine instead -->
           <a3d-floating-sphere
             float3d
             [floatConfig]="{ height: 0.7, speed: 4500 }"
             [position]="[15, -10, -16]"
-            [args]="[2.2, 24, 24]"
+            [args]="[2.2, 16, 16]"
             [color]="'#d946ef'"
-            [metalness]="0.0"
-            [roughness]="0.0"
-            [transmission]="0.9"
-            [thickness]="0.5"
-            [ior]="1.4"
+            [metalness]="0.3"
+            [roughness]="0.1"
+            [transmission]="0"
+            [thickness]="0"
+            [ior]="1.0"
             [clearcoat]="1.0"
-            [clearcoatRoughness]="0.0"
+            [clearcoatRoughness]="0.1"
           />
           <a3d-spot-light
             [position]="[12, -6, -9]"
@@ -202,12 +203,13 @@ import {
             [position]="[0, 0, -20]"
             [width]="50"
             [height]="35"
-            [primaryColor]="'#d946ef'"
-            [secondaryColor]="'#8b5cf6'"
+            [primaryColor]="nebulaColors.primary"
+            [secondaryColor]="nebulaColors.secondary"
             [opacity]="0.5"
           />
 
           <!-- Main bubble text -->
+          <!-- PERF: Reduced transmission and bubbles for better performance -->
           <a3d-bubble-text
             [text]="'AI CRAFTED'"
             [fontSize]="70"
@@ -216,29 +218,29 @@ import {
             [opacity]="0.85"
             [maxBubbleScale]="0.22"
             [minBubbleScale]="0.12"
-            [bubblesPerPixel]="1.5"
+            [bubblesPerPixel]="0.8"
             [animationMode]="'breathe'"
             [animationSpeed]="0.3"
             [animationIntensity]="0.4"
-            [mouseProximityEffect]="true"
+            [mouseProximityEffect]="false"
             [mouseRadius]="2.5"
             [mouseScaleBoost]="1.8"
-            [enableFlying]="true"
+            [enableFlying]="false"
             [flyingRatio]="0.08"
             [flySpeed]="0.2"
             [position]="[0, 8, -12]"
-            [transmission]="0.95"
-            [thickness]="0.3"
-            [ior]="1.4"
-            [iridescence]="1.0"
-            [iridescenceIOR]="1.3"
+            [transmission]="0.5"
+            [thickness]="0.2"
+            [ior]="1.2"
+            [iridescence]="0.5"
+            [iridescenceIOR]="1.2"
             [iridescenceThicknessMin]="100"
-            [iridescenceThicknessMax]="400"
-            [clearcoat]="1.0"
-            [clearcoatRoughness]="0.0"
-            [roughness]="0.0"
-            [metalness]="0.0"
-            [envMapIntensity]="1.5"
+            [iridescenceThicknessMax]="300"
+            [clearcoat]="0.8"
+            [clearcoatRoughness]="0.1"
+            [roughness]="0.1"
+            [metalness]="0.1"
+            [envMapIntensity]="1.0"
           />
 
           <!-- Soft bloom -->
@@ -531,6 +533,10 @@ import {
 export class ClaudeSkillsShowcaseSectionComponent {
   public readonly backgroundColor = 0x0a0515;
   public readonly bubbleColor = 0xffffff;
+  public readonly nebulaColors = {
+    primary: SCENE_COLORS.magenta,
+    secondary: SCENE_COLORS.violet,
+  };
 
   /**
    * Claude Agent Skills data

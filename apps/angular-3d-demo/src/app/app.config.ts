@@ -23,7 +23,7 @@ export const appConfig: ApplicationConfig = {
     // Lenis uses native RAF, Three.js uses setAnimationLoop - they don't compete
     provideLenis({
       lerp: 0.1,
-      wheelMultiplier: 1,
+      wheelMultiplier: 1.2,
       touchMultiplier: 2,
       smoothWheel: true,
       useGsapTicker: false, // Use native RAF to avoid conflict with Three.js

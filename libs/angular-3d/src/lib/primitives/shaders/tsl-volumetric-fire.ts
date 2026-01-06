@@ -22,26 +22,21 @@ const {
   Fn,
   Loop,
   float,
-  vec2,
   vec3,
   vec4,
   int,
   abs,
-  sqrt,
-  dot,
   length,
   normalize,
   cameraPosition,
   positionWorld,
   mx_noise_float,
   uniform,
-  max,
-  min,
-  pow,
   clamp,
   mix,
   smoothstep,
   select,
+  fract,
 } = TSL;
 
 /**
@@ -101,12 +96,18 @@ const samplerSphericalFire = Fn(
     const normalizedDist = distFromCenter.div(sphereRadius);
 
     // Animate fire - radial expansion outward over time
+    // FIX: Use fract() to keep time bounded and prevent noise coordinate drift
+    // Without this, after several minutes, timeOffset becomes huge and pushes
+    // noise sampling too far away, causing flames to degrade into dots
     const animP = vec3(p).toVar('animP');
-    const timeOffset = seed.add(time).mul(noiseScale.w);
+    const rawTime = seed.add(time).mul(noiseScale.w).div(10.0); // Divide to slow down cycle
+    const timeOffset = fract(rawTime).mul(10.0); // Cycle every ~5 minutes at default speed
 
     // VERY LOW FREQUENCY noise for LARGE, SEPARATED flame shapes
     // Lower multiplier (0.25) = bigger, more distinct flame tendrils
-    animP.assign(p.mul(vec3(noiseScale.x, noiseScale.y, noiseScale.z).mul(0.25)));
+    animP.assign(
+      p.mul(vec3(noiseScale.x, noiseScale.y, noiseScale.z).mul(0.25))
+    );
     // Add time-based animation (fire flows outward)
     animP.addAssign(normalize(p).mul(timeOffset.mul(0.5)));
 
@@ -125,7 +126,9 @@ const samplerSphericalFire = Fn(
     // RADIAL GRADIENT - MASSIVE FLAMES, TINY CORE
     // ========================================
     // Very high magnitude multiplier creates extremely long flame tendrils
-    const radialGradient = normalizedDist.add(turbulenceValue.mul(magnitude.mul(4.0)));
+    const radialGradient = normalizedDist.add(
+      turbulenceValue.mul(magnitude.mul(4.0))
+    );
 
     // Fire intensity - TINY core, flames extend VERY FAR outward
     const coreSize = float(0.12); // Tiny bright core (was 0.25)
@@ -156,9 +159,21 @@ const samplerSphericalFire = Fn(
     const colorT = clamp(normalizedDist.mul(4.0), float(0.0), float(1.0));
 
     // Gradient with TINY bright core - transitions happen at smaller distances
-    const color1 = mix(coreColor, innerColor, smoothstep(float(0.0), float(0.06), colorT));
-    const color2 = mix(color1, midColor, smoothstep(float(0.06), float(0.2), colorT));
-    const finalColor = mix(color2, outerColor, smoothstep(float(0.2), float(0.5), colorT));
+    const color1 = mix(
+      coreColor,
+      innerColor,
+      smoothstep(float(0.0), float(0.06), colorT)
+    );
+    const color2 = mix(
+      color1,
+      midColor,
+      smoothstep(float(0.06), float(0.2), colorT)
+    );
+    const finalColor = mix(
+      color2,
+      outerColor,
+      smoothstep(float(0.2), float(0.5), colorT)
+    );
 
     // Apply core texture darkness
     const texturedColor = finalColor.mul(coreTexture.mul(0.3).add(0.7));
@@ -208,7 +223,9 @@ export const createVolumetricFireUniforms = (
   config: VolumetricFireConfig = {}
 ): VolumetricFireUniforms => {
   const colorValue =
-    config.color instanceof Color ? config.color : new Color(config.color ?? 0xff6600);
+    config.color instanceof Color
+      ? config.color
+      : new Color(config.color ?? 0xff6600);
 
   return {
     color: uniform(colorValue),
@@ -240,8 +257,8 @@ export const createVolumetricFireUniforms = (
  */
 export const createVolumetricFireNode = (
   uniforms: VolumetricFireUniforms,
-  iterations: number = 40,
-  sunMode: boolean = true
+  iterations = 40,
+  sunMode = true
 ) => {
   return Fn(() => {
     const rayPos = vec3(positionWorld).toVar('rayPos');

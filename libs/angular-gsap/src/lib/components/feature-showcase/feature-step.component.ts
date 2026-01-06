@@ -135,7 +135,8 @@ export class FeatureStepComponent {
   readonly anticipatePin = input<number>(1);
 
   /**
-   * Enable pin spacing
+   * Enable pin spacing - pushes content below during pin
+   * Default: true for proper layout during pinning
    */
   readonly pinSpacing = input<boolean>(true);
 

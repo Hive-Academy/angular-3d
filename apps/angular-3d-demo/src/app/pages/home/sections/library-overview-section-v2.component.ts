@@ -80,13 +80,7 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
           <!-- Main Headline -->
           <h2
             class="text-7xl font-bold text-white mb-6 leading-tight"
-            viewportAnimation
-            [viewportConfig]="{
-              animation: 'slideUp',
-              duration: 0.8,
-              delay: 0.1,
-              threshold: 0.2
-            }"
+          
           >
             <span
               class="bg-gradient-to-r from-emerald-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent"
@@ -98,13 +92,7 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
           <!-- Subtitle -->
           <p
             class="text-2xl text-gray-300 leading-relaxed max-w-3xl mx-auto"
-            viewportAnimation
-            [viewportConfig]="{
-              animation: 'fadeIn',
-              duration: 0.8,
-              delay: 0.2,
-              threshold: 0.2
-            }"
+          
           >
             Production-ready Angular packages for building immersive web
             experiences.

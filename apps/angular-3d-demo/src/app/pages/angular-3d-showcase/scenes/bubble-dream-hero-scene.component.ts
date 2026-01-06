@@ -12,6 +12,7 @@ import {
   Scene3dComponent,
   SpotLightComponent,
 } from '@hive-academy/angular-3d';
+import { SCENE_COLORS } from '../../../shared/colors';
 
 /**
  * Bubble Dream Hero Scene - Interactive Skills Showcase
@@ -240,8 +241,8 @@ import {
             [position]="[0, 0, -20]"
             [width]="50"
             [height]="35"
-            [primaryColor]="'#d946ef'"
-            [secondaryColor]="'#8b5cf6'"
+            [primaryColor]="nebulaColors.primary"
+            [secondaryColor]="nebulaColors.secondary"
             [opacity]="0.5"
           />
 
@@ -566,6 +567,10 @@ export class BubbleDreamHeroSceneComponent {
   public readonly backgroundColor = 0x0a0515;
   public readonly bubbleColor = 0xffffff;
   public readonly accentBubbleColor = 0xe879f9;
+  public readonly nebulaColors = {
+    primary: SCENE_COLORS.magenta,
+    secondary: SCENE_COLORS.violet,
+  };
 
   /**
    * Skills data for the overlay cards

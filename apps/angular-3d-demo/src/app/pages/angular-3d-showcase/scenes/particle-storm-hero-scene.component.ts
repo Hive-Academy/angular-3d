@@ -10,6 +10,7 @@ import {
   Float3dDirective,
   NebulaVolumetricComponent,
 } from '@hive-academy/angular-3d';
+import { SCENE_COLORS } from '../../../shared/colors';
 
 /**
  * ParticleStormHeroSceneComponent - Dramatic Particle Text Effect
@@ -92,9 +93,9 @@ import {
           [width]="180"
           [height]="90"
           [opacity]="0.6"
-          [primaryColor]="'#00d4ff'"
-          [secondaryColor]="'#6b21a8'"
-          [tertiaryColor]="'#06b6d4'"
+          [primaryColor]="nebulaColors.primary"
+          [secondaryColor]="nebulaColors.secondary"
+          [tertiaryColor]="nebulaColors.tertiary"
           [enableFlow]="true"
           [flowSpeed]="0.25"
           [noiseScale]="2.5"
@@ -157,4 +158,9 @@ import {
 export class ParticleStormHeroSceneComponent {
   public readonly backgroundColor = 0x0a0a0f;
   public readonly particleColor = 0xa1ff4f; // Neon green - contrasts with cyan/purple nebula
+  public readonly nebulaColors = {
+    primary: SCENE_COLORS.neonCyan,
+    secondary: SCENE_COLORS.electricPurple,
+    tertiary: SCENE_COLORS.cyan,
+  };
 }

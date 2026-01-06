@@ -8,6 +8,9 @@
  * - Mouse-interactive with color shifts
  * - HTML text with CSS 3D transforms
  * - Pure eye candy!
+ *
+ * NOTE: Uses `data-lenis-prevent` on parent section to prevent
+ * Lenis smooth scroll conflict with OrbitControls zoom/rotate.
  */
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
@@ -37,7 +40,10 @@ import { SCENE_COLORS } from '../../../shared/colors';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="cta-section relative min-h-screen overflow-hidden bg-black">
+    <section
+      class="cta-section relative min-h-screen overflow-hidden bg-black"
+      data-lenis-prevent
+    >
       <!-- NEON HONEYCOMB 3D Background (z-0) -->
       <div class="absolute inset-0 z-0">
         <a3d-scene-3d

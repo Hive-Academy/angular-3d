@@ -95,7 +95,7 @@ export interface RendererConfig {
     },
   ],
   template: `
-    <div class="scene-container">
+    <div class="scene-container" data-lenis-prevent>
       <canvas #canvas></canvas>
       <div class="scene-content">
         <ng-content />
@@ -117,6 +117,8 @@ export interface RendererConfig {
         position: relative;
         overflow: hidden;
         background: transparent;
+        /* Prevent scroll chaining to parent - works with Lenis smooth scroll */
+        overscroll-behavior: contain;
       }
 
       canvas {
@@ -207,6 +209,9 @@ export class Scene3dComponent implements OnDestroy {
   // Flag to track when renderer is ready for reactive effects
   private rendererInitialized = false;
 
+  // Visibility observer for performance optimization
+  private visibilityObserver: IntersectionObserver | null = null;
+
   public constructor() {
     // Expose scene immediately so children can access it in ngOnInit
     this.sceneService.setScene(this.scene);
@@ -268,6 +273,9 @@ export class Scene3dComponent implements OnDestroy {
 
           // Setup resize handler
           this.setupResizeHandler();
+
+          // Setup visibility-based pausing for performance
+          this.setupVisibilityObserver();
 
           // Mark renderer as initialized - this triggers the background effect above
           this.rendererInitialized = true;
@@ -447,6 +455,46 @@ export class Scene3dComponent implements OnDestroy {
 
     this.destroyRef.onDestroy(() => {
       resizeObserver.disconnect();
+    });
+  }
+
+  /**
+   * Setup visibility-based pausing using IntersectionObserver.
+   *
+   * Pauses the render loop when scene scrolls out of view to save
+   * GPU resources. Resumes when visible again.
+   *
+   * PERF: This is a key optimization for pages with multiple 3D scenes.
+   * When a scene is not visible, GPU usage drops to near zero.
+   */
+  private setupVisibilityObserver(): void {
+    const container = this.canvasRef().nativeElement.parentElement;
+    if (!container) return;
+
+    this.visibilityObserver = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          // Scene is visible - resume rendering
+          this.renderLoop.resume();
+        } else {
+          // Scene is not visible - pause rendering to save GPU
+          this.renderLoop.pause();
+        }
+      },
+      {
+        // Trigger when any part (1%) is visible
+        threshold: 0.01,
+        // Add margin to start rendering slightly before visible
+        rootMargin: '100px',
+      }
+    );
+
+    this.visibilityObserver.observe(container);
+
+    this.destroyRef.onDestroy(() => {
+      this.visibilityObserver?.disconnect();
+      this.visibilityObserver = null;
     });
   }
 

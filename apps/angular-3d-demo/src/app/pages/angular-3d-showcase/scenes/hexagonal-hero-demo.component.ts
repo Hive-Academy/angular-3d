@@ -8,6 +8,19 @@
  * - Mouse interaction
  * - Bloom post-processing
  * - Responsive design
+ *
+ * IMPORTANT: When using 3D scenes with Lenis smooth scroll AND content overlays,
+ * add `data-lenis-prevent` to the parent container that wraps both the 3D scene
+ * and the overlay content. This prevents Lenis from intercepting scroll events
+ * and conflicting with OrbitControls.
+ *
+ * Pattern:
+ * ```html
+ * <section data-lenis-prevent>        <!-- Add here for overlay patterns -->
+ *   <div class="z-0"><a3d-scene-3d>   <!-- 3D background -->
+ *   <div class="z-10">content</div>   <!-- Content overlay -->
+ * </section>
+ * ```
  */
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
@@ -37,7 +50,11 @@ import { SCENE_COLORS } from '../../../shared/colors';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="hero-container relative w-full" style="height: 100vh">
+    <section
+      class="hero-container relative w-full"
+      style="height: 100vh"
+      data-lenis-prevent
+    >
       <!-- Layer 1: 3D Background (z-0) -->
       <div
         class="gradient-layer absolute inset-0 z-0 bg-gradient-to-br from-indigo-950 via-purple-950 to-black"

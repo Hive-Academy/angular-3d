@@ -15,6 +15,10 @@ import { MeshPhysicalNodeMaterial } from 'three/webgpu';
 import { SceneService } from '../../canvas/scene.service';
 import { RenderLoopService } from '../../render-loop/render-loop.service';
 import { TextSamplingService } from '../../services/text-sampling.service';
+import {
+  RenderCallbackRegistry,
+  createVisibilityObserver,
+} from '../../services';
 import { OBJECT_ID } from '../../tokens/object-id.token';
 import { NG_3D_PARENT } from '../../types/tokens';
 import { tslFresnel, tslIridescence } from '../shaders/tsl-utilities';
@@ -133,11 +137,18 @@ export class BubbleTextComponent {
   private readonly parent = inject(NG_3D_PARENT, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
   private readonly renderLoop = inject(RenderLoopService, { optional: true });
+  private readonly callbackRegistry = inject(RenderCallbackRegistry);
   private readonly sceneService = inject(SceneService);
   private readonly textSampling = inject(TextSamplingService);
   private readonly document = inject(DOCUMENT);
   private readonly ngZone = inject(NgZone);
   private readonly elementRef = inject(ElementRef);
+
+  // Visibility tracking for performance optimization
+  private readonly componentId = `bubble-text-${crypto.randomUUID()}`;
+  private readonly visibility = createVisibilityObserver({
+    rootMargin: '200px',
+  });
 
   // Internal state
   private bubbleGeometry?: THREE.IcosahedronGeometry;
@@ -184,10 +195,36 @@ export class BubbleTextComponent {
       }
     });
 
-    // Frame loop animation
-    const cleanup = this.renderLoop?.registerUpdateCallback((delta) => {
-      this.elapsedTime += delta;
-      this.animateBubbles(delta);
+    // Frame loop animation - registered with centralized callback registry
+    // for pause/resume support when not visible
+    const cleanup = this.callbackRegistry.register(
+      this.componentId,
+      (delta) => {
+        this.elapsedTime += delta;
+        this.animateBubbles(delta);
+      }
+    );
+
+    // Setup visibility detection to pause when off-screen
+    effect(() => {
+      // Initialize visibility observer after parent is available
+      const parent = this.parent?.();
+      if (parent) {
+        // Observe the scene's canvas or closest container
+        const canvas = this.sceneService.domElement;
+        if (canvas) {
+          this.visibility.observe(canvas);
+        }
+      }
+    });
+
+    // Pause/resume based on visibility
+    effect(() => {
+      if (this.visibility.isVisible()) {
+        this.callbackRegistry.resume(this.componentId);
+      } else {
+        this.callbackRegistry.pause(this.componentId);
+      }
     });
 
     // Cleanup on destroy
@@ -376,6 +413,16 @@ export class BubbleTextComponent {
 
     const [baseX, baseY, baseZ] = this.position();
     this.instancedMesh.position.set(baseX, baseY, baseZ);
+
+    // Initialize instance matrices with bubble positions
+    // This ensures bubbles are visible even before animation callback runs
+    this.bubbles.forEach((b, idx) => {
+      this.dummy.position.set(b.x, b.y, b.z);
+      this.dummy.scale.setScalar(b.baseScale);
+      this.dummy.updateMatrix();
+      this.instancedMesh!.setMatrixAt(idx, this.dummy.matrix);
+    });
+    this.instancedMesh.instanceMatrix.needsUpdate = true;
 
     if (parent) {
       parent.add(this.instancedMesh);

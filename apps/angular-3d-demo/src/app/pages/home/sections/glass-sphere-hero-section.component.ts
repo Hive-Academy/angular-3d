@@ -24,6 +24,7 @@ import {
   BloomEffectComponent,
   NebulaVolumetricComponent,
 } from '@hive-academy/angular-3d';
+import { SCENE_COLORS } from '../../../shared/colors';
 
 @Component({
   selector: 'app-glass-sphere-hero-section',
@@ -81,7 +82,7 @@ import {
 
           <!-- Sun - FIXED at center-bottom (volumetric with large separated flames) -->
           <a3d-fire-sphere
-            [radius]="8"
+            [radius]="6"
             [position]="sunPosition"
             [quality]="'quality'"
             [sunMode]="true"
@@ -97,8 +98,8 @@ import {
             [width]="120"
             [height]="60"
             [opacity]="0.75"
-            [primaryColor]="'#3344aa'"
-            [secondaryColor]="'#160805ff'"
+            [primaryColor]="primaryColor"
+            [secondaryColor]="secondaryColor"
             [enableFlow]="false"
             [noiseScale]="3.5"
             [density]="1.2"
@@ -280,7 +281,9 @@ export class GlassSphereHeroSectionComponent {
   protected readonly featurePills = ['WebGPU', 'TSL Shaders', 'Signals'];
 
   /** Dark space background color (hex number for Three.js) */
-  protected readonly spaceBackgroundColor = 0x030310;
+  protected readonly spaceBackgroundColor = SCENE_COLORS.darkBlueGray;
+  protected readonly primaryColor = SCENE_COLORS.honeyGold;
+  protected readonly secondaryColor = SCENE_COLORS.emerald;
 
   /**
    * Sun position: FIXED at center-bottom

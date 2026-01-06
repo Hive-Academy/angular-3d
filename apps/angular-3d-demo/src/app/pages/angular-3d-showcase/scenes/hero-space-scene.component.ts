@@ -13,6 +13,7 @@ import {
   StarFieldComponent,
   tslWaterMarble,
 } from '@hive-academy/angular-3d';
+import { SCENE_COLORS } from '../../../shared/colors';
 
 /**
  * Hero Space Scene - Procedural Planet Showcase
@@ -138,8 +139,8 @@ import {
           [width]="250"
           [height]="80"
           [opacity]="0.75"
-          [primaryColor]="'#3344aa'"
-          [secondaryColor]="'#160805ff'"
+          [primaryColor]="nebulaColors.primary"
+          [secondaryColor]="nebulaColors.secondary"
           [enableFlow]="false"
           [noiseScale]="3.5"
           [density]="1.2"
@@ -197,4 +198,10 @@ export class HeroSpaceSceneComponent {
     turbulence: 0.6,
     speed: 0.5,
   });
+
+  // Nebula colors (deepBlue primary, darkNavy secondary)
+  protected readonly nebulaColors = {
+    primary: SCENE_COLORS.deepBlue,
+    secondary: SCENE_COLORS.darkNavy,
+  };
 }
