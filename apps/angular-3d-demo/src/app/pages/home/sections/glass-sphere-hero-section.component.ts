@@ -22,6 +22,7 @@ import {
   StarFieldComponent,
   EffectComposerComponent,
   BloomEffectComponent,
+  NebulaVolumetricComponent,
 } from '@hive-academy/angular-3d';
 
 @Component({
@@ -34,6 +35,7 @@ import {
     StarFieldComponent,
     EffectComposerComponent,
     BloomEffectComponent,
+    NebulaVolumetricComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -59,18 +61,53 @@ import {
             [radius]="100"
             [enableTwinkle]="true"
             [multiSize]="true"
+            [stellarColors]="true"
+            [enableRotation]="true"
+            [rotationSpeed]="0.005"
+            [rotationAxis]="'y'"
           />
 
-          <!-- Sun - FIXED at center-bottom (volumetric for flame tendrils) -->
+          <!-- Layer 2: Mid-range stars - slightly slower rotation -->
+          <a3d-star-field
+            [starCount]="1500"
+            [radius]="55"
+            [size]="0.025"
+            [multiSize]="true"
+            [stellarColors]="true"
+            [enableRotation]="true"
+            [rotationSpeed]="0.005"
+            [rotationAxis]="'y'"
+          />
+
+          <!-- Sun - FIXED at center-bottom (volumetric with large separated flames) -->
           <a3d-fire-sphere
             [radius]="6"
             [position]="sunPosition"
             [quality]="'quality'"
             [sunMode]="true"
-            [fireSpeed]="0.4"
-            [fireMagnitude]="0.5"
-            [fireNoiseScale]="0.6"
-            [iterations]="12"
+            [fireSpeed]="0.35"
+            [fireMagnitude]="1.7"
+            [fireNoiseScale]="0.4"
+            [lacunarity]="2.5"
+            [iterations]="24"
+          />
+
+          <a3d-nebula-volumetric
+            [position]="[60, 40, -110]"
+            [width]="120"
+            [height]="60"
+            [opacity]="0.75"
+            [primaryColor]="'#3344aa'"
+            [secondaryColor]="'#160805ff'"
+            [enableFlow]="false"
+            [noiseScale]="3.5"
+            [density]="1.2"
+            [glowIntensity]="0.6"
+            [centerFalloff]="1.2"
+            [erosionStrength]="0.65"
+            [enableEdgePulse]="true"
+            [edgePulseSpeed]="0.3"
+            [edgePulseAmount]="0.2"
           />
 
           <!-- Bloom for luminous sun glow -->

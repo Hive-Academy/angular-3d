@@ -115,6 +115,9 @@ export class FireSphereComponent {
   /** Ray march iterations - volumetric only, lower = faster (default: 15) */
   public readonly iterations = input<number>(15);
 
+  /** Lacunarity - volumetric only, lower = larger/more separated flames (default: 1.8) */
+  public readonly lacunarity = input<number>(1.8);
+
   // ========================================================================
   // Internal State
   // ========================================================================
@@ -171,9 +174,9 @@ export class FireSphereComponent {
     const isSunMode = this.sunMode();
 
     // Geometry size depends on mode
-    // Quality mode uses 1.2x for corona/flame extension (ray marching)
+    // Quality mode uses 1.5x for corona/flame extension (ray marching with large flames)
     // Fast mode uses exact radius (texture-based)
-    const extendedRadius = qualityMode === 'quality' ? radius * 1.2 : radius;
+    const extendedRadius = qualityMode === 'quality' ? radius * 1.5 : radius;
     const segments = qualityMode === 'quality' ? 32 : 64;
 
     this.sphereGeometry = new THREE.SphereGeometry(extendedRadius, segments, segments);
@@ -200,7 +203,7 @@ export class FireSphereComponent {
         sphereRadius: radius,
         noiseScale: [noiseScale, noiseScale, noiseScale, speed],
         magnitude: this.fireMagnitude(),
-        lacunarity: 2.0,
+        lacunarity: this.lacunarity(),
         gain: 0.5,
       });
 

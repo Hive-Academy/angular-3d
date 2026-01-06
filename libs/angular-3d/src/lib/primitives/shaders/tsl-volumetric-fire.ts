@@ -104,59 +104,61 @@ const samplerSphericalFire = Fn(
     const animP = vec3(p).toVar('animP');
     const timeOffset = seed.add(time).mul(noiseScale.w);
 
-    // LOW FREQUENCY noise scaling for BIG flame shapes (fewer, larger flames)
-    animP.assign(p.mul(vec3(noiseScale.x, noiseScale.y, noiseScale.z).mul(0.4)));
+    // VERY LOW FREQUENCY noise for LARGE, SEPARATED flame shapes
+    // Lower multiplier (0.25) = bigger, more distinct flame tendrils
+    animP.assign(p.mul(vec3(noiseScale.x, noiseScale.y, noiseScale.z).mul(0.25)));
     // Add time-based animation (fire flows outward)
-    animP.addAssign(normalize(p).mul(timeOffset.mul(0.4)));
+    animP.addAssign(normalize(p).mul(timeOffset.mul(0.5)));
 
     // ========================================
     // SINGLE TURBULENCE PASS - optimized for performance
-    // Low frequency = 4-5 big flame tendrils instead of many small ones
+    // Very low frequency = 3-4 big distinct flame tendrils
     // ========================================
     const turbulenceValue = turbulence3(animP, lacunarity, gain);
 
     // ========================================
-    // SIMPLE CORE TEXTURE - darker variation without extra noise
+    // CORE TEXTURE - more variation for organic look
     // ========================================
-    // Use existing turbulence for core texture (no extra noise call)
-    const coreTexture = turbulenceValue.mul(0.3).add(0.7);
+    const coreTexture = turbulenceValue.mul(0.4).add(0.6);
 
     // ========================================
-    // RADIAL GRADIENT - MUCH BIGGER FLAMES
+    // RADIAL GRADIENT - MASSIVE FLAMES, TINY CORE
     // ========================================
-    // High magnitude creates long flame tendrils
-    const radialGradient = normalizedDist.add(turbulenceValue.mul(magnitude.mul(2.5)));
+    // Very high magnitude multiplier creates extremely long flame tendrils
+    const radialGradient = normalizedDist.add(turbulenceValue.mul(magnitude.mul(4.0)));
 
-    // Fire intensity - small core, flames extend FAR outward
-    const coreSize = float(0.25); // Very small core
-    const flameReach = float(1.8); // Flames reach 1.8x radius
+    // Fire intensity - TINY core, flames extend VERY FAR outward
+    const coreSize = float(0.12); // Tiny bright core (was 0.25)
+    const flameReach = float(2.5); // Flames reach 2.5x radius (was 1.8)
     const fireIntensity = smoothstep(flameReach, coreSize, radialGradient);
 
     // Apply core texture for variation
     const texturedIntensity = fireIntensity.mul(coreTexture);
 
-    // Soft threshold for smooth flames
-    const sunSurface = smoothstep(float(0.1), float(0.7), texturedIntensity);
+    // Higher threshold contrast for more distinct flames
+    const sunSurface = smoothstep(float(0.05), float(0.65), texturedIntensity);
 
     // ========================================
     // MULTI-COLOR GRADIENT (center → edge)
+    // TINY CORE, FAST TRANSITION TO FLAME COLORS
     // ========================================
-    // Core: warm golden (not pure white)
-    const coreColor = vec3(1.0, 0.92, 0.65);
+    // Core: warm golden (very small area)
+    const coreColor = vec3(1.0, 0.95, 0.75);
     // Inner: golden yellow
-    const innerColor = vec3(1.0, 0.75, 0.3);
+    const innerColor = vec3(1.0, 0.7, 0.25);
     // Mid: deep orange
-    const midColor = vec3(1.0, 0.45, 0.1);
+    const midColor = vec3(1.0, 0.4, 0.08);
     // Outer: red-orange for flame tips
-    const outerColor = vec3(0.9, 0.2, 0.0);
+    const outerColor = vec3(0.85, 0.15, 0.0);
 
-    // Color based on distance - faster transition for smaller core
-    const colorT = clamp(normalizedDist.mul(2.5), float(0.0), float(1.0));
+    // Color based on distance - VERY fast transition for tiny core
+    // Higher multiplier = faster color change from center
+    const colorT = clamp(normalizedDist.mul(4.0), float(0.0), float(1.0));
 
-    // Gradient with smaller bright core
-    const color1 = mix(coreColor, innerColor, smoothstep(float(0.0), float(0.12), colorT));
-    const color2 = mix(color1, midColor, smoothstep(float(0.12), float(0.35), colorT));
-    const finalColor = mix(color2, outerColor, smoothstep(float(0.35), float(0.75), colorT));
+    // Gradient with TINY bright core - transitions happen at smaller distances
+    const color1 = mix(coreColor, innerColor, smoothstep(float(0.0), float(0.06), colorT));
+    const color2 = mix(color1, midColor, smoothstep(float(0.06), float(0.2), colorT));
+    const finalColor = mix(color2, outerColor, smoothstep(float(0.2), float(0.5), colorT));
 
     // Apply core texture darkness
     const texturedColor = finalColor.mul(coreTexture.mul(0.3).add(0.7));
@@ -164,8 +166,8 @@ const samplerSphericalFire = Fn(
     // Final colored sun
     const coloredSun = texturedColor.mul(sunSurface);
 
-    // Alpha with extended flame fade
-    const coronaFade = smoothstep(float(1.8), float(0.6), normalizedDist);
+    // Alpha with extended flame fade - matches larger flame reach
+    const coronaFade = smoothstep(float(2.5), float(0.4), normalizedDist);
     const alpha = sunSurface.mul(coronaFade);
 
     return vec4(coloredSun.x, coloredSun.y, coloredSun.z, alpha);
@@ -245,8 +247,8 @@ export const createVolumetricFireNode = (
     const rayPos = vec3(positionWorld).toVar('rayPos');
     const rayDir = normalize(rayPos.sub(cameraPosition)).toVar('rayDir');
 
-    // Extended diameter to include corona (15% beyond sphere)
-    const coronaExtension = float(1.15);
+    // Extended diameter to include corona and large flames (40% beyond sphere)
+    const coronaExtension = float(1.4);
     const extendedRadius = uniforms.sphereRadius.mul(coronaExtension);
     const diameter = extendedRadius.mul(2.0);
     const rayLen = diameter.div(float(iterations)).mul(length(uniforms.scale));
