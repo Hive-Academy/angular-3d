@@ -1,10 +1,32 @@
 # @hive-academy/angular-3d
 
-> 🎨 **Declarative Three.js components for Angular**
+[![npm version](https://img.shields.io/npm/v/@hive-academy/angular-3d.svg)](https://www.npmjs.com/package/@hive-academy/angular-3d)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../LICENSE)
 
-A modern Angular library providing declarative, type-safe wrappers for Three.js. Build stunning 3D graphics experiences with familiar Angular patterns.
+> 🎨 **Declarative Three.js components for Angular applications**
 
-## Installation
+A modern Angular library providing declarative, type-safe wrappers for Three.js. Build stunning 3D graphics experiences with familiar Angular patterns using signals, standalone components, and dependency injection.
+
+## ✨ Features
+
+- 🎯 **Declarative API** - Configure 3D scenes via Angular inputs and signals
+- 🎬 **Scene Container** - Automatic WebGLRenderer, Scene, and Camera setup
+- 📦 **44 Components** - Primitives, lights, text, particles, effects, loaders, and more
+- 💡 **5 Light Types** - Ambient, Directional, Point, Spot, and preset SceneLighting
+- 🌊 **Animation Directives** - Float3d, Rotate3d, and waypoint-based flight animations
+- 🎮 **Orbit Controls** - Interactive camera controls out of the box
+- 📥 **Asset Loaders** - GLTF/GLB models, SVG icons, and texture loading
+- 🌈 **Postprocessing** - Bloom, DOF, SSAO, color grading, and 8+ effects
+- 🚀 **WebGPU Ready** - TSL (Three.js Shading Language) node-based materials
+- 🌐 **SSR Compatible** - Safely handles server-side rendering
+- 🌳 **Tree-Shakeable** - Import only what you need
+- 🎓 **TypeScript First** - Full type safety and IntelliSense support
+
+> **Scope**: This library provides **3D graphics components**. For scroll animations, see [`@hive-academy/angular-gsap`](../angular-gsap).
+
+---
+
+## 📦 Installation
 
 ```bash
 npm install @hive-academy/angular-3d three three-stdlib gsap maath troika-three-text
@@ -12,133 +34,491 @@ npm install @hive-academy/angular-3d three three-stdlib gsap maath troika-three-
 
 **Peer Dependencies**:
 
-- `@angular/core`: ~20.3.0
-- `@angular/common`: ~20.3.0
-- `three`: ^0.182.0
-- `three-stdlib`: ^2.35.0
-- `gsap`: ^3.14.2
-- `maath`: ^0.10.8
-- `troika-three-text`: ^0.52.4
-- `rxjs`: ~7.8.0
+| Package             | Version  | Purpose                                      |
+| ------------------- | -------- | -------------------------------------------- |
+| `@angular/core`     | ~20.3.0  | Angular framework                            |
+| `@angular/common`   | ~20.3.0  | Angular common utilities                     |
+| `three`             | ^0.182.0 | Three.js core library                        |
+| `three-stdlib`      | ^2.35.0  | Three.js extensions (OrbitControls, loaders) |
+| `gsap`              | ^3.14.2  | Animation engine (used by Float3d, Rotate3d) |
+| `maath`             | ^0.10.8  | Math utilities for 3D calculations           |
+| `troika-three-text` | ^0.52.4  | 3D text rendering                            |
+| `rxjs`              | ~7.8.0   | Reactive extensions                          |
 
-## Running unit tests
+---
 
-Run `nx test angular-3d` to execute the unit tests.
+## 🚀 Quick Start
 
-## Animation Directives
+### Example 1: Basic Scene with Box
+
+```typescript
+import { Component } from '@angular/core';
+import { Scene3dComponent, BoxComponent } from '@hive-academy/angular-3d';
+
+@Component({
+  selector: 'app-basic-scene',
+  standalone: true,
+  imports: [Scene3dComponent, BoxComponent],
+  template: `
+    <a3d-scene-3d [cameraPosition]="[0, 0, 5]">
+      <a3d-box [position]="[0, 0, 0]" [color]="'#ff6b6b'" />
+    </a3d-scene-3d>
+  `,
+  styles: [
+    `
+      a3d-scene-3d {
+        display: block;
+        width: 100%;
+        height: 400px;
+      }
+    `,
+  ],
+})
+export class BasicSceneComponent {}
+```
+
+### Example 2: Scene with Lighting
+
+```typescript
+import { Component } from '@angular/core';
+import { Scene3dComponent, SphereComponent, SceneLightingComponent } from '@hive-academy/angular-3d';
+
+@Component({
+  selector: 'app-lit-scene',
+  standalone: true,
+  imports: [Scene3dComponent, SphereComponent, SceneLightingComponent],
+  template: `
+    <a3d-scene-3d [cameraPosition]="[0, 2, 5]">
+      <a3d-scene-lighting />
+      <a3d-sphere [position]="[0, 0, 0]" [color]="'#4ecdc4'" [metalness]="0.8" [roughness]="0.2" />
+    </a3d-scene-3d>
+  `,
+})
+export class LitSceneComponent {}
+```
+
+### Example 3: Animated Scene
+
+```typescript
+import { Component } from '@angular/core';
+import { Scene3dComponent, TorusComponent, Float3dDirective, Rotate3dDirective, SceneLightingComponent } from '@hive-academy/angular-3d';
+
+@Component({
+  selector: 'app-animated-scene',
+  standalone: true,
+  imports: [Scene3dComponent, TorusComponent, Float3dDirective, Rotate3dDirective, SceneLightingComponent],
+  template: `
+    <a3d-scene-3d [cameraPosition]="[0, 0, 5]">
+      <a3d-scene-lighting />
+      <a3d-torus [position]="[0, 0, 0]" [color]="'#9b59b6'" float3d rotate3d />
+    </a3d-scene-3d>
+  `,
+})
+export class AnimatedSceneComponent {}
+```
+
+---
+
+## 📚 API Reference
+
+### Scene Container
+
+#### Scene3dComponent
+
+Root scene container automatically sets up WebGLRenderer, Scene, PerspectiveCamera, and render loop.
+
+**Selector**: `<a3d-scene-3d>`
+
+**Inputs**:
+
+- `cameraPosition?: [number, number, number]` - Camera position (default: `[0, 0, 5]`)
+- `cameraTarget?: [number, number, number]` - Camera look-at target (default: `[0, 0, 0]`)
+- `backgroundColor?: string` - Scene background color
+- `fov?: number` - Camera field of view (default: 75)
+- `enableShadows?: boolean` - Enable shadow rendering
+- `rendererOptions?: WebGLRendererParameters` - Custom renderer config
+
+---
+
+### Geometry Primitives
+
+| Component               | Selector                | Description                                     |
+| ----------------------- | ----------------------- | ----------------------------------------------- |
+| BoxComponent            | `<a3d-box>`             | Box/cube mesh with configurable size            |
+| SphereComponent         | `<a3d-sphere>`          | Sphere mesh with radius and segments            |
+| CylinderComponent       | `<a3d-cylinder>`        | Cylinder mesh with height and radius            |
+| TorusComponent          | `<a3d-torus>`           | Torus (donut) mesh                              |
+| PolyhedronComponent     | `<a3d-polyhedron>`      | Platonic solids (tetrahedron, octahedron, etc.) |
+| FloatingSphereComponent | `<a3d-floating-sphere>` | Pre-animated floating sphere                    |
+
+**Common Inputs** (all primitives):
+
+- `position?: [number, number, number]` - Position in 3D space
+- `rotation?: [number, number, number]` - Rotation in radians
+- `scale?: [number, number, number] | number` - Scale factor
+- `color?: string` - Material color (hex or CSS color name)
+- `metalness?: number` - Metalness (0-1, default: 0)
+- `roughness?: number` - Roughness (0-1, default: 0.5)
+- `opacity?: number` - Opacity (0-1, default: 1)
+- `transparent?: boolean` - Enable transparency
+
+---
+
+### Lights
+
+| Component                 | Selector                  | Description                                 |
+| ------------------------- | ------------------------- | ------------------------------------------- |
+| AmbientLightComponent     | `<a3d-ambient-light>`     | Uniform ambient illumination                |
+| DirectionalLightComponent | `<a3d-directional-light>` | Sun-like directional light with shadows     |
+| PointLightComponent       | `<a3d-point-light>`       | Omnidirectional point light                 |
+| SpotLightComponent        | `<a3d-spot-light>`        | Focused cone spotlight                      |
+| SceneLightingComponent    | `<a3d-scene-lighting>`    | Preset lighting rig (ambient + directional) |
+
+**Example**:
+
+```html
+<a3d-scene-3d>
+  <a3d-ambient-light [intensity]="0.5" />
+  <a3d-directional-light [position]="[5, 5, 5]" [intensity]="1.0" [castShadow]="true" />
+  <a3d-sphere [receiveShadow]="true" [castShadow]="true" />
+</a3d-scene-3d>
+```
+
+---
+
+### Text Components
+
+| Component                     | Selector                       | Description                      |
+| ----------------------------- | ------------------------------ | -------------------------------- |
+| TroikaTextComponent           | `<a3d-troika-text>`            | Basic 3D text using Troika       |
+| ResponsiveTroikaTextComponent | `<a3d-responsive-troika-text>` | Responsive 3D text with maxWidth |
+| GlowTroikaTextComponent       | `<a3d-glow-troika-text>`       | 3D text with glow effect         |
+| SmokeTroikaTextComponent      | `<a3d-smoke-troika-text>`      | 3D text with smoke effect        |
+| ParticlesTextComponent        | `<a3d-particle-text>`          | Text rendered as particles       |
+| BubbleTextComponent           | `<a3d-bubble-text>`            | Text with bubble effect          |
+| ExtrudedText3dComponent       | `<a3d-extruded-text-3d>`       | Extruded 3D text with depth      |
+
+**Example**:
+
+```html
+<a3d-troika-text [text]="'Hello 3D World'" [fontSize]="0.5" [color]="'#ffffff'" [position]="[0, 0, 0]" />
+```
+
+---
+
+### Space-Themed Components
+
+| Component                 | Selector                  | Description                     |
+| ------------------------- | ------------------------- | ------------------------------- |
+| PlanetComponent           | `<a3d-planet>`            | Planet with optional atmosphere |
+| StarFieldComponent        | `<a3d-star-field>`        | Particle-based star background  |
+| NebulaComponent           | `<a3d-nebula>`            | Volumetric nebula effect        |
+| NebulaVolumetricComponent | `<a3d-nebula-volumetric>` | Advanced volumetric nebula      |
+| CloudLayerComponent       | `<a3d-cloud-layer>`       | Cloud layer effect              |
+
+**Example**:
+
+```html
+<a3d-scene-3d [cameraPosition]="[0, 0, 10]">
+  <a3d-star-field [count]="5000" [radius]="50" />
+  <a3d-planet [radius]="2" [textureUrl]="'assets/earth.jpg'" [hasAtmosphere]="true" />
+  <a3d-nebula [position]="[-10, 0, -20]" [color]="'#9b59b6'" />
+</a3d-scene-3d>
+```
+
+---
+
+### Particle Systems
+
+| Component                     | Selector                       | Description                     |
+| ----------------------------- | ------------------------------ | ------------------------------- |
+| ParticleSystemComponent       | `<a3d-particle-system>`        | Configurable particle effects   |
+| MarbleParticleSystemComponent | `<a3d-marble-particle-system>` | Marble-styled particles         |
+| GpuParticleSphereComponent    | `<a3d-gpu-particle-sphere>`    | GPU-accelerated particle sphere |
+| SparkleCoronaComponent        | `<a3d-sparkle-corona>`         | Sparkle/corona effect           |
+| ParticleCloudComponent        | `<a3d-particle-cloud>`         | Particle cloud effect           |
+
+---
+
+### Visual Effects
+
+| Component                | Selector                 | Description                        |
+| ------------------------ | ------------------------ | ---------------------------------- |
+| MetaballSceneComponent   | `<a3d-metaball-scene>`   | Metaball container (compositional) |
+| MetaballSphereComponent  | `<a3d-metaball-sphere>`  | Individual metaball sphere         |
+| MetaballCursorComponent  | `<a3d-metaball-cursor>`  | Cursor-following metaball          |
+| MarbleSphereComponent    | `<a3d-marble-sphere>`    | Marble material sphere             |
+| FireSphereComponent      | `<a3d-fire-sphere>`      | Fire/flame effect sphere           |
+| BackgroundCubesComponent | `<a3d-background-cubes>` | Decorative background cubes        |
+
+---
+
+### Scene Organization
+
+| Component               | Selector                | Description                     |
+| ----------------------- | ----------------------- | ------------------------------- |
+| GroupComponent          | `<a3d-group>`           | Object3D container for grouping |
+| FogComponent            | `<a3d-fog>`             | Scene fog effect                |
+| EnvironmentComponent    | `<a3d-environment>`     | Environment mapping             |
+| BackgroundCubeComponent | `<a3d-background-cube>` | Skybox background               |
+| InstancedMeshComponent  | `<a3d-instanced-mesh>`  | Instanced mesh rendering        |
+
+**Example - Grouping objects**:
+
+```html
+<a3d-scene-3d>
+  <a3d-group [position]="[0, 2, 0]" rotate3d>
+    <a3d-box [position]="[-1, 0, 0]" />
+    <a3d-sphere [position]="[1, 0, 0]" />
+  </a3d-group>
+</a3d-scene-3d>
+```
+
+---
+
+### Loaders
+
+| Component          | Selector           | Description               |
+| ------------------ | ------------------ | ------------------------- |
+| GltfModelComponent | `<a3d-gltf-model>` | GLTF/GLB model loader     |
+| SvgIconComponent   | `<a3d-svg-icon>`   | SVG extruded as 3D object |
+
+**Example - Loading GLTF model**:
+
+```html
+<a3d-gltf-model [modelUrl]="'assets/models/spaceship.glb'" [scale]="0.5" [position]="[0, 0, 0]" [autoRotate]="true" />
+```
+
+---
+
+### Postprocessing Effects
+
+| Component                          | Selector                            | Description                    |
+| ---------------------------------- | ----------------------------------- | ------------------------------ |
+| EffectComposerComponent            | `<a3d-effect-composer>`             | Postprocessing container       |
+| BloomEffectComponent               | `<a3d-bloom-effect>`                | Bloom/glow effect              |
+| SelectiveBloomEffectComponent      | `<a3d-selective-bloom-effect>`      | Selective bloom with luminance |
+| DofEffectComponent                 | `<a3d-dof-effect>`                  | Depth of field                 |
+| SsaoEffectComponent                | `<a3d-ssao-effect>`                 | Screen-space ambient occlusion |
+| ColorGradingEffectComponent        | `<a3d-color-grading-effect>`        | LUT-based color grading        |
+| ChromaticAberrationEffectComponent | `<a3d-chromatic-aberration-effect>` | Chromatic aberration           |
+| FilmGrainEffectComponent           | `<a3d-film-grain-effect>`           | Film grain effect              |
+
+**Example - Adding bloom**:
+
+```html
+<a3d-scene-3d>
+  <a3d-effect-composer>
+    <a3d-bloom-effect [strength]="1.5" [radius]="0.8" [threshold]="0.1" />
+  </a3d-effect-composer>
+
+  <a3d-sphere [color]="'#00ffff'" [emissiveIntensity]="1.0" />
+</a3d-scene-3d>
+```
+
+---
+
+## 🎮 Controls
+
+### OrbitControlsComponent
+
+Interactive camera controls with mouse/touch support.
+
+**Selector**: `<a3d-orbit-controls>`
+
+**Inputs**:
+
+- `enableDamping?: boolean` - Enable smooth damping (default: true)
+- `dampingFactor?: number` - Damping inertia (default: 0.05)
+- `enableZoom?: boolean` - Enable zoom (default: true)
+- `minDistance?: number` - Minimum zoom distance
+- `maxDistance?: number` - Maximum zoom distance
+- `target?: [number, number, number]` - Orbit target point
+
+**Example**:
+
+```html
+<a3d-scene-3d>
+  <a3d-orbit-controls [enableDamping]="true" [minDistance]="2" [maxDistance]="10" />
+  <a3d-box />
+</a3d-scene-3d>
+```
+
+---
+
+## 🌊 Animation Directives
 
 ### Float3dDirective
 
-Adds floating/bobbing animation to 3D objects using GSAP.
+Adds smooth floating/bobbing animation.
 
-**Usage**:
+**Selector**: `[float3d]`
+
+**Inputs**:
+
+- `floatHeight?: number` - Float distance (default: 0.3)
+- `floatSpeed?: number` - Animation speed (default: 1.5)
+
+**Example**:
 
 ```html
-<app-sphere
-  float3d
-  [floatConfig]="{
-    height: 0.5,
-    speed: 2000,
-    delay: 0,
-    ease: 'sine.inOut',
-    autoStart: true
-  }"
-/>
-```
-
-**Configuration**:
-
-- `height` (number): Vertical displacement in 3D units (default: 0.3)
-- `speed` (number): Full cycle duration in milliseconds (default: 2000)
-- `delay` (number): Start delay in milliseconds (default: 0)
-- `ease` (string): GSAP easing function (default: 'sine.inOut')
-- `autoStart` (boolean): Auto-play on init (default: true)
-
-**Public API**:
-
-```typescript
-@ViewChild(Float3dDirective) floatDir!: Float3dDirective;
-
-ngAfterViewInit() {
-  this.floatDir.play();
-  this.floatDir.pause();
-  this.floatDir.stop();
-  const playing = this.floatDir.isPlaying();
-}
+<a3d-sphere float3d [floatHeight]="0.5" [floatSpeed]="2.0" />
 ```
 
 ---
 
 ### Rotate3dDirective
 
-Adds continuous rotation animation to 3D objects.
+Continuous rotation animation.
 
-**Usage**:
+**Selector**: `[rotate3d]`
+
+**Inputs**:
+
+- `rotateSpeed?: [number, number, number]` - Rotation speed per axis (default: `[0, 1, 0]`)
+
+**Example**:
 
 ```html
-<!-- Simple Y-axis rotation -->
-<app-planet rotate3d [rotateConfig]="{ axis: 'y', speed: 60 }" />
-
-<!-- Multi-axis tumble -->
-<app-asteroid
-  rotate3d
-  [rotateConfig]="{
-    axis: 'xyz',
-    xSpeed: 10,
-    ySpeed: 20,
-    zSpeed: 5
-  }"
-/>
+<a3d-box rotate3d [rotateSpeed]="[0.5, 1, 0]" />
 ```
 
-**Configuration**:
+---
 
-- `axis` ('x' | 'y' | 'z' | 'xyz'): Rotation axis (default: 'y')
-- `speed` (number): Seconds for 360° rotation (default: 60)
-- `xSpeed`, `ySpeed`, `zSpeed` (number): Individual axis speeds for multi-axis
-- `direction` (1 | -1): Rotation direction (default: 1)
-- `autoStart` (boolean): Auto-play on init (default: true)
+### SpaceFlight3dDirective
 
-**Public API**:
+Waypoint-based flight animation for spaceship-like movement.
+
+**Selector**: `[a3dSpaceFlight3d]`
+
+**Inputs**:
+
+- `waypoints?: Array<{ position: [number, number, number]; rotation?: [number, number, number] }>`
+- `speed?: number` - Flight speed
+- `loop?: boolean` - Loop through waypoints
+
+---
+
+## 🎯 Interaction Directives
+
+### MouseTracking3dDirective
+
+Makes objects follow mouse movement.
+
+**Selector**: `[mouseTracking3d]`
+
+**Inputs**:
+
+- `trackingSpeed?: number` - Response speed (default: 0.1)
+- `trackingRange?: number` - Movement range (default: 1.0)
+
+**Example**:
+
+```html
+<a3d-sphere mouseTracking3d [trackingSpeed]="0.2" />
+```
+
+---
+
+### ScrollZoomCoordinatorDirective
+
+Coordinates camera zoom with page scroll.
+
+**Selector**: `[a3dScrollZoomCoordinator]`
+
+**Inputs**:
+
+- `zoomRange?: [number, number]` - Min/max zoom distance
+- `scrollSensitivity?: number` - Scroll response sensitivity
+
+---
+
+### Performance3dDirective
+
+Automatic LOD (Level of Detail) and performance optimization.
+
+**Selector**: `[a3dPerformance3d]`
+
+**Inputs**:
+
+- `targetFps?: number` - Target frame rate (default: 60)
+- `enableLod?: boolean` - Enable LOD switching
+
+---
+
+## ⚙️ Configuration
+
+### Material Options
+
+All mesh components support standard material properties:
+
+```html
+<a3d-sphere [color]="'#ff6b6b'" [metalness]="0.8" [roughness]="0.2" [opacity]="0.9" [transparent]="true" [emissive]="'#ff0000'" [emissiveIntensity]="0.5" />
+```
+
+### Custom Materials with TSL
+
+Use `NodeMaterialDirective` for advanced node-based materials:
 
 ```typescript
-@ViewChild(Rotate3dDirective) rotateDir!: Rotate3dDirective;
+import { tslFresnel, tslIridescence } from '@hive-academy/angular-3d';
+```
 
-ngAfterViewInit() {
-  this.rotateDir.play();
-  this.rotateDir.pause();
-  this.rotateDir.setSpeed(30); // Adjust speed
-  this.rotateDir.reverse(); // Reverse direction
+---
+
+## 🌐 SSR Compatibility
+
+The library automatically handles server-side rendering:
+
+- Three.js initializes only in browser environment
+- No hydration mismatches
+- Safe component lifecycle management
+
+```typescript
+// ✅ Safe - library handles SSR internally
+<a3d-scene-3d>
+  <a3d-box />
+</a3d-scene-3d>
+
+// ✅ No additional guards needed
+constructor() {
+  // Library uses isPlatformBrowser() internally
 }
 ```
 
 ---
 
-### AnimationService
+## 🎬 Live Demo
 
-For programmatic animations, inject `AnimationService`:
+> 🚀 Coming soon - Live demo application showcasing all components
 
-```typescript
-import { AnimationService } from '@hive-academy/angular-3d';
+---
 
-@Component({...})
-export class MyComponent {
-  private animationService = inject(AnimationService);
+## 📖 Resources
 
-  ngAfterViewInit() {
-    const mesh = new THREE.Mesh(geometry, material);
+- [Three.js Documentation](https://threejs.org/docs/)
+- [Three.js Examples](https://threejs.org/examples/)
+- [Angular Documentation](https://angular.dev)
+- [WebGL Fundamentals](https://webglfundamentals.org/)
 
-    // Float animation
-    this.animationService.floatAnimation(mesh, { height: 0.5 });
+---
 
-    // Rotation animation
-    this.animationService.rotateAnimation(mesh, { axis: 'y', speed: 30 });
+## 🤝 Contributing
 
-    // Flight path
-    this.animationService.flightPath(mesh, [
-      { position: [0, 0, 0], duration: 2 },
-      { position: [5, 2, 3], duration: 3 }
-    ]);
-  }
-}
-```
+Contributions are welcome! Please read our [Contributing Guide](../../CONTRIBUTING.md) and follow the conventional commit format for all commits.
+
+See [CODE_OF_CONDUCT.md](../../CODE_OF_CONDUCT.md) for community guidelines.
+
+---
+
+## 📄 License
+
+MIT © Hive Academy
+
+See [LICENSE](../../LICENSE) for details.
+
+---
+
+## 🔗 Related Packages
+
+- [`@hive-academy/angular-gsap`](../angular-gsap) - GSAP scroll animations for Angular (for DOM scroll effects)
