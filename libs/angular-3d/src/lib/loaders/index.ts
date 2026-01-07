@@ -15,6 +15,13 @@ export {
   type GltfLoadResult,
 } from './gltf-loader.service';
 
+export {
+  AssetPreloaderService,
+  type AssetDefinition,
+  type AssetType,
+  type PreloadState,
+} from './asset-preloader.service';
+
 // Injectable functions
 export {
   injectTextureLoader,
