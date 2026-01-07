@@ -98,6 +98,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
 
     <!-- Hero Container - no scroll animation on container -->
     <section
+      data-lenis-prevent
       class="hero-container relative w-full overflow-hidden"
       style="height: 100vh"
     >
@@ -206,7 +207,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
           <!-- Sun - FIXED at center-bottom (volumetric with large separated flames) -->
           <a3d-fire-sphere
             [radius]="8"
-            [position]="sunPosition"
+            [position]="firePosition"
             [quality]="'quality'"
             [sunMode]="true"
             [fireSpeed]="0.35"
@@ -277,12 +278,12 @@ import { SCENE_COLORS } from '../../../shared/colors';
             color="#00ccff"
             coreColor="#ffffff"
             [intensity]="2.2"
-            [size]="22"
-            [flameLength]="40"
+            [size]="60"
+            [flameLength]="60"
             [speed]="1.5"
             [turbulence]="0.4"
-            [particleCount]="700"
-            [nozzleRadius]="12"
+            [particleCount]="900"
+            [nozzleRadius]="15"
           />
           <a3d-thruster-flame
             #rightThruster
@@ -290,12 +291,12 @@ import { SCENE_COLORS } from '../../../shared/colors';
             color="#00ccff"
             coreColor="#ffffff"
             [intensity]="2.2"
-            [size]="22"
-            [flameLength]="40"
+            [size]="60"
+            [flameLength]="60"
             [speed]="1.5"
             [turbulence]="0.4"
-            [particleCount]="700"
-            [nozzleRadius]="12"
+            [particleCount]="900"
+            [nozzleRadius]="15"
           />
 
           <!-- Bloom for luminous sun glow -->
@@ -477,7 +478,8 @@ export class GlassSphereHeroSectionComponent {
    * y=-9 places sun so top half is visible above bottom edge
    * Centered horizontally (x=0)
    */
-  protected readonly sunPosition: [number, number, number] = [0, -9, 0];
+  protected readonly firePosition: [number, number, number] = [0, -9, 0];
+  protected readonly sunPosition: [number, number, number] = [0, -9, -2];
 
   /** Angular logo position: centered, floating above sun */
   protected readonly angularLogoPosition: [number, number, number] = [
@@ -551,8 +553,6 @@ export class GlassSphereHeroSectionComponent {
    * bound during construction.
    */
   protected onRobotLoaded(group: THREE.Group): void {
-    console.log('[GlassSphereHero] Robot loaded, attaching thrusters...');
-
     // Get thruster components
     const left = this.leftThruster();
     const right = this.rightThruster();
@@ -562,10 +562,6 @@ export class GlassSphereHeroSectionComponent {
       const leftMesh = left.getMesh();
       if (leftMesh) {
         group.add(leftMesh);
-        console.log('[GlassSphereHero] Left thruster attached:', {
-          position: leftMesh.position.toArray(),
-          scale: leftMesh.scale.toArray(),
-        });
       }
     }
 
@@ -574,10 +570,6 @@ export class GlassSphereHeroSectionComponent {
       const rightMesh = right.getMesh();
       if (rightMesh) {
         group.add(rightMesh);
-        console.log('[GlassSphereHero] Right thruster attached:', {
-          position: rightMesh.position.toArray(),
-          scale: rightMesh.scale.toArray(),
-        });
       }
     }
   }

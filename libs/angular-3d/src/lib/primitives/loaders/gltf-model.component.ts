@@ -209,31 +209,16 @@ export class GltfModelComponent implements OnDestroy {
       const initialized = this.isInitialized();
       const group = this.group;
 
-      console.log('[GltfModelComponent] Child Attachment Effect:', {
-        childrenCount: children.length,
-        initialized,
-        hasGroup: !!group,
-        alreadyAttached: this.attachedChildren.size,
-      });
-
       if (group && initialized && children.length > 0) {
         for (const child of children) {
           // Skip if already attached
           if (this.attachedChildren.has(child)) {
-            console.log(
-              '[GltfModelComponent] Child already attached, skipping'
-            );
             continue;
           }
 
           // Get mesh and attach if ready
           const mesh = child.getMesh();
           const ready = child.isReady();
-          console.log('[GltfModelComponent] Processing child:', {
-            hasMesh: !!mesh,
-            isReady: ready,
-            meshType: mesh?.type,
-          });
 
           if (mesh && ready) {
             group.add(mesh);
@@ -245,17 +230,6 @@ export class GltfModelComponent implements OnDestroy {
             mesh.getWorldPosition(worldPos);
             const worldScale = new THREE.Vector3();
             mesh.getWorldScale(worldScale);
-            console.log(
-              '[GltfModelComponent] ✅ Successfully attached child mesh to group',
-              {
-                localPosition: mesh.position.toArray(),
-                localScale: mesh.scale.toArray(),
-                worldPosition: worldPos.toArray(),
-                worldScale: worldScale.toArray(),
-                visible: mesh.visible,
-                renderOrder: mesh.renderOrder,
-              }
-            );
           } else {
             console.log('[GltfModelComponent] ❌ Child not ready or no mesh');
           }

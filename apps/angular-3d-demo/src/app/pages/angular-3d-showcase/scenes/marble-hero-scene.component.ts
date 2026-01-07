@@ -166,10 +166,6 @@ export class MarbleHeroContentComponent implements AfterViewInit {
 
         // Store reference for cleanup
         this.envTexture = texture;
-
-        console.log(
-          'Environment texture loaded - marbles should now reflect the background'
-        );
       },
       undefined,
       (error) => {

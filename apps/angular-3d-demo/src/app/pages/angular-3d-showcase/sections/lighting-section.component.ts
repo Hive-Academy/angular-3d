@@ -1,15 +1,13 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
-  Scene3dComponent,
-  TorusComponent,
-  SphereComponent,
-  BoxComponent,
   AmbientLightComponent,
+  BoxComponent,
   DirectionalLightComponent,
   PointLightComponent,
-  SpotLightComponent,
+  Scene3dComponent,
   SceneLightingComponent,
-  Rotate3dDirective,
+  SphereComponent,
+  SpotLightComponent,
 } from '@hive-academy/angular-3d';
 import { SCENE_COLORS } from '../../../shared/colors';
 
@@ -23,7 +21,6 @@ import { SCENE_COLORS } from '../../../shared/colors';
   selector: 'app-lighting-section',
   imports: [
     Scene3dComponent,
-    TorusComponent,
     SphereComponent,
     BoxComponent,
     AmbientLightComponent,
@@ -31,7 +28,6 @@ import { SCENE_COLORS } from '../../../shared/colors';
     PointLightComponent,
     SpotLightComponent,
     SceneLightingComponent,
-    Rotate3dDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `

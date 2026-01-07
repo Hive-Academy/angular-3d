@@ -187,7 +187,7 @@ import { CodeSnippetComponent } from '../shared/code-snippet.component';
 })
 export class ServicesDocumentationComponent {
   // Code examples for each service (using modern inject() pattern)
-  readonly sceneServiceExample = `import { inject } from '@angular/core';
+  public readonly sceneServiceExample = `import { inject } from '@angular/core';
 import { SceneService } from '@hive-academy/angular-3d';
 
 export class MyComponent {
@@ -200,7 +200,7 @@ export class MyComponent {
   }
 }`;
 
-  readonly renderLoopServiceExample = `import { inject, DestroyRef } from '@angular/core';
+  public readonly renderLoopServiceExample = `import { inject, DestroyRef } from '@angular/core';
 import { RenderLoopService } from '@hive-academy/angular-3d';
 
 export class MyComponent {
@@ -217,7 +217,7 @@ export class MyComponent {
   }
 }`;
 
-  readonly gltfLoaderServiceExample = `import { inject } from '@angular/core';
+  public readonly gltfLoaderServiceExample = `import { inject } from '@angular/core';
 import { GltfLoaderService } from '@hive-academy/angular-3d';
 
 export class MyComponent {
@@ -232,7 +232,7 @@ export class MyComponent {
   }
 }`;
 
-  readonly textureLoaderServiceExample = `import { inject } from '@angular/core';
+  public readonly textureLoaderServiceExample = `import { inject } from '@angular/core';
 import { TextureLoaderService } from '@hive-academy/angular-3d';
 
 export class MyComponent {
@@ -244,7 +244,7 @@ export class MyComponent {
   }
 }`;
 
-  readonly fontPreloadServiceExample = `import { inject } from '@angular/core';
+  public readonly fontPreloadServiceExample = `import { inject } from '@angular/core';
 import { FontPreloadService } from '@hive-academy/angular-3d';
 
 export class MyComponent {
@@ -256,7 +256,7 @@ export class MyComponent {
   }
 }`;
 
-  readonly performanceOptimizerServiceExample = `import { inject } from '@angular/core';
+  public readonly performanceOptimizerServiceExample = `import { inject } from '@angular/core';
 import { AdvancedPerformanceOptimizerService, SceneService } from '@hive-academy/angular-3d';
 
 export class MyComponent {

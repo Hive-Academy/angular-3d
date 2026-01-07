@@ -5,14 +5,13 @@ import {
   signal,
 } from '@angular/core';
 import {
-  Scene3dComponent,
-  MetaballSceneComponent,
-  MetaballSphereComponent,
+  AmbientLightComponent,
   MetaballCursorComponent,
   MetaballPreset,
-  AmbientLightComponent,
+  MetaballSceneComponent,
+  MetaballSphereComponent,
   PointLightComponent,
-  OrbitControlsComponent,
+  Scene3dComponent,
 } from '@hive-academy/angular-3d';
 
 /**
@@ -36,7 +35,6 @@ import {
     MetaballCursorComponent,
     AmbientLightComponent,
     PointLightComponent,
-    OrbitControlsComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
