@@ -1,6 +1,6 @@
 {
   "name": "@hive-academy/angular-3d",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Declarative Three.js components for Angular - Build stunning 3D experiences with familiar Angular patterns",
   "keywords": [
     "angular",

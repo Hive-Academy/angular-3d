@@ -166,7 +166,7 @@ export const tslFireClouds = TSLFn((userParams: TslTextureParams = {}) => {
   // ========================================================================
 
   // Combine turbulent noise with core intensity
-  let flamePattern = turbulentNoise.mul(coreIntensity);
+  const flamePattern = turbulentNoise.mul(coreIntensity);
 
   // CRITICAL: Threshold to create gaps (flame streams instead of solid sphere)
   // Below threshold = transparent/invisible, above = visible flames

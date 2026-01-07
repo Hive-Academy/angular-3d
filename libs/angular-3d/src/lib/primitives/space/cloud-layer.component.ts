@@ -32,7 +32,7 @@ import { injectTextureLoader } from '../../loaders/inject-texture-loader';
 import { RenderLoopService } from '../../render-loop/render-loop.service';
 import { NG_3D_PARENT } from '../../types/tokens';
 import { applyFog, clampForBloom } from '../shaders/tsl-utilities';
-// eslint-disable-next-line @nx/enforce-module-boundaries
+
 import * as TSL from 'three/tsl';
 
 const { texture, uv, positionView, float, pow, color } = TSL;

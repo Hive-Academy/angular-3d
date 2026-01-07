@@ -6,7 +6,6 @@
  * @module primitives/shaders/tsl-textures/shapes
  */
 
-// eslint-disable-next-line @nx/enforce-module-boundaries
 import * as TSL from 'three/tsl';
 
 import { TSLFn, TSLNode, TslTextureParams, convertToNodes } from './types';

@@ -215,12 +215,14 @@ export interface FireTextureUniforms {
 /**
  * Create uniforms for fire texture shader
  */
-export const createFireTextureUniforms = (config: {
-  speed?: number;
-  intensity?: number;
-  scale?: number;
-  distortion?: number;
-} = {}): FireTextureUniforms => {
+export const createFireTextureUniforms = (
+  config: {
+    speed?: number;
+    intensity?: number;
+    scale?: number;
+    distortion?: number;
+  } = {}
+): FireTextureUniforms => {
   return {
     speed: uniform(config.speed ?? 0.5),
     intensity: uniform(config.intensity ?? 1.0),
@@ -237,7 +239,7 @@ export const createFireTextureUniforms = (config: {
  */
 export const createFireTextureNode = (
   uniforms: FireTextureUniforms,
-  sunMode: boolean = true
+  sunMode = true
 ) => {
   return Fn(() => {
     // Get normalized position on sphere surface
@@ -273,7 +275,8 @@ export const createFireTextureNode = (
     const heightFactor = float(1.0).sub(abs(pos.y).mul(0.3));
 
     // Combine noise layers for final fire pattern
-    const firePattern = turbulence.mul(0.6)
+    const firePattern = turbulence
+      .mul(0.6)
       .add(detail.mul(0.4))
       .mul(heightFactor);
 
@@ -281,8 +284,11 @@ export const createFireTextureNode = (
     const baseIntensity = firePattern.mul(uniforms.distortion.add(0.5));
 
     // Clamp and enhance contrast
-    const finalIntensity = smoothstep(float(0.15), float(0.7), baseIntensity)
-      .mul(uniforms.intensity);
+    const finalIntensity = smoothstep(
+      float(0.15),
+      float(0.7),
+      baseIntensity
+    ).mul(uniforms.intensity);
 
     // Fire color based on intensity
     let color: TSLNode;
@@ -292,13 +298,17 @@ export const createFireTextureNode = (
       const n = clamp(finalIntensity, float(0.0), float(1.0));
 
       // Color stops for realistic sun
-      const coreColor = vec3(1.0, 0.95, 0.8);   // Warm white
-      const hotColor = vec3(1.0, 0.75, 0.3);    // Golden yellow
-      const midColor = vec3(1.0, 0.4, 0.05);    // Deep orange
-      const edgeColor = vec3(0.8, 0.15, 0.0);   // Dark red
+      const coreColor = vec3(1.0, 0.95, 0.8); // Warm white
+      const hotColor = vec3(1.0, 0.75, 0.3); // Golden yellow
+      const midColor = vec3(1.0, 0.4, 0.05); // Deep orange
+      const edgeColor = vec3(0.8, 0.15, 0.0); // Dark red
 
       // Multi-step blend
-      const c1 = mix(edgeColor, midColor, smoothstep(float(0.0), float(0.3), n));
+      const c1 = mix(
+        edgeColor,
+        midColor,
+        smoothstep(float(0.0), float(0.3), n)
+      );
       const c2 = mix(c1, hotColor, smoothstep(float(0.3), float(0.6), n));
       const c3 = mix(c2, coreColor, smoothstep(float(0.6), float(0.9), n));
 
@@ -329,11 +339,16 @@ export const createFireTextureNode = (
  * @param sunMode Use sun colors vs fire colors
  */
 export const createOptimizedFireNode = (
-  speed: number = 0.5,
-  distortion: number = 0.3,
-  scale: number = 4.0,
-  sunMode: boolean = true
+  speed = 0.5,
+  distortion = 0.3,
+  scale = 4.0,
+  sunMode = true
 ) => {
-  const uniforms = createFireTextureUniforms({ speed, distortion, scale, intensity: 1.0 });
+  const uniforms = createFireTextureUniforms({
+    speed,
+    distortion,
+    scale,
+    intensity: 1.0,
+  });
   return createFireTextureNode(uniforms, sunMode);
 };

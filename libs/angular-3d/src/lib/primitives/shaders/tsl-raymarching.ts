@@ -27,7 +27,7 @@
  */
 
 // Import TSL as namespace (standard pattern from Three.js examples)
-// eslint-disable-next-line @nx/enforce-module-boundaries
+
 import * as TSL from 'three/tsl';
 
 // TSL nodes use complex types - use generic node type for flexibility

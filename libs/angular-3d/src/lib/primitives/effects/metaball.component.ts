@@ -10,15 +10,21 @@ import * as THREE from 'three/webgpu';
 import { MeshBasicNodeMaterial } from 'three/webgpu';
 
 import * as TSL from 'three/tsl';
+import {
+  TSLUniform,
+  TSLFloat,
+  TSLVec2,
+  TSLVec3,
+  TSLColor,
+} from '../../types/tsl-types';
 import { RenderLoopService } from '../../render-loop/render-loop.service';
 import { OBJECT_ID } from '../../tokens/object-id.token';
 import { NG_3D_PARENT } from '../../types/tokens';
 import { SceneService } from '../../canvas/scene.service';
 // Note: Ray marching utilities available in tsl-raymarching.ts if needed
 
-// TSL nodes use complex types - use generic node type for flexibility
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type TSLNode = any;
+// TSL nodes use complex types - import from tsl-types for type safety
+import type { TSLNode } from '../../types/tsl-types';
 
 /**
  * Helper to safely access TSL functions at runtime rather than module load time.
@@ -227,77 +233,42 @@ export class MetaballComponent {
   private material!: MeshBasicNodeMaterial;
   private readonly group = new THREE.Group();
 
-  // TSL Uniform Nodes (use any type as UniformNode is not exported)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uTime!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uResolution!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uActualResolution!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uPixelRatio!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uMousePosition!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uCursorSphere!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uCursorRadius!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uSphereCount!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uFixedTopLeftRadius!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uFixedBottomRightRadius!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uSmallTopLeftRadius!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uSmallBottomRightRadius!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uMergeDistance!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uSmoothness!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uAmbientIntensity!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uDiffuseIntensity!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uSpecularIntensity!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uSpecularPower!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uFresnelPower!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uBackgroundColor!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uSphereColor!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uLightColor!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uLightPosition!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uContrast!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uFogDensity!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uAnimationSpeed!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uMovementScale!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uMouseProximityEffect!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uMinMovementScale!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uMaxMovementScale!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uCursorGlowIntensity!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uCursorGlowRadius!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uCursorGlowColor!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uIsMobile!: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private uIsLowPower!: any;
+  // TSL Uniform Nodes - typed with proper TSL types
+  private uTime!: TSLUniform<number>;
+  private uResolution!: TSLVec2;
+  private uActualResolution!: TSLVec2;
+  private uPixelRatio!: TSLFloat;
+  private uMousePosition!: TSLVec2;
+  private uCursorSphere!: TSLVec3;
+  private uCursorRadius!: TSLFloat;
+  private uSphereCount!: TSLFloat;
+  private uFixedTopLeftRadius!: TSLFloat;
+  private uFixedBottomRightRadius!: TSLFloat;
+  private uSmallTopLeftRadius!: TSLFloat;
+  private uSmallBottomRightRadius!: TSLFloat;
+  private uMergeDistance!: TSLFloat;
+  private uSmoothness!: TSLFloat;
+  private uAmbientIntensity!: TSLFloat;
+  private uDiffuseIntensity!: TSLFloat;
+  private uSpecularIntensity!: TSLFloat;
+  private uSpecularPower!: TSLFloat;
+  private uFresnelPower!: TSLFloat;
+  private uBackgroundColor!: TSLColor;
+  private uSphereColor!: TSLColor;
+  private uLightColor!: TSLColor;
+  private uLightPosition!: TSLVec3;
+  private uContrast!: TSLFloat;
+  private uFogDensity!: TSLFloat;
+  private uAnimationSpeed!: TSLFloat;
+  private uMovementScale!: TSLFloat;
+  private uMouseProximityEffect!: TSLFloat;
+  private uMinMovementScale!: TSLFloat;
+  private uMaxMovementScale!: TSLFloat;
+  private uCursorGlowIntensity!: TSLFloat;
+  private uCursorGlowRadius!: TSLFloat;
+  private uCursorGlowColor!: TSLColor;
+  private uIsMobile!: TSLFloat;
+  private uIsLowPower!: TSLFloat;
 
   // Mouse tracking state
   private readonly mousePosition = new THREE.Vector2(0.5, 0.5);

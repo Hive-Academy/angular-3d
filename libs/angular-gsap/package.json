@@ -1,6 +1,6 @@
 {
   "name": "@hive-academy/angular-gsap",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "GSAP-powered scroll animations for Angular - Declarative scroll-triggered animations with ScrollTrigger integration",
   "keywords": [
     "angular",

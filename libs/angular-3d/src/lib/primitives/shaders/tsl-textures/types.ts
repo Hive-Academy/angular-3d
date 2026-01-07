@@ -32,7 +32,7 @@ export interface TslTextureParams {
  * @param layout - Optional layout for the Fn call
  * @returns Wrapper function that calls Fn with proper parameter passing
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export const TSLFn = (
   fn: any,
   defaults?: TslTextureParams,
