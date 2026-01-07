@@ -10,11 +10,22 @@
  * - Simple parallax effect on hero content only
  * - Dark space background with subtle star field
  * - Bloom effect for luminous sun glow
+ * - Loading progress overlay with cinematic entrance animation
+ * - Staggered scene reveals for dramatic effect
  */
-import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  viewChild,
+} from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import {
   AmbientLightComponent,
+  AssetPreloaderService,
   BloomEffectComponent,
+  CinematicEntranceConfig,
+  CinematicEntranceDirective,
   DirectionalLightComponent,
   EffectComposerComponent,
   EnvironmentComponent,
@@ -23,8 +34,11 @@ import {
   MouseTracking3dDirective,
   NebulaVolumetricComponent,
   NodeMaterialDirective,
+  OrbitControlsComponent,
   Scene3dComponent,
+  SceneRevealDirective,
   SphereComponent,
+  StaggerGroupService,
   StarFieldComponent,
   ThrusterFlameComponent,
   tslCausticsTexture,
@@ -39,6 +53,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
 @Component({
   selector: 'app-glass-sphere-hero-section',
   imports: [
+    DecimalPipe,
     ScrollAnimationDirective,
     ViewportAnimationDirective,
     Scene3dComponent,
@@ -55,9 +70,32 @@ import { SCENE_COLORS } from '../../../shared/colors';
     GltfModelComponent,
     ThrusterFlameComponent,
     NodeMaterialDirective,
+    OrbitControlsComponent,
+    CinematicEntranceDirective,
+    SceneRevealDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <!-- Loading Overlay - shows until assets ready -->
+    @if (!preloadState.isReady()) {
+    <div
+      class="absolute inset-0 z-50 flex items-center justify-center bg-gradient-to-b from-[#030310] to-[#0a0a1a]"
+    >
+      <div class="text-center">
+        <div class="text-3xl font-bold text-white mb-4">Loading Experience</div>
+        <div class="w-64 h-2 bg-white/10 rounded-full overflow-hidden">
+          <div
+            class="h-full bg-gradient-to-r from-orange-500 to-red-500 transition-all duration-300"
+            [style.width.%]="preloadState.progress()"
+          ></div>
+        </div>
+        <div class="text-orange-400 mt-2">
+          {{ preloadState.progress() | number : '1.0-0' }}%
+        </div>
+      </div>
+    </div>
+    }
+
     <!-- Hero Container - no scroll animation on container -->
     <section
       class="hero-container relative w-full overflow-hidden"
@@ -74,6 +112,18 @@ import { SCENE_COLORS } from '../../../shared/colors';
           [cameraFov]="55"
           [backgroundColor]="spaceBackgroundColor"
         >
+          <!-- OrbitControls with Cinematic Entrance Animation -->
+          <a3d-orbit-controls
+            a3dCinematicEntrance
+            [entranceConfig]="entranceConfig"
+            (entranceComplete)="onEntranceComplete()"
+            (controlsReady)="onControlsReady($event)"
+            [enableDamping]="true"
+            [dampingFactor]="0.05"
+            [minDistance]="10"
+            [maxDistance]="30"
+          />
+
           <!-- Ambient fill light -->
           <a3d-ambient-light [intensity]="0.12" />
 
@@ -136,10 +186,17 @@ import { SCENE_COLORS } from '../../../shared/colors';
             [rotationAxis]="'y'"
           />
 
-          <!-- Glossy animated marble sphere -->
+          <!-- Glossy animated marble sphere with scene reveal -->
           <a3d-sphere
-            [args]="[4, 32, 32]"
-            [position]="[14, 5, -15]"
+            a3dSceneReveal
+            [revealConfig]="{
+              animation: 'fade-in',
+              staggerGroup: 'hero',
+              staggerIndex: 1,
+              duration: 1.2
+            }"
+            [args]="[4, 52, 52]"
+            [position]="sunPosition"
             [roughness]="0.1"
             [metalness]="0.04"
             a3dNodeMaterial
@@ -148,7 +205,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
 
           <!-- Sun - FIXED at center-bottom (volumetric with large separated flames) -->
           <a3d-fire-sphere
-            [radius]="6"
+            [radius]="8"
             [position]="sunPosition"
             [quality]="'quality'"
             [sunMode]="true"
@@ -156,7 +213,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
             [fireMagnitude]="1.7"
             [fireNoiseScale]="0.4"
             [lacunarity]="1.2"
-            [iterations]="24"
+            [iterations]="26"
           />
 
           <a3d-nebula-volumetric
@@ -177,10 +234,17 @@ import { SCENE_COLORS } from '../../../shared/colors';
             [edgePulseAmount]="0.2"
           />
 
-          <!-- Flying Robot - uses (loaded) event for manual thruster attachment -->
+          <!-- Flying Robot with scene reveal - uses (loaded) event for manual thruster attachment -->
           <a3d-gltf-model
+            a3dSceneReveal
+            [revealConfig]="{
+              animation: 'scale-pop',
+              staggerGroup: 'hero',
+              staggerIndex: 0,
+              duration: 1.0
+            }"
             modelPath="3d/mini_robot.glb"
-            [scale]="[0.07, 0.07, 0.07]"
+            [scale]="[0.04, 0.04, 0.04]"
             [position]="angularLogoPosition"
             mouseTracking3d
             [trackingConfig]="{
@@ -189,8 +253,8 @@ import { SCENE_COLORS } from '../../../shared/colors';
               smoothness: 0.08,
               lockZ: true,
               flightBehavior: true,
-              maxBankAngle: 0.5,
-              maxPitchAngle: 0.3,
+              maxBankAngle: 0.6,
+              maxPitchAngle: 0.4,
               flightDamping: 0.06,
               velocityMultiplier: 20
             }"
@@ -427,11 +491,52 @@ export class GlassSphereHeroSectionComponent {
     background: new THREE.Color('#1a0a00'), // Dark burnt orange/brown
   });
 
+  // Inject services for preloading and stagger animations
+  private readonly preloader = inject(AssetPreloaderService);
+  private readonly staggerService = inject(StaggerGroupService);
+
   // ViewChild references for thruster flames
   private readonly leftThruster =
     viewChild<ThrusterFlameComponent>('leftThruster');
   private readonly rightThruster =
     viewChild<ThrusterFlameComponent>('rightThruster');
+
+  // ViewChild for cinematic entrance directive (to set orbit controls)
+  private readonly cinematicEntrance = viewChild(CinematicEntranceDirective);
+
+  /** Preload state for the robot model */
+  protected readonly preloadState = this.preloader.preload([
+    { url: '3d/mini_robot.glb', type: 'gltf' },
+  ]);
+
+  /** Cinematic entrance configuration */
+  protected readonly entranceConfig: CinematicEntranceConfig = {
+    preset: 'orbit-drift', // Dramatic sweep-in effect
+    duration: 3,
+    startPosition: [10, 5, 25], // Start offset right, up, and far
+    endPosition: [0, 0, 16], // Current camera position from component
+    preloadState: this.preloadState,
+  };
+
+  /**
+   * Handle OrbitControls ready event - connect to cinematic entrance directive
+   */
+  protected onControlsReady(
+    controls: import('three-stdlib').OrbitControls
+  ): void {
+    const entrance = this.cinematicEntrance();
+    if (entrance) {
+      entrance.setOrbitControls(controls);
+    }
+  }
+
+  /**
+   * Handle entrance animation complete - trigger staggered reveal of scene elements
+   */
+  protected async onEntranceComplete(): Promise<void> {
+    // Trigger staggered reveal of scene elements
+    await this.staggerService.revealGroup('hero', 200);
+  }
 
   /**
    * Handle robot model loaded event - attach thruster flames manually.
@@ -450,7 +555,7 @@ export class GlassSphereHeroSectionComponent {
       const leftMesh = left.getMesh();
       if (leftMesh) {
         group.add(leftMesh);
-        console.log('[GlassSphereHero] ✅ Left thruster attached:', {
+        console.log('[GlassSphereHero] Left thruster attached:', {
           position: leftMesh.position.toArray(),
           scale: leftMesh.scale.toArray(),
         });
@@ -462,7 +567,7 @@ export class GlassSphereHeroSectionComponent {
       const rightMesh = right.getMesh();
       if (rightMesh) {
         group.add(rightMesh);
-        console.log('[GlassSphereHero] ✅ Right thruster attached:', {
+        console.log('[GlassSphereHero] Right thruster attached:', {
           position: rightMesh.position.toArray(),
           scale: rightMesh.scale.toArray(),
         });
