@@ -233,7 +233,7 @@ export class InstancedMeshComponent {
   // Constructor & Lifecycle
   // ============================================================================
 
-  constructor() {
+  public constructor() {
     // Effect: Create instanced mesh when geometry and material are ready
     effect(() => {
       // Wait for scene store to be initialized

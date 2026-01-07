@@ -107,7 +107,7 @@ export interface MaterialProps {
  * }
  * ```
  */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class SceneGraphStore {
   // Core Three.js objects (provided by Scene3dComponent)
   private readonly _scene = signal<Scene | null>(null);
@@ -183,7 +183,7 @@ export class SceneGraphStore {
     if (!scene) return;
 
     // Process all pending registrations in order
-    for (const { id, object, parentId } of this._pendingRegistrations) {
+    for (const { object, parentId } of this._pendingRegistrations) {
       const parent = parentId ? this._registry().get(parentId)?.object : scene;
       if (parent) {
         parent.add(object);

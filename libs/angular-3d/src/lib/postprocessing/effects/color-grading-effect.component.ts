@@ -112,21 +112,21 @@ export class ColorGradingEffectComponent {
    * 0 = grayscale, 1 = normal, >1 = more vibrant colors
    * Default: 1 (no change)
    */
-  public readonly saturationInput = input<number>(1, { alias: 'saturation' });
+  public readonly saturation = input<number>(1);
 
   /**
    * Contrast level - difference between light and dark areas
    * <1 = flatter image, 1 = normal, >1 = more contrast
    * Default: 1 (no change)
    */
-  public readonly contrastInput = input<number>(1, { alias: 'contrast' });
+  public readonly contrast = input<number>(1);
 
   /**
    * Brightness multiplier - overall lightness
    * <1 = darker, 1 = normal, >1 = brighter
    * Default: 1 (no change)
    */
-  public readonly brightnessInput = input<number>(1, { alias: 'brightness' });
+  public readonly brightness = input<number>(1);
 
   /**
    * Gamma value - non-linear brightness curve
@@ -177,9 +177,9 @@ export class ColorGradingEffectComponent {
     // Update color grading parameters reactively
     effect(() => {
       // Trigger reactivity on all inputs
-      this.saturationInput();
-      this.contrastInput();
-      this.brightnessInput();
+      this.saturation();
+      this.contrast();
+      this.brightness();
       this.gamma();
       this.exposure();
       this.vignette();
@@ -214,9 +214,9 @@ export class ColorGradingEffectComponent {
    * Full integration requires chaining with the scene pass output.
    */
   private createColorGradingNode(): Node {
-    const satValue = this.saturationInput();
-    const contrastValue = this.contrastInput();
-    const brightnessValue = this.brightnessInput();
+    const satValue = this.saturation();
+    const contrastValue = this.contrast();
+    const brightnessValue = this.brightness();
     const gammaValue = this.gamma();
     const exposureValue = this.exposure();
     const vignetteValue = this.vignette();

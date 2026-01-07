@@ -38,16 +38,9 @@ import {
   normalize,
   length,
   mix,
-  smoothstep,
   dot,
-  min,
-  max,
   pow,
   sin,
-  cos,
-  add,
-  mul,
-  sub,
   select,
 } from 'three/tsl';
 
@@ -84,7 +77,9 @@ const noise3D = Fn(([p]: [TSLNode]): TSLNode => {
   const p3 = sin(dot(p.add(vec3(2.7, 1.9, 0.3)), K));
 
   // Combine sine waves to create noise pattern
-  const n = sin(p1.mul(43758.5453).add(p2.mul(12345.6789)).add(p3.mul(98765.4321)));
+  const n = sin(
+    p1.mul(43758.5453).add(p2.mul(12345.6789)).add(p3.mul(98765.4321))
+  );
   return n.mul(0.5).add(0.5); // Remap to 0-1 range
 });
 
@@ -92,7 +87,7 @@ const noise3D = Fn(([p]: [TSLNode]): TSLNode => {
  * Fractal Brownian Motion (FBM) Noise
  * Layered noise for more detailed density variation
  */
-const fbm = Fn(([p, octaves]: [TSLNode, TSLNode]): TSLNode => {
+const fbm = Fn(([p, _octaves]: [TSLNode, TSLNode]): TSLNode => {
   const value = float(0).toVar();
   const amplitude = float(0.5).toVar();
   const frequency = float(1.0).toVar();
@@ -111,8 +106,9 @@ const fbm = Fn(([p, octaves]: [TSLNode, TSLNode]): TSLNode => {
 
 /**
  * Sphere SDF - Signed distance to sphere surface
+ * @internal Reserved for future volumetric calculations
  */
-const sphereSDF = Fn(([p, radius]: [TSLNode, TSLNode]): TSLNode => {
+const _sphereSDF = Fn(([p, radius]: [TSLNode, TSLNode]): TSLNode => {
   return length(p).sub(radius);
 });
 
@@ -159,15 +155,19 @@ const raymarchFog = Fn(
 
       // Accumulate density only if inside sphere and should continue
       const contribution = localDensity.mul(stepSize).mul(0.1); // Scale contribution
-      const validContribution = select(shouldContinue.and(insideSphere), contribution, float(0));
+      const validContribution = select(
+        shouldContinue.and(insideSphere),
+        contribution,
+        float(0)
+      );
       accumulatedDensity.addAssign(validContribution);
 
       // Advance ray
       t.addAssign(stepSize);
 
       // Early exit if density saturates or exited sphere
-      const saturated = accumulatedDensity.greaterThan(1.0);
-      const exitedSphere = distFromCenter.greaterThan(sphereRadius.mul(1.1));
+      const _saturated = accumulatedDensity.greaterThan(1.0);
+      const _exitedSphere = distFromCenter.greaterThan(sphereRadius.mul(1.1));
       // Break not available in TSL, so we just stop accumulating
     }
 
@@ -187,7 +187,7 @@ export const tslVolumetricFog = (config: VolumetricFogConfig = {}): TSLNode => {
     densityScale = 3.0,
     noiseScale = 2.0,
     steps = 32,
-    animationSpeed = 0.3,
+    animationSpeed: _animationSpeed = 0.3,
   } = config;
 
   // Convert hex colors to vec3

@@ -20,8 +20,7 @@ import { Color } from 'three/webgpu';
 import { TSLFn, TSLNode, TslTextureParams, convertToNodes } from './types';
 import { nativeFBM } from '../tsl-utilities';
 
-const { float, vec3, add, abs, exp, pow, max, positionGeometry, sin, cos } =
-  TSL;
+const { float, vec3, add, abs, exp, positionGeometry, sin, cos } = TSL;
 
 // ============================================================================
 // tslVolumetricParticleCloud - Multi-scale particles with depth variation

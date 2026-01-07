@@ -10,18 +10,7 @@ import {
 import { Text } from 'troika-three-text';
 import * as THREE from 'three/webgpu';
 import { MeshBasicNodeMaterial } from 'three/webgpu';
-import {
-  float,
-  vec3,
-  uniform,
-  mix,
-  smoothstep,
-  uv,
-  mul,
-  add,
-  pow,
-  sin,
-} from 'three/tsl';
+import { float, vec3, uniform, smoothstep, uv, mul, add, pow } from 'three/tsl';
 import { NG_3D_PARENT } from '../../types/tokens';
 import { OBJECT_ID } from '../../tokens/object-id.token';
 import { RenderLoopService } from '../../render-loop/render-loop.service';

@@ -67,7 +67,7 @@ export class Performance3dDirective {
    */
   public readonly a3dPerformance3d = input<boolean | PerformanceConfig>(true);
 
-  constructor() {
+  public constructor() {
     // Register object after next render (when Three.js object exists)
     afterNextRender(() => {
       const config = this.normalizeConfig(this.a3dPerformance3d());

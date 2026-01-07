@@ -242,7 +242,10 @@ export class ScrollZoomCoordinatorDirective
   }
 
   public ngAfterViewInit(): void {
-    // Handled by effect and afterNextRender
+    // Lifecycle handled by effect and afterNextRender in constructor
+    // This empty implementation satisfies the AfterViewInit interface
+    // while allowing the directive to work with components that expect it
+    void 0; // Intentional no-op
   }
 
   public ngOnDestroy(): void {

@@ -15,14 +15,12 @@ import {
   float,
   vec3,
   uniform,
-  mix,
   smoothstep,
   uv,
   mul,
   add,
   pow,
   abs,
-  sin,
 } from 'three/tsl';
 import { NG_3D_PARENT } from '../../types/tokens';
 import { RenderLoopService } from '../../render-loop/render-loop.service';
@@ -50,8 +48,9 @@ function generateSpherePositions(
 
 /**
  * Smoothstep function for smooth interpolation
+ * @internal Reserved for future CPU-side calculations
  */
-function smoothstepCPU(edge0: number, edge1: number, x: number): number {
+function _smoothstepCPU(edge0: number, edge1: number, x: number): number {
   const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
   return t * t * (3 - 2 * t);
 }
@@ -428,6 +427,7 @@ export class NebulaComponent implements OnDestroy {
   }
 
   public ngOnDestroy(): void {
-    // Cleanup handled by destroyRef
+    // Cleanup handled by destroyRef in constructor
+    void 0; // Intentional no-op
   }
 }

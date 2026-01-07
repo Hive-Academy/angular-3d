@@ -248,7 +248,7 @@ export class ThrusterFlameComponent implements Attachable3dChild {
   private initializeParticles(count: number): void {
     this.particleData = [];
     const nozzleRad = this.nozzleRadius();
-    const baseSize = this.size();
+    const _baseSize = this.size();
 
     for (let i = 0; i < count; i++) {
       // Random position within nozzle SPHERE (3D volume, not just circle)
@@ -376,8 +376,6 @@ export class ThrusterFlameComponent implements Attachable3dChild {
    * Setup the per-frame animation loop
    */
   private setupAnimationLoop(): void {
-    let lastTime = 0;
-
     this.updateCleanup = this.renderLoop.registerUpdateCallback(
       (delta: number, elapsed: number) => {
         if (!this.instancedMesh || !this.enabled()) return;
@@ -407,7 +405,7 @@ export class ThrusterFlameComponent implements Attachable3dChild {
           this.instancedMesh.instanceColor.needsUpdate = true;
         }
 
-        lastTime = elapsed;
+        // Animation frame complete
       }
     );
   }

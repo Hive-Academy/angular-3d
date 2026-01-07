@@ -63,34 +63,36 @@ export class ParticleCloudComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   /** Number of particles */
-  readonly count = input<number>(10000);
+  public readonly count = input<number>(10000);
 
   /** Base particle size */
-  readonly size = input<number>(0.05);
+  public readonly size = input<number>(0.05);
 
   /** Minimum radius for particle distribution */
-  readonly radiusMin = input<number>(0);
+  public readonly radiusMin = input<number>(0);
 
   /** Maximum radius for particle distribution */
-  readonly radiusMax = input<number>(1.0);
+  public readonly radiusMax = input<number>(1.0);
 
   /** Position offset [x, y, z] */
-  readonly position = input<[number, number, number]>([0, 0, 0]);
+  public readonly position = input<[number, number, number]>([0, 0, 0]);
 
   /** Distribution type */
-  readonly distribution = input<'uniform' | 'density-gradient'>('uniform');
+  public readonly distribution = input<'uniform' | 'density-gradient'>(
+    'uniform'
+  );
 
   /** Color gradient (array of hex colors) */
-  readonly colorGradient = input<string[]>(['#ffffff']);
+  public readonly colorGradient = input<string[]>(['#ffffff']);
 
   /** Base opacity */
-  readonly opacity = input<number>(0.8);
+  public readonly opacity = input<number>(0.8);
 
   /** Enable animation */
-  readonly animated = input<boolean>(true);
+  public readonly animated = input<boolean>(true);
 
   /** Animation speed */
-  readonly animationSpeed = input<number>(0.3);
+  public readonly animationSpeed = input<number>(0.3);
 
   private particlesMesh: THREE.InstancedMesh | null = null;
   private particlesGeometry: THREE.PlaneGeometry | null = null;
@@ -103,7 +105,7 @@ export class ParticleCloudComponent {
   private particleUpdateCleanup: (() => void) | null = null;
   private isCreated = false;
 
-  constructor() {
+  public constructor() {
     // Use effect to wait for parent to become available
     // This handles the case where parent mesh isn't created yet
     effect(() => {

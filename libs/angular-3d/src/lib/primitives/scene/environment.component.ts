@@ -204,7 +204,7 @@ export class EnvironmentComponent {
    * Emits when an error occurs during loading.
    * The component handles errors gracefully without crashing the scene.
    */
-  public readonly error = output<Error>();
+  public readonly loadError$ = output<Error>();
 
   // ============================================================================
   // Injected Dependencies
@@ -245,7 +245,7 @@ export class EnvironmentComponent {
   // Constructor & Lifecycle
   // ============================================================================
 
-  constructor() {
+  public constructor() {
     // Effect: Load environment when source changes
     effect((onCleanup) => {
       const hdriPath = this.hdri();
@@ -413,7 +413,7 @@ export class EnvironmentComponent {
 
         this.isLoading.set(false);
         this.loadError.set(error.message);
-        this.error.emit(error);
+        this.loadError$.emit(error);
 
         console.error('[EnvironmentComponent] Failed to load HDRI:', error);
       }

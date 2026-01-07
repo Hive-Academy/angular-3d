@@ -26,6 +26,7 @@ describe.skip('CloudLayerComponent', () => {
   beforeEach(async () => {
     mockParent = new THREE.Object3D();
     mockRenderLoopService = {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       registerUpdateCallback: jest.fn().mockReturnValue(() => {}),
     };
 

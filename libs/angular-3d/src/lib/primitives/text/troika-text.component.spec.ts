@@ -116,6 +116,7 @@ describe.skip('TroikaTextComponent', () => {
     mockCamera = new THREE.PerspectiveCamera();
 
     mockRenderLoopService = {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       registerUpdateCallback: jest.fn().mockReturnValue(() => {}),
     } as any;
 

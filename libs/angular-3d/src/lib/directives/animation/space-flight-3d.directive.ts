@@ -80,16 +80,16 @@ export interface SpaceFlightWaypoint {
 })
 export class SpaceFlight3dDirective {
   // Configuration inputs
-  readonly flightPath = input<SpaceFlightWaypoint[]>([]);
-  readonly rotationsPerCycle = input<number>(8);
-  readonly loop = input<boolean>(true);
-  readonly autoStart = input<boolean>(true);
-  readonly delay = input<number>(0);
+  public readonly flightPath = input<SpaceFlightWaypoint[]>([]);
+  public readonly rotationsPerCycle = input<number>(8);
+  public readonly loop = input<boolean>(true);
+  public readonly autoStart = input<boolean>(true);
+  public readonly delay = input<number>(0);
 
   // Event outputs
-  readonly animationStarted = output<void>();
-  readonly animationComplete = output<void>();
-  readonly waypointReached = output<{
+  public readonly animationStarted = output<void>();
+  public readonly animationComplete = output<void>();
+  public readonly waypointReached = output<{
     index: number;
     position: [number, number, number];
   }>();
@@ -113,7 +113,7 @@ export class SpaceFlight3dDirective {
     return this.store.getObject<Object3D>(this.objectId);
   });
 
-  constructor() {
+  public constructor() {
     afterNextRender(() => {
       // Auto-start if configured and flight path provided
       if (this.autoStart() && this.flightPath().length > 0) {
@@ -136,7 +136,7 @@ export class SpaceFlight3dDirective {
   /**
    * Start the flight animation
    */
-  start(): void {
+  public start(): void {
     const path = this.flightPath();
     if (path.length === 0) {
       console.warn(
@@ -163,7 +163,7 @@ export class SpaceFlight3dDirective {
   /**
    * Stop the flight animation and reset to start position
    */
-  stop(): void {
+  public stop(): void {
     this.isAnimating = false;
 
     // Reset position to start if available

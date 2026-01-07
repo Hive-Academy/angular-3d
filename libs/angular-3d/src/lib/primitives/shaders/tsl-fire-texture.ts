@@ -14,7 +14,7 @@
  */
 
 import * as TSL from 'three/tsl';
-import { time, positionLocal, normalLocal } from 'three/tsl';
+import { time, positionLocal } from 'three/tsl';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TSLNode = any;
@@ -36,10 +36,7 @@ const {
   clamp,
   max,
   pow,
-  atan,
-  sqrt,
   uniform,
-  length,
   normalize,
 } = TSL;
 
@@ -179,8 +176,9 @@ const fireNoise2d = Fn(([p]: [TSLNode]) => {
 
 /**
  * 2D FBM with domain rotation for turbulent flames
+ * @internal Reserved for future flame patterns
  */
-const fireFbm2d = Fn(([p]: [TSLNode]) => {
+const _fireFbm2d = Fn(([p]: [TSLNode]) => {
   const f = float(0.0).toVar('fbm2dF');
   const pos = vec2(p).toVar('fbm2dPos');
 

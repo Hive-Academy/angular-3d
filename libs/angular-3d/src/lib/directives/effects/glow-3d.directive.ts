@@ -201,7 +201,7 @@ export class Glow3dDirective {
       baseRadius = Math.max(size.x, size.y, size.z) / 2;
     }
 
-    const glowRadius = baseRadius * this.glowScale();
+    const _glowRadius = baseRadius * this.glowScale();
     const segments = this.glowSegments();
 
     // Create glow geometry with base radius (no scale multiplier - use mesh.scale instead)

@@ -21,7 +21,7 @@ import {
   DestroyRef,
   afterNextRender,
 } from '@angular/core';
-import { Fn, uv, float, vec3, uniform, mul, sub, add } from 'three/tsl';
+import { Fn, uv, float, vec3, uniform, mul } from 'three/tsl';
 import { mx_fractal_noise_float } from 'three/tsl';
 import { Node } from 'three/webgpu';
 import { EffectComposerService } from '../effect-composer.service';

@@ -74,7 +74,7 @@ export type FrameloopMode = 'always' | 'demand';
  * this.renderLoop.invalidate();
  * ```
  */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class RenderLoopService implements OnDestroy {
   private readonly ngZone = inject(NgZone);
 
@@ -251,7 +251,7 @@ export class RenderLoopService implements OnDestroy {
    * });
    * ```
    */
-  public tick(time: number): void {
+  public tick(_time: number): void {
     // Skip if not running or paused
     if (!this._isRunning() || this._isPaused()) {
       return;

@@ -21,20 +21,7 @@ import { Color } from 'three/webgpu';
 import { TSLFn, TSLNode, TslTextureParams, convertToNodes } from './types';
 import { nativeFBM } from '../tsl-utilities';
 
-const {
-  float,
-  vec3,
-  add,
-  abs,
-  pow,
-  max,
-  positionGeometry,
-  sin,
-  cos,
-  mul,
-  sub,
-  length,
-} = TSL;
+const { float, vec3, abs, pow, positionGeometry, sin, cos, length } = TSL;
 
 // ============================================================================
 // tslFireClouds - Upward-flowing turbulent fire/smoke effect
@@ -100,7 +87,7 @@ export const tslFireClouds = TSLFn((userParams: TslTextureParams = {}) => {
 
   // CRITICAL: Calculate distance from sphere CENTER (0,0,0) once for both flow and gradient
   // For normalized position, length ranges from 0 (center) to 1 (surface)
-  const distanceFromSphereCenter = length(normalizedPos);
+  const _distanceFromSphereCenter = length(normalizedPos);
 
   // Radial expansion: move texture outward from center over time
   const radialFlow = t.mul(flowSpeed).mul(0.5);

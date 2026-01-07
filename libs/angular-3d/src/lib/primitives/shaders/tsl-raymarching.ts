@@ -213,7 +213,7 @@ export const tslRayMarch = (
   stepCount: TSLNode
 ): TSLNode => {
   if (!_tslRayMarch) {
-    const { Fn, Loop, float, select, min } = getTSL();
+    const { Fn, Loop, float, select } = getTSL();
     _tslRayMarch = Fn(
       ([origin, direction, sdf, steps]: [
         TSLNode,
