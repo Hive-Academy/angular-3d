@@ -1,7 +1,7 @@
 # @hive-academy/angular-3d
 
 [![npm version](https://img.shields.io/npm/v/@hive-academy/angular-3d.svg)](https://www.npmjs.com/package/@hive-academy/angular-3d)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/hive-academy/angular-3d-workspace/blob/main/LICENSE)
 
 > 🎨 **Declarative Three.js components for Angular applications**
 
@@ -11,7 +11,7 @@ A modern Angular library providing declarative, type-safe wrappers for Three.js.
 
 - 🎯 **Declarative API** - Configure 3D scenes via Angular inputs and signals
 - 🎬 **Scene Container** - Automatic WebGLRenderer, Scene, and Camera setup
-- 📦 **44 Components** - Primitives, lights, text, particles, effects, loaders, and more
+- 📦 **54 Components** - Primitives, lights, text, particles, effects, loaders, and more
 - 💡 **5 Light Types** - Ambient, Directional, Point, Spot, and preset SceneLighting
 - 🌊 **Animation Directives** - Float3d, Rotate3d, and waypoint-based flight animations
 - 🎮 **Orbit Controls** - Interactive camera controls out of the box
@@ -250,6 +250,17 @@ Root scene container automatically sets up WebGLRenderer, Scene, PerspectiveCame
 | MarbleSphereComponent    | `<a3d-marble-sphere>`    | Marble material sphere             |
 | FireSphereComponent      | `<a3d-fire-sphere>`      | Fire/flame effect sphere           |
 | BackgroundCubesComponent | `<a3d-background-cubes>` | Decorative background cubes        |
+| ThrusterFlameComponent   | `<a3d-thruster-flame>`   | Thruster/rocket flame effect       |
+
+> **Note**: `MetaballComponent` (`<a3d-metaball>`) is deprecated. Use the compositional API with `MetaballSceneComponent`, `MetaballSphereComponent`, and `MetaballCursorComponent` instead.
+
+---
+
+### Backgrounds
+
+| Component                             | Selector                               | Description                        |
+| ------------------------------------- | -------------------------------------- | ---------------------------------- |
+| HexagonalBackgroundInstancedComponent | `<a3d-hexagonal-background-instanced>` | GPU-instanced hexagonal background |
 
 ---
 
@@ -443,6 +454,86 @@ Automatic LOD (Level of Detail) and performance optimization.
 
 - `targetFps?: number` - Target frame rate (default: 60)
 - `enableLod?: boolean` - Enable LOD switching
+
+---
+
+## 📋 Directives Reference
+
+### Core Directives
+
+| Directive          | Selector         | Description                     |
+| ------------------ | ---------------- | ------------------------------- |
+| MeshDirective      | `[a3dMesh]`      | Creates a Three.js Mesh         |
+| GroupDirective     | `[a3dGroup]`     | Creates a Three.js Group        |
+| TransformDirective | `[a3dTransform]` | Applies position/rotation/scale |
+
+### Geometry Directives
+
+| Directive                   | Selector                  | Description                |
+| --------------------------- | ------------------------- | -------------------------- |
+| BoxGeometryDirective        | `[a3dBoxGeometry]`        | Creates BoxGeometry        |
+| SphereGeometryDirective     | `[a3dSphereGeometry]`     | Creates SphereGeometry     |
+| CylinderGeometryDirective   | `[a3dCylinderGeometry]`   | Creates CylinderGeometry   |
+| TorusGeometryDirective      | `[a3dTorusGeometry]`      | Creates TorusGeometry      |
+| PolyhedronGeometryDirective | `[a3dPolyhedronGeometry]` | Creates PolyhedronGeometry |
+
+### Material Directives
+
+| Directive                 | Selector                | Description                       |
+| ------------------------- | ----------------------- | --------------------------------- |
+| StandardMaterialDirective | `[a3dStandardMaterial]` | Creates MeshStandardMaterial      |
+| PhysicalMaterialDirective | `[a3dPhysicalMaterial]` | Creates MeshPhysicalMaterial      |
+| NodeMaterialDirective     | `[a3dNodeMaterial]`     | Creates TSL NodeMaterial (WebGPU) |
+
+### Light Directives
+
+| Directive                 | Selector                | Description            |
+| ------------------------- | ----------------------- | ---------------------- |
+| LightDirective            | `[a3dLight]`            | Base light directive   |
+| AmbientLightDirective     | `[a3dAmbientLight]`     | Adds ambient light     |
+| PointLightDirective       | `[a3dPointLight]`       | Adds point light       |
+| DirectionalLightDirective | `[a3dDirectionalLight]` | Adds directional light |
+| SpotLightDirective        | `[a3dSpotLight]`        | Adds spot light        |
+
+### Effect Directives
+
+| Directive       | Selector      | Description              |
+| --------------- | ------------- | ------------------------ |
+| Glow3dDirective | `[a3dGlow3d]` | Adds glow effect to mesh |
+
+### Positioning Directives
+
+| Directive                 | Selector             | Description                              |
+| ------------------------- | -------------------- | ---------------------------------------- |
+| ViewportPositionDirective | `[viewportPosition]` | Positions 3D object relative to viewport |
+
+---
+
+## 🔧 Services Reference
+
+| Service                             | Description                             |
+| ----------------------------------- | --------------------------------------- |
+| SceneService                        | Access to scene, camera, renderer       |
+| RenderLoopService                   | Frame loop management and callbacks     |
+| AnimationService                    | Flight waypoints, pulse animations      |
+| GltfLoaderService                   | GLTF/GLB model loading with caching     |
+| TextureLoaderService                | Texture loading with caching            |
+| EffectComposerService               | Postprocessing effect chain management  |
+| ViewportPositioningService          | Viewport-relative positioning utilities |
+| ComponentRegistryService            | Component registration and lookup       |
+| Angular3dStateStore                 | Signal-based application state          |
+| SceneGraphStore                     | Scene graph node registry               |
+| AdvancedPerformanceOptimizerService | Performance monitoring and optimization |
+| RenderCallbackRegistryService       | Render callback management              |
+| VisibilityObserverService           | Intersection observer utilities         |
+| FontPreloadService                  | Font preloading for text components     |
+
+### Injectable Functions
+
+| Function              | Description                          |
+| --------------------- | ------------------------------------ |
+| injectGltfLoader()    | Modern DI pattern for GLTF loader    |
+| injectTextureLoader() | Modern DI pattern for texture loader |
 
 ---
 
