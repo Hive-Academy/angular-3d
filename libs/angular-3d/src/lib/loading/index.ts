@@ -19,6 +19,12 @@ export {
   type AssetListFactory,
 } from './resolvers/scene-preload.resolver';
 
+// Components
+export { LoadingOverlayComponent } from './loading-overlay.component';
+
+// Directives
+export { SceneLoadingDirective } from './scene-loading.directive';
+
 // Types
 export {
   type LoadingPhase,
