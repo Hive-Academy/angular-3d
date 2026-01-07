@@ -9,12 +9,14 @@ Angular library wrapping GSAP for scroll-based animations. Provides directives f
 ## Boundaries
 
 **Belongs here**:
+
 - GSAP animation directives
 - ScrollTrigger integrations
 - Hijacked scroll components
 - Scroll-based animation utilities
 
 **Does NOT belong**:
+
 - Three.js/3D code (use `@hive-academy/angular-3d`)
 - Application-specific scroll sections
 - Demo/showcase code
@@ -25,12 +27,35 @@ Angular library wrapping GSAP for scroll-based animations. Provides directives f
 src/
 ├── lib/
 │   ├── directives/
-│   │   ├── scroll-animation.directive.ts   # ScrollTrigger animations
-│   │   ├── hijacked-scroll.directive.ts    # Full-page scroll hijacking
-│   │   └── hijacked-scroll-item.directive.ts
-│   └── components/
-│       └── hijacked-scroll-timeline.component.ts
-└── index.ts                                 # Public API exports
+│   │   ├── scroll/                           # Scroll-based directives
+│   │   │   ├── scroll-animation.directive.ts # Main scroll animation
+│   │   │   ├── hijacked-scroll.directive.ts  # Scroll hijacking container
+│   │   │   ├── hijacked-scroll-item.directive.ts # Hijacked scroll items
+│   │   │   └── scroll-section-pin.directive.ts   # Section pinning
+│   │   ├── viewport-animation.directive.ts   # IntersectionObserver animations
+│   │   ├── section-sticky.directive.ts       # Sticky section behavior
+│   │   ├── parallax-split-item.directive.ts  # Parallax split items
+│   │   └── lenis-smooth-scroll.directive.ts  # Smooth scroll directive
+│   ├── components/
+│   │   ├── scroll-timeline/                  # Timeline components
+│   │   │   ├── hijacked-scroll-timeline.component.ts
+│   │   │   ├── scroll-timeline.component.ts
+│   │   │   └── step-indicator.component.ts
+│   │   ├── feature-showcase/                 # Feature showcase system
+│   │   │   ├── feature-showcase-timeline.component.ts
+│   │   │   ├── feature-step.component.ts
+│   │   │   └── feature-step.directives.ts    # 6 content directives
+│   │   ├── split-panel/                      # Split panel system
+│   │   │   ├── split-panel-section.component.ts
+│   │   │   └── split-panel.directives.ts     # 5 content directives
+│   │   └── parallax-split-scroll.component.ts
+│   ├── services/
+│   │   ├── gsap-core.service.ts              # GSAP initialization & config
+│   │   └── lenis-smooth-scroll.service.ts    # Lenis smooth scroll service
+│   └── providers/
+│       ├── gsap.provider.ts                  # provideGsap() function
+│       └── lenis.provider.ts                 # provideLenis() function
+└── index.ts                                  # Public API exports
 ```
 
 ## Key Files
@@ -42,6 +67,7 @@ src/
 ## Dependencies
 
 **External**:
+
 - `gsap` - GreenSock Animation Platform
 - `gsap/ScrollTrigger` - Scroll-triggered animations
 
@@ -82,7 +108,8 @@ Basic usage:
     start: 'top 80%',
     duration: 1.2,
     ease: 'power3.out'
-  }">
+  }"
+>
   Content
 </div>
 
@@ -93,7 +120,8 @@ Basic usage:
     animation: 'parallax',
     speed: 0.5,
     scrub: true
-  }">
+  }"
+>
   Parallax element
 </div>
 ```
@@ -102,16 +130,16 @@ Basic usage:
 
 ```typescript
 type AnimationType =
-  | 'fadeIn'      // Fade from 0 to 1 opacity
-  | 'fadeOut'     // Fade from 1 to 0 opacity
-  | 'slideUp'     // Slide up with fade
-  | 'slideDown'   // Slide down with fade
-  | 'slideLeft'   // Slide left with fade
-  | 'slideRight'  // Slide right with fade
-  | 'scaleIn'     // Scale from 0.8 with fade
-  | 'scaleOut'    // Scale from 1.2 with fade
-  | 'parallax'    // Parallax scroll effect
-  | 'custom';     // Custom from/to values
+  | 'fadeIn' // Fade from 0 to 1 opacity
+  | 'fadeOut' // Fade from 1 to 0 opacity
+  | 'slideUp' // Slide up with fade
+  | 'slideDown' // Slide down with fade
+  | 'slideLeft' // Slide left with fade
+  | 'slideRight' // Slide right with fade
+  | 'scaleIn' // Scale from 0.8 with fade
+  | 'scaleOut' // Scale from 1.2 with fade
+  | 'parallax' // Parallax scroll effect
+  | 'custom'; // Custom from/to values
 ```
 
 ### Configuration Options
@@ -122,21 +150,21 @@ interface ScrollAnimationConfig {
   animation?: AnimationType;
 
   // ScrollTrigger settings
-  trigger?: string;           // CSS selector or 'self'
-  start?: string;             // e.g., 'top 80%'
-  end?: string;               // e.g., 'bottom 20%'
-  scrub?: boolean | number;   // Link to scroll progress
-  pin?: boolean;              // Pin during scroll
-  markers?: boolean;          // Debug markers
+  trigger?: string; // CSS selector or 'self'
+  start?: string; // e.g., 'top 80%'
+  end?: string; // e.g., 'bottom 20%'
+  scrub?: boolean | number; // Link to scroll progress
+  pin?: boolean; // Pin during scroll
+  markers?: boolean; // Debug markers
 
   // Animation properties
-  duration?: number;          // Seconds
-  delay?: number;             // Seconds
-  ease?: string;              // GSAP easing
-  stagger?: number;           // Child stagger
+  duration?: number; // Seconds
+  delay?: number; // Seconds
+  ease?: string; // GSAP easing
+  stagger?: number; // Child stagger
 
   // Parallax settings
-  speed?: number;             // 0.5 = half, 2 = double
+  speed?: number; // 0.5 = half, 2 = double
   yPercent?: number;
   xPercent?: number;
 
@@ -150,8 +178,8 @@ interface ScrollAnimationConfig {
   onUpdate?: (progress: number) => void;
 
   // Performance
-  once?: boolean;             // Run once only
-  toggleActions?: string;     // play/pause/resume/reset
+  once?: boolean; // Run once only
+  toggleActions?: string; // play/pause/resume/reset
 }
 ```
 
@@ -161,12 +189,8 @@ For full-page scroll experiences:
 
 ```html
 <div hijackedScroll [config]="{ totalItems: 5 }">
-  <section hijackedScrollItem [config]="{ index: 0, direction: 'up' }">
-    Section 1
-  </section>
-  <section hijackedScrollItem [config]="{ index: 1, direction: 'left' }">
-    Section 2
-  </section>
+  <section hijackedScrollItem [config]="{ index: 0, direction: 'up' }">Section 1</section>
+  <section hijackedScrollItem [config]="{ index: 1, direction: 'left' }">Section 2</section>
   <!-- More sections... -->
 </div>
 ```
@@ -221,27 +245,33 @@ directive.setEnabled(false);
 
 ## Public API
 
+Import from `@hive-academy/angular-gsap`:
+
 ```typescript
-// Directives
-export {
-  ScrollAnimationDirective,
-  ScrollAnimationConfig,
-  AnimationType,
-} from './lib/directives/scroll-animation.directive';
+// Scroll Directives (4 directives)
+export { ScrollAnimationDirective, ScrollAnimationConfig, AnimationType, HijackedScrollDirective, HijackedScrollConfig, HijackedScrollItemDirective, HijackedScrollItemConfig, SlideDirection, ScrollSectionPinDirective } from '@hive-academy/angular-gsap';
 
-export {
-  HijackedScrollDirective,
-  HijackedScrollConfig,
-} from './lib/directives/hijacked-scroll.directive';
+// Other Directives (4 directives)
+export { ViewportAnimationDirective, ViewportAnimationConfig, ViewportAnimationType, SectionStickyDirective, ParallaxSplitItemDirective, ParallaxSplitItemConfig, SplitLayout, LenisSmoothScrollDirective, LenisSmoothScrollConfig } from '@hive-academy/angular-gsap';
 
-export {
-  HijackedScrollItemDirective,
-  HijackedScrollItemConfig,
-  SlideDirection,
-} from './lib/directives/hijacked-scroll-item.directive';
+// Scroll Timeline Components (3 components)
+export { HijackedScrollTimelineComponent, ScrollTimelineComponent, StepIndicatorComponent, StepData } from '@hive-academy/angular-gsap';
 
-// Components
-export { HijackedScrollTimelineComponent } from './lib/components/hijacked-scroll-timeline.component';
+// Feature Showcase Components (2 components + 6 directives)
+export { FeatureShowcaseTimelineComponent, FeatureStepComponent, FeatureBadgeDirective, FeatureTitleDirective, FeatureDescriptionDirective, FeatureNotesDirective, FeatureVisualDirective, FeatureDecorationDirective } from '@hive-academy/angular-gsap';
+
+// Split Panel Components (1 component + 5 directives)
+export { SplitPanelSectionComponent, SplitPanelImageDirective, SplitPanelBadgeDirective, SplitPanelTitleDirective, SplitPanelDescriptionDirective, SplitPanelFeaturesDirective } from '@hive-academy/angular-gsap';
+
+// Other Components (1 component)
+export { ParallaxSplitScrollComponent } from '@hive-academy/angular-gsap';
+
+// Services (2 services)
+export { GsapCoreService } from '@hive-academy/angular-gsap';
+export { LenisSmoothScrollService, LenisServiceOptions, LenisScrollEvent } from '@hive-academy/angular-gsap';
+
+// Providers (Modern Angular pattern)
+export { provideGsap, GSAP_CONFIG, GsapConfig, provideLenis, LENIS_CONFIG } from '@hive-academy/angular-gsap';
 ```
 
 ## Common Patterns
@@ -254,7 +284,8 @@ export { HijackedScrollTimelineComponent } from './lib/components/hijacked-scrol
   [scrollConfig]="{
     animation: 'slideUp',
     stagger: 0.1
-  }">
+  }"
+>
   <div>Item 1</div>
   <div>Item 2</div>
   <div>Item 3</div>
@@ -269,7 +300,8 @@ export { HijackedScrollTimelineComponent } from './lib/components/hijacked-scrol
   [scrollConfig]="{
     scrub: true,
     onUpdate: updateProgress
-  }">
+  }"
+>
   Content
 </div>
 ```
@@ -290,7 +322,8 @@ updateProgress = (progress: number) => {
     pinSpacing: true,
     start: 'top top',
     end: '+=100%'
-  }">
+  }"
+>
   Pinned content
 </section>
 ```

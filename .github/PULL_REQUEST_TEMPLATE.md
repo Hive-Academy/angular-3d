@@ -30,7 +30,7 @@ Fixes #(issue number)
 - [ ] I have added tests covering my changes
 - [ ] All new and existing tests pass
 - [ ] I have updated relevant documentation
-- [ ] My commits follow [conventional commit format](./CONTRIBUTING.md)
+- [ ] My commits follow [conventional commit format](../CONTRIBUTING.md)
 
 ## Screenshots (if applicable)
 

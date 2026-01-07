@@ -1,6 +1,6 @@
 # Angular 3D & GSAP Libraries
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/hive-academy/angular-3d-workspace/blob/main/LICENSE)
 
 > Modern Angular libraries for building stunning 3D graphics and scroll animations
 
@@ -13,10 +13,10 @@ This repository contains two powerful Angular libraries for creating immersive w
 
 ## 📚 Libraries
 
-| Library                                           | Version                                                                                                                         | Description                                                                 |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| [@hive-academy/angular-3d](./libs/angular-3d)     | [![npm](https://img.shields.io/npm/v/@hive-academy/angular-3d.svg)](https://www.npmjs.com/package/@hive-academy/angular-3d)     | Declarative Three.js components - 44 components, 19 directives, 14 services |
-| [@hive-academy/angular-gsap](./libs/angular-gsap) | [![npm](https://img.shields.io/npm/v/@hive-academy/angular-gsap.svg)](https://www.npmjs.com/package/@hive-academy/angular-gsap) | GSAP scroll animations - 7 components, 22 directives, 12+ animation types   |
+| Library                                           | Version                                                                                                                         | Description                                                                   |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| [@hive-academy/angular-3d](./libs/angular-3d)     | [![npm](https://img.shields.io/npm/v/@hive-academy/angular-3d.svg)](https://www.npmjs.com/package/@hive-academy/angular-3d)     | Declarative Three.js components - 54 components, 24 directives, 14 services   |
+| [@hive-academy/angular-gsap](./libs/angular-gsap) | [![npm](https://img.shields.io/npm/v/@hive-academy/angular-gsap.svg)](https://www.npmjs.com/package/@hive-academy/angular-gsap) | GSAP scroll animations - 7 components, 19 directives, 2 services, 2 providers |
 
 ---
 
@@ -29,15 +29,20 @@ npm install @hive-academy/angular-3d three three-stdlib gsap maath troika-three-
 ```
 
 ```typescript
+import { Component } from '@angular/core';
 import { Scene3dComponent, BoxComponent } from '@hive-academy/angular-3d';
 
 @Component({
+  selector: 'app-basic-scene',
+  standalone: true,
+  imports: [Scene3dComponent, BoxComponent],
   template: `
     <a3d-scene-3d [cameraPosition]="[0, 0, 5]">
       <a3d-box [color]="'#ff6b6b'" />
     </a3d-scene-3d>
-  `
+  `,
 })
+export class BasicSceneComponent {}
 ```
 
 ### Scroll Animations
@@ -47,11 +52,16 @@ npm install @hive-academy/angular-gsap gsap lenis
 ```
 
 ```typescript
+import { Component } from '@angular/core';
 import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
 
 @Component({
-  template: `<h1 scrollAnimation>Animated on scroll</h1>`
+  selector: 'app-hero',
+  standalone: true,
+  imports: [ScrollAnimationDirective],
+  template: `<h1 scrollAnimation>Animated on scroll</h1>`,
 })
+export class HeroComponent {}
 ```
 
 ---
