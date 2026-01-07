@@ -16,6 +16,7 @@ A modern Angular library providing declarative, type-safe wrappers for Three.js.
 - 🌊 **Animation Directives** - Float3d, Rotate3d, and waypoint-based flight animations
 - 🎮 **Orbit Controls** - Interactive camera controls out of the box
 - 📥 **Asset Loaders** - GLTF/GLB models, SVG icons, and texture loading
+- 🎬 **Scene Loading & Entrance** - Asset preloading with cinematic camera animations
 - 🌈 **Postprocessing** - Bloom, DOF, SSAO, color grading, and 8+ effects
 - 🚀 **WebGPU Ready** - TSL (Three.js Shading Language) node-based materials
 - 🌐 **SSR Compatible** - Safely handles server-side rendering
@@ -431,6 +432,246 @@ Makes objects follow mouse movement.
 
 ---
 
+## 🎬 Scene Loading & Entrance Animations
+
+Orchestrate professional scene loading experiences with asset preloading and cinematic camera entrances.
+
+### Overview
+
+The Scene Loading & Entrance Animation System provides:
+
+- **Asset Preloading** - Load GLTF models and textures with unified progress tracking
+- **Cinematic Camera Entrances** - 4 preset camera animations (dolly-in, orbit-drift, crane-up, fade-drift)
+- **Object Reveal Animations** - 3 reveal effects (fade-in, scale-pop, rise-up)
+- **Stagger Group Coordination** - Cascade reveal effects across multiple objects
+
+### Quick Start
+
+```typescript
+import { Component, inject } from '@angular/core';
+import { Scene3dComponent, OrbitControlsComponent, BoxComponent, SphereComponent, AssetPreloaderService, StaggerGroupService, CinematicEntranceDirective, SceneRevealDirective, type CinematicEntranceConfig } from '@hive-academy/angular-3d';
+
+@Component({
+  selector: 'app-hero-scene',
+  standalone: true,
+  imports: [Scene3dComponent, OrbitControlsComponent, BoxComponent, SphereComponent, CinematicEntranceDirective, SceneRevealDirective],
+  template: `
+    <a3d-scene-3d [cameraPosition]="[0, 2, 8]">
+      <a3d-orbit-controls a3dCinematicEntrance [entranceConfig]="entranceConfig" (entranceComplete)="onEntranceComplete()" />
+
+      <a3d-box a3dSceneReveal [revealConfig]="{ animation: 'scale-pop', staggerGroup: 'items', staggerIndex: 0 }" [position]="[-2, 0, 0]" [color]="'#ff6b6b'" />
+
+      <a3d-sphere a3dSceneReveal [revealConfig]="{ animation: 'scale-pop', staggerGroup: 'items', staggerIndex: 1 }" [position]="[2, 0, 0]" [color]="'#4ecdc4'" />
+    </a3d-scene-3d>
+
+    @if (!preloadState.isReady()) {
+    <div class="loading">Loading: {{ preloadState.progress() }}%</div>
+    }
+  `,
+})
+export class HeroSceneComponent {
+  private preloader = inject(AssetPreloaderService);
+  private stagger = inject(StaggerGroupService);
+
+  // Preload assets (optional - for heavy scenes)
+  preloadState = this.preloader.preload([
+    { url: '/assets/model.glb', type: 'gltf', weight: 3 },
+    { url: '/assets/texture.jpg', type: 'texture' },
+  ]);
+
+  entranceConfig: CinematicEntranceConfig = {
+    preset: 'dolly-in',
+    duration: 2.5,
+    preloadState: this.preloadState,
+  };
+
+  async onEntranceComplete(): Promise<void> {
+    await this.stagger.revealGroup('items', 150);
+  }
+}
+```
+
+### AssetPreloaderService
+
+Coordinates loading of multiple assets with unified progress tracking.
+
+**Methods**:
+
+| Method                      | Description                                  |
+| --------------------------- | -------------------------------------------- |
+| `preload(assets)`           | Load multiple assets, returns `PreloadState` |
+| `getActiveOperationCount()` | Get number of active preload operations      |
+
+**AssetDefinition**:
+
+| Property   | Type        | Description                                          |
+| ---------- | ----------- | ---------------------------------------------------- |
+| `url`      | `string`    | URL of the asset to load                             |
+| `type`     | `AssetType` | `'gltf'`, `'texture'`, or `'hdri'`                   |
+| `weight?`  | `number`    | Weight for progress calculation (default: 1)         |
+| `options?` | `object`    | Loader options (e.g., `{ useDraco: true }` for GLTF) |
+
+**PreloadState** (reactive signals):
+
+| Signal        | Type              | Description                         |
+| ------------- | ----------------- | ----------------------------------- |
+| `progress`    | `Signal<number>`  | Combined progress (0-100)           |
+| `isReady`     | `Signal<boolean>` | True when all assets loaded         |
+| `errors`      | `Signal<Error[]>` | Array of loading errors             |
+| `loadedCount` | `Signal<number>`  | Count of successfully loaded assets |
+| `totalCount`  | `Signal<number>`  | Total number of assets              |
+| `cancel`      | `() => void`      | Cancel loading operation            |
+
+---
+
+### CinematicEntranceDirective
+
+Applies cinematic camera entrance animations with preset patterns.
+
+**Selector**: `[a3dCinematicEntrance]`
+
+**Inputs**:
+
+| Input            | Type                      | Description             |
+| ---------------- | ------------------------- | ----------------------- |
+| `entranceConfig` | `CinematicEntranceConfig` | Animation configuration |
+
+**Outputs**:
+
+| Output             | Type   | Description                      |
+| ------------------ | ------ | -------------------------------- |
+| `entranceStart`    | `void` | Emitted when animation starts    |
+| `entranceComplete` | `void` | Emitted when animation completes |
+
+**CinematicEntranceConfig**:
+
+| Property         | Type             | Default          | Description                     |
+| ---------------- | ---------------- | ---------------- | ------------------------------- |
+| `preset?`        | `EntrancePreset` | subtle dolly-in  | Animation preset                |
+| `duration?`      | `number`         | `2.5`            | Duration in seconds             |
+| `startPosition?` | `[x, y, z]`      | (from preset)    | Override start camera position  |
+| `endPosition?`   | `[x, y, z]`      | (current camera) | Override end camera position    |
+| `startLookAt?`   | `[x, y, z]`      | (from preset)    | Override start look-at target   |
+| `endLookAt?`     | `[x, y, z]`      | `[0, 0, 0]`      | Override end look-at target     |
+| `easing?`        | `string`         | `'power2.inOut'` | GSAP easing function            |
+| `delay?`         | `number`         | `0`              | Delay before animation starts   |
+| `autoStart?`     | `boolean`        | `true`           | Auto-start when ready           |
+| `preloadState?`  | `PreloadState`   | -                | Wait for assets before starting |
+
+**Available Presets** (`EntrancePreset`):
+
+| Preset          | Description                                      |
+| --------------- | ------------------------------------------------ |
+| `'dolly-in'`    | Camera moves forward along Z-axis toward scene   |
+| `'orbit-drift'` | Camera drifts from offset position (right/above) |
+| `'crane-up'`    | Camera rises from below, like a crane shot       |
+| `'fade-drift'`  | Gentle horizontal drift from the left            |
+
+**Example - Custom positions**:
+
+```html
+<a3d-orbit-controls
+  a3dCinematicEntrance
+  [entranceConfig]="{
+    startPosition: [10, 5, 15],
+    endPosition: [0, 2, 8],
+    startLookAt: [0, -2, 0],
+    endLookAt: [0, 0, 0],
+    duration: 3,
+    easing: 'power3.out'
+  }"
+/>
+```
+
+---
+
+### SceneRevealDirective
+
+Adds reveal animations to 3D objects with stagger group coordination.
+
+**Selector**: `[a3dSceneReveal]`
+
+**Inputs**:
+
+| Input          | Type                | Description             |
+| -------------- | ------------------- | ----------------------- |
+| `revealConfig` | `SceneRevealConfig` | Animation configuration |
+
+**Outputs**:
+
+| Output           | Type   | Description                   |
+| ---------------- | ------ | ----------------------------- |
+| `revealStart`    | `void` | Emitted when reveal starts    |
+| `revealComplete` | `void` | Emitted when reveal completes |
+
+**SceneRevealConfig**:
+
+| Property        | Type              | Default        | Description                           |
+| --------------- | ----------------- | -------------- | ------------------------------------- |
+| `animation?`    | `RevealAnimation` | `'fade-in'`    | Animation type                        |
+| `duration?`     | `number`          | `0.8`          | Duration in seconds                   |
+| `delay?`        | `number`          | `0`            | Delay before animation                |
+| `easing?`       | `string`          | `'power2.out'` | GSAP easing (scale-pop uses back.out) |
+| `staggerGroup?` | `string`          | -              | Group name for stagger coordination   |
+| `staggerIndex?` | `number`          | `0`            | Index within stagger group            |
+| `autoReveal?`   | `boolean`         | `false`        | Auto-reveal on init                   |
+
+**Available Animations** (`RevealAnimation`):
+
+| Animation     | Description                                  |
+| ------------- | -------------------------------------------- |
+| `'fade-in'`   | Material opacity animates from 0 to original |
+| `'scale-pop'` | Scale from near-zero with overshoot effect   |
+| `'rise-up'`   | Position animates upward from below          |
+
+**Example - Mixed animations**:
+
+```html
+<a3d-box a3dSceneReveal [revealConfig]="{ animation: 'fade-in', staggerGroup: 'items', staggerIndex: 0 }" />
+
+<a3d-sphere a3dSceneReveal [revealConfig]="{ animation: 'scale-pop', staggerGroup: 'items', staggerIndex: 1 }" />
+
+<a3d-torus a3dSceneReveal [revealConfig]="{ animation: 'rise-up', staggerGroup: 'items', staggerIndex: 2 }" />
+```
+
+---
+
+### StaggerGroupService
+
+Coordinates reveal animations across multiple SceneRevealDirective instances.
+
+**Methods**:
+
+| Method                      | Description                                  |
+| --------------------------- | -------------------------------------------- |
+| `revealGroup(name, delay?)` | Reveal all items in group with stagger delay |
+| `hideGroup(name)`           | Hide all items in group simultaneously       |
+| `hasGroup(name)`            | Check if group exists and has items          |
+| `getGroupSize(name)`        | Get number of items in group                 |
+| `getGroupNames()`           | Get array of all group names                 |
+| `clearGroup(name)`          | Clear all items from a group                 |
+| `clearAllGroups()`          | Clear all groups                             |
+
+**Example - Programmatic control**:
+
+```typescript
+private stagger = inject(StaggerGroupService);
+
+// Reveal with 150ms stagger delay (default)
+await this.stagger.revealGroup('hero-items');
+
+// Reveal with custom 200ms stagger
+await this.stagger.revealGroup('hero-items', 200);
+
+// Reveal all at once (no stagger)
+await this.stagger.revealGroup('hero-items', 0);
+
+// Hide all items for re-reveal
+await this.stagger.hideGroup('hero-items');
+```
+
+---
+
 ### ScrollZoomCoordinatorDirective
 
 Coordinates camera zoom with page scroll.
@@ -518,6 +759,8 @@ Automatic LOD (Level of Detail) and performance optimization.
 | AnimationService                    | Flight waypoints, pulse animations      |
 | GltfLoaderService                   | GLTF/GLB model loading with caching     |
 | TextureLoaderService                | Texture loading with caching            |
+| AssetPreloaderService               | Multi-asset loading with progress       |
+| StaggerGroupService                 | Coordinated reveal animations           |
 | EffectComposerService               | Postprocessing effect chain management  |
 | ViewportPositioningService          | Viewport-relative positioning utilities |
 | ComponentRegistryService            | Component registration and lookup       |

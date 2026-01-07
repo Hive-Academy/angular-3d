@@ -81,6 +81,14 @@ export const appRoutes: Routes = [
         title: 'Performance | Angular-3D',
       },
       {
+        path: 'loading-entrance',
+        loadComponent: () =>
+          import(
+            './pages/home/sections/loading-entrance-demo-section.component'
+          ).then((m) => m.LoadingEntranceDemoSectionComponent),
+        title: 'Loading & Entrance | Angular-3D',
+      },
+      {
         path: 'hero-space',
         loadComponent: () =>
           import(

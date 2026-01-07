@@ -109,11 +109,14 @@ src/
 │   │           ├── shapes.ts        # Supersphere, melter
 │   │           ├── space.ts         # Planet, stars, photosphere
 │   │           └── organic.ts       # Brain, veins, clay
-│   ├── directives/                  # Animation behaviors (24 total)
-│   │   ├── animation/               # Animation directives (3)
+│   ├── directives/                  # Animation behaviors (27 total)
+│   │   ├── animation/               # Animation directives (6)
 │   │   │   ├── float-3d.directive.ts
 │   │   │   ├── rotate-3d.directive.ts
-│   │   │   └── space-flight-3d.directive.ts
+│   │   │   ├── space-flight-3d.directive.ts
+│   │   │   ├── cinematic-entrance.directive.ts  # Camera entrance animations
+│   │   │   ├── scene-reveal.directive.ts        # Object reveal animations
+│   │   │   └── stagger-group.service.ts         # Stagger coordination
 │   │   ├── core/                    # Core directives (3)
 │   │   │   ├── mesh.directive.ts
 │   │   │   ├── group.directive.ts
@@ -306,6 +309,37 @@ const cleanup = this.renderLoop.registerUpdateCallback((delta, elapsed) => {
 this.destroyRef.onDestroy(cleanup);
 ```
 
+### Loading & Entrance Animations
+
+Orchestrate asset loading with cinematic camera entrances:
+
+```typescript
+// In component
+private preloader = inject(AssetPreloaderService);
+private stagger = inject(StaggerGroupService);
+
+preloadState = this.preloader.preload([
+  { url: '/model.glb', type: 'gltf' },
+  { url: '/texture.jpg', type: 'texture' }
+]);
+
+entranceConfig: CinematicEntranceConfig = {
+  preset: 'dolly-in',  // or 'orbit-drift', 'crane-up', 'fade-drift'
+  duration: 2.5,
+  preloadState: this.preloadState,
+};
+
+async onEntranceComplete() {
+  await this.stagger.revealGroup('myGroup', 150);
+}
+```
+
+```html
+<a3d-orbit-controls a3dCinematicEntrance [entranceConfig]="entranceConfig" (entranceComplete)="onEntranceComplete()"> </a3d-orbit-controls>
+
+<a3d-box a3dSceneReveal [revealConfig]="{ animation: 'scale-pop', staggerGroup: 'myGroup' }"> </a3d-box>
+```
+
 ## Public API
 
 The library exports are organized by module. Import from `@hive-academy/angular-3d`:
@@ -328,6 +362,9 @@ export { NG_3D_PARENT, NG_3D_CHILD, OBJECT_ID, GEOMETRY_SIGNAL, MATERIAL_SIGNAL 
 
 // Loaders - Asset loading
 export { GltfLoaderService, TextureLoaderService, injectGltfLoader, injectTextureLoader } from '@hive-academy/angular-3d';
+
+// Loading & Entrance Animations
+export { AssetPreloaderService, type AssetDefinition, type AssetType, type PreloadState, CinematicEntranceDirective, type CinematicEntranceConfig, type EntrancePreset, SceneRevealDirective, type SceneRevealConfig, type RevealAnimation, StaggerGroupService, type RevealableDirective } from '@hive-academy/angular-3d';
 
 // Primitives - All 54 components via barrel exports
 export * from '@hive-academy/angular-3d'; // Includes all geometry, lights, text, space, particles, effects, scene, loaders, backgrounds

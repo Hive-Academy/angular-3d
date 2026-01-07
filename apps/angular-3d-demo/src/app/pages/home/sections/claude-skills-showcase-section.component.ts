@@ -4,6 +4,7 @@ import {
   BloomEffectComponent,
   BubbleTextComponent,
   EffectComposerComponent,
+  EnvironmentComponent,
   Float3dDirective,
   FloatingSphereComponent,
   NebulaVolumetricComponent,
@@ -40,6 +41,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
     Float3dDirective,
     EffectComposerComponent,
     BloomEffectComponent,
+    EnvironmentComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -86,60 +88,11 @@ import { SCENE_COLORS } from '../../../shared/colors';
             [decay]="2"
           />
 
-          <!-- ============ CORNER BUBBLE SPHERES ============ -->
-
-          <!-- Top-Left Corner Bubble -->
-          <!-- PERF: Removed transmission, using metalness+clearcoat for shine instead -->
-          <a3d-floating-sphere
-            float3d
-            [floatConfig]="{ height: 0.6, speed: 4000 }"
-            [position]="[-15, 10, -15]"
-            [args]="[2, 16, 16]"
-            [color]="'#e879f9'"
-            [metalness]="0.3"
-            [roughness]="0.1"
-            [transmission]="0"
-            [thickness]="0"
-            [ior]="1.0"
-            [clearcoat]="1.0"
-            [clearcoatRoughness]="0.1"
-          />
-          <a3d-spot-light
-            [position]="[-12, 14, -8]"
-            [target]="[-15, 10, -15]"
-            [intensity]="40"
-            [color]="'#e879f9'"
-            [angle]="0.4"
-            [penumbra]="0.8"
-            [distance]="25"
-            [decay]="1.5"
-          />
-
-          <!-- Top-Right Corner Bubble -->
-          <!-- PERF: Removed transmission, using metalness+clearcoat for shine instead -->
-          <a3d-floating-sphere
-            float3d
-            [floatConfig]="{ height: 0.8, speed: 5000 }"
-            [position]="[15, 10, -14]"
-            [args]="[2.5, 16, 16]"
-            [color]="'#a855f7'"
-            [metalness]="0.3"
-            [roughness]="0.1"
-            [transmission]="0"
-            [thickness]="0"
-            [ior]="1.0"
-            [clearcoat]="1.0"
-            [clearcoatRoughness]="0.1"
-          />
-          <a3d-spot-light
-            [position]="[12, 14, -7]"
-            [target]="[15, 10, -14]"
-            [intensity]="40"
-            [color]="'#a855f7'"
-            [angle]="0.4"
-            [penumbra]="0.8"
-            [distance]="25"
-            [decay]="1.5"
+          <!-- HDRI Environment for IBL reflections -->
+          <a3d-environment
+            [preset]="'night'"
+            [intensity]="0.3"
+            [background]="false"
           />
 
           <!-- Bottom-Left Corner Bubble -->
@@ -400,6 +353,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
       .skills-intro {
         text-align: center;
         margin-bottom: 1rem;
+        padding-top: 1rem;
       }
 
       .skills-label {

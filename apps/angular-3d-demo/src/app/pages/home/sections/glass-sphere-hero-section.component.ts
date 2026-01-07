@@ -211,12 +211,19 @@ import { SCENE_COLORS } from '../../../shared/colors';
             [sunMode]="true"
             [fireSpeed]="0.35"
             [fireMagnitude]="1.7"
-            [fireNoiseScale]="0.4"
+            [fireNoiseScale]="1.4"
             [lacunarity]="1.2"
-            [iterations]="26"
+            [iterations]="20"
           />
 
           <a3d-nebula-volumetric
+            a3dSceneReveal
+            [revealConfig]="{
+              animation: 'fade-in',
+              staggerGroup: 'hero',
+              staggerIndex: 1,
+              duration: 1.2
+            }"
             [position]="[60, 40, -110]"
             [width]="120"
             [height]="60"
