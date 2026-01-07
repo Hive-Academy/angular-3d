@@ -16,11 +16,12 @@ describe('NavigationComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render logo with correct text', () => {
+  it('should render logo image', () => {
     const fixture = TestBed.createComponent(NavigationComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('a')?.textContent).toContain('Hive Academy');
+    const logoImg = compiled.querySelector('img[alt="logo"]');
+    expect(logoImg).toBeTruthy();
   });
 
   it('should have navigation links', () => {
@@ -32,8 +33,8 @@ describe('NavigationComponent', () => {
 
     const linkTexts = Array.from(links).map((l) => l.textContent?.trim());
     expect(linkTexts).toContain('Home');
-    expect(linkTexts).toContain('Angular-3D');
-    expect(linkTexts).toContain('Angular-GSAP');
+    expect(linkTexts).toContain('Angular 3D');
+    expect(linkTexts).toContain('Angular GSAP');
     expect(linkTexts).toContain('GitHub');
   });
 });
