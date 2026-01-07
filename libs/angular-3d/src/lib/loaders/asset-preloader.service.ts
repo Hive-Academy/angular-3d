@@ -37,6 +37,7 @@ import {
   effect,
   type Signal,
   type WritableSignal,
+  type EffectRef,
 } from '@angular/core';
 import {
   GltfLoaderService,
@@ -99,6 +100,8 @@ interface AssetLoadOperation {
   error: Signal<Error | null>;
   /** Signal tracking loaded state */
   loaded: Signal<boolean>;
+  /** Effect reference for cleanup */
+  effectRef: EffectRef | null;
 }
 
 /**
@@ -206,9 +209,17 @@ export class AssetPreloaderService {
       return allErrors;
     });
 
-    // Cancel function to stop tracking updates
+    // Cancel function to stop tracking updates and cleanup effects
     const cancel = (): void => {
       _cancelled.set(true);
+
+      // Destroy all effect references to prevent memory leaks
+      for (const op of operations) {
+        if (op.effectRef) {
+          op.effectRef.destroy();
+        }
+      }
+
       this.activeOperations.delete(operationId);
       // Note: Underlying loaders don't support cancellation,
       // but we mark state as cancelled to prevent further signal updates from affecting consumers
@@ -238,7 +249,7 @@ export class AssetPreloaderService {
    * Start loading a single asset and return tracking signals
    *
    * @param asset - Asset definition to load
-   * @returns Operation tracking object with progress, error, and loaded signals
+   * @returns Operation tracking object with progress, error, loaded signals, and effectRef
    */
   private startAssetLoad(
     asset: AssetDefinition
@@ -246,6 +257,7 @@ export class AssetPreloaderService {
     const _progress: WritableSignal<number> = signal(0);
     const _error: WritableSignal<Error | null> = signal(null);
     const _loaded: WritableSignal<boolean> = signal(false);
+    let _effectRef: EffectRef | null = null;
 
     switch (asset.type) {
       case 'gltf': {
@@ -253,7 +265,8 @@ export class AssetPreloaderService {
 
         // Create effect to sync loader signals to our tracking signals
         // All signal reads must be in the same execution context
-        effect(
+        // Store effect reference for cleanup
+        _effectRef = effect(
           () => {
             const progressValue = result.progress();
             const errorValue = result.error();
@@ -276,7 +289,8 @@ export class AssetPreloaderService {
         const result = this.textureLoader.load(asset.url);
 
         // Create effect to sync loader signals to our tracking signals
-        effect(
+        // Store effect reference for cleanup
+        _effectRef = effect(
           () => {
             const progressValue = result.progress();
             const errorValue = result.error();
@@ -303,6 +317,7 @@ export class AssetPreloaderService {
         );
         _progress.set(100);
         _loaded.set(true);
+        // No effect needed for HDRI placeholder
         break;
       }
 
@@ -315,6 +330,7 @@ export class AssetPreloaderService {
         _error.set(new Error(`Unknown asset type: ${unknownType}`));
         _progress.set(100);
         _loaded.set(true);
+        // No effect needed for unknown types
       }
     }
 
@@ -324,6 +340,7 @@ export class AssetPreloaderService {
       progress: _progress.asReadonly(),
       error: _error.asReadonly(),
       loaded: _loaded.asReadonly(),
+      effectRef: _effectRef,
     };
   }
 

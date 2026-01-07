@@ -18,3 +18,9 @@ export {
   StaggerGroupService,
   type RevealableDirective,
 } from './stagger-group.service';
+
+// Animation constants
+export {
+  REVEAL_ANIMATION_DEFAULTS,
+  ENTRANCE_ANIMATION_DEFAULTS,
+} from './animation-constants';

@@ -236,6 +236,12 @@ export class CinematicEntranceDirective {
   /** Emitted when entrance animation completes */
   public readonly entranceComplete = output<void>();
 
+  /** Emitted when preload progress changes (0-100) - requires preloadState in config */
+  public readonly loadProgress = output<number>();
+
+  /** Emitted when preload completes - requires preloadState in config */
+  public readonly loadComplete = output<void>();
+
   // ================================
   // Internal State
   // ================================
@@ -254,6 +260,12 @@ export class CinematicEntranceDirective {
 
   /** Internal destroyed state for async safety checks */
   private readonly isDestroyed = signal(false);
+
+  /** Track if loadComplete has been emitted (to emit only once) */
+  private loadCompleteEmitted = false;
+
+  /** Track last emitted progress value to avoid duplicate emissions */
+  private lastEmittedProgress = -1;
 
   // ================================
   // Constructor & Lifecycle
@@ -284,6 +296,27 @@ export class CinematicEntranceDirective {
       } else {
         // No preload state - start immediately
         this.startEntrance();
+      }
+    });
+
+    // Effect: Emit loading progress events when preloadState is provided
+    effect(() => {
+      const config = this.entranceConfig();
+      if (!config?.preloadState || this.isDestroyed()) return;
+
+      const progress = config.preloadState.progress();
+      const isReady = config.preloadState.isReady();
+
+      // Emit progress only if it has changed
+      if (progress !== this.lastEmittedProgress) {
+        this.lastEmittedProgress = progress;
+        this.loadProgress.emit(progress);
+      }
+
+      // Emit loadComplete only once when ready
+      if (isReady && !this.loadCompleteEmitted) {
+        this.loadCompleteEmitted = true;
+        this.loadComplete.emit();
       }
     });
 
@@ -355,6 +388,43 @@ export class CinematicEntranceDirective {
     return this.gsapTimeline?.isActive() ?? false;
   }
 
+  /**
+   * Reset the entrance animation for replay.
+   *
+   * Restores camera to original position and allows start() to be called again.
+   * Useful for demo scenes where the entrance should replay on user action.
+   *
+   * @example
+   * ```typescript
+   * @ViewChild(CinematicEntranceDirective) entrance!: CinematicEntranceDirective;
+   *
+   * replayEntrance(): void {
+   *   this.entrance.reset();
+   *   this.entrance.start();
+   * }
+   * ```
+   */
+  public reset(): void {
+    // Kill any running animation
+    if (this.gsapTimeline) {
+      this.gsapTimeline.kill();
+      this.gsapTimeline = null;
+    }
+
+    // Restore camera to original position if available
+    const camera = this.sceneService?.camera();
+    if (camera && this.originalCameraPosition) {
+      camera.position.copy(this.originalCameraPosition);
+      this.sceneService?.invalidate();
+    }
+
+    // Re-enable OrbitControls if they were disabled
+    this.reEnableControls();
+
+    // Reset flag to allow restart
+    this.animationStarted = false;
+  }
+
   // ================================
   // Private Methods - Animation
   // ================================
@@ -413,11 +483,21 @@ export class CinematicEntranceDirective {
       return;
     }
 
-    // Dynamic GSAP import for tree-shaking optimization
-    const { gsap } = await import('gsap');
+    // Dynamic GSAP import for tree-shaking optimization with error handling
+    let gsap: typeof import('gsap').gsap;
+    try {
+      const gsapModule = await import('gsap');
+      gsap = gsapModule.gsap;
+    } catch (error) {
+      console.error('[CinematicEntrance] Failed to load GSAP:', error);
+      // Skip to end state and re-enable controls on GSAP load failure
+      this.skipToEnd(camera, endPos, endLookAt);
+      return;
+    }
 
     // Safety check: directive may have been destroyed during async import
     if (this.isDestroyed() || !this.entranceConfig()) {
+      this.reEnableControls();
       return;
     }
 
@@ -605,12 +685,22 @@ export class CinematicEntranceDirective {
     }
 
     // Re-enable OrbitControls if animation was interrupted
-    if (this.orbitControls && !this.orbitControls.enabled) {
-      this.orbitControls.enabled = true;
-    }
+    this.reEnableControls();
 
     // Clear references
     this.orbitControls = null;
     this.originalCameraPosition = null;
+  }
+
+  /**
+   * Re-enable OrbitControls if they were disabled.
+   *
+   * Called after animation completes, on error, or during cleanup
+   * to ensure controls are always restored to interactive state.
+   */
+  private reEnableControls(): void {
+    if (this.orbitControls && !this.orbitControls.enabled) {
+      this.orbitControls.enabled = true;
+    }
   }
 }

@@ -77,6 +77,7 @@ import {
   StaggerGroupService,
   type RevealableDirective,
 } from './stagger-group.service';
+import { REVEAL_ANIMATION_DEFAULTS } from './animation-constants';
 
 // ============================================================================
 // Type Definitions
@@ -136,8 +137,10 @@ export interface SceneRevealConfig {
 
   /**
    * Automatically reveal when directive initializes.
-   * Set to false to manually trigger reveal via reveal() method.
-   * @default false
+   * Set to false (or omit) when using stagger groups - the StaggerGroupService
+   * will coordinate reveals via revealGroup(). Set to true for standalone
+   * objects that should reveal immediately without waiting for coordination.
+   * @default true (when not using stagger groups)
    */
   autoReveal?: boolean;
 }
@@ -152,6 +155,8 @@ interface OriginalState {
   scale: Vector3;
   /** Map of materials to their original opacity values */
   opacity: Map<Material, number>;
+  /** Map of materials to their original transparent flag */
+  transparent: Map<Material, boolean>;
   /** Original visibility state */
   visible: boolean;
 }
@@ -235,6 +240,15 @@ export class SceneRevealDirective implements RevealableDirective {
   /** Internal destroyed state for async safety checks */
   private readonly isDestroyed = signal(false);
 
+  /** Pending reveal promise resolve function for cancellation handling */
+  private revealResolve: (() => void) | null = null;
+
+  /** Track if we've warned about missing objectId (warn once per instance) */
+  private hasWarnedMissingObjectId = false;
+
+  /** Track if we've warned about missing sceneService (warn once per instance) */
+  private hasWarnedMissingSceneService = false;
+
   // ================================
   // Computed Signals
   // ================================
@@ -260,6 +274,29 @@ export class SceneRevealDirective implements RevealableDirective {
 
       // Don't proceed if destroyed or already initialized
       if (this.isDestroyed() || this.isInitialized) return;
+
+      // Developer warning: config provided but no objectId token found
+      if (config && !obj && !this.hasWarnedMissingObjectId) {
+        if (!this.objectId) {
+          console.warn(
+            '[SceneRevealDirective] No OBJECT_ID found. ' +
+              'Ensure directive is applied to a component that provides OBJECT_ID token ' +
+              '(e.g., a3d-box, a3d-sphere, a3d-gltf-model). ' +
+              'Animations will not work without a target object.'
+          );
+          this.hasWarnedMissingObjectId = true;
+        }
+      }
+
+      // Developer warning: no sceneService for invalidation
+      if (config && !this.sceneService && !this.hasWarnedMissingSceneService) {
+        console.warn(
+          '[SceneRevealDirective] SceneService not found. ' +
+            'Directive should be used within a Scene3dComponent context. ' +
+            'Animations will run but scene may not re-render properly.'
+        );
+        this.hasWarnedMissingSceneService = true;
+      }
 
       if (obj && config) {
         // Capture original state
@@ -324,9 +361,9 @@ export class SceneRevealDirective implements RevealableDirective {
     this.revealStart.emit();
 
     const animation = config.animation ?? 'fade-in';
-    const duration = config.duration ?? 0.8;
+    const duration = config.duration ?? REVEAL_ANIMATION_DEFAULTS.FADE_DURATION;
     const delay = config.delay ?? 0;
-    const easing = config.easing ?? 'power2.out';
+    const easing = config.easing ?? REVEAL_ANIMATION_DEFAULTS.DEFAULT_EASING;
 
     // Handle prefers-reduced-motion - skip to end state immediately
     if (this.prefersReducedMotion()) {
@@ -346,9 +383,13 @@ export class SceneRevealDirective implements RevealableDirective {
 
     // Create a Promise that resolves when animation completes
     return new Promise<void>((resolve) => {
+      // Store resolve function for cancellation handling
+      this.revealResolve = resolve;
+
       this.gsapTimeline = gsap.timeline({
         delay,
         onComplete: () => {
+          this.revealResolve = null;
           this.isHidden = false;
           this.revealComplete.emit();
           resolve();
@@ -398,6 +439,13 @@ export class SceneRevealDirective implements RevealableDirective {
       return;
     }
 
+    // Resolve any pending reveal promise before killing timeline
+    // This prevents hanging promises when hide() interrupts reveal()
+    if (this.revealResolve) {
+      this.revealResolve();
+      this.revealResolve = null;
+    }
+
     // Kill any running animation
     if (this.gsapTimeline) {
       this.gsapTimeline.kill();
@@ -433,12 +481,14 @@ export class SceneRevealDirective implements RevealableDirective {
    * - Position
    * - Scale
    * - Material opacities (handles arrays and single materials)
+   * - Material transparency flags
    * - Visibility
    */
   private captureOriginalState(obj: Object3D): void {
     const opacityMap = new Map<Material, number>();
+    const transparentMap = new Map<Material, boolean>();
 
-    // Traverse object to capture all material opacities
+    // Traverse object to capture all material opacities and transparency
     obj.traverse((child) => {
       if ('material' in child && child.material) {
         const materials = Array.isArray(child.material)
@@ -449,6 +499,7 @@ export class SceneRevealDirective implements RevealableDirective {
           // Only capture if not already in map (avoid duplicates)
           if (!opacityMap.has(mat)) {
             opacityMap.set(mat, mat.opacity);
+            transparentMap.set(mat, mat.transparent);
           }
         });
       }
@@ -458,6 +509,7 @@ export class SceneRevealDirective implements RevealableDirective {
       position: obj.position.clone(),
       scale: obj.scale.clone(),
       opacity: opacityMap,
+      transparent: transparentMap,
       visible: obj.visible,
     };
   }
@@ -492,12 +544,12 @@ export class SceneRevealDirective implements RevealableDirective {
 
       case 'scale-pop':
         // Set scale to near-zero (not 0 to avoid rendering issues)
-        obj.scale.setScalar(0.01);
+        obj.scale.setScalar(REVEAL_ANIMATION_DEFAULTS.HIDDEN_SCALE);
         break;
 
       case 'rise-up':
         // Offset position downward
-        obj.position.y -= 2;
+        obj.position.y -= REVEAL_ANIMATION_DEFAULTS.RISE_UP_OFFSET;
         break;
     }
 
@@ -529,6 +581,12 @@ export class SceneRevealDirective implements RevealableDirective {
    * back to the captured original values.
    */
   private animateFadeIn(obj: Object3D, duration: number, easing: string): void {
+    // Guard: ensure timeline and original state are available
+    if (!this.gsapTimeline || !this.originalState) return;
+
+    const timeline = this.gsapTimeline;
+    const originalState = this.originalState;
+
     // Collect all materials
     const materials: Material[] = [];
 
@@ -543,9 +601,9 @@ export class SceneRevealDirective implements RevealableDirective {
 
     // Animate each material's opacity
     materials.forEach((mat) => {
-      const originalOpacity = this.originalState?.opacity.get(mat) ?? 1;
+      const originalOpacity = originalState.opacity.get(mat) ?? 1;
 
-      this.gsapTimeline!.to(
+      timeline.to(
         mat,
         {
           opacity: originalOpacity,
@@ -562,19 +620,23 @@ export class SceneRevealDirective implements RevealableDirective {
   }
 
   /**
-   * Animate scale-pop effect (scale 0.01 to original with overshoot).
+   * Animate scale-pop effect (scale HIDDEN_SCALE to original with overshoot).
    *
-   * Uses 'back.out(1.4)' easing for the characteristic "pop" overshoot effect.
+   * Uses back.out easing with SCALE_POP_OVERSHOOT for the characteristic "pop" overshoot effect.
    */
   private animateScalePop(obj: Object3D, duration: number): void {
-    const targetScale = this.originalState!.scale;
+    // Guard: ensure timeline and original state are available
+    if (!this.gsapTimeline || !this.originalState) return;
 
-    this.gsapTimeline!.to(obj.scale, {
+    const timeline = this.gsapTimeline;
+    const targetScale = this.originalState.scale;
+
+    timeline.to(obj.scale, {
       x: targetScale.x,
       y: targetScale.y,
       z: targetScale.z,
       duration,
-      ease: 'back.out(1.4)', // Overshoot for "pop" effect
+      ease: `back.out(${REVEAL_ANIMATION_DEFAULTS.SCALE_POP_OVERSHOOT})`, // Overshoot for "pop" effect
       onUpdate: () => {
         this.sceneService?.invalidate();
       },
@@ -587,9 +649,13 @@ export class SceneRevealDirective implements RevealableDirective {
    * Animates the object upward from its offset position to the original.
    */
   private animateRiseUp(obj: Object3D, duration: number, easing: string): void {
-    const targetY = this.originalState!.position.y;
+    // Guard: ensure timeline and original state are available
+    if (!this.gsapTimeline || !this.originalState) return;
 
-    this.gsapTimeline!.to(obj.position, {
+    const timeline = this.gsapTimeline;
+    const targetY = this.originalState.position.y;
+
+    timeline.to(obj.position, {
       y: targetY,
       duration,
       ease: easing,
@@ -617,9 +683,13 @@ export class SceneRevealDirective implements RevealableDirective {
     // Restore scale
     obj.scale.copy(this.originalState.scale);
 
-    // Restore material opacities
-    this.originalState.opacity.forEach((opacity, mat) => {
+    // Store reference for closure to avoid non-null assertion
+    const originalState = this.originalState;
+
+    // Restore material opacities and transparency flags
+    originalState.opacity.forEach((opacity, mat) => {
       mat.opacity = opacity;
+      mat.transparent = originalState.transparent.get(mat) ?? false;
       mat.needsUpdate = true;
     });
 
@@ -649,6 +719,12 @@ export class SceneRevealDirective implements RevealableDirective {
    * and unregisters from stagger group.
    */
   private cleanup(): void {
+    // Resolve any pending reveal promise to prevent hanging
+    if (this.revealResolve) {
+      this.revealResolve();
+      this.revealResolve = null;
+    }
+
     // Kill GSAP timeline
     if (this.gsapTimeline) {
       this.gsapTimeline.kill();
