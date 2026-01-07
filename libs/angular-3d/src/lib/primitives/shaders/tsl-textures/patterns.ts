@@ -98,7 +98,7 @@ export const tslPolkaDots = TSLFn((userParams: TslTextureParams = {}) => {
   const k = smoothstep(size.sub(blur), size.add(blur), dist);
 
   return mix(p['color'], p['background'], k);
-});
+}, polkaDotsDefaults);
 
 // ============================================================================
 // tslGrid
@@ -141,7 +141,7 @@ export const tslGrid = TSLFn((userParams: TslTextureParams = {}) => {
   const lines = max(lineX, lineY);
 
   return mix(p['background'], p['color'], lines);
-});
+}, gridDefaults);
 
 // ============================================================================
 // tslVoronoiCells
@@ -180,7 +180,7 @@ export const tslVoronoiCells = TSLFn((userParams: TslTextureParams = {}) => {
   const edge = smoothstep(0, p['edgeWidth'], gradient);
 
   return mix(p['color'], p['background'], edge);
-});
+}, voronoiDefaults);
 
 // ============================================================================
 // tslBricks
@@ -228,7 +228,7 @@ export const tslBricks = TSLFn((userParams: TslTextureParams = {}) => {
   const isBrick = mortarX.mul(mortarY);
 
   return mix(p['background'], p['color'], isBrick);
-});
+}, bricksDefaults);
 
 // ============================================================================
 // tslFabric
@@ -266,4 +266,4 @@ export const tslFabric = TSLFn((userParams: TslTextureParams = {}) => {
   const shadow = float(1.0).sub(pattern.mul(0.5));
 
   return mix(p['color1'], p['color2'], checker).mul(shadow);
-});
+}, fabricDefaults);

@@ -61,7 +61,7 @@ export const tslBrain = TSLFn((userParams: TslTextureParams = {}) => {
     .pow(2);
 
   return mix(p['color'], p['background'], n);
-});
+}, brainDefaults);
 
 // ============================================================================
 // tslReticularVeins - Animated cell network
@@ -105,7 +105,7 @@ export const tslReticularVeins = TSLFn((userParams: TslTextureParams = {}) => {
   const k = k1.add(k2).add(dots);
 
   return mix(p['background'], p['color'], k);
-});
+}, reticularVeinsDefaults);
 
 // ============================================================================
 // tslWaterMarble - Animated swirling water marble
@@ -147,7 +147,7 @@ export const tslWaterMarble = TSLFn((userParams: TslTextureParams = {}) => {
   const glassEffect = swirlPattern.pow(0.5).mul(0.7).add(0.3);
 
   return mix(p['background'], p['color'], glassEffect);
-});
+}, waterMarbleDefaults);
 
 // ============================================================================
 // tslRoughClay - Animated rough clay surface
@@ -188,4 +188,4 @@ export const tslRoughClay = TSLFn((userParams: TslTextureParams = {}) => {
   const k = k1.mul(detail).clamp(0, 1);
 
   return mix(p['background'], p['color'], k);
-});
+}, roughClayDefaults);

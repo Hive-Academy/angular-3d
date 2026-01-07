@@ -45,7 +45,7 @@ export const tslSupersphere = TSLFn((userParams: TslTextureParams = {}) => {
   const factor = pow(sum, float(1).div(exp).negate());
 
   return pos.mul(factor);
-});
+}, supersphereDefaults);
 
 // ============================================================================
 // tslMelter
@@ -84,4 +84,4 @@ export const tslMelter = TSLFn((userParams: TslTextureParams = {}) => {
   const yFactor = float(1).sub(pos.y.add(1).div(2));
 
   return TSL.vec3(0, drip.mul(yFactor), 0);
-});
+}, melterDefaults);

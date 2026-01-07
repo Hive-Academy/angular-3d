@@ -9,3 +9,4 @@ export * from './metaball';
 export * from './marble-sphere.component';
 export * from './background-cubes.component';
 export * from './fire-sphere.component';
+export * from './thruster-flame.component';

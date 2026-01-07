@@ -99,7 +99,7 @@ export const tslMarble = TSLFn((userParams: TslTextureParams = {}) => {
   k.assign(k.add(mul(p['noise'], abs(noise(pos.mul(150))).pow(3))));
 
   return mix(p['background'], p['color'], k);
-});
+}, marbleDefaults);
 
 // ============================================================================
 // tslWood - Animated wood grain
@@ -139,7 +139,7 @@ export const tslWood = TSLFn((userParams: TslTextureParams = {}) => {
     .add(0.5);
 
   return mix(p['background'], p['color'], rings.pow(0.5));
-});
+}, woodDefaults);
 
 // ============================================================================
 // tslRust - Animated spreading rust
@@ -178,7 +178,7 @@ export const tslRust = TSLFn((userParams: TslTextureParams = {}) => {
   const rustLevel = n1.mul(n2).mul(n3).mul(p['intensity']);
 
   return mix(p['background'], p['color'], rustLevel);
-});
+}, rustDefaults);
 
 // ============================================================================
 // tslConcrete
@@ -210,4 +210,4 @@ export const tslConcrete = TSLFn((userParams: TslTextureParams = {}) => {
   const grain = noise1.mul(noise2).mul(p['roughness']).add(0.5);
 
   return mix(p['color1'], p['color2'], grain.clamp(0, 1));
-});
+}, concreteDefaults);

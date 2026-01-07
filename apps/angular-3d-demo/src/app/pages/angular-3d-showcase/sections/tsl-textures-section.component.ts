@@ -220,7 +220,7 @@ export default class TslTexturesSectionComponent {
   protected readonly spaceTextures: TextureDemo[] = [
     {
       name: 'Planet',
-      node: tslPlanet({ scale: 2 }),
+      node: tslPlanet({ scale: 5 }),
       code: 'tslPlanet()',
       position: [-4.5, 0, 0],
     },
@@ -238,7 +238,7 @@ export default class TslTexturesSectionComponent {
     },
     {
       name: 'Starfield',
-      node: tslStars({ density: 1.5, variation: 0.5 }),
+      node: tslStars({ density: 10, variation: 0.5, speed: 0.4, seed: 5 }),
       code: 'tslStars()',
       position: [4.5, 0, 0],
     },

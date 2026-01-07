@@ -6,7 +6,6 @@ import {
   EffectComposerComponent,
   Float3dDirective,
   FloatingSphereComponent,
-  MouseTracking3dDirective,
   NebulaVolumetricComponent,
   PointLightComponent,
   Scene3dComponent,
@@ -41,7 +40,6 @@ import { SCENE_COLORS } from '../../../shared/colors';
     Float3dDirective,
     EffectComposerComponent,
     BloomEffectComponent,
-    MouseTracking3dDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `

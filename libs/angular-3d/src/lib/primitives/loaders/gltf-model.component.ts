@@ -8,16 +8,20 @@ import {
   effect,
   signal,
   DestroyRef,
+  contentChildren,
 } from '@angular/core';
 import * as THREE from 'three/webgpu';
 import { NG_3D_PARENT } from '../../types/tokens';
 import { GltfLoaderService } from '../../loaders/gltf-loader.service';
 import { OBJECT_ID } from '../../tokens/object-id.token';
 import { SceneGraphStore } from '../../store/scene-graph.store';
+import {
+  Attachable3dChild,
+  NG_3D_CHILD,
+} from '../../types/attachable-3d-child';
 
 @Component({
   selector: 'a3d-gltf-model',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '<ng-content />',
   providers: [
@@ -44,12 +48,21 @@ export class GltfModelComponent implements OnDestroy {
 
   public readonly loaded = output<THREE.Group>();
 
+  /**
+   * Query for all child components that provide NG_3D_CHILD token.
+   * This includes ThrusterFlameComponent and any other attachable 3D children.
+   */
+  public readonly attachableChildren = contentChildren(NG_3D_CHILD);
+
   private readonly gltfLoader = inject(GltfLoaderService);
   private readonly parentFn = inject(NG_3D_PARENT, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
   private readonly sceneStore = inject(SceneGraphStore);
   private readonly objectId = inject(OBJECT_ID);
   private group: THREE.Group | null = null;
+
+  // Track attached children to avoid duplicates
+  private readonly attachedChildren = new Set<Attachable3dChild>();
 
   // Track if model has been added to scene (for browser-only operations)
   private readonly isInitialized = signal(false);
@@ -189,8 +202,80 @@ export class GltfModelComponent implements OnDestroy {
       }
     });
 
+    // Child Attachment Effect - attach all child components using NG_3D_CHILD token
+    // NOTE: We read isInitialized() to create a dependency so this effect re-runs after model loads
+    effect(() => {
+      const children = this.attachableChildren();
+      const initialized = this.isInitialized();
+      const group = this.group;
+
+      console.log('[GltfModelComponent] Child Attachment Effect:', {
+        childrenCount: children.length,
+        initialized,
+        hasGroup: !!group,
+        alreadyAttached: this.attachedChildren.size,
+      });
+
+      if (group && initialized && children.length > 0) {
+        for (const child of children) {
+          // Skip if already attached
+          if (this.attachedChildren.has(child)) {
+            console.log(
+              '[GltfModelComponent] Child already attached, skipping'
+            );
+            continue;
+          }
+
+          // Get mesh and attach if ready
+          const mesh = child.getMesh();
+          const ready = child.isReady();
+          console.log('[GltfModelComponent] Processing child:', {
+            hasMesh: !!mesh,
+            isReady: ready,
+            meshType: mesh?.type,
+          });
+
+          if (mesh && ready) {
+            group.add(mesh);
+            this.attachedChildren.add(child);
+
+            // Debug: Log world position of attached child
+            mesh.updateWorldMatrix(true, false);
+            const worldPos = new THREE.Vector3();
+            mesh.getWorldPosition(worldPos);
+            const worldScale = new THREE.Vector3();
+            mesh.getWorldScale(worldScale);
+            console.log(
+              '[GltfModelComponent] ✅ Successfully attached child mesh to group',
+              {
+                localPosition: mesh.position.toArray(),
+                localScale: mesh.scale.toArray(),
+                worldPosition: worldPos.toArray(),
+                worldScale: worldScale.toArray(),
+                visible: mesh.visible,
+                renderOrder: mesh.renderOrder,
+              }
+            );
+          } else {
+            console.log('[GltfModelComponent] ❌ Child not ready or no mesh');
+          }
+        }
+      } else {
+        console.log('[GltfModelComponent] Conditions not met for attachment');
+      }
+    });
+
     // Cleanup on destroy
     this.destroyRef.onDestroy(() => {
+      // Remove all attached children
+      for (const child of this.attachedChildren) {
+        const mesh = child.getMesh();
+        if (mesh && this.group) {
+          this.group.remove(mesh);
+        }
+      }
+      this.attachedChildren.clear();
+
       if (this.parentFn && this.group) {
         const parent = this.parentFn();
         parent?.remove(this.group);
@@ -221,6 +306,14 @@ export class GltfModelComponent implements OnDestroy {
         }
       }
     });
+  }
+
+  /**
+   * Get the Three.js group for child components to attach to.
+   * Used by NG_3D_PARENT provider for content projection.
+   */
+  public getGroup(): THREE.Group | null {
+    return this.group;
   }
 
   public ngOnDestroy(): void {

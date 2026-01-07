@@ -32,7 +32,7 @@ export interface MouseTrackingConfig {
   /** Invert Y axis position (default: false) */
   invertPosY?: boolean;
 
-  // --- NEW: Cursor Following Mode ---
+  // --- Cursor Following Mode ---
   /**
    * When true, object follows cursor in world space using camera unprojection.
    * Overrides translationRange behavior - object moves directly to cursor position.
@@ -64,6 +64,39 @@ export interface MouseTrackingConfig {
    * Set to true if you only want position tracking.
    */
   disableRotation?: boolean;
+
+  // --- Flight Behavior Mode ---
+  /**
+   * Enable flight behavior: bank and pitch based on movement velocity.
+   * Creates a realistic flying/spaceship feel where the object tilts
+   * in the direction of movement.
+   */
+  flightBehavior?: boolean;
+  /**
+   * Maximum bank angle in radians when moving horizontally (default: Math.PI / 6 = 30°).
+   * Banking rotates the object on its Z-axis based on X velocity.
+   */
+  maxBankAngle?: number;
+  /**
+   * Maximum pitch angle in radians when moving vertically (default: Math.PI / 8 = 22.5°).
+   * Pitching rotates the object on its X-axis based on Y velocity.
+   */
+  maxPitchAngle?: number;
+  /**
+   * Flight rotation responsiveness (0-1, default: 0.08).
+   * Lower = smoother banking/pitching, higher = more responsive.
+   */
+  flightDamping?: number;
+  /**
+   * Maximum heading/yaw angle in radians when moving horizontally (default: Math.PI / 4 = 45°).
+   * Yaw rotates the object on its Y-axis to face the direction of travel.
+   */
+  maxYawAngle?: number;
+  /**
+   * Velocity multiplier for flight calculations (default: 15).
+   * Higher values make the object respond more dramatically to small movements.
+   */
+  velocityMultiplier?: number;
 }
 
 @Directive({
@@ -95,6 +128,13 @@ export class MouseTracking3dDirective implements OnDestroy {
   private basePosition: Vector3 | null = null;
   private targetPosition = new Vector3();
   private currentPosition = new Vector3();
+  private previousPosition = new Vector3();
+
+  // Flight behavior state
+  private velocity = new Vector2();
+  private currentBankAngle = 0;
+  private currentPitchAngle = 0;
+  private currentYawAngle = 0;
 
   // Cursor following utilities
   private raycaster = new Raycaster();
@@ -259,25 +299,12 @@ export class MouseTracking3dDirective implements OnDestroy {
       const smoothness = config.smoothness ?? damping;
       const obj = this.object3D;
 
+      // Store previous position for velocity calculation
+      this.previousPosition.copy(obj.position);
+
       // Smooth mouse interpolation
       this.mouse.x += (this.targetMouse.x - this.mouse.x) * smoothness;
       this.mouse.y += (this.targetMouse.y - this.mouse.y) * smoothness;
-
-      // --- ROTATION LOGIC ---
-      if (!config.disableRotation) {
-        const sensitivity = config.sensitivity ?? 0.5;
-        const limit = config.limit ?? Math.PI / 4;
-        const invertX = config.invertX ?? false;
-        const invertY = config.invertY ?? false;
-
-        const targetRotY =
-          this.mouse.x * limit * sensitivity * (invertX ? -1 : 1);
-        const targetRotX =
-          this.mouse.y * limit * sensitivity * (invertY ? -1 : 1);
-
-        obj.rotation.x += (targetRotX - obj.rotation.x) * damping;
-        obj.rotation.y += (targetRotY - obj.rotation.y) * damping;
-      }
 
       // --- CURSOR FOLLOWING MODE ---
       if (config.followCursor) {
@@ -327,6 +354,68 @@ export class MouseTracking3dDirective implements OnDestroy {
           obj.position.x += (targetPosX - obj.position.x) * damping;
           obj.position.y += (targetPosY - obj.position.y) * damping;
         }
+      }
+
+      // Calculate velocity after position update
+      this.velocity.x = obj.position.x - this.previousPosition.x;
+      this.velocity.y = obj.position.y - this.previousPosition.y;
+
+      // --- FLIGHT BEHAVIOR MODE ---
+      if (config.flightBehavior) {
+        const maxBankAngle = config.maxBankAngle ?? Math.PI / 6; // 30 degrees
+        const maxPitchAngle = config.maxPitchAngle ?? Math.PI / 8; // 22.5 degrees
+        const maxYawAngle = config.maxYawAngle ?? Math.PI / 4; // 45 degrees
+        const flightDamping = config.flightDamping ?? 0.08;
+        const velocityMultiplier = config.velocityMultiplier ?? 15;
+
+        // Calculate target bank angle (Z rotation) based on X velocity
+        // Negative because moving right should bank right (negative Z rotation)
+        const targetBankAngle = Math.max(
+          -maxBankAngle,
+          Math.min(maxBankAngle, -this.velocity.x * velocityMultiplier)
+        );
+
+        // Calculate target pitch angle (X rotation) based on Y velocity
+        // Moving up should pitch up (negative X rotation)
+        const targetPitchAngle = Math.max(
+          -maxPitchAngle,
+          Math.min(maxPitchAngle, -this.velocity.y * velocityMultiplier)
+        );
+
+        // Calculate target yaw/heading angle (Y rotation) based on X velocity
+        // Moving right should turn/yaw right (positive Y rotation)
+        const targetYawAngle = Math.max(
+          -maxYawAngle,
+          Math.min(maxYawAngle, this.velocity.x * velocityMultiplier)
+        );
+
+        // Smooth interpolation of flight angles
+        this.currentBankAngle +=
+          (targetBankAngle - this.currentBankAngle) * flightDamping;
+        this.currentPitchAngle +=
+          (targetPitchAngle - this.currentPitchAngle) * flightDamping;
+        this.currentYawAngle +=
+          (targetYawAngle - this.currentYawAngle) * flightDamping;
+
+        // Apply flight rotations
+        obj.rotation.z = this.currentBankAngle;
+        obj.rotation.x = this.currentPitchAngle;
+        obj.rotation.y = this.currentYawAngle;
+      }
+      // --- STANDARD ROTATION LOGIC (mouse-based look-at) ---
+      else if (!config.disableRotation) {
+        const sensitivity = config.sensitivity ?? 0.5;
+        const limit = config.limit ?? Math.PI / 4;
+        const invertX = config.invertX ?? false;
+        const invertY = config.invertY ?? false;
+
+        const targetRotY =
+          this.mouse.x * limit * sensitivity * (invertX ? -1 : 1);
+        const targetRotX =
+          this.mouse.y * limit * sensitivity * (invertY ? -1 : 1);
+
+        obj.rotation.x += (targetRotX - obj.rotation.x) * damping;
+        obj.rotation.y += (targetRotY - obj.rotation.y) * damping;
       }
     }
 

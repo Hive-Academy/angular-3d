@@ -11,25 +11,29 @@
  * - Dark space background with subtle star field
  * - Bloom effect for luminous sun glow
  */
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import {
+  AmbientLightComponent,
+  BloomEffectComponent,
+  DirectionalLightComponent,
+  EffectComposerComponent,
+  EnvironmentComponent,
+  FireSphereComponent,
+  GltfModelComponent,
+  MouseTracking3dDirective,
+  NebulaVolumetricComponent,
+  NodeMaterialDirective,
+  Scene3dComponent,
+  SphereComponent,
+  StarFieldComponent,
+  ThrusterFlameComponent,
+  tslCausticsTexture,
+} from '@hive-academy/angular-3d';
 import {
   ScrollAnimationDirective,
   ViewportAnimationDirective,
 } from '@hive-academy/angular-gsap';
-import {
-  Scene3dComponent,
-  FireSphereComponent,
-  StarFieldComponent,
-  EffectComposerComponent,
-  BloomEffectComponent,
-  NebulaVolumetricComponent,
-  SvgIconComponent,
-  SpotLightComponent,
-  MouseTracking3dDirective,
-  AmbientLightComponent,
-  DirectionalLightComponent,
-  GltfModelComponent,
-} from '@hive-academy/angular-3d';
+import * as THREE from 'three/webgpu';
 import { SCENE_COLORS } from '../../../shared/colors';
 
 @Component({
@@ -43,12 +47,14 @@ import { SCENE_COLORS } from '../../../shared/colors';
     EffectComposerComponent,
     BloomEffectComponent,
     NebulaVolumetricComponent,
-    SvgIconComponent,
-    SpotLightComponent,
+    EnvironmentComponent,
+    SphereComponent,
     MouseTracking3dDirective,
     AmbientLightComponent,
     DirectionalLightComponent,
     GltfModelComponent,
+    ThrusterFlameComponent,
+    NodeMaterialDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -68,23 +74,40 @@ import { SCENE_COLORS } from '../../../shared/colors';
           [cameraFov]="55"
           [backgroundColor]="spaceBackgroundColor"
         >
-          <!-- Scene Lighting for Metallic Materials -->
-          <a3d-ambient-light color="#ffeedd" [intensity]="0.4" />
+          <!-- Ambient fill light -->
+          <a3d-ambient-light [intensity]="0.12" />
+
+          <!-- Main sun light from dramatic angle -->
           <a3d-directional-light
-            [position]="[10, 15, 10]"
-            color="white"
-            [intensity]="1.5"
+            [position]="[15, 8, 10]"
+            [intensity]="1.6"
+            [color]="'#fff8f0'"
           />
 
-          <!-- Subtle Star Field -->
+          <!-- Rim light for cinematic effect -->
+          <a3d-directional-light
+            [position]="[14, 5, -10]"
+            [intensity]="0.25"
+            [color]="'#4a90d9'"
+          />
+
+          <!-- HDRI Environment for IBL reflections -->
+          <a3d-environment
+            [preset]="'night'"
+            [intensity]="0.3"
+            [background]="false"
+          />
+
+          <!-- Multi-Layer Star Fields for depth parallax with gentle rotation -->
+          <!-- Layer 1: Close stars (larger, brighter) - slow rotation -->
           <a3d-star-field
-            [starCount]="1200"
-            [radius]="100"
-            [enableTwinkle]="true"
+            [starCount]="2000"
+            [radius]="40"
+            [size]="0.035"
             [multiSize]="true"
             [stellarColors]="true"
             [enableRotation]="true"
-            [rotationSpeed]="0.005"
+            [rotationSpeed]="0.008"
             [rotationAxis]="'y'"
           />
 
@@ -98,6 +121,29 @@ import { SCENE_COLORS } from '../../../shared/colors';
             [enableRotation]="true"
             [rotationSpeed]="0.005"
             [rotationAxis]="'y'"
+          />
+
+          <!-- Layer 3: Distant stars (smaller, dimmer) - slowest rotation for parallax -->
+          <a3d-star-field
+            [starCount]="1500"
+            [radius]="70"
+            [size]="0.018"
+            [opacity]="0.5"
+            [multiSize]="true"
+            [stellarColors]="true"
+            [enableRotation]="true"
+            [rotationSpeed]="0.003"
+            [rotationAxis]="'y'"
+          />
+
+          <!-- Glossy animated marble sphere -->
+          <a3d-sphere
+            [args]="[4, 32, 32]"
+            [position]="[14, 5, -15]"
+            [roughness]="0.1"
+            [metalness]="0.04"
+            a3dNodeMaterial
+            [colorNode]="causticsTexture"
           />
 
           <!-- Sun - FIXED at center-bottom (volumetric with large separated flames) -->
@@ -131,29 +177,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
             [edgePulseAmount]="0.2"
           />
 
-          <!-- Floating Angular Logo at Center with Spotlight 
-          <a3d-svg-icon
-            [svgPath]="'/images/logos/angular-gold.svg'"
-            [position]="angularLogoPosition"
-            [scale]="0.07"
-            [depth]="0.6"
-            [metalness]="0.3"
-            [roughness]="0.4"
-            [emissiveIntensity]="0.6"
-            [bevelEnabled]="true"
-            [bevelThickness]="0.04"
-            [bevelSize]="0.03"
-            mouseTracking3d
-            [trackingConfig]="{
-              sensitivity: 0.8,
-              limit: 0.5,
-              damping: 0.05,
-              invertX: true,
-              translationRange: [10, 5],
-              invertPosX: true
-            }"
-          />-->
-
+          <!-- Flying Robot - uses (loaded) event for manual thruster attachment -->
           <a3d-gltf-model
             modelPath="3d/mini_robot.glb"
             [scale]="[0.07, 0.07, 0.07]"
@@ -164,24 +188,44 @@ import { SCENE_COLORS } from '../../../shared/colors';
               cursorDepth: 20,
               smoothness: 0.08,
               lockZ: true,
-              disableRotation: false,
-              sensitivity: 0.3,
-              limit: 0.4,
-              damping: 0.05
+              flightBehavior: true,
+              maxBankAngle: 0.5,
+              maxPitchAngle: 0.3,
+              flightDamping: 0.06,
+              velocityMultiplier: 20
             }"
+            (loaded)="onRobotLoaded($event)"
           />
 
-          <!-- Cinematic Spotlight on Angular Logo
-          <a3d-spot-light
-            [position]="spotlightPosition"
-            [target]="angularLogoPosition"
-            [color]="spotlightColor"
-            [intensity]="15"
-            [distance]="50"
-            [angle]="0.6"
-            [penumbra]="0.5"
-            [decay]="1.2"
-          /> -->
+          <!-- Thruster Flames - GPU Particle-based for realistic effect -->
+          <!-- Parent scale is 0.07, so local values are multiplied by 0.07 for world size -->
+          <!-- Positioned under each foot of the robot -->
+          <a3d-thruster-flame
+            #leftThruster
+            [offset]="[-5, -62, 0]"
+            color="#00ccff"
+            coreColor="#ffffff"
+            [intensity]="2.2"
+            [size]="22"
+            [flameLength]="40"
+            [speed]="1.5"
+            [turbulence]="0.4"
+            [particleCount]="700"
+            [nozzleRadius]="12"
+          />
+          <a3d-thruster-flame
+            #rightThruster
+            [offset]="[5, -62, 0]"
+            color="#00ccff"
+            coreColor="#ffffff"
+            [intensity]="2.2"
+            [size]="22"
+            [flameLength]="40"
+            [speed]="1.5"
+            [turbulence]="0.4"
+            [particleCount]="700"
+            [nozzleRadius]="12"
+          />
 
           <!-- Bloom for luminous sun glow -->
           <a3d-effect-composer [enabled]="true">
@@ -374,4 +418,55 @@ export class GlassSphereHeroSectionComponent {
 
   /** Warm spotlight color (cinematic golden light) */
   protected readonly spotlightColor = '#ffeedd';
+
+  protected readonly causticsTexture = tslCausticsTexture({
+    speed: 1.2,
+    scale: 0.4,
+    intensity: 1.4,
+    color: new THREE.Color('#ff6600'), // Bright orange caustics
+    background: new THREE.Color('#1a0a00'), // Dark burnt orange/brown
+  });
+
+  // ViewChild references for thruster flames
+  private readonly leftThruster =
+    viewChild<ThrusterFlameComponent>('leftThruster');
+  private readonly rightThruster =
+    viewChild<ThrusterFlameComponent>('rightThruster');
+
+  /**
+   * Handle robot model loaded event - attach thruster flames manually.
+   * This bypasses the contentChildren timing issue where inputs aren't
+   * bound during construction.
+   */
+  protected onRobotLoaded(group: THREE.Group): void {
+    console.log('[GlassSphereHero] Robot loaded, attaching thrusters...');
+
+    // Get thruster components
+    const left = this.leftThruster();
+    const right = this.rightThruster();
+
+    // Attach left thruster
+    if (left?.isReady()) {
+      const leftMesh = left.getMesh();
+      if (leftMesh) {
+        group.add(leftMesh);
+        console.log('[GlassSphereHero] ✅ Left thruster attached:', {
+          position: leftMesh.position.toArray(),
+          scale: leftMesh.scale.toArray(),
+        });
+      }
+    }
+
+    // Attach right thruster
+    if (right?.isReady()) {
+      const rightMesh = right.getMesh();
+      if (rightMesh) {
+        group.add(rightMesh);
+        console.log('[GlassSphereHero] ✅ Right thruster attached:', {
+          position: rightMesh.position.toArray(),
+          scale: rightMesh.scale.toArray(),
+        });
+      }
+    }
+  }
 }

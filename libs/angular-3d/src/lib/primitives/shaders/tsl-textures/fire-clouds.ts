@@ -247,4 +247,4 @@ export const tslFireClouds = TSLFn((userParams: TslTextureParams = {}) => {
   // Multiplying by intensity again was causing double-darkening (intensity squared effect)
   // This was making the fire texture appear nearly black inside the sphere
   return finalColor;
-});
+}, fireCloudsDefaults);

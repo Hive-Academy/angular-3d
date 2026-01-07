@@ -147,7 +147,7 @@ export const tslPlanet = TSLFn((userParams: TslTextureParams = {}) => {
     });
 
   return color;
-});
+}, planetDefaults);
 
 // ============================================================================
 // tslStars
@@ -185,7 +185,7 @@ export const tslStars = TSLFn((userParams: TslTextureParams = {}) => {
   const col = tslToHsl(mix(p['background'], p['color'], k));
 
   return tslHsl(add(col.x, dS), col.y, col.z);
-});
+}, starsDefaults);
 
 // ============================================================================
 // tslCausticsTexture
@@ -195,14 +195,21 @@ const causticsDefaults: TslTextureParams = {
   $name: 'Caustics',
   scale: 2,
   speed: 1, // Animation speed (0 = static, 1 = normal)
-  color: new Color(0x50a8c0),
+  color: new Color(0x88ddff), // Bright caustic color (light areas)
+  background: new Color(0x002244), // Dark background color (dark areas)
+  intensity: 1.5, // Contrast/intensity of caustics
   seed: 0,
 };
 
 /**
  * TSL Caustics Texture
  * Creates animated underwater caustic light patterns using Worley noise.
- * Matches the original tsl-textures implementation.
+ *
+ * @param color - The bright caustic color (light areas)
+ * @param background - The dark background color (shadows)
+ * @param scale - Pattern scale (1-5 typical)
+ * @param speed - Animation speed (0 = static, 1 = normal, 2 = fast)
+ * @param intensity - Contrast/brightness of caustics (0.5-2 typical)
  */
 export const tslCausticsTexture = TSLFn((userParams: TslTextureParams = {}) => {
   const p = convertToNodes(userParams, causticsDefaults);
@@ -229,12 +236,16 @@ export const tslCausticsTexture = TSLFn((userParams: TslTextureParams = {}) => {
   // Final worley noise with displacement
   const noiseResult = mx_worley_noise_vec3(pos.add(worleyDisplacement));
 
-  // Normalize to 0-1 range
-  const k = noiseResult.length().div(Math.sqrt(3));
+  // Normalize to 0-1 range and apply intensity for contrast
+  const k = noiseResult
+    .length()
+    .div(Math.sqrt(3))
+    .mul(p['intensity'])
+    .clamp(0, 1);
 
-  // Apply color
-  return k.add((p['color'] as TSLNode).sub(0.5).mul(2));
-});
+  // Properly blend between background and color using mix
+  return mix(p['background'], p['color'], k);
+}, causticsDefaults);
 
 // ============================================================================
 // tslPhotosphere
@@ -268,7 +279,7 @@ export const tslPhotosphere = TSLFn((userParams: TslTextureParams = {}) => {
 
   const k = noise(vec).add(1).div(2);
   return mix(p['background'], p['color'], k);
-});
+}, photosphereDefaults);
 
 // ============================================================================
 // tslGasGiant
@@ -313,4 +324,4 @@ export const tslGasGiant = TSLFn((userParams: TslTextureParams = {}) => {
   const mix2 = mix(p['color2'], p['color3'], n.sub(0.5).mul(2));
 
   return select(n.lessThan(0.5), mix1, mix2);
-});
+}, gasGiantDefaults);

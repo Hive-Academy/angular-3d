@@ -94,7 +94,8 @@ export const tslBlueYardParticles = TSLFn(
 
     // Final output with intensity
     return mix(p['background'], particleColor, k.clamp(0, 1));
-  }
+  },
+  blueyardParticlesDefaults
 );
 
 // ============================================================================
@@ -165,5 +166,6 @@ export const tslBlueYardParticlesEmissive = TSLFn(
     // Return colored particles as emissive (multiply by intensity)
     const color = p['color'] as TSLNode;
     return vec3(color.x, color.y, color.z).mul(k.clamp(0, 1));
-  }
+  },
+  blueyardEmissiveDefaults
 );
