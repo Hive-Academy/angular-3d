@@ -36,3 +36,6 @@ export * from './lib/positioning';
 
 // Utils - Shared utilities (GSAP loader, etc.)
 export * from './lib/utils';
+
+// Loading - Route-level loading coordination
+export * from './lib/loading';

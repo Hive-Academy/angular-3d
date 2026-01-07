@@ -31,6 +31,7 @@ import { EffectComposerService } from '../postprocessing/effect-composer.service
 import { AdvancedPerformanceOptimizerService } from '../services/advanced-performance-optimizer.service';
 import { ViewportPositioningService } from '../positioning/viewport-positioning.service';
 import { NG_3D_PARENT } from '../types/tokens';
+import { SceneReadyService } from '../loading/scene-ready.service';
 
 /**
  * Camera configuration input interface
@@ -88,6 +89,7 @@ export interface RendererConfig {
     ViewportPositioningService, // Per-scene instance for correct camera reference
     EffectComposerService, // Per-scene instance for independent post-processing
     AdvancedPerformanceOptimizerService, // Per-scene instance for independent performance optimization
+    SceneReadyService, // Per-scene instance for loading coordination
     {
       provide: NG_3D_PARENT,
       useFactory: (sceneService: SceneService) => () => sceneService.scene(),
@@ -152,6 +154,7 @@ export class Scene3dComponent implements OnDestroy {
   private readonly sceneService = inject(SceneService);
   private readonly sceneStore = inject(SceneGraphStore);
   private readonly renderLoop = inject(RenderLoopService);
+  private readonly sceneReadyService = inject(SceneReadyService);
 
   // Camera inputs
   public readonly cameraPosition = input<[number, number, number]>([0, 0, 20]);
@@ -212,6 +215,9 @@ export class Scene3dComponent implements OnDestroy {
   // Visibility observer for performance optimization
   private visibilityObserver: IntersectionObserver | null = null;
 
+  // Flag to track first frame for loading coordination
+  private firstFrameRendered = false;
+
   public constructor() {
     // Expose scene immediately so children can access it in ngOnInit
     this.sceneService.setScene(this.scene);
@@ -264,8 +270,16 @@ export class Scene3dComponent implements OnDestroy {
           });
 
           // Set the render function for RenderLoopService to use
+          // Track first frame for loading coordination
           this.renderLoop.setRenderFunction(() => {
             this.renderer.render(this.scene, this.camera);
+
+            // Track first frame for SceneReadyService (one-time)
+            // Check destroyed flag to prevent calling on destroyed component
+            if (!this.firstFrameRendered && !this.destroyed) {
+              this.firstFrameRendered = true;
+              this.sceneReadyService.setFirstFrameRendered();
+            }
           });
 
           // Mark render loop as running (without starting internal RAF loop)
@@ -279,6 +293,9 @@ export class Scene3dComponent implements OnDestroy {
 
           // Mark renderer as initialized - this triggers the background effect above
           this.rendererInitialized = true;
+
+          // Mark scene ready service as renderer ready for loading coordination
+          this.sceneReadyService.setRendererReady();
         })
         .catch((error: Error) => {
           console.error(
@@ -542,5 +559,6 @@ export class Scene3dComponent implements OnDestroy {
 
     // Clear service references
     this.sceneService.clear();
+    this.sceneReadyService.clear();
   }
 }
