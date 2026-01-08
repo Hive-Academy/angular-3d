@@ -672,6 +672,66 @@ await this.stagger.hideGroup('hero-items');
 
 ---
 
+### LoadingOverlayComponent
+
+Pre-styled loading overlay that displays during scene initialization and asset loading.
+
+**Selector**: `<a3d-loading-overlay>`
+
+**Inputs**:
+
+| Input      | Type                   | Description                            |
+| ---------- | ---------------------- | -------------------------------------- |
+| `progress` | `Signal<number>`       | Loading progress signal (0-100)        |
+| `isReady`  | `Signal<boolean>`      | Ready state signal (triggers fade-out) |
+| `config?`  | `LoadingOverlayConfig` | Optional visual customization          |
+
+**LoadingOverlayConfig**:
+
+| Property          | Type      | Default     | Description                  |
+| ----------------- | --------- | ----------- | ---------------------------- |
+| `fadeOutDuration` | `number`  | `800`       | Fade-out duration in ms      |
+| `fadeOutDelay`    | `number`  | `200`       | Delay before fade-out starts |
+| `showProgress`    | `boolean` | `true`      | Show progress percentage     |
+| `showSpinner`     | `boolean` | `true`      | Show animated spinner        |
+| `spinnerColor`    | `string`  | `'#ff6600'` | Spinner accent color         |
+| `backgroundColor` | `string`  | `'#0a0a0f'` | Overlay background color     |
+| `zIndex`          | `number`  | `9999`      | CSS z-index                  |
+
+**Example - Basic usage with preload state**:
+
+```html
+<a3d-scene-3d [cameraPosition]="[0, 2, 8]">
+  <!-- 3D content -->
+</a3d-scene-3d>
+
+<a3d-loading-overlay [progress]="preloadState.progress" [isReady]="preloadState.isReady" />
+```
+
+**Example - Custom styling**:
+
+```html
+<a3d-loading-overlay
+  [progress]="preloadState.progress"
+  [isReady]="preloadState.isReady"
+  [config]="{
+    spinnerColor: '#00ff88',
+    backgroundColor: '#1a1a2e',
+    fadeOutDuration: 500
+  }"
+/>
+```
+
+**Features**:
+
+- Animated spinner with pulsing glow effect
+- Smooth progress text updates
+- Respects `prefers-reduced-motion` media query
+- Automatic fade-out when `isReady` becomes true
+- Removes itself from DOM after fade-out completes
+
+---
+
 ### ScrollZoomCoordinatorDirective
 
 Coordinates camera zoom with page scroll.

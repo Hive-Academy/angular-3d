@@ -247,7 +247,24 @@ interface ViewportAnimationConfig {
   distance?: number; // Slide distance in px, default: 50
   scale?: number; // Scale factor, default: 0.9
   rotation?: number; // Rotation degrees, default: 15
+  waitFor?: () => boolean; // Delay animation until condition is met
 }
+```
+
+**waitFor Example - Coordinate with loading state**:
+
+```html
+<!-- Wait for 3D scene to finish loading before animating -->
+<h1
+  viewportAnimation
+  [viewportConfig]="{
+    animation: 'slideUp',
+    duration: 0.8,
+    waitFor: preloadState.isReady
+  }"
+>
+  Animates only after scene loads
+</h1>
 ```
 
 **When to use which directive**:
@@ -461,7 +478,26 @@ interface ScrollAnimationConfig {
 
   // Performance
   once?: boolean; // Run only once
+
+  // Coordination
+  waitFor?: () => boolean; // Delay animation until condition is met
 }
+```
+
+**waitFor Example - Coordinate with loading state**:
+
+```html
+<!-- Wait for 3D scene to finish loading before scroll animation activates -->
+<div
+  scrollAnimation
+  [scrollConfig]="{
+    animation: 'parallax',
+    speed: 0.5,
+    waitFor: preloadState.isReady
+  }"
+>
+  Parallax starts only after scene loads
+</div>
 ```
 
 ### SSR Compatibility
