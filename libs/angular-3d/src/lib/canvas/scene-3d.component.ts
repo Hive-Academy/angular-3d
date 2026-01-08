@@ -19,6 +19,7 @@ import {
   viewChild,
   afterNextRender,
   effect,
+  signal,
 } from '@angular/core';
 import * as THREE from 'three/webgpu';
 import { SceneService } from './scene.service';
@@ -180,6 +181,33 @@ export class Scene3dComponent implements OnDestroy {
   public readonly backgroundColor = input<number | null>(null);
   public readonly enableShadows = input<boolean>(false);
 
+  // Fog inputs - Scene-level atmospheric fog (like Three.js scene.fog)
+  /**
+   * Fog color (hex number). If fogDensity is set, uses FogExp2, otherwise linear fog.
+   * @example 0x0A0E11 (dark space), 0x87CEEB (sky blue)
+   */
+  public readonly fogColor = input<number | null>(null);
+
+  /**
+   * Fog density for exponential fog (FogExp2).
+   * When set, uses exponential fog which is more realistic for atmospheric effects.
+   * Typical values: 0.001 (light) to 0.05 (heavy)
+   * @example 0.008 for subtle space atmosphere
+   */
+  public readonly fogDensity = input<number | null>(null);
+
+  /**
+   * Near distance for linear fog (only used if fogDensity is null).
+   * Objects closer than this are not affected by fog.
+   */
+  public readonly fogNear = input<number>(10);
+
+  /**
+   * Far distance for linear fog (only used if fogDensity is null).
+   * Objects farther than this are fully obscured by fog.
+   */
+  public readonly fogFar = input<number>(100);
+
   /**
    * Frame loop mode for rendering optimization
    *
@@ -209,8 +237,9 @@ export class Scene3dComponent implements OnDestroy {
   // Lifecycle flag to prevent race conditions during async initialization
   private destroyed = false;
 
-  // Flag to track when renderer is ready for reactive effects
-  private rendererInitialized = false;
+  // Signal to track when renderer is ready for reactive effects
+  // Using signal ensures effects dependent on this will re-run when it changes
+  private readonly rendererInitialized = signal(false);
 
   // Visibility observer for performance optimization
   private visibilityObserver: IntersectionObserver | null = null;
@@ -229,13 +258,43 @@ export class Scene3dComponent implements OnDestroy {
     effect(() => {
       const bgColor = this.backgroundColor();
       // Only apply background color after renderer is initialized
-      if (!this.rendererInitialized) {
+      // Reading the signal creates a reactive dependency
+      if (!this.rendererInitialized()) {
         return;
       }
       if (bgColor !== null) {
         this.scene.background = new THREE.Color(bgColor);
       } else {
         this.scene.background = null;
+      }
+    });
+
+    // Reactive effect: Update scene fog when fog inputs change
+    // Supports both FogExp2 (exponential, atmospheric) and Fog (linear)
+    effect(() => {
+      const color = this.fogColor();
+      const density = this.fogDensity();
+      const near = this.fogNear();
+      const far = this.fogFar();
+
+      // Only apply fog after renderer is initialized
+      // Reading the signal creates a reactive dependency
+      if (!this.rendererInitialized()) {
+        return;
+      }
+
+      // If no fog color specified, clear fog
+      if (color === null) {
+        this.scene.fog = null;
+        return;
+      }
+
+      // If density is specified, use FogExp2 (exponential fog - more realistic)
+      if (density !== null) {
+        this.scene.fog = new THREE.FogExp2(color, density);
+      } else {
+        // Otherwise use linear fog
+        this.scene.fog = new THREE.Fog(color, near, far);
       }
     });
 
@@ -291,8 +350,8 @@ export class Scene3dComponent implements OnDestroy {
           // Setup visibility-based pausing for performance
           this.setupVisibilityObserver();
 
-          // Mark renderer as initialized - this triggers the background effect above
-          this.rendererInitialized = true;
+          // Mark renderer as initialized - this triggers the background and fog effects above
+          this.rendererInitialized.set(true);
 
           // Mark scene ready service as renderer ready for loading coordination
           this.sceneReadyService.setRendererReady();

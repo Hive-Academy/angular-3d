@@ -70,20 +70,20 @@ import { SCENE_COLORS } from '../../../shared/colors';
             [decay]="1.2"
           />
 
-          <!-- Accent rim light from left - purple glow -->
+          <!-- Accent rim light from left - indigo glow -->
           <a3d-point-light
             [position]="[-10, 10, -10]"
             [intensity]="25"
-            [color]="'#a855f7'"
+            [color]="'#6366F1'"
             [distance]="30"
             [decay]="2"
           />
 
-          <!-- Warm fill from right - pink accent -->
+          <!-- Warm fill from right - neon purple accent -->
           <a3d-point-light
             [position]="[10, 6, -8]"
             [intensity]="15"
-            [color]="'#f472b6'"
+            [color]="'#D946EF'"
             [distance]="25"
             [decay]="2"
           />
@@ -102,7 +102,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
             [floatConfig]="{ height: 0.5, speed: 3500 }"
             [position]="[-12, -8, -13]"
             [args]="[1.8, 16, 16]"
-            [color]="'#f472b6'"
+            [color]="'#A1FF4F'"
             [metalness]="0.3"
             [roughness]="0.1"
             [transmission]="0"
@@ -115,7 +115,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
             [position]="[-9, -4, -6]"
             [target]="[-12, -8, -13]"
             [intensity]="35"
-            [color]="'#f472b6'"
+            [color]="'#A1FF4F'"
             [angle]="0.4"
             [penumbra]="0.8"
             [distance]="20"
@@ -129,7 +129,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
             [floatConfig]="{ height: 0.7, speed: 4500 }"
             [position]="[15, -10, -16]"
             [args]="[2.2, 16, 16]"
-            [color]="'#d946ef'"
+            [color]="'#4FFFDF'"
             [metalness]="0.3"
             [roughness]="0.1"
             [transmission]="0"
@@ -142,7 +142,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
             [position]="[12, -6, -9]"
             [target]="[15, -10, -16]"
             [intensity]="35"
-            [color]="'#d946ef'"
+            [color]="'#4FFFDF'"
             [angle]="0.4"
             [penumbra]="0.8"
             [distance]="40"
@@ -162,7 +162,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
           <!-- Main bubble text -->
           <!-- PERF: Reduced transmission and bubbles for better performance -->
           <a3d-bubble-text
-            [text]="'AI CRAFTED'"
+            [text]="'AI'"
             [fontSize]="70"
             [fontScaleFactor]="0.065"
             [bubbleColor]="bubbleColor"
@@ -337,7 +337,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
       }
 
       .nav-link:hover {
-        color: #e879f9;
+        color: #a1ff4f;
       }
 
       /* Skills Section */
@@ -361,7 +361,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
         font-weight: 600;
         letter-spacing: 0.2em;
         text-transform: uppercase;
-        color: #e879f9;
+        color: #a1ff4f;
         margin-bottom: 0.75rem;
       }
 
@@ -397,11 +397,11 @@ import { SCENE_COLORS } from '../../../shared/colors';
 
       .skill-card:hover {
         background: rgba(255, 255, 255, 0.08);
-        border-color: var(--accent-color, #e879f9);
+        border-color: var(--accent-color, #a1ff4f);
         transform: translateY(-4px);
         box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3),
           0 0 20px
-            color-mix(in srgb, var(--accent-color, #e879f9) 20%, transparent);
+            color-mix(in srgb, var(--accent-color, #a1ff4f) 20%, transparent);
       }
 
       .skill-icon {
@@ -451,7 +451,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
       }
 
       .highlight {
-        color: #e879f9;
+        color: #a1ff4f;
         font-weight: 500;
         text-decoration: none;
       }
@@ -483,11 +483,11 @@ import { SCENE_COLORS } from '../../../shared/colors';
   ],
 })
 export class ClaudeSkillsShowcaseSectionComponent {
-  public readonly backgroundColor = 0x0a0515;
+  public readonly backgroundColor = 0x0a0e11; // Matches background-dark token
   public readonly bubbleColor = 0xffffff;
   public readonly nebulaColors = {
-    primary: SCENE_COLORS.magenta,
-    secondary: SCENE_COLORS.violet,
+    primary: SCENE_COLORS.neonGreen,
+    secondary: SCENE_COLORS.cyan,
   };
 
   /**
@@ -505,7 +505,7 @@ export class ClaudeSkillsShowcaseSectionComponent {
         'Lighting setups',
         'Code generation',
       ],
-      color: '#e879f9',
+      color: '#a1ff4f', // neon-green
     },
     {
       icon: '✨',
@@ -518,7 +518,7 @@ export class ClaudeSkillsShowcaseSectionComponent {
         'Scroll triggers',
         'GSAP configuration',
       ],
-      color: '#a855f7',
+      color: '#6366f1', // primary-500
     },
   ]);
 }

@@ -6,14 +6,22 @@ import { RouterLink } from '@angular/router';
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <footer class="bg-background-dark text-white py-12x mt-20x">
+    <footer
+      class="relative bg-background-dark text-white py-12x mt-20x border-t border-neon-green/20"
+    >
+      <!-- Subtle glow effect at top border -->
+      <div
+        class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-neon-green/40 to-transparent"
+      ></div>
+      <div
+        class="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-neon-green/5 to-transparent pointer-events-none"
+      ></div>
+
       <div class="max-w-container mx-auto px-4x">
         <div class="grid md:grid-cols-4 gap-8x mb-8x">
-          <!-- Column 1: Branding -->
+          <!-- Column 1: Branding with Logo -->
           <div>
-            <h3 class="text-headline-sm font-bold text-neon-green mb-3x">
-              Hive Academy
-            </h3>
+            <img src="/logo.png" alt="Hive Academy" class="h-12 w-auto mb-4x" />
             <p class="text-body-md text-text-secondary">
               Angular libraries for 3D and animation experiences
             </p>

@@ -506,7 +506,7 @@ export class NebulaVolumetricComponent {
     material.depthWrite = false;
     material.depthTest = true;
     material.side = THREE.DoubleSide;
-    material.fog = false;
+    material.fog = true; // Enable scene fog for atmospheric depth
 
     // Create mesh
     const mesh = new THREE.Mesh(geometry, material);

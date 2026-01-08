@@ -19,7 +19,6 @@ import {
   inject,
   viewChild,
 } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import {
   AmbientLightComponent,
   AssetPreloaderService,
@@ -54,7 +53,6 @@ import { SCENE_COLORS } from '../../../shared/colors';
 @Component({
   selector: 'app-glass-sphere-hero-section',
   imports: [
-    DecimalPipe,
     ScrollAnimationDirective,
     ViewportAnimationDirective,
     Scene3dComponent,
@@ -95,15 +93,14 @@ import { SCENE_COLORS } from '../../../shared/colors';
       style="height: 100vh"
     >
       <!-- Layer 1: Dark Space Background with FIXED Sun -->
-      <div
-        class="gradient-layer absolute inset-0 z-0"
-        style="background: linear-gradient(to bottom, #030310, #0a0a1a)"
-      >
+      <div class="gradient-layer absolute inset-0 z-0 bg-background-dark">
         <!-- 3D Scene (no SceneLoadingDirective needed for now) -->
         <a3d-scene-3d
           [cameraPosition]="[0, 0, 16]"
           [cameraFov]="55"
           [backgroundColor]="spaceBackgroundColor"
+          [fogColor]="fogColor"
+          [fogDensity]="fogDensity"
         >
           <!-- OrbitControls with Cinematic Entrance Animation -->
           <a3d-orbit-controls
@@ -118,27 +115,27 @@ import { SCENE_COLORS } from '../../../shared/colors';
             [enableZoom]="false"
           />
 
-          <!-- Ambient fill light -->
-          <a3d-ambient-light [intensity]="0.12" />
+          <!-- Ambient fill light - reduced for deeper shadows -->
+          <a3d-ambient-light [intensity]="0.05" />
 
-          <!-- Main sun light from dramatic angle -->
+          <!-- Main sun light from dramatic angle - reduced for more contrast -->
           <a3d-directional-light
             [position]="[15, 8, 10]"
-            [intensity]="1.6"
+            [intensity]="1.2"
             [color]="'#fff8f0'"
           />
 
-          <!-- Rim light for cinematic effect -->
+          <!-- Rim light for cinematic effect - enhanced for dramatic edge lighting -->
           <a3d-directional-light
             [position]="[14, 5, -10]"
-            [intensity]="0.25"
+            [intensity]="0.35"
             [color]="'#4a90d9'"
           />
 
-          <!-- HDRI Environment for IBL reflections -->
+          <!-- HDRI Environment for IBL reflections - reduced for deeper shadows -->
           <a3d-environment
             [preset]="'night'"
-            [intensity]="0.3"
+            [intensity]="0.15"
             [background]="false"
           />
 
@@ -202,7 +199,8 @@ import { SCENE_COLORS } from '../../../shared/colors';
             [radius]="8"
             [position]="firePosition"
             [quality]="'quality'"
-            [sunMode]="true"
+            [sunMode]="false"
+            [fireColor]="'#A1FF4F'"
             [fireSpeed]="0.35"
             [fireMagnitude]="1.7"
             [fireNoiseScale]="1.4"
@@ -316,17 +314,17 @@ import { SCENE_COLORS } from '../../../shared/colors';
           [viewportConfig]="viewportBadgeConfig"
         >
           <span
-            class="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 bg-orange-500/10 backdrop-blur-md rounded-full text-xs sm:text-sm font-medium border border-orange-500/30 shadow-lg shadow-orange-500/10"
+            class="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 bg-neon-green/10 backdrop-blur-md rounded-full text-xs sm:text-sm font-medium border border-neon-green/30 shadow-lg shadow-neon-green/10"
           >
             <span class="relative flex h-2 w-2 sm:h-3 sm:w-3">
               <span
-                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-500 opacity-75"
+                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-neon-green opacity-75"
               ></span>
               <span
-                class="relative inline-flex rounded-full h-2 w-2 sm:h-3 sm:w-3 bg-orange-500"
+                class="relative inline-flex rounded-full h-2 w-2 sm:h-3 sm:w-3 bg-neon-green"
               ></span>
             </span>
-            <span class="text-orange-300">Angular 3D</span>
+            <span class="text-neon-green">Angular 3D</span>
           </span>
         </div>
 
@@ -340,7 +338,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
             Build Stunning
           </span>
           <span
-            class="block bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent"
+            class="block bg-gradient-to-r from-neon-green via-primary-500 to-neon-blue bg-clip-text text-transparent"
           >
             3D Experiences
           </span>
@@ -364,34 +362,11 @@ import { SCENE_COLORS } from '../../../shared/colors';
         >
           @for (pill of featurePills; track pill) {
           <span
-            class="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/5 text-orange-300 rounded-full text-xs sm:text-sm font-semibold border border-white/10"
+            class="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/5 text-neon-green rounded-full text-xs sm:text-sm font-semibold border border-neon-green/20"
           >
             {{ pill }}
           </span>
           }
-        </div>
-
-        <!-- CTA Buttons -->
-        <div
-          class="flex flex-wrap gap-4 sm:gap-6 justify-center mb-12 sm:mb-16"
-          viewportAnimation
-          [viewportConfig]="viewportButtonsConfig"
-        >
-          <a
-            href="/angular-3d-showcase"
-            class="group relative px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full font-bold text-sm sm:text-base md:text-lg hover:scale-105 transition-all duration-300 shadow-xl shadow-orange-500/30"
-          >
-            <span class="relative z-10">Get Started</span>
-            <div
-              class="absolute inset-0 rounded-full bg-gradient-to-r from-orange-500 to-red-500 blur-xl opacity-50 group-hover:opacity-75 transition-opacity"
-            ></div>
-          </a>
-          <a
-            href="/angular-3d-showcase"
-            class="px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-white/5 backdrop-blur-md text-white rounded-full font-bold text-sm sm:text-base md:text-lg border border-white/20 hover:bg-white/10 hover:border-white/40 transition-all duration-300"
-          >
-            See Examples
-          </a>
         </div>
       </div>
     </section>
@@ -431,8 +406,12 @@ export class GlassSphereHeroSectionComponent {
 
   /** Dark space background color (hex number for Three.js) */
   protected readonly spaceBackgroundColor = SCENE_COLORS.darkBlueGray;
-  protected readonly primaryColor = SCENE_COLORS.honeyGold;
-  protected readonly secondaryColor = SCENE_COLORS.emerald;
+  protected readonly primaryColor = SCENE_COLORS.neonGreen;
+  protected readonly secondaryColor = SCENE_COLORS.indigo;
+
+  /** Scene-level atmospheric fog (FogExp2 for space depth) */
+  protected readonly fogColor = 0x0a0e11; // Match background-dark
+  protected readonly fogDensity = 0.012; // Subtle atmospheric depth
 
   /**
    * Sun position: FIXED at center-bottom
@@ -454,11 +433,11 @@ export class GlassSphereHeroSectionComponent {
   protected readonly spotlightColor = '#ffeedd';
 
   protected readonly causticsTexture = tslCausticsTexture({
-    speed: 1.2,
+    speed: 0.7,
     scale: 0.4,
     intensity: 1.4,
-    color: new THREE.Color('#ff6600'), // Bright orange caustics
-    background: new THREE.Color('#1a0a00'), // Dark burnt orange/brown
+    color: new THREE.Color('#A1FF4F'), // Neon green caustics
+    background: new THREE.Color('#0A1A0F'), // Dark green-black
   });
 
   // Inject services for preloading and stagger animations

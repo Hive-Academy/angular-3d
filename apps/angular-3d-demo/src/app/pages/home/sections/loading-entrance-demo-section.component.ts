@@ -20,26 +20,25 @@
  * ```
  */
 
+import { DecimalPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   inject,
   signal,
   viewChild,
 } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import {
-  Scene3dComponent,
-  OrbitControlsComponent,
-  BoxComponent,
   AmbientLightComponent,
-  DirectionalLightComponent,
-  StarFieldComponent,
   AssetPreloaderService,
+  BoxComponent,
   CinematicEntranceDirective,
+  DirectionalLightComponent,
+  OrbitControlsComponent,
+  Scene3dComponent,
   SceneRevealDirective,
   StaggerGroupService,
+  StarFieldComponent,
   type CinematicEntranceConfig,
   type PreloadState,
 } from '@hive-academy/angular-3d';
