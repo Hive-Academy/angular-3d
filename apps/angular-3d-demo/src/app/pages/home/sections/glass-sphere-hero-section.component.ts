@@ -324,7 +324,8 @@ import { SCENE_COLORS } from '../../../shared/colors';
             animation: 'scaleIn',
             duration: 0.6,
             delay: 0.1,
-            threshold: 0.1
+            threshold: 0.1,
+            waitFor: preloadState.isReady
           }"
         >
           <span
@@ -350,7 +351,8 @@ import { SCENE_COLORS } from '../../../shared/colors';
             animation: 'slideUp',
             duration: 0.8,
             delay: 0.2,
-            threshold: 0.1
+            threshold: 0.1,
+            waitFor: preloadState.isReady
           }"
         >
           <span class="block p-2 text-white drop-shadow-lg">
@@ -371,7 +373,8 @@ import { SCENE_COLORS } from '../../../shared/colors';
             animation: 'fadeIn',
             duration: 0.8,
             delay: 0.4,
-            threshold: 0.1
+            threshold: 0.1,
+            waitFor: preloadState.isReady
           }"
         >
           Create immersive web experiences with WebGPU-powered 3D graphics and
@@ -386,7 +389,8 @@ import { SCENE_COLORS } from '../../../shared/colors';
             animation: 'slideUp',
             duration: 0.6,
             delay: 0.5,
-            threshold: 0.1
+            threshold: 0.1,
+            waitFor: preloadState.isReady
           }"
         >
           @for (pill of featurePills; track pill) {
@@ -406,7 +410,8 @@ import { SCENE_COLORS } from '../../../shared/colors';
             animation: 'slideUp',
             duration: 0.6,
             delay: 0.6,
-            threshold: 0.1
+            threshold: 0.1,
+            waitFor: preloadState.isReady
           }"
         >
           <a
