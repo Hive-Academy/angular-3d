@@ -480,45 +480,50 @@ export class GlassSphereHeroSectionComponent {
   ]);
 
   /** Shared viewport animation configs - all wait for preload to complete */
-  protected readonly viewportBadgeConfig = {
-    animation: 'scaleIn' as const,
-    duration: 0.6,
-    delay: 0.1,
-    threshold: 0.1,
-    waitFor: () => this.preloadState.isReady(),
-  };
+  /**
+   * Helper to create viewport animation configs with shared base settings.
+   * All configs wait for preload to complete and use threshold 0.1.
+   */
+  private createViewportConfig(
+    animation: 'scaleIn' | 'slideUp' | 'fadeIn',
+    duration: number,
+    delay: number
+  ) {
+    return {
+      animation,
+      duration,
+      delay,
+      threshold: 0.1,
+      waitFor: () => this.preloadState.isReady(),
+    };
+  }
 
-  protected readonly viewportTitleConfig = {
-    animation: 'slideUp' as const,
-    duration: 0.8,
-    delay: 0.2,
-    threshold: 0.1,
-    waitFor: () => this.preloadState.isReady(),
-  };
-
-  protected readonly viewportSubtitleConfig = {
-    animation: 'fadeIn' as const,
-    duration: 0.8,
-    delay: 0.4,
-    threshold: 0.1,
-    waitFor: () => this.preloadState.isReady(),
-  };
-
-  protected readonly viewportPillsConfig = {
-    animation: 'slideUp' as const,
-    duration: 0.6,
-    delay: 0.5,
-    threshold: 0.1,
-    waitFor: () => this.preloadState.isReady(),
-  };
-
-  protected readonly viewportButtonsConfig = {
-    animation: 'slideUp' as const,
-    duration: 0.6,
-    delay: 0.6,
-    threshold: 0.1,
-    waitFor: () => this.preloadState.isReady(),
-  };
+  /** Viewport animation configs - generated with shared base settings */
+  protected readonly viewportBadgeConfig = this.createViewportConfig(
+    'scaleIn',
+    0.6,
+    0.1
+  );
+  protected readonly viewportTitleConfig = this.createViewportConfig(
+    'slideUp',
+    0.8,
+    0.2
+  );
+  protected readonly viewportSubtitleConfig = this.createViewportConfig(
+    'fadeIn',
+    0.8,
+    0.4
+  );
+  protected readonly viewportPillsConfig = this.createViewportConfig(
+    'slideUp',
+    0.6,
+    0.5
+  );
+  protected readonly viewportButtonsConfig = this.createViewportConfig(
+    'slideUp',
+    0.6,
+    0.6
+  );
 
   /** Shared scroll animation config - waits for preload to complete */
   protected readonly scrollContentConfig = {
