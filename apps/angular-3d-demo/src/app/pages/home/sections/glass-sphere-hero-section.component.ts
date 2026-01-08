@@ -31,11 +31,13 @@ import {
   EnvironmentComponent,
   FireSphereComponent,
   GltfModelComponent,
+  LoadingOverlayComponent,
   MouseTracking3dDirective,
   NebulaVolumetricComponent,
   NodeMaterialDirective,
   OrbitControlsComponent,
   Scene3dComponent,
+  SceneLoadingDirective,
   SceneRevealDirective,
   SphereComponent,
   StaggerGroupService,
@@ -73,28 +75,18 @@ import { SCENE_COLORS } from '../../../shared/colors';
     OrbitControlsComponent,
     CinematicEntranceDirective,
     SceneRevealDirective,
+    LoadingOverlayComponent,
+    SceneLoadingDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <!-- Loading Overlay - shows until assets ready -->
-    @if (!preloadState.isReady()) {
-    <div
-      class="absolute inset-0 z-50 flex items-center justify-center bg-gradient-to-b from-[#030310] to-[#0a0a1a]"
-    >
-      <div class="text-center">
-        <div class="text-3xl font-bold text-white mb-4">Loading Experience</div>
-        <div class="w-64 h-2 bg-white/10 rounded-full overflow-hidden">
-          <div
-            class="h-full bg-gradient-to-r from-orange-500 to-red-500 transition-all duration-300"
-            [style.width.%]="preloadState.progress()"
-          ></div>
-        </div>
-        <div class="text-orange-400 mt-2">
-          {{ preloadState.progress() | number : '1.0-0' }}%
-        </div>
-      </div>
-    </div>
-    }
+    <!-- Loading Overlay - shows until scene and assets ready -->
+    <a3d-loading-overlay
+      [loadingState]="loadingState()"
+      [fullscreen]="true"
+      [showProgress]="true"
+      [showPhase]="true"
+    />
 
     <!-- Hero Container - no scroll animation on container -->
     <section
@@ -107,8 +99,14 @@ import { SCENE_COLORS } from '../../../shared/colors';
         class="gradient-layer absolute inset-0 z-0"
         style="background: linear-gradient(to bottom, #030310, #0a0a1a)"
       >
-        <!-- 3D Scene -->
+        <!-- 3D Scene with Loading Coordination -->
         <a3d-scene-3d
+          a3dSceneLoading
+          #sceneLoading="a3dSceneLoading"
+          [loadingConfig]="{
+            assets: [{ url: '3d/mini_robot.glb', type: 'gltf' }],
+            skipEntrance: false
+          }"
           [cameraPosition]="[0, 0, 16]"
           [cameraFov]="55"
           [backgroundColor]="spaceBackgroundColor"
@@ -123,6 +121,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
             [dampingFactor]="0.05"
             [minDistance]="10"
             [maxDistance]="30"
+            [enableZoom]="false"
           />
 
           <!-- Ambient fill light -->
@@ -473,6 +472,10 @@ export class GlassSphereHeroSectionComponent {
   protected readonly primaryColor = SCENE_COLORS.honeyGold;
   protected readonly secondaryColor = SCENE_COLORS.emerald;
 
+  // ViewChild reference for scene loading directive
+  private readonly sceneLoadingDirective =
+    viewChild<SceneLoadingDirective>('sceneLoading');
+
   /**
    * Sun position: FIXED at center-bottom
    * y=-9 places sun so top half is visible above bottom edge
@@ -517,6 +520,11 @@ export class GlassSphereHeroSectionComponent {
   protected readonly preloadState = this.preloader.preload([
     { url: '3d/mini_robot.glb', type: 'gltf' },
   ]);
+
+  /** Unified loading state from scene loading directive */
+  protected readonly loadingState = () => {
+    return this.sceneLoadingDirective()?.getLoadingState() ?? null;
+  };
 
   /** Cinematic entrance configuration */
   protected readonly entranceConfig: CinematicEntranceConfig = {

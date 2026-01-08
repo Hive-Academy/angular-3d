@@ -1,8 +1,14 @@
 import { Routes } from '@angular/router';
+import { sceneLoadingGuard } from '@hive-academy/angular-3d';
 
 export const appRoutes: Routes = [
   {
     path: '',
+    // Optional: Demonstrate sceneLoadingGuard for route-level loading coordination
+    // This guard waits for the scene to be ready before allowing navigation
+    // In this demo, it may not provide significant benefit without a resolver,
+    // but it demonstrates the pattern for library consumers
+    canActivate: [sceneLoadingGuard({ timeout: 10000 })],
     loadComponent: () =>
       import('./pages/home/home.component').then((m) => m.HomeComponent),
     title: 'Hive Academy - Angular 3D & GSAP Libraries',

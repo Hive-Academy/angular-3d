@@ -61,6 +61,7 @@ import type { SceneLoadingConfig, UnifiedLoadingState } from './types';
  */
 @Directive({
   selector: '[a3dSceneLoading]',
+  exportAs: 'a3dSceneLoading',
   standalone: true,
 })
 export class SceneLoadingDirective {

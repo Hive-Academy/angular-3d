@@ -216,9 +216,7 @@ export class LoadingOverlayComponent {
    * Unified loading state from createUnifiedLoadingState().
    * If provided, takes precedence over individual signals.
    */
-  public readonly loadingState = input<UnifiedLoadingState | undefined>(
-    undefined
-  );
+  public readonly loadingState = input<UnifiedLoadingState | null>(null);
 
   /**
    * Progress signal (0-100).
