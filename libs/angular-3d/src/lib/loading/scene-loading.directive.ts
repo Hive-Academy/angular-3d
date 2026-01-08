@@ -36,6 +36,7 @@
  */
 
 import {
+  afterNextRender,
   Directive,
   DestroyRef,
   effect,
@@ -157,13 +158,14 @@ export class SceneLoadingDirective {
   // ================================
 
   public constructor() {
-    // Effect: setup loading when config changes
-    effect(() => {
+    // Use afterNextRender to ensure inputs are bound before initializing
+    // Input signals don't have their bound values in constructor
+    afterNextRender(() => {
       const config = this.loadingConfig();
-      this.setupLoading(config);
+      this.initializeLoading(config);
     });
 
-    // Effect: emit progress updates
+    // Effect: emit progress updates (read-only, no signal writes)
     effect(() => {
       if (this.unifiedState) {
         const progress = this.unifiedState.progress();
@@ -179,26 +181,52 @@ export class SceneLoadingDirective {
     // Effect: emit scene ready event (once)
     effect(() => {
       const isSceneReady = this.sceneReadyService?.isSceneReady();
+      const alreadyEmitted = this.sceneReadyEmitted();
 
-      if (isSceneReady && !this.sceneReadyEmitted()) {
-        this.sceneReadyEmitted.set(true);
-        this.sceneReady.emit();
+      if (isSceneReady && !alreadyEmitted) {
+        // Defer signal write to avoid reactive context issue
+        queueMicrotask(() => {
+          this.sceneReadyEmitted.set(true);
+          this.sceneReady.emit();
+        });
       }
     });
 
     // Effect: emit loading complete event (once)
     effect(() => {
       const isFullyReady = this.unifiedState?.isFullyReady();
+      const alreadyEmitted = this.loadingCompleteEmitted();
 
-      if (isFullyReady && !this.loadingCompleteEmitted()) {
-        this.loadingCompleteEmitted.set(true);
-        this.loadingComplete.emit();
+      if (isFullyReady && !alreadyEmitted) {
+        // Defer signal write to avoid reactive context issue
+        queueMicrotask(() => {
+          this.loadingCompleteEmitted.set(true);
+          this.loadingComplete.emit();
+        });
       }
     });
 
     // Cleanup on destroy
     this.destroyRef.onDestroy(() => {
       this.cleanup();
+    });
+  }
+
+  /**
+   * Initialize loading coordination (called once in constructor).
+   * Separated from setupLoading to avoid effect context issues.
+   */
+  private initializeLoading(config?: SceneLoadingConfig): void {
+    // Start preloading if assets configured
+    if (config?.assets && config.assets.length > 0) {
+      this.preloadState = this.preloader.preload(config.assets);
+    }
+
+    // Create unified loading state with available signals
+    this.unifiedState = createUnifiedLoadingState({
+      sceneReady: this.sceneReadyService?.isSceneReady,
+      preloadState: this.preloadState ?? undefined,
+      skipEntrance: config?.skipEntrance ?? false,
     });
   }
 

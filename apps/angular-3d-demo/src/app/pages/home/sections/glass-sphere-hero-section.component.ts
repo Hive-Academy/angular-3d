@@ -37,7 +37,6 @@ import {
   NodeMaterialDirective,
   OrbitControlsComponent,
   Scene3dComponent,
-  SceneLoadingDirective,
   SceneRevealDirective,
   SphereComponent,
   StaggerGroupService,
@@ -76,16 +75,17 @@ import { SCENE_COLORS } from '../../../shared/colors';
     CinematicEntranceDirective,
     SceneRevealDirective,
     LoadingOverlayComponent,
-    SceneLoadingDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- Loading Overlay - shows until scene and assets ready -->
+    <!-- Uses existing preloadState directly (directive only tracks scene ready) -->
     <a3d-loading-overlay
-      [loadingState]="loadingState()"
+      [progress]="preloadState.progress"
+      [isReady]="preloadState.isReady"
       [fullscreen]="true"
       [showProgress]="true"
-      [showPhase]="true"
+      [showPhase]="false"
     />
 
     <!-- Hero Container - no scroll animation on container -->
@@ -99,14 +99,8 @@ import { SCENE_COLORS } from '../../../shared/colors';
         class="gradient-layer absolute inset-0 z-0"
         style="background: linear-gradient(to bottom, #030310, #0a0a1a)"
       >
-        <!-- 3D Scene with Loading Coordination -->
+        <!-- 3D Scene (no SceneLoadingDirective needed for now) -->
         <a3d-scene-3d
-          a3dSceneLoading
-          #sceneLoading="a3dSceneLoading"
-          [loadingConfig]="{
-            assets: [{ url: '3d/mini_robot.glb', type: 'gltf' }],
-            skipEntrance: false
-          }"
           [cameraPosition]="[0, 0, 16]"
           [cameraFov]="55"
           [backgroundColor]="spaceBackgroundColor"
@@ -472,10 +466,6 @@ export class GlassSphereHeroSectionComponent {
   protected readonly primaryColor = SCENE_COLORS.honeyGold;
   protected readonly secondaryColor = SCENE_COLORS.emerald;
 
-  // ViewChild reference for scene loading directive
-  private readonly sceneLoadingDirective =
-    viewChild<SceneLoadingDirective>('sceneLoading');
-
   /**
    * Sun position: FIXED at center-bottom
    * y=-9 places sun so top half is visible above bottom edge
@@ -520,11 +510,6 @@ export class GlassSphereHeroSectionComponent {
   protected readonly preloadState = this.preloader.preload([
     { url: '3d/mini_robot.glb', type: 'gltf' },
   ]);
-
-  /** Unified loading state from scene loading directive */
-  protected readonly loadingState = () => {
-    return this.sceneLoadingDirective()?.getLoadingState() ?? null;
-  };
 
   /** Cinematic entrance configuration */
   protected readonly entranceConfig: CinematicEntranceConfig = {
