@@ -24,3 +24,7 @@ export {
   REVEAL_ANIMATION_DEFAULTS,
   ENTRANCE_ANIMATION_DEFAULTS,
 } from './animation-constants';
+
+// Camera flight navigation - waypoint-based camera animation with hold-to-fly controls
+// TODO: Export will be added in Batch 2 after CameraFlightDirective implementation
+// export * from './camera-flight';
