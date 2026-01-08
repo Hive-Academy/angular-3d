@@ -307,26 +307,13 @@ import { SCENE_COLORS } from '../../../shared/colors';
       <div
         class="content-layer relative z-10 flex flex-col items-center justify-center min-h-screen text-center px-4 sm:px-6 md:px-8 max-w-5xl mx-auto"
         scrollAnimation
-        [scrollConfig]="{
-          animation: 'custom',
-          start: 'top top',
-          end: 'bottom top',
-          scrub: 0.5,
-          from: { y: 0 },
-          to: { y: -80 }
-        }"
+        [scrollConfig]="scrollContentConfig"
       >
         <!-- Badge -->
         <div
           class="mb-6"
           viewportAnimation
-          [viewportConfig]="{
-            animation: 'scaleIn',
-            duration: 0.6,
-            delay: 0.1,
-            threshold: 0.1,
-            waitFor: preloadState.isReady
-          }"
+          [viewportConfig]="viewportBadgeConfig"
         >
           <span
             class="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 bg-orange-500/10 backdrop-blur-md rounded-full text-xs sm:text-sm font-medium border border-orange-500/30 shadow-lg shadow-orange-500/10"
@@ -347,13 +334,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
         <h1
           class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 sm:mb-8 leading-none tracking-tight"
           viewportAnimation
-          [viewportConfig]="{
-            animation: 'slideUp',
-            duration: 0.8,
-            delay: 0.2,
-            threshold: 0.1,
-            waitFor: preloadState.isReady
-          }"
+          [viewportConfig]="viewportTitleConfig"
         >
           <span class="block p-2 text-white drop-shadow-lg">
             Build Stunning
@@ -369,13 +350,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
         <p
           class="text-base font-medium sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto mb-4 sm:mb-6 leading-relaxed"
           viewportAnimation
-          [viewportConfig]="{
-            animation: 'fadeIn',
-            duration: 0.8,
-            delay: 0.4,
-            threshold: 0.1,
-            waitFor: preloadState.isReady
-          }"
+          [viewportConfig]="viewportSubtitleConfig"
         >
           Create immersive web experiences with WebGPU-powered 3D graphics and
           smooth scroll animations.
@@ -385,13 +360,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
         <div
           class="flex flex-wrap gap-2 sm:gap-3 justify-center mb-8 sm:mb-12"
           viewportAnimation
-          [viewportConfig]="{
-            animation: 'slideUp',
-            duration: 0.6,
-            delay: 0.5,
-            threshold: 0.1,
-            waitFor: preloadState.isReady
-          }"
+          [viewportConfig]="viewportPillsConfig"
         >
           @for (pill of featurePills; track pill) {
           <span
@@ -406,13 +375,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
         <div
           class="flex flex-wrap gap-4 sm:gap-6 justify-center mb-12 sm:mb-16"
           viewportAnimation
-          [viewportConfig]="{
-            animation: 'slideUp',
-            duration: 0.6,
-            delay: 0.6,
-            threshold: 0.1,
-            waitFor: preloadState.isReady
-          }"
+          [viewportConfig]="viewportButtonsConfig"
         >
           <a
             href="/angular-3d-showcase"
@@ -515,6 +478,58 @@ export class GlassSphereHeroSectionComponent {
   protected readonly preloadState = this.preloader.preload([
     { url: '3d/mini_robot.glb', type: 'gltf' },
   ]);
+
+  /** Shared viewport animation configs - all wait for preload to complete */
+  protected readonly viewportBadgeConfig = {
+    animation: 'scaleIn' as const,
+    duration: 0.6,
+    delay: 0.1,
+    threshold: 0.1,
+    waitFor: () => this.preloadState.isReady(),
+  };
+
+  protected readonly viewportTitleConfig = {
+    animation: 'slideUp' as const,
+    duration: 0.8,
+    delay: 0.2,
+    threshold: 0.1,
+    waitFor: () => this.preloadState.isReady(),
+  };
+
+  protected readonly viewportSubtitleConfig = {
+    animation: 'fadeIn' as const,
+    duration: 0.8,
+    delay: 0.4,
+    threshold: 0.1,
+    waitFor: () => this.preloadState.isReady(),
+  };
+
+  protected readonly viewportPillsConfig = {
+    animation: 'slideUp' as const,
+    duration: 0.6,
+    delay: 0.5,
+    threshold: 0.1,
+    waitFor: () => this.preloadState.isReady(),
+  };
+
+  protected readonly viewportButtonsConfig = {
+    animation: 'slideUp' as const,
+    duration: 0.6,
+    delay: 0.6,
+    threshold: 0.1,
+    waitFor: () => this.preloadState.isReady(),
+  };
+
+  /** Shared scroll animation config - waits for preload to complete */
+  protected readonly scrollContentConfig = {
+    animation: 'custom' as const,
+    start: 'top top',
+    end: 'bottom top',
+    scrub: 0.5,
+    from: { y: 0 },
+    to: { y: -80 },
+    waitFor: () => this.preloadState.isReady(),
+  };
 
   /** Cinematic entrance configuration */
   protected readonly entranceConfig: CinematicEntranceConfig = {

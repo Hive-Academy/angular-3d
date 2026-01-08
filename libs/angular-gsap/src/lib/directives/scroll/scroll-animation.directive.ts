@@ -107,6 +107,13 @@ export interface ScrollAnimationConfig {
   // Performance
   once?: boolean; // Run animation only once
   toggleActions?: string; // 'play pause resume reset' etc.
+
+  /**
+   * Optional signal or function that must return true before animation initializes.
+   * Useful for coordinating with loading states or other async conditions.
+   * @example waitFor: () => preloadState.isReady()
+   */
+  waitFor?: () => boolean;
 }
 
 @Directive({
@@ -121,6 +128,7 @@ export class ScrollAnimationDirective implements OnDestroy {
   private scrollTrigger?: ScrollTrigger;
   private animation?: gsap.core.Tween | gsap.core.Timeline;
   private isInitialized = false;
+  private waitForInterval?: ReturnType<typeof setInterval>;
 
   // Configuration input
   readonly scrollConfig = input<ScrollAnimationConfig>({
@@ -137,11 +145,42 @@ export class ScrollAnimationDirective implements OnDestroy {
         () => {
           const config = this.scrollConfig();
           if (config) {
-            this.initializeAnimation(config);
+            this.tryInitializeAnimation(config);
           }
         },
         { injector: this.injector }
       );
+    }
+  }
+
+  /**
+   * Try to initialize animation, respecting waitFor condition.
+   * If waitFor is defined and returns false, start polling.
+   */
+  private tryInitializeAnimation(config: ScrollAnimationConfig): void {
+    // If no waitFor or waitFor returns true, initialize immediately
+    if (!config.waitFor || config.waitFor()) {
+      this.initializeAnimation(config);
+      return;
+    }
+
+    // Start polling for waitFor condition (check every 100ms)
+    this.clearWaitForPolling();
+    this.waitForInterval = setInterval(() => {
+      if (config.waitFor?.()) {
+        this.clearWaitForPolling();
+        this.initializeAnimation(config);
+      }
+    }, 100);
+  }
+
+  /**
+   * Clear waitFor polling interval.
+   */
+  private clearWaitForPolling(): void {
+    if (this.waitForInterval) {
+      clearInterval(this.waitForInterval);
+      this.waitForInterval = undefined;
     }
   }
 
@@ -324,6 +363,7 @@ export class ScrollAnimationDirective implements OnDestroy {
   }
 
   private cleanup(): void {
+    this.clearWaitForPolling();
     if (this.scrollTrigger) {
       this.scrollTrigger.kill();
       this.scrollTrigger = undefined;
