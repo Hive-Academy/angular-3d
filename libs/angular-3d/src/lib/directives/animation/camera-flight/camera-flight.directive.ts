@@ -670,10 +670,28 @@ export class CameraFlightDirective {
       toLookAt: to.lookAt,
     });
 
-    // Initialize lookAt proxy from current lookAt position
-    this.lookAtProxy.x = from.lookAt[0];
-    this.lookAtProxy.y = from.lookAt[1];
-    this.lookAtProxy.z = from.lookAt[2];
+    // =====================================================
+    // QUATERNION-BASED CAMERA ROTATION (prevents flip)
+    // =====================================================
+    // Using SLERP instead of lookAt animation to prevent
+    // the camera up-vector from flipping during flight.
+
+    // Calculate starting quaternion (current camera orientation)
+    const startQuaternion = camera.quaternion.clone();
+
+    // Calculate ending quaternion (what orientation at destination?)
+    // Temporarily move camera to destination to compute target orientation
+    const originalPosition = camera.position.clone();
+    camera.position.set(to.position[0], to.position[1], to.position[2]);
+    camera.lookAt(to.lookAt[0], to.lookAt[1], to.lookAt[2]);
+    const endQuaternion = camera.quaternion.clone();
+
+    // Restore camera to original position and orientation
+    camera.position.copy(originalPosition);
+    camera.quaternion.copy(startQuaternion);
+
+    // Animation progress proxy for SLERP
+    const animProgress = { value: 0 };
 
     // Create timeline (starts paused for hold-to-fly control)
     console.log('[CameraFlight] About to create gsap.timeline...');
@@ -682,11 +700,11 @@ export class CameraFlightDirective {
       const timeline = gsap.timeline({
         paused: true,
         onUpdate: () => {
-          // Update camera lookAt during animation
-          camera.lookAt(
-            this.lookAtProxy.x,
-            this.lookAtProxy.y,
-            this.lookAtProxy.z
+          // SLERP camera rotation (smooth, no flip)
+          camera.quaternion.slerpQuaternions(
+            startQuaternion,
+            endQuaternion,
+            animProgress.value
           );
 
           // Calculate and emit progress
@@ -725,20 +743,18 @@ export class CameraFlightDirective {
 
       console.log('[CameraFlight] Camera position tween added');
 
-      // Animate lookAt target in parallel
+      // Animate rotation progress for SLERP (0 to 1)
       timeline.to(
-        this.lookAtProxy,
+        animProgress,
         {
-          x: to.lookAt[0],
-          y: to.lookAt[1],
-          z: to.lookAt[2],
+          value: 1,
           duration,
           ease,
         },
         0 // Start at timeline position 0 (parallel with position)
       );
 
-      console.log('[CameraFlight] LookAt tween added');
+      console.log('[CameraFlight] Rotation SLERP tween added');
 
       // Animate FOV if specified in waypoint
       if (to.fov !== undefined && camera instanceof PerspectiveCamera) {
