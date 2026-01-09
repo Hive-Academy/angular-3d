@@ -71,6 +71,14 @@ export const appRoutes: Routes = [
         title: 'Postprocessing | Angular-3D',
       },
       {
+        path: 'postprocessing-advanced',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/sections/postprocessing-advanced-section.component'
+          ),
+        title: 'Postprocessing Advanced | Angular-3D',
+      },
+      {
         path: 'controls',
         loadComponent: () =>
           import(

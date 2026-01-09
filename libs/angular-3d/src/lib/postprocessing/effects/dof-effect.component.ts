@@ -13,7 +13,7 @@ import {
   input,
   inject,
   effect,
-  DestroyRef,
+  OnDestroy,
 } from '@angular/core';
 import { EffectComposerService } from '../effect-composer.service';
 import { SceneService } from '../../canvas/scene.service';
@@ -25,32 +25,32 @@ import { SceneService } from '../../canvas/scene.service';
  * Objects outside the focus range appear blurred, creating
  * realistic depth perception.
  *
- * Must be used inside `a3d-effect-composer`.
+ * Must be used inside a3d-scene-3d.
  *
  * Uses native THREE.PostProcessing with TSL dof() node.
  * Replaces three-stdlib BokehPass.
  *
  * @example
  * ```html
- * <a3d-effect-composer>
+ * <a3d-scene-3d>
  *   <a3d-dof-effect
  *     [focus]="10"
  *     [aperture]="0.025"
  *     [maxblur]="0.01"
  *   />
- * </a3d-effect-composer>
+ * </a3d-scene-3d>
  * ```
  *
  * @example
  * ```html
  * <!-- Shallow depth of field for portrait-style focus -->
- * <a3d-effect-composer>
+ * <a3d-scene-3d>
  *   <a3d-dof-effect
  *     [focus]="5"
  *     [aperture]="0.1"
  *     [maxblur]="0.02"
  *   />
- * </a3d-effect-composer>
+ * </a3d-scene-3d>
  * ```
  */
 @Component({
@@ -59,10 +59,9 @@ import { SceneService } from '../../canvas/scene.service';
   template: '',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DepthOfFieldEffectComponent {
+export class DepthOfFieldEffectComponent implements OnDestroy {
   private readonly composerService = inject(EffectComposerService);
   private readonly sceneService = inject(SceneService);
-  private readonly destroyRef = inject(DestroyRef);
 
   /**
    * Focus distance - distance at which objects are in sharp focus
@@ -123,13 +122,12 @@ export class DepthOfFieldEffectComponent {
         this.sceneService.invalidate();
       }
     });
+  }
 
-    // Cleanup on destroy using DestroyRef pattern
-    this.destroyRef.onDestroy(() => {
-      if (this.effectAdded) {
-        this.composerService.removeDepthOfField();
-        this.effectAdded = false;
-      }
-    });
+  public ngOnDestroy(): void {
+    if (this.effectAdded) {
+      this.composerService.removeDepthOfField();
+      this.effectAdded = false;
+    }
   }
 }

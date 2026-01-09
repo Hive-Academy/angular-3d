@@ -17,26 +17,8 @@ import {
   input,
   inject,
   effect,
-  DestroyRef,
-  afterNextRender,
+  OnDestroy,
 } from '@angular/core';
-import {
-  saturation,
-  float,
-  vec3,
-  vec2,
-  mix,
-  smoothstep,
-  length,
-  uv,
-  Fn,
-  clamp,
-  pow,
-  mul,
-  add,
-  sub,
-} from 'three/tsl';
-import { Node } from 'three/webgpu';
 import { EffectComposerService } from '../effect-composer.service';
 import { SceneService } from '../../canvas/scene.service';
 
@@ -46,66 +28,33 @@ import { SceneService } from '../../canvas/scene.service';
  * Adjusts saturation, gamma, exposure, and vignette.
  * Perfect for creating cinematic looks or correcting scene colors.
  *
- * Must be used inside `a3d-effect-composer`.
+ * Must be used inside a3d-scene-3d.
  *
  * Uses native TSL color operations:
  * - saturation() for color intensity
  * - Manual contrast/brightness via math operations
  * - Custom TSL functions for gamma, exposure, vignette
  *
- * @remarks
- * LUT (Look-Up Table) support is planned for a future version. LUT textures
- * enable complex color transformations by mapping input colors to output colors
- * through a 3D texture lookup, allowing for film-grade color grading presets.
- *
  * @example
  * ```html
- * <a3d-effect-composer>
+ * <a3d-scene-3d>
  *   <a3d-color-grading-effect
  *     [saturation]="1.2"
  *     [contrast]="1.1"
  *     [vignette]="0.3"
  *   />
- * </a3d-effect-composer>
- * ```
- *
- * @example
- * ```html
- * <!-- Moody dark look with desaturated colors -->
- * <a3d-effect-composer>
- *   <a3d-color-grading-effect
- *     [saturation]="0.8"
- *     [contrast]="1.3"
- *     [brightness]="0.9"
- *     [exposure]="0.95"
- *     [vignette]="0.5"
- *   />
- * </a3d-effect-composer>
- * ```
- *
- * @example
- * ```html
- * <!-- Bright and vibrant look for product visualization -->
- * <a3d-effect-composer>
- *   <a3d-color-grading-effect
- *     [saturation]="1.3"
- *     [contrast]="1.05"
- *     [brightness]="1.1"
- *     [exposure]="1.1"
- *     [gamma]="2.4"
- *   />
- * </a3d-effect-composer>
+ * </a3d-scene-3d>
  * ```
  */
 @Component({
   selector: 'a3d-color-grading-effect',
+  standalone: true,
   template: '',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ColorGradingEffectComponent {
+export class ColorGradingEffectComponent implements OnDestroy {
   private readonly composerService = inject(EffectComposerService);
   private readonly sceneService = inject(SceneService);
-  private readonly destroyRef = inject(DestroyRef);
 
   /**
    * Saturation level - controls color intensity
@@ -149,123 +98,56 @@ export class ColorGradingEffectComponent {
    */
   public readonly vignette = input<number>(0);
 
-  private effectName = 'colorGrading';
-  private initialized = false;
+  private effectAdded = false;
 
   public constructor() {
-    afterNextRender(() => {
+    // Add color grading effect when renderer is available
+    effect(() => {
       const renderer = this.sceneService.renderer();
       const scene = this.sceneService.scene();
       const camera = this.sceneService.camera();
 
-      if (renderer && scene && camera) {
+      if (renderer && scene && camera && !this.effectAdded) {
         // Initialize the composer first (if not already done)
         this.composerService.init(renderer, scene, camera);
 
-        // Create color grading TSL effect
-        const colorGradingEffect = this.createColorGradingNode();
+        // Add color grading effect through the service
+        this.composerService.addColorGrading({
+          saturation: this.saturation(),
+          contrast: this.contrast(),
+          brightness: this.brightness(),
+          gamma: this.gamma(),
+          exposure: this.exposure(),
+          vignette: this.vignette(),
+        });
 
-        // Add effect to composer
-        this.composerService.addEffect(this.effectName, colorGradingEffect);
+        this.effectAdded = true;
 
         // Enable the composer to switch render function
         this.composerService.enable();
-        this.initialized = true;
       }
     });
 
     // Update color grading parameters reactively
     effect(() => {
-      // Trigger reactivity on all inputs
-      this.saturation();
-      this.contrast();
-      this.brightness();
-      this.gamma();
-      this.exposure();
-      this.vignette();
-
-      // Only update if initialized
-      if (this.initialized) {
-        // Rebuild effect with new parameters
-        const colorGradingEffect = this.createColorGradingNode();
-        this.composerService.addEffect(this.effectName, colorGradingEffect);
+      if (this.effectAdded) {
+        this.composerService.updateColorGrading({
+          saturation: this.saturation(),
+          contrast: this.contrast(),
+          brightness: this.brightness(),
+          gamma: this.gamma(),
+          exposure: this.exposure(),
+          vignette: this.vignette(),
+        });
         this.sceneService.invalidate();
       }
     });
-
-    // Cleanup on destroy using DestroyRef pattern
-    this.destroyRef.onDestroy(() => {
-      this.composerService.removeEffect(this.effectName);
-    });
   }
 
-  /**
-   * Create TSL color grading effect node
-   *
-   * Applies color operations in order:
-   * 1. Exposure
-   * 2. Saturation
-   * 3. Contrast (manual implementation)
-   * 4. Brightness (manual implementation)
-   * 5. Gamma correction
-   * 6. Vignette
-   *
-   * Note: This is a placeholder effect that shows the pattern.
-   * Full integration requires chaining with the scene pass output.
-   */
-  private createColorGradingNode(): Node {
-    const satValue = this.saturation();
-    const contrastValue = this.contrast();
-    const brightnessValue = this.brightness();
-    const gammaValue = this.gamma();
-    const exposureValue = this.exposure();
-    const vignetteValue = this.vignette();
-
-    // Create TSL function for color grading
-    // This demonstrates the pattern - full implementation would sample
-    // from the previous effect's output texture
-    const colorGradingFn = Fn(() => {
-      // Sample UV coordinates for vignette
-      const uvCoord = uv();
-
-      // Placeholder: In real usage, this would sample from the scene pass
-      // For now, just return a passthrough with vignette effect
-      const baseColor = vec3(1.0, 1.0, 1.0);
-
-      // Use any type to allow reassignment of different TSL node types
-      // TSL operations return various node subclasses (OperatorNode, MathNode, etc.)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let color: any = mul(baseColor, float(exposureValue));
-
-      // 2. Saturation - use TSL saturation function
-      color = saturation(color, float(satValue));
-
-      // 3. Contrast - expand around midpoint (0.5)
-      // contrast = (color - 0.5) * contrastValue + 0.5
-      const midpoint = float(0.5);
-      color = add(mul(sub(color, midpoint), float(contrastValue)), midpoint);
-
-      // 4. Brightness - simple multiplier
-      color = mul(color, float(brightnessValue));
-
-      // 5. Gamma correction - power curve
-      // color = pow(color, 1.0 / gamma)
-      const invGamma = float(1.0 / gammaValue);
-      color = pow(clamp(color, 0.0, 1.0), invGamma);
-
-      // 6. Vignette - darken corners for cinematic effect
-      if (vignetteValue > 0) {
-        const center = sub(uvCoord, vec2(0.5, 0.5));
-        const dist = length(center);
-        const vigStrength = float(1.0 + vignetteValue);
-        const vig = smoothstep(float(0.8), float(0.2), mul(dist, vigStrength));
-        color = mix(color, mul(color, vig), float(vignetteValue));
-      }
-
-      return color;
-    })();
-
-    // Type assertion for return - colorGradingFn is a valid TSL Node
-    return colorGradingFn as unknown as Node;
+  public ngOnDestroy(): void {
+    if (this.effectAdded) {
+      this.composerService.removeColorGrading();
+      this.effectAdded = false;
+    }
   }
 }

@@ -727,6 +727,7 @@ export default class Angular3dLayoutComponent {
       expanded: true,
       tabs: [
         { path: 'postprocessing', label: 'Effects', icon: '✨' },
+        { path: 'postprocessing-advanced', label: 'Cinematic FX', icon: '🎬' },
         { path: 'performance', label: 'Performance', icon: '📊' },
       ],
     },

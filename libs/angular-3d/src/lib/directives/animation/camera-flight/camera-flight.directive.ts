@@ -456,15 +456,25 @@ export class CameraFlightDirective {
 
   /**
    * Start forward flight from current position toward next waypoint.
-   * Called on mouse hold (right-click by default).
+   * Called on mouse hold (left-click by default).
    */
   private async startForwardFlight(): Promise<void> {
     const wps = this.waypoints();
     const currentIdx = this.currentWaypointIndex();
     const nextIdx = currentIdx + 1;
 
+    console.log('[CameraFlight] startForwardFlight called', {
+      currentIdx,
+      nextIdx,
+      waypointCount: wps.length,
+      orbitControlsAvailable: !!this.orbitControls,
+    });
+
     // Validate we can fly forward
-    if (nextIdx >= wps.length || wps.length < 2) return;
+    if (nextIdx >= wps.length || wps.length < 2) {
+      console.warn('[CameraFlight] Cannot fly forward - invalid waypoint index');
+      return;
+    }
 
     const from = wps[currentIdx];
     const to = wps[nextIdx];
@@ -479,15 +489,20 @@ export class CameraFlightDirective {
 
     // Handle reduced motion
     if (this.prefersReducedMotion()) {
+      console.log('[CameraFlight] Reduced motion enabled - jumping to waypoint');
       this.jumpToWaypoint(nextIdx);
       return;
     }
 
     // Create timeline (starts paused for hold-to-fly)
+    console.log('[CameraFlight] Creating flight timeline...');
     const timeline = await this.createFlightTimeline(from, to, 'forward');
     if (timeline) {
       this.timeline = timeline;
       this.timeline.play();
+      console.log('[CameraFlight] Timeline created and playing');
+    } else {
+      console.error('[CameraFlight] Failed to create timeline');
     }
   }
 
@@ -574,19 +589,29 @@ export class CameraFlightDirective {
     direction: 'forward' | 'backward'
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
+    console.log('[CameraFlight] createFlightTimeline', {
+      from: from.id,
+      to: to.id,
+      direction,
+      sceneServiceAvailable: !!this.sceneService,
+    });
+
     const camera = this.sceneService?.camera();
     if (!camera) {
-      console.error('[CameraFlightDirective] Camera not available');
+      console.error('[CameraFlight] Camera not available - sceneService:', !!this.sceneService);
       return null;
     }
+
+    console.log('[CameraFlight] Camera available, position:', camera.position.toArray());
 
     // Dynamic GSAP import for tree-shaking optimization
     let gsap: typeof import('gsap').gsap;
     try {
       const gsapModule = await import('gsap');
       gsap = gsapModule.gsap;
+      console.log('[CameraFlight] GSAP loaded successfully');
     } catch (error) {
-      console.error('[CameraFlightDirective] Failed to load GSAP:', error);
+      console.error('[CameraFlight] Failed to load GSAP:', error);
       // Fallback: jump to destination
       const targetIdx = this.targetWaypointIndex();
       this.jumpToWaypoint(targetIdx);
@@ -595,6 +620,7 @@ export class CameraFlightDirective {
 
     // Safety check: directive may have been destroyed during async import
     if (this.isDestroyed()) {
+      console.warn('[CameraFlight] Directive destroyed during GSAP import');
       this.enableOrbitControls(to.lookAt);
       return null;
     }

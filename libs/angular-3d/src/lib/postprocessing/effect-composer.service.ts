@@ -13,7 +13,22 @@
 
 import { Injectable, OnDestroy, inject, signal } from '@angular/core';
 import * as THREE from 'three/webgpu';
-import { pass } from 'three/tsl';
+import {
+  pass,
+  saturation,
+  float,
+  vec2,
+  mix,
+  smoothstep,
+  length,
+  uv,
+  Fn,
+  clamp,
+  pow,
+  mul,
+  add,
+  sub,
+} from 'three/tsl';
 import { Node } from 'three/webgpu';
 import BloomNode, { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import DepthOfFieldNode, {
@@ -51,6 +66,18 @@ export interface DOFConfig {
   focus: number;
   aperture: number;
   maxBlur: number;
+}
+
+/**
+ * Configuration for color grading effect
+ */
+export interface ColorGradingConfig {
+  saturation: number;
+  contrast: number;
+  brightness: number;
+  gamma: number;
+  exposure: number;
+  vignette: number;
 }
 
 /**
@@ -315,39 +342,40 @@ export class EffectComposerService implements OnDestroy {
    * DOF requires access to depth buffer from scene pass.
    * Parameters:
    * - focus: Focus distance in world units
-   * - aperture: Controls DOF range (smaller = wider focus area)
+   * - aperture: Controls DOF range (larger = more blur, shallower DOF)
    * - maxBlur: Maximum blur intensity
    *
    * @param config DOF configuration (focus, aperture, maxBlur)
    */
   public addDepthOfField(config: DOFConfig): void {
-    if (!this.postProcessing || !this.scenePassNode) {
+    if (!this.postProcessing || !this.scenePassNode || !this.scenePassColor) {
       console.warn('[EffectComposer] Cannot add DOF before init() is called');
       return;
     }
 
-    // Get current output node
-    const currentOutput = this.getCurrentOutput();
-
     // Get depth buffer from scene pass for DOF calculations
     // dof(textureNode, viewZNode, focusDistance, focalLength, bokehScale)
     //
-    // TSL DOF parameters (different from old BokehPass):
+    // TSL DOF parameters:
     // - focusDistance: Distance in world units where objects are in sharp focus
-    // - focalLength: Range of sharpness in world units (larger = more in focus)
-    // - bokehScale: Intensity of the blur effect (0-1 typically, larger = more blur)
+    // - focalLength: How far from focal plane before completely out-of-focus (smaller = more blur)
+    // - bokehScale: Intensity/size of the blur effect (larger = more blur)
     const viewZ = this.scenePassNode.getViewZNode();
 
-    // Convert old BokehPass semantics to TSL DOF:
-    // - focus stays the same (world units)
-    // - aperture → inversely related to focal length (smaller aperture = larger focus range)
-    // - maxBlur → directly maps to bokehScale (but needs much smaller values)
+    // Map our API to TSL DOF:
+    // - focus: Direct mapping to focusDistance
+    // - aperture: Larger aperture = shallower DOF = smaller focalLength
+    //   Camera aperture of 0.1 should give visible blur
+    // - maxBlur: Maps to bokehScale (multiply for more visibility)
     const focusDistance = config.focus;
-    const focalLength = 1.0 / Math.max(config.aperture, 0.001); // Invert aperture
-    const bokehScale = config.maxBlur * 10; // Gentle scaling for blur intensity
+    // Smaller focalLength = objects blur more quickly as they move from focus
+    // Aperture of 0.1 → focalLength of ~2 world units
+    const focalLength = 0.5 / Math.max(config.aperture, 0.001);
+    // bokehScale controls the visual size of the blur circles
+    const bokehScale = config.maxBlur * 100; // Much larger multiplier for visible effect
 
     const dofNode = dof(
-      currentOutput as Node,
+      this.scenePassColor as Node,
       viewZ,
       focusDistance,
       focalLength,
@@ -385,6 +413,105 @@ export class EffectComposerService implements OnDestroy {
       dofNode.dispose();
     }
     this.effectNodes.delete('dof');
+    this.rebuildOutputChain();
+  }
+
+  // Store color grading config for updates
+  private colorGradingConfig: ColorGradingConfig | null = null;
+
+  /**
+   * Add color grading effect
+   *
+   * Color grading applies color transformations to the rendered scene:
+   * - Saturation: Color intensity (0 = grayscale, 1 = normal, >1 = vibrant)
+   * - Contrast: Light/dark difference
+   * - Brightness: Overall lightness
+   * - Gamma: Non-linear brightness curve
+   * - Exposure: Overall scene brightness
+   * - Vignette: Darken corners
+   */
+  public addColorGrading(config: ColorGradingConfig): void {
+    if (!this.postProcessing || !this.scenePassColor) {
+      console.warn('[EffectComposer] Cannot add color grading before init()');
+      return;
+    }
+
+    this.colorGradingConfig = config;
+
+    // Create TSL color grading function that transforms scene color
+    const colorGradingNode = this.createColorGradingNode(config);
+
+    // Store effect node
+    this.effectNodes.set('colorGrading', colorGradingNode);
+
+    // Rebuild output chain
+    this.rebuildOutputChain();
+  }
+
+  /**
+   * Create TSL node for color grading transformations
+   */
+  private createColorGradingNode(config: ColorGradingConfig): Node {
+    const sceneColor = this.scenePassColor;
+
+    // Create TSL function that transforms scene colors
+    const colorGradingFn = Fn(() => {
+      // Start with scene color
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let color: any = sceneColor;
+
+      // 1. Exposure - multiply scene brightness
+      color = mul(color, float(config.exposure));
+
+      // 2. Saturation - use TSL saturation function
+      color = saturation(color, float(config.saturation));
+
+      // 3. Contrast - expand around midpoint (0.5)
+      const midpoint = float(0.5);
+      color = add(mul(sub(color, midpoint), float(config.contrast)), midpoint);
+
+      // 4. Brightness - simple multiplier
+      color = mul(color, float(config.brightness));
+
+      // 5. Gamma correction
+      const invGamma = float(1.0 / config.gamma);
+      color = pow(clamp(color, 0.0, 1.0), invGamma);
+
+      // 6. Vignette - darken corners
+      if (config.vignette > 0) {
+        const uvCoord = uv();
+        const center = sub(uvCoord, vec2(0.5, 0.5));
+        const dist = length(center);
+        const vigStrength = float(1.0 + config.vignette * 2);
+        const vig = smoothstep(float(0.8), float(0.2), mul(dist, vigStrength));
+        color = mix(color, mul(color, vig), float(config.vignette));
+      }
+
+      return color;
+    })();
+
+    return colorGradingFn as unknown as Node;
+  }
+
+  /**
+   * Update color grading parameters
+   */
+  public updateColorGrading(config: ColorGradingConfig): void {
+    if (!this.colorGradingConfig) return;
+
+    // Recreate node with new config
+    this.colorGradingConfig = config;
+    const colorGradingNode = this.createColorGradingNode(config);
+    this.effectNodes.set('colorGrading', colorGradingNode);
+    this.rebuildOutputChain();
+  }
+
+  /**
+   * Remove color grading effect
+   */
+  public removeColorGrading(): void {
+    this.effectNodes.delete('colorGrading');
+    this.colorGradingConfig = null;
     this.rebuildOutputChain();
   }
 
@@ -493,7 +620,19 @@ export class EffectComposerService implements OnDestroy {
     let output: any = this.scenePassColor;
 
     // Reserved effect names that are handled specially
-    const reservedEffects = new Set(['bloom', 'selectiveBloom', 'dof']);
+    const reservedEffects = new Set([
+      'bloom',
+      'selectiveBloom',
+      'dof',
+      'colorGrading',
+    ]);
+
+    // Color grading REPLACES scene color (it reads and transforms the scene)
+    const colorGradingNode = this.effectNodes.get('colorGrading') as Node;
+    if (colorGradingNode) {
+      // Color grading applies transformations to scene color
+      output = colorGradingNode;
+    }
 
     // Add bloom effect (additive compositing)
     const bloomNode = this.effectNodes.get('bloom') as BloomNode;
@@ -511,20 +650,14 @@ export class EffectComposerService implements OnDestroy {
       output = output.add(selectiveBloomNode);
     }
 
-    // Process custom effects (color grading, chromatic aberration, film grain, etc.)
+    // Process other custom effects (chromatic aberration, film grain, etc.)
     // Custom effects are applied AFTER bloom but BEFORE DOF
-    // They are blended with the current output (typically as color modifications)
     for (const [name, effectNode] of this.effectNodes) {
       if (reservedEffects.has(name)) {
         continue; // Skip reserved effects - already handled above
       }
 
-      // Custom effects are TSL color transformation nodes
-      // They return a color value that should blend with the current output
-      // Using mix for subtle blending: output = mix(output, effectOutput, 0.5)
-      // Or multiply for color grading: output = output * effectOutput
-      // For most custom effects, we use additive blend (output + effectOffset)
-      // where effectOffset represents the color adjustment
+      // For most custom effects, we use additive blend
       output = output.add(effectNode);
     }
 

@@ -46,6 +46,9 @@ const COLOR_DEFINITIONS = {
   // Background base colors
   darkBlueGray: '#222244',
   darkNavy: '#1a1a33',
+  spaceFog: '#0a1015',
+  backgroundDark: '#0a0e11',
+  fogBlueGray: '#2a3a4a',
 } as const;
 
 /**

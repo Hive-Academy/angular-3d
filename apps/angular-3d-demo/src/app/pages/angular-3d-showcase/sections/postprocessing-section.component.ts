@@ -288,30 +288,32 @@ import { SCENE_COLORS } from '../../../shared/colors';
               <div
                 class="aspect-video rounded-2xl overflow-hidden bg-background-dark shadow-xl"
               >
-                <a3d-scene-3d [cameraPosition]="[0, 0, 6]">
+                <a3d-scene-3d [cameraPosition]="[0, 0, 10]">
                   <a3d-ambient-light [intensity]="0.3" />
                   <a3d-directional-light
                     [position]="[3, 3, 3]"
                     [intensity]="0.5"
                   />
 
-                  <!-- 3 boxes at different depths -->
+                  <!-- 3 boxes at VERY different depths for visible DOF -->
                   <a3d-box
-                    [position]="[-2, 0, 2]"
+                    [position]="[-2.5, 0, 4]"
                     [color]="colors.pink"
+                    [args]="[1.5, 1.5, 1.5]"
                     rotate3d
                     [rotateConfig]="{ axis: 'y', speed: 15 }"
                   />
                   <a3d-box
                     [position]="[0, 0, 0]"
                     [color]="colors.cyan"
-                    [args]="[1.2, 1.2, 1.2]"
+                    [args]="[1.8, 1.8, 1.8]"
                     rotate3d
                     [rotateConfig]="{ axis: 'y', speed: 15 }"
                   />
                   <a3d-box
-                    [position]="[2, 0, -2]"
+                    [position]="[2.5, 0, -5]"
                     [color]="colors.neonGreen"
+                    [args]="[1.5, 1.5, 1.5]"
                     rotate3d
                     [rotateConfig]="{ axis: 'y', speed: 15 }"
                   />
@@ -321,7 +323,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
             </div>
             <div class="mt-3x p-4x bg-white/5 rounded-lg">
               <p class="text-sm text-text-secondary">
-                All objects equally sharp
+                All objects equally sharp at all depths
               </p>
               <code class="text-xs text-text-tertiary">No DOF effect</code>
             </div>
@@ -338,49 +340,51 @@ import { SCENE_COLORS } from '../../../shared/colors';
               <div
                 class="aspect-video rounded-2xl overflow-hidden bg-background-dark shadow-xl"
               >
-                <a3d-scene-3d [cameraPosition]="[0, 0, 6]">
+                <a3d-scene-3d [cameraPosition]="[0, 0, 10]">
                   <a3d-ambient-light [intensity]="0.3" />
                   <a3d-directional-light
                     [position]="[3, 3, 3]"
                     [intensity]="0.5"
                   />
 
-                  <!-- Same 3 boxes -->
+                  <!-- Same 3 boxes at different depths -->
                   <a3d-box
-                    [position]="[-2, 0, 2]"
+                    [position]="[-2.5, 0, 4]"
                     [color]="colors.pink"
+                    [args]="[1.5, 1.5, 1.5]"
                     rotate3d
                     [rotateConfig]="{ axis: 'y', speed: 15 }"
                   />
                   <a3d-box
                     [position]="[0, 0, 0]"
                     [color]="colors.cyan"
-                    [args]="[1.2, 1.2, 1.2]"
+                    [args]="[1.8, 1.8, 1.8]"
                     rotate3d
                     [rotateConfig]="{ axis: 'y', speed: 15 }"
                   />
                   <a3d-box
-                    [position]="[2, 0, -2]"
+                    [position]="[2.5, 0, -5]"
                     [color]="colors.neonGreen"
+                    [args]="[1.5, 1.5, 1.5]"
                     rotate3d
                     [rotateConfig]="{ axis: 'y', speed: 15 }"
                   />
 
-                  <!-- DOF ENABLED - focus on center box -->
+                  <!-- DOF ENABLED - focus on center box (10 units from camera) -->
                   <a3d-dof-effect
-                    [focus]="6"
-                    [aperture]="0.025"
-                    [maxblur]="0.01"
+                    [focus]="10"
+                    [aperture]="0.15"
+                    [maxblur]="0.05"
                   />
                 </a3d-scene-3d>
               </div>
             </div>
             <div class="mt-3x p-4x bg-white/5 rounded-lg">
               <p class="text-sm text-text-secondary">
-                Center box sharp, foreground/background blurred
+                Center box sharp, near/far objects blurred
               </p>
               <code class="text-xs text-cyan-400"
-                >&lt;a3d-dof-effect [focus]="6" /&gt;</code
+                >&lt;a3d-dof-effect [focus]="10" [aperture]="0.15" /&gt;</code
               >
             </div>
           </div>
@@ -564,9 +568,9 @@ import { SCENE_COLORS } from '../../../shared/colors';
                 />
 
                 <a3d-color-grading-effect
-                  [saturation]="1.2"
-                  [contrast]="1.15"
-                  [vignette]="0.3"
+                  [saturation]="1.5"
+                  [contrast]="1.4"
+                  [vignette]="0.6"
                 />
               </a3d-scene-3d>
             </div>
@@ -594,10 +598,10 @@ import { SCENE_COLORS } from '../../../shared/colors';
                 />
 
                 <a3d-color-grading-effect
-                  [saturation]="0.6"
-                  [contrast]="1.1"
-                  [brightness]="1.1"
-                  [vignette]="0.4"
+                  [saturation]="0.3"
+                  [contrast]="1.2"
+                  [brightness]="0.9"
+                  [vignette]="0.5"
                 />
               </a3d-scene-3d>
             </div>
