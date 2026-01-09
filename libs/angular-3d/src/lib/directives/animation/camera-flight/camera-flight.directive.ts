@@ -394,7 +394,12 @@ export class CameraFlightDirective {
     }
 
     // Create and play timeline (auto-plays, not hold-based)
-    const timeline = await this.createFlightTimeline(from, to, direction);
+    const timeline = await this.createFlightTimeline(
+      from,
+      to,
+      direction,
+      index
+    );
     if (timeline) {
       this.timeline = timeline;
       this.timeline.play();
@@ -501,7 +506,12 @@ export class CameraFlightDirective {
     // Create timeline (starts paused for hold-to-fly)
     console.log('[CameraFlight] Creating flight timeline...');
     try {
-      const timelinePromise = this.createFlightTimeline(from, to, 'forward');
+      const timelinePromise = this.createFlightTimeline(
+        from,
+        to,
+        'forward',
+        nextIdx
+      );
       console.log(
         '[CameraFlight] createFlightTimeline called, awaiting promise...'
       );
@@ -564,7 +574,12 @@ export class CameraFlightDirective {
     }
 
     // Create and play timeline (auto-plays, not hold-based)
-    const timeline = await this.createFlightTimeline(from, to, 'backward');
+    const timeline = await this.createFlightTimeline(
+      from,
+      to,
+      'backward',
+      prevIdx
+    );
     if (timeline) {
       this.timeline = timeline;
       this.timeline.play();
@@ -613,7 +628,8 @@ export class CameraFlightDirective {
   private async createFlightTimeline(
     from: CameraWaypoint,
     to: CameraWaypoint,
-    direction: 'forward' | 'backward'
+    direction: 'forward' | 'backward',
+    toIndex: number // Capture target index to avoid signal timing issues
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
     console.log('[CameraFlight] createFlightTimeline', {
@@ -720,9 +736,12 @@ export class CameraFlightDirective {
           this.sceneService?.invalidate();
         },
         onComplete: () => {
-          console.log('[CameraFlight] Timeline onComplete fired');
-          const targetIndex = this.targetWaypointIndex();
-          this.onWaypointArrival(targetIndex, direction);
+          console.log(
+            '[CameraFlight] Timeline onComplete fired, toIndex:',
+            toIndex
+          );
+          // Use captured toIndex instead of reading signal (avoids timing issues)
+          this.onWaypointArrival(toIndex, direction);
         },
       });
 
