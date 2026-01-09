@@ -1,5 +1,5 @@
 /**
- * SunHeroSectionComponent - Stunning Space Sun Hero
+ * GlassSphereHeroSectionComponent - Stunning Space Sun Hero with Flight Navigation
  *
  * Self-contained hero section with optimized sun effect fixed at center-bottom.
  * Creates a dramatic space scene with smooth 60fps performance.
@@ -12,17 +12,24 @@
  * - Bloom effect for luminous sun glow
  * - Loading progress overlay with cinematic entrance animation
  * - Staggered scene reveals for dramatic effect
+ * - Camera flight navigation between waypoints (hold right-click to fly)
+ * - Warp lines effect during flight transitions
+ * - Dynamic content switching based on active waypoint
  */
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
+  signal,
   viewChild,
 } from '@angular/core';
 import {
   AmbientLightComponent,
   AssetPreloaderService,
   BloomEffectComponent,
+  CameraFlightDirective,
+  CameraWaypoint,
   CinematicEntranceConfig,
   CinematicEntranceDirective,
   DirectionalLightComponent,
@@ -30,6 +37,7 @@ import {
   EnvironmentComponent,
   FireSphereComponent,
   GltfModelComponent,
+  GroundFogComponent,
   LoadingOverlayComponent,
   MouseTracking3dDirective,
   NebulaVolumetricComponent,
@@ -42,6 +50,9 @@ import {
   StarFieldComponent,
   ThrusterFlameComponent,
   tslCausticsTexture,
+  WarpLinesComponent,
+  WaypointNavigationState,
+  WaypointReachedEvent,
 } from '@hive-academy/angular-3d';
 import {
   ScrollAnimationDirective,
@@ -71,8 +82,11 @@ import { SCENE_COLORS } from '../../../shared/colors';
     NodeMaterialDirective,
     OrbitControlsComponent,
     CinematicEntranceDirective,
+    CameraFlightDirective,
     SceneRevealDirective,
     LoadingOverlayComponent,
+    GroundFogComponent,
+    WarpLinesComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -99,20 +113,35 @@ import { SCENE_COLORS } from '../../../shared/colors';
           [cameraPosition]="[0, 0, 16]"
           [cameraFov]="55"
           [backgroundColor]="spaceBackgroundColor"
-          [fogColor]="fogColor"
-          [fogDensity]="fogDensity"
         >
-          <!-- OrbitControls with Cinematic Entrance Animation -->
+          <!-- OrbitControls with Cinematic Entrance and Camera Flight -->
           <a3d-orbit-controls
             a3dCinematicEntrance
             [entranceConfig]="entranceConfig"
             (entranceComplete)="onEntranceComplete()"
             (controlsReady)="onControlsReady($event)"
+            a3dCameraFlight
+            [waypoints]="waypoints"
+            [enabled]="flightEnabled()"
+            (flightStart)="onFlightStart()"
+            (flightEnd)="onFlightEnd()"
+            (waypointReached)="onWaypointReached($event)"
+            (navigationStateChange)="onNavigationStateChange($event)"
             [enableDamping]="true"
             [dampingFactor]="0.05"
             [minDistance]="10"
             [maxDistance]="30"
             [enableZoom]="false"
+          />
+
+          <!-- Warp Lines Effect (controlled by isFlying signal) -->
+          <a3d-warp-lines
+            [intensity]="isFlying() ? 1 : 0"
+            [lineCount]="250"
+            [color]="'#00ffff'"
+            [lineLength]="2.5"
+            [stretchMultiplier]="6"
+            [spreadRadius]="25"
           />
 
           <!-- Ambient fill light - reduced for deeper shadows -->
@@ -233,6 +262,22 @@ import { SCENE_COLORS } from '../../../shared/colors';
             [edgePulseAmount]="0.2"
           />
 
+          <!-- Atmospheric ground fog - far left, closer to camera -->
+          <a3d-ground-fog
+            [position]="[-25, 0, -5]"
+            [width]="40"
+            [depth]="30"
+            [height]="20"
+            [color]="groundFogColor"
+            [opacity]="0.6"
+            [density]="1.5"
+            [noiseScale]="0.02"
+            [edgeSoftness]="0.35"
+            [enableDrift]="true"
+            [driftSpeed]="0.15"
+            [driftDirection]="[0.3, 0.05, 0.1]"
+          />
+
           <!-- Flying Robot with scene reveal - uses (loaded) event for manual thruster attachment -->
           <a3d-gltf-model
             a3dSceneReveal
@@ -290,6 +335,17 @@ import { SCENE_COLORS } from '../../../shared/colors';
             [nozzleRadius]="15"
           />
 
+          <!-- Destination Sphere - visible when not at waypoint 1 -->
+          @if (activeWaypoint() !== 1) {
+          <a3d-sphere
+            [args]="[1.5, 32, 32]"
+            [position]="waypoints[1].lookAt"
+            [color]="'#4a90d9'"
+            [emissive]="'#1a3050'"
+            [emissiveIntensity]="0.5"
+          />
+          }
+
           <!-- Bloom for luminous sun glow -->
           <a3d-effect-composer [enabled]="true">
             <a3d-bloom-effect
@@ -307,6 +363,8 @@ import { SCENE_COLORS } from '../../../shared/colors';
         scrollAnimation
         [scrollConfig]="scrollContentConfig"
       >
+        <!-- Waypoint 0: Angular 3D Content -->
+        @if (showContent() && activeWaypoint() === 0) {
         <!-- Badge -->
         <div
           class="mb-6"
@@ -368,6 +426,71 @@ import { SCENE_COLORS } from '../../../shared/colors';
           </span>
           }
         </div>
+        }
+
+        <!-- Waypoint 1: GSAP ScrollTrigger Content -->
+        @if (showContent() && activeWaypoint() === 1) {
+        <!-- Badge -->
+        <div
+          class="mb-6"
+          viewportAnimation
+          [viewportConfig]="viewportBadgeConfig"
+        >
+          <span
+            class="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 bg-purple-500/10 backdrop-blur-md rounded-full text-xs sm:text-sm font-medium border border-purple-500/30 shadow-lg shadow-purple-500/10"
+          >
+            <span class="relative flex h-2 w-2 sm:h-3 sm:w-3">
+              <span
+                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-500 opacity-75"
+              ></span>
+              <span
+                class="relative inline-flex rounded-full h-2 w-2 sm:h-3 sm:w-3 bg-purple-500"
+              ></span>
+            </span>
+            <span class="text-purple-400">Angular + GSAP ScrollTrigger</span>
+          </span>
+        </div>
+
+        <!-- Main Title -->
+        <h1
+          class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 sm:mb-8 leading-none tracking-tight"
+          viewportAnimation
+          [viewportConfig]="viewportTitleConfig"
+        >
+          <span class="block p-2 text-white drop-shadow-lg">
+            Scroll-Driven
+          </span>
+          <span
+            class="block bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 bg-clip-text text-transparent"
+          >
+            Animations
+          </span>
+        </h1>
+
+        <!-- Subtitle -->
+        <p
+          class="text-base font-medium sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto mb-4 sm:mb-6 leading-relaxed"
+          viewportAnimation
+          [viewportConfig]="viewportSubtitleConfig"
+        >
+          Create stunning scroll-driven animations with declarative directives.
+        </p>
+
+        <!-- Feature Pills -->
+        <div
+          class="flex flex-wrap gap-2 sm:gap-3 justify-center mb-8 sm:mb-12"
+          viewportAnimation
+          [viewportConfig]="viewportPillsConfig"
+        >
+          @for (pill of gsapFeaturePills; track pill) {
+          <span
+            class="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/5 text-purple-400 rounded-full text-xs sm:text-sm font-semibold border border-purple-500/20"
+          >
+            {{ pill }}
+          </span>
+          }
+        </div>
+        }
       </div>
     </section>
   `,
@@ -401,8 +524,106 @@ import { SCENE_COLORS } from '../../../shared/colors';
   ],
 })
 export class GlassSphereHeroSectionComponent {
-  /** Feature pills for hero section */
+  /** Feature pills for hero section - waypoint 0 */
   protected readonly featurePills = ['WebGPU', 'TSL Shaders', 'Signals'];
+
+  /** Feature pills for GSAP section - waypoint 1 */
+  protected readonly gsapFeaturePills = [
+    '10+ Built-in Effects',
+    'SSR-Safe',
+    'TypeScript-First',
+  ];
+
+  // =========================================================================
+  // FLIGHT NAVIGATION STATE (Signal-based)
+  // =========================================================================
+
+  /** Current active waypoint index */
+  protected readonly activeWaypoint = signal(0);
+
+  /** Whether camera is currently in flight */
+  protected readonly isFlying = signal(false);
+
+  /** Whether user can fly forward to next waypoint */
+  protected readonly canFlyForward = signal(true);
+
+  /** Whether user can fly backward to previous waypoint */
+  protected readonly canFlyBackward = signal(false);
+
+  /** Track if user has flown at least once (for hint visibility) */
+  protected readonly hasFlownOnce = signal(false);
+
+  /** Enable flight after entrance animation completes */
+  protected readonly flightEnabled = signal(false);
+
+  /** Computed: show content only when not actively flying */
+  protected readonly showContent = computed(() => !this.isFlying());
+
+  /** Computed: show flight hint before first flight and after entrance completes */
+  protected readonly showFlightHint = computed(
+    () =>
+      !this.hasFlownOnce() &&
+      this.flightEnabled() &&
+      this.preloadState.isReady()
+  );
+
+  // =========================================================================
+  // WAYPOINT CONFIGURATION
+  // =========================================================================
+
+  /** Camera waypoints for flight navigation */
+  protected readonly waypoints: CameraWaypoint[] = [
+    {
+      id: 'hero-main',
+      position: [0, 0, 16],
+      lookAt: [0, 0, 0],
+      duration: 2,
+      ease: 'power2.inOut',
+    },
+    {
+      id: 'gsap-destination',
+      position: [-15, 3, 8],
+      lookAt: [-20, 2, -5],
+      duration: 2.5,
+      ease: 'power2.inOut',
+    },
+  ];
+
+  /** Content configuration for each waypoint */
+  protected readonly waypointContent: Record<
+    number,
+    {
+      badge: string;
+      badgeColor: string;
+      title: [string, string];
+      subtitle: string;
+      pills: string[];
+      gradient: string;
+    }
+  > = {
+    0: {
+      badge: 'Angular 3D',
+      badgeColor: 'neon-green',
+      title: ['Build Stunning', '3D Experiences'],
+      subtitle:
+        'Create immersive web experiences with WebGPU-powered 3D graphics and smooth scroll animations.',
+      pills: ['WebGPU', 'TSL Shaders', 'Signals'],
+      gradient: 'from-neon-green via-primary-500 to-neon-blue',
+    },
+    1: {
+      badge: 'Angular + GSAP ScrollTrigger',
+      badgeColor: 'purple-500',
+      title: ['Scroll-Driven', 'Animations'],
+      subtitle:
+        'Create stunning scroll-driven animations with declarative directives.',
+      pills: ['10+ Built-in Effects', 'SSR-Safe', 'TypeScript-First'],
+      gradient: 'from-purple-500 via-pink-500 to-cyan-500',
+    },
+  };
+
+  // =========================================================================
+  // SCENE COLORS AND POSITIONS
+  // =========================================================================
 
   /** Dark space background color (hex number for Three.js) */
   protected readonly spaceBackgroundColor = SCENE_COLORS.darkBlueGray;
@@ -410,8 +631,11 @@ export class GlassSphereHeroSectionComponent {
   protected readonly secondaryColor = SCENE_COLORS.indigo;
 
   /** Scene-level atmospheric fog (FogExp2 for space depth) */
-  protected readonly fogColor = 0x0a0e11; // Match background-dark
+  protected readonly fogColor = SCENE_COLORS.spaceFog;
   protected readonly fogDensity = 0.012; // Subtle atmospheric depth
+
+  /** Ground fog color - blue-gray for atmospheric depth */
+  protected readonly groundFogColor = SCENE_COLORS.fogBlueGray;
 
   /**
    * Sun position: FIXED at center-bottom
@@ -452,6 +676,9 @@ export class GlassSphereHeroSectionComponent {
 
   // ViewChild for cinematic entrance directive (to set orbit controls)
   private readonly cinematicEntrance = viewChild(CinematicEntranceDirective);
+
+  // ViewChild for camera flight directive (to set orbit controls)
+  private readonly cameraFlight = viewChild(CameraFlightDirective);
 
   /** Preload state for the robot model */
   protected readonly preloadState = this.preloader.preload([
@@ -525,7 +752,7 @@ export class GlassSphereHeroSectionComponent {
   };
 
   /**
-   * Handle OrbitControls ready event - connect to cinematic entrance directive
+   * Handle OrbitControls ready event - connect to cinematic entrance and camera flight directives
    */
   protected onControlsReady(
     controls: import('three-stdlib').OrbitControls
@@ -533,6 +760,12 @@ export class GlassSphereHeroSectionComponent {
     const entrance = this.cinematicEntrance();
     if (entrance) {
       entrance.setOrbitControls(controls);
+    }
+
+    // Also set controls on camera flight directive
+    const flight = this.cameraFlight();
+    if (flight) {
+      flight.setOrbitControls(controls);
     }
   }
 
@@ -542,6 +775,39 @@ export class GlassSphereHeroSectionComponent {
   protected async onEntranceComplete(): Promise<void> {
     // Trigger staggered reveal of scene elements
     await this.staggerService.revealGroup('hero', 200);
+
+    // Enable camera flight after entrance animation completes
+    this.flightEnabled.set(true);
+  }
+
+  // =========================================================================
+  // FLIGHT NAVIGATION EVENT HANDLERS
+  // =========================================================================
+
+  /** Handle flight start event */
+  protected onFlightStart(): void {
+    this.isFlying.set(true);
+    this.hasFlownOnce.set(true);
+  }
+
+  /** Handle flight end event */
+  protected onFlightEnd(): void {
+    // isFlying stays true until waypointReached to prevent content flash
+    // This is intentionally left here for documentation purposes
+  }
+
+  /** Handle waypoint arrival */
+  protected onWaypointReached(event: WaypointReachedEvent): void {
+    this.activeWaypoint.set(event.index);
+    this.isFlying.set(false);
+    this.canFlyForward.set(event.index < this.waypoints.length - 1);
+    this.canFlyBackward.set(event.index > 0);
+  }
+
+  /** Handle navigation state changes */
+  protected onNavigationStateChange(state: WaypointNavigationState): void {
+    this.canFlyForward.set(state.canFlyForward);
+    this.canFlyBackward.set(state.canFlyBackward);
   }
 
   /**
