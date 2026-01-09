@@ -496,13 +496,20 @@ export class CameraFlightDirective {
 
     // Create timeline (starts paused for hold-to-fly)
     console.log('[CameraFlight] Creating flight timeline...');
-    const timeline = await this.createFlightTimeline(from, to, 'forward');
-    if (timeline) {
-      this.timeline = timeline;
-      this.timeline.play();
-      console.log('[CameraFlight] Timeline created and playing');
-    } else {
-      console.error('[CameraFlight] Failed to create timeline');
+    try {
+      const timeline = await this.createFlightTimeline(from, to, 'forward');
+      console.log('[CameraFlight] createFlightTimeline returned:', !!timeline);
+
+      if (timeline) {
+        this.timeline = timeline;
+        console.log('[CameraFlight] About to call timeline.play()...');
+        this.timeline.play();
+        console.log('[CameraFlight] Timeline created and playing!');
+      } else {
+        console.error('[CameraFlight] Failed to create timeline - returned null');
+      }
+    } catch (error) {
+      console.error('[CameraFlight] Error in startForwardFlight after createFlightTimeline:', error);
     }
   }
 
