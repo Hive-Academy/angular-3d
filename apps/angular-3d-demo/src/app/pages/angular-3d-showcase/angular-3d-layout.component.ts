@@ -715,6 +715,7 @@ export default class Angular3dLayoutComponent {
       tabs: [
         { path: 'directives', label: 'Directives', icon: '🔄' },
         { path: 'controls', label: 'Controls', icon: '🎮' },
+        { path: 'camera-flight', label: 'Camera Flight', icon: '🚀' },
         { path: 'loading-entrance', label: 'Loading & Entrance', icon: '🎬' },
         { path: 'space-station', label: 'Space Station', icon: '🛸' },
       ],

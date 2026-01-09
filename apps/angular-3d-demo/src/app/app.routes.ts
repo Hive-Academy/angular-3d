@@ -87,6 +87,14 @@ export const appRoutes: Routes = [
         title: 'Controls | Angular-3D',
       },
       {
+        path: 'camera-flight',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/sections/camera-flight-section.component'
+          ),
+        title: 'Camera Flight | Angular-3D',
+      },
+      {
         path: 'performance',
         loadComponent: () =>
           import(
