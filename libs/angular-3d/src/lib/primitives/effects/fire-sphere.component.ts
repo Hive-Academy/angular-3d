@@ -119,6 +119,17 @@ export class FireSphereComponent {
   public readonly lacunarity = input<number>(1.8);
 
   // ========================================================================
+  // Scene Integration
+  // ========================================================================
+
+  /**
+   * Enable scene fog support for this material.
+   * When true, the material will be affected by scene.fog.
+   * Default: false (fire effects typically don't use fog)
+   */
+  public readonly fog = input<boolean>(false);
+
+  // ========================================================================
   // Internal State
   // ========================================================================
 
@@ -179,7 +190,11 @@ export class FireSphereComponent {
     const extendedRadius = qualityMode === 'quality' ? radius * 1.5 : radius;
     const segments = qualityMode === 'quality' ? 32 : 64;
 
-    this.sphereGeometry = new THREE.SphereGeometry(extendedRadius, segments, segments);
+    this.sphereGeometry = new THREE.SphereGeometry(
+      extendedRadius,
+      segments,
+      segments
+    );
 
     // Create material based on quality mode
     this.sphereMaterial = new THREE.MeshBasicNodeMaterial();
@@ -219,7 +234,9 @@ export class FireSphereComponent {
     this.sphereMaterial.transparent = true;
     this.sphereMaterial.depthWrite = false;
     this.sphereMaterial.blending = THREE.AdditiveBlending;
-    this.sphereMaterial.side = qualityMode === 'quality' ? THREE.DoubleSide : THREE.FrontSide;
+    this.sphereMaterial.side =
+      qualityMode === 'quality' ? THREE.DoubleSide : THREE.FrontSide;
+    this.sphereMaterial.fog = this.fog(); // Controlled by parent input
 
     this.sphereMesh = new THREE.Mesh(this.sphereGeometry, this.sphereMaterial);
   }

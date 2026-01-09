@@ -700,6 +700,9 @@ export class GlassSphereHeroSectionComponent {
   // ViewChild for camera flight directive (to set orbit controls)
   private readonly cameraFlight = viewChild(CameraFlightDirective);
 
+  // Store orbit controls reference for flight coordination
+  private orbitControlsRef: import('three-stdlib').OrbitControls | null = null;
+
   /** Preload state for the robot model */
   protected readonly preloadState = this.preloader.preload([
     { url: '3d/mini_robot.glb', type: 'gltf' },
@@ -786,15 +789,22 @@ export class GlassSphereHeroSectionComponent {
   protected onControlsReady(
     controls: import('three-stdlib').OrbitControls
   ): void {
+    // Store controls reference for later use
+    this.orbitControlsRef = controls;
+
+    // Connect to cinematic entrance directive
     const entrance = this.cinematicEntrance();
     if (entrance) {
       entrance.setOrbitControls(controls);
     }
 
-    // Also set controls on camera flight directive
+    // Connect to camera flight directive
     const flight = this.cameraFlight();
     if (flight) {
       flight.setOrbitControls(controls);
+    } else {
+      // viewChild might not be resolved yet - will be set when flight is enabled
+      console.log('[HeroSection] CameraFlight directive not yet available, will set controls when flight enabled');
     }
   }
 
@@ -804,6 +814,19 @@ export class GlassSphereHeroSectionComponent {
   protected async onEntranceComplete(): Promise<void> {
     // Trigger staggered reveal of scene elements
     await this.staggerService.revealGroup('hero', 200);
+
+    // Ensure camera flight directive has orbit controls reference
+    // (viewChild might not have been resolved when controlsReady fired)
+    const flight = this.cameraFlight();
+    if (flight && this.orbitControlsRef) {
+      flight.setOrbitControls(this.orbitControlsRef);
+    }
+
+    // Disable OrbitControls rotation to prevent conflict with left-click flight
+    // The flight uses left-click, and OrbitControls also uses left-click for rotation
+    if (this.orbitControlsRef) {
+      this.orbitControlsRef.enableRotate = false;
+    }
 
     // Enable camera flight after entrance animation completes
     this.flightEnabled.set(true);

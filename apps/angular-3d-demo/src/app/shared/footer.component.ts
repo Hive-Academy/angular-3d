@@ -1,13 +1,14 @@
+import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-footer',
-  imports: [RouterLink],
+  imports: [RouterLink, NgOptimizedImage],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <footer
-      class="relative bg-background-dark text-white py-12x mt-20x border-t border-neon-green/20"
+      class="relative bg-background-dark text-white py-12x  border-t border-neon-green/20"
     >
       <!-- Subtle glow effect at top border -->
       <div
@@ -21,7 +22,14 @@ import { RouterLink } from '@angular/router';
         <div class="grid md:grid-cols-4 gap-8x mb-8x">
           <!-- Column 1: Branding with Logo -->
           <div>
-            <img src="/logo.png" alt="Hive Academy" class="h-12 w-auto mb-4x" />
+            <img
+              ngSrc="/logo.png"
+              alt="Hive Academy"
+              width="90"
+              height="60"
+              class="mb-4x"
+              priority
+            />
             <p class="text-body-md text-text-secondary">
               Angular libraries for 3D and animation experiences
             </p>
