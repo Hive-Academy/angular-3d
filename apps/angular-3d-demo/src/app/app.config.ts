@@ -3,7 +3,11 @@ import {
   provideBrowserGlobalErrorListeners,
   provideZoneChangeDetection,
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import {
+  provideRouter,
+  withViewTransitions,
+  withInMemoryScrolling,
+} from '@angular/router';
 import { provideGsap, provideLenis } from '@hive-academy/angular-gsap';
 import { appRoutes } from './app.routes';
 
@@ -11,7 +15,14 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(appRoutes),
+    provideRouter(
+      appRoutes,
+      withViewTransitions(),
+      withInMemoryScrolling({
+        scrollPositionRestoration: 'top',
+        anchorScrolling: 'enabled',
+      })
+    ),
 
     // GSAP with global configuration
     provideGsap({

@@ -27,3 +27,9 @@ export {
 
 // Camera flight navigation - waypoint-based camera animation with hold-to-fly controls
 export * from './camera-flight';
+
+// Object flight navigation - waypoint-based object animation
+export * from './object-flight';
+
+// Camera shake effects - configurable camera shake for impact and transitions
+export * from './camera-shake';

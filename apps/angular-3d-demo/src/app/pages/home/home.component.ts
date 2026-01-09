@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { GlassSphereHeroSectionComponent } from './sections/glass-sphere-hero-section.component';
+import { HeroSectionComponent } from './sections/hero-section.component';
 import { LibraryOverviewSectionV2Component } from './sections/library-overview-section-v2.component';
 import { CtaSectionComponent } from './sections/cta-section.component';
 import { ClaudeSkillsShowcaseSectionComponent } from './sections/claude-skills-showcase-section.component';
@@ -9,7 +9,7 @@ import { PerformanceDebugComponent } from '../../shared/components/performance-d
  * Home Page Component
  *
  * Landing page with four sections:
- * - Glass Sphere Hero (eagerly loaded - above the fold)
+ * - Hero (eagerly loaded - above the fold)
  * - CTA section (deferred - lightweight CSS animations)
  * - Claude Skills Showcase (deferred - heavy 3D scene)
  * - Library Overview v2 (deferred - static content)
@@ -18,7 +18,7 @@ import { PerformanceDebugComponent } from '../../shared/components/performance-d
 @Component({
   selector: 'app-home',
   imports: [
-    GlassSphereHeroSectionComponent,
+    HeroSectionComponent,
     ClaudeSkillsShowcaseSectionComponent,
     LibraryOverviewSectionV2Component,
     CtaSectionComponent,
@@ -29,7 +29,7 @@ import { PerformanceDebugComponent } from '../../shared/components/performance-d
     <app-performance-debug />
 
     <!-- Hero Section - Eagerly loaded (above the fold) -->
-    <app-glass-sphere-hero-section />
+    <app-hero-section />
 
     <!-- CTA Section - Deferred with 150px prefetch margin -->
     <section class="min-h-screen">

@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   signal,
   viewChild,
 } from '@angular/core';
@@ -85,32 +86,32 @@ import { SCENE_COLORS } from '../../../shared/colors';
                 [color]="colors.white"
               />
 
-              <!-- Waypoint Markers -->
+              <!-- Waypoint Markers (positioned in front of camera, visible from previous waypoint) -->
               <!-- Waypoint 0: Start (Front) -->
               <a3d-sphere
-                [position]="waypoints[0].position"
-                [scale]="[0.3, 0.3, 0.3]"
+                [position]="markerPositions()[0]"
+                [scale]="[0.5, 0.5, 0.5]"
                 [color]="colors.emerald"
               />
 
               <!-- Waypoint 1: Side (Right) -->
               <a3d-sphere
-                [position]="waypoints[1].position"
-                [scale]="[0.3, 0.3, 0.3]"
+                [position]="markerPositions()[1]"
+                [scale]="[0.5, 0.5, 0.5]"
                 [color]="colors.amber"
               />
 
               <!-- Waypoint 2: Back -->
               <a3d-sphere
-                [position]="waypoints[2].position"
-                [scale]="[0.3, 0.3, 0.3]"
+                [position]="markerPositions()[2]"
+                [scale]="[0.5, 0.5, 0.5]"
                 [color]="colors.pink"
               />
 
               <!-- Waypoint 3: Other Side (Left) -->
               <a3d-sphere
-                [position]="waypoints[3].position"
-                [scale]="[0.3, 0.3, 0.3]"
+                [position]="markerPositions()[3]"
+                [scale]="[0.5, 0.5, 0.5]"
                 [color]="colors.cyan"
               />
 
@@ -363,6 +364,36 @@ export default class CameraFlightSectionComponent {
 
   /** Angles for orbit path markers (every 30 degrees) */
   public readonly orbitAngles = [30, 60, 120, 150, 210, 240, 300, 330];
+
+  /**
+   * Calculate marker position offset from waypoint (visible from camera position).
+   * Places marker 3 units in front of the camera position, toward the lookAt point.
+   */
+  private getMarkerPosition(
+    waypoint: CameraWaypoint
+  ): [number, number, number] {
+    const pos = waypoint.position;
+    const lookAt = waypoint.lookAt;
+
+    // Calculate direction from position to lookAt
+    const dx = lookAt[0] - pos[0];
+    const dy = lookAt[1] - pos[1];
+    const dz = lookAt[2] - pos[2];
+    const len = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+    // Place marker 3 units in front of camera position (toward lookAt)
+    const offset = 3;
+    return [
+      pos[0] + (dx / len) * offset,
+      pos[1] + (dy / len) * offset,
+      pos[2] + (dz / len) * offset,
+    ];
+  }
+
+  /** Marker positions computed from waypoints (placed in front of camera) */
+  public readonly markerPositions = computed(() =>
+    this.waypoints.map((wp) => this.getMarkerPosition(wp))
+  );
 
   /** Calculate position on orbit path for a given angle */
   public getOrbitPosition(angleDeg: number): [number, number, number] {

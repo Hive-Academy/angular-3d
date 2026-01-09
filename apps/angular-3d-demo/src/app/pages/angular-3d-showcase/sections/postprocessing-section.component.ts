@@ -1,16 +1,15 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
-  Scene3dComponent,
-  BoxComponent,
-  TorusComponent,
   AmbientLightComponent,
-  DirectionalLightComponent,
   BloomEffectComponent,
-  DepthOfFieldEffectComponent,
-  SsaoEffectComponent,
+  BoxComponent,
   ColorGradingEffectComponent,
-  Glow3dDirective,
+  DepthOfFieldEffectComponent,
+  DirectionalLightComponent,
   Rotate3dDirective,
+  Scene3dComponent,
+  SsaoEffectComponent,
+  TorusComponent,
 } from '@hive-academy/angular-3d';
 import { SCENE_COLORS } from '../../../shared/colors';
 
@@ -31,7 +30,6 @@ import { SCENE_COLORS } from '../../../shared/colors';
     DepthOfFieldEffectComponent,
     SsaoEffectComponent,
     ColorGradingEffectComponent,
-    Glow3dDirective,
     Rotate3dDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

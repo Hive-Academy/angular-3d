@@ -1,11 +1,24 @@
-camera-flight.directive.ts:466 [CameraFlight] startForwardFlight called {currentIdx: 0, nextIdx: 1, waypointCount: 2, orbitControlsAvailable: true}
-camera-flight.directive.ts:498 [CameraFlight] Creating flight timeline...
-camera-flight.directive.ts:592 [CameraFlight] createFlightTimeline {from: 'hero-main', to: 'gsap-destination', direction: 'forward', sceneServiceAvailable: true}
-camera-flight.directive.ts:605 [CameraFlight] Camera available, position: (3) [0, 9.797174393178826e-16, 16]
-camera-flight.directive.ts:612 [CameraFlight] GSAP loaded successfully
-camera-flight.directive.ts:631 [CameraFlight] Creating timeline with {duration: 2.5, ease: 'power2.inOut', fromPosition: Array(3), toPosition: Array(3), fromLookAt: Array(3), …}
-camera-flight.directive.ts:646 [CameraFlight] About to create gsap.timeline...
-camera-flight.directive.ts:678 [CameraFlight] gsap.timeline() created
-camera-flight.directive.ts:693 [CameraFlight] Camera position tween added
-camera-flight.directive.ts:708 [CameraFlight] LookAt tween added
-camera-flight.directive.ts:725 [CameraFlight] Timeline created successfully, duration: 2.5
+debug_node.mjs:18311 Angular is running in development mode.
+gltf-model.component.ts:238 [GltfModelComponent] Conditions not met for attachment
+content_script_bundle.js:1 Attempting handshake with backend Fri Jan 09 2026 19:02:25 GMT+0200 (Eastern European Standard Time)
+gltf-model.component.ts:238 [GltfModelComponent] Conditions not met for attachment
+gltf-model.component.ts:238 [GltfModelComponent] Conditions not met for attachment
+camera-flight.directive.ts:476 [CameraFlight] startForwardFlight called {currentIdx: 0, nextIdx: 1, waypointCount: 3, orbitControlsAvailable: true}
+camera-flight.directive.ts:512 [CameraFlight] Creating flight timeline...
+camera-flight.directive.ts:640 [CameraFlight] createFlightTimeline {from: 'hero-angular', to: 'arc-transition', direction: 'forward', sceneServiceAvailable: true}
+camera-flight.directive.ts:656 [CameraFlight] Camera available, position: (3) [0, 1.9999999999999978, 20]
+camera-flight.directive.ts:520 [CameraFlight] createFlightTimeline called, awaiting promise...
+camera-flight.directive.ts:666 [CameraFlight] GSAP loaded successfully
+camera-flight.directive.ts:685 [CameraFlight] Creating timeline with {duration: 2.2, ease: 'power2.inOut', fromPosition: Array(3), toPosition: Array(3), fromLookAt: Array(3), …}
+camera-flight.directive.ts:718 [CameraFlight] About to create gsap.timeline...
+camera-flight.directive.ts:753 [CameraFlight] gsap.timeline() created
+camera-flight.directive.ts:768 [CameraFlight] Camera position tween added
+camera-flight.directive.ts:781 [CameraFlight] Rotation SLERP tween added
+camera-flight.directive.ts:798 [CameraFlight] Timeline created successfully, duration: 2.2
+camera-flight.directive.ts:805 [CameraFlight] Playing timeline directly...
+camera-flight.directive.ts:808 [CameraFlight] Timeline.play() called!
+camera-flight.directive.ts:744 [CameraFlight] Timeline onComplete fired, toIndex: 1
+camera-flight.directive.ts:526 [CameraFlight] Promise resolved with: true
+camera-flight.directive.ts:531 [CameraFlight] await completed, timeline: true
+camera-flight.directive.ts:535 [CameraFlight] About to call timeline.play()...
+camera-flight.directive.ts:537 [CameraFlight] Timeline created and playing!

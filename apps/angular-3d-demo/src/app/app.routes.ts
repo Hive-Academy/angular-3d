@@ -106,7 +106,7 @@ export const appRoutes: Routes = [
         path: 'loading-entrance',
         loadComponent: () =>
           import(
-            './pages/home/sections/loading-entrance-demo-section.component'
+            './pages/angular-3d-showcase/sections/loading-entrance-demo-section.component'
           ).then((m) => m.LoadingEntranceDemoSectionComponent),
         title: 'Loading & Entrance | Angular-3D',
       },
@@ -114,7 +114,7 @@ export const appRoutes: Routes = [
         path: 'space-station',
         loadComponent: () =>
           import(
-            './pages/home/sections/space-station-demo-section.component'
+            './pages/angular-3d-showcase/sections/space-station-demo-section.component'
           ).then((m) => m.SpaceStationDemoSectionComponent),
         title: 'Space Station | Angular-3D',
       },

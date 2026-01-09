@@ -1,17 +1,18 @@
 /**
- * @fileoverview WarpLinesComponent - Speed line effect for camera flight navigation.
+ * @fileoverview WarpLinesComponent - Hyperspace tunnel effect for navigation.
  *
  * Creates a dynamic warp speed line effect using InstancedMesh with TSL materials.
- * Lines are distributed in a cylinder around the camera path and stretch based
- * on the intensity input, creating a sense of high-speed movement.
+ * Lines radiate from a focal point (center or shifted by direction), creating
+ * the classic sci-fi "hyperspace tunnel" visual effect.
  *
  * Features:
  * - WebGPU-compatible using MeshBasicNodeMaterial with TSL opacity nodes
  * - InstancedMesh for single draw call performance (200+ lines)
+ * - Radial lines that emanate from a focal point
+ * - Direction-aware: focal point shifts based on movement direction
  * - Smooth intensity transitions with configurable duration
  * - Additive blending for glow effect
- * - Lazy resource creation (mesh created only when intensity > 0)
- * - Proper resource disposal when intensity returns to 0
+ * - Lines move radially outward for true 3D depth feeling
  *
  * @module warp-lines
  */
@@ -26,43 +27,49 @@ import {
 } from '@angular/core';
 import { afterNextRender } from '@angular/core';
 import * as THREE from 'three/webgpu';
-import { uv, float, smoothstep, sub, length, vec2, mul, abs } from 'three/tsl';
+import { uv, float, smoothstep, sub, abs, mul } from 'three/tsl';
 import { NG_3D_PARENT } from '../../../types/tokens';
 import { RenderLoopService } from '../../../render-loop/render-loop.service';
 
 /**
- * WarpLinesComponent - Speed line effect for camera flight navigation.
+ * Line data for radial warp effect.
+ */
+interface WarpLine {
+  /** Angle from center (radians) */
+  angle: number;
+  /** Distance from center (0-1 normalized, then scaled by radius) */
+  distance: number;
+  /** Z depth position */
+  z: number;
+  /** Random offset for variation */
+  angleOffset: number;
+  /** Speed multiplier for this line */
+  speedMult: number;
+}
+
+/**
+ * WarpLinesComponent - Hyperspace tunnel effect for navigation.
  *
- * Creates elongated lines that stretch based on intensity, simulating
- * the classic sci-fi "warp speed" visual effect. Uses InstancedMesh
- * for optimal performance with hundreds of lines.
- *
- * The component lazily creates Three.js resources when intensity first
- * goes above 0, and disposes them when intensity returns to 0 and the
- * fade-out completes. This ensures minimal memory usage when the effect
- * is not active.
+ * Creates lines that radiate from a focal point, simulating the classic
+ * sci-fi "warp speed" or "hyperspace jump" visual effect.
  *
  * @example
  * ```html
- * <!-- Basic usage - intensity controlled by signal -->
+ * <!-- Basic usage -->
  * <a3d-warp-lines
  *   [intensity]="isFlying() ? 1 : 0"
+ *   [direction]="flyingRight ? 1 : -1"
  * />
  *
  * <!-- Customized appearance -->
  * <a3d-warp-lines
  *   [intensity]="flightProgress()"
- *   [lineCount]="250"
+ *   [direction]="navigationDirection()"
+ *   [lineCount]="300"
  *   [color]="'#00ffff'"
- *   [lineLength]="2.5"
- *   [stretchMultiplier]="6"
- *   [spreadRadius]="25"
- *   [transitionDuration]="400"
+ *   [speed]="60"
  * />
  * ```
- *
- * @selector a3d-warp-lines
- * @standalone true
  */
 @Component({
   selector: 'a3d-warp-lines',
@@ -77,132 +84,101 @@ export class WarpLinesComponent {
 
   /**
    * Effect intensity from 0 (off) to 1 (full).
-   * Controls both opacity and line stretch.
-   *
-   * - 0: Lines are invisible and resources may be disposed
-   * - 0.5: Lines at 50% opacity with moderate stretch
-   * - 1: Full opacity with maximum stretch (lineLength * stretchMultiplier)
-   *
+   * Controls opacity, line stretch, and movement speed.
    * @default 0
    */
   readonly intensity = input<number>(0);
 
   /**
+   * Movement direction for focal point shift.
+   * - -1: Moving left (focal point shifts right)
+   * - 0: No direction (centered focal point)
+   * - 1: Moving right (focal point shifts left)
+   * @default 0
+   */
+  readonly direction = input<number>(0);
+
+  /**
    * Number of speed lines to render.
-   *
-   * Higher values create a denser effect but may impact performance.
-   * Uses InstancedMesh so performance impact is minimal.
-   *
    * @default 200
    */
   readonly lineCount = input<number>(200);
 
   /**
    * Line color (hex string or CSS color).
-   *
-   * Works with any valid CSS color format:
-   * - Hex: '#ffffff', '#00ffcc'
-   * - Named: 'white', 'cyan'
-   *
    * @default '#ffffff'
    */
   readonly color = input<string>('#ffffff');
 
   /**
    * Base length of lines in world units.
-   *
-   * This is the line length at rest (before stretch is applied).
-   *
-   * @default 2
+   * @default 1.5
    */
-  readonly lineLength = input<number>(2);
+  readonly lineLength = input<number>(1.5);
 
   /**
    * Maximum stretch multiplier when intensity is 1.
-   *
-   * Final line length = lineLength * (1 + (stretchMultiplier - 1) * intensity)
-   *
-   * @default 5
+   * @default 6
    */
-  readonly stretchMultiplier = input<number>(5);
+  readonly stretchMultiplier = input<number>(6);
 
   /**
-   * Spread radius around camera path (cylinder radius).
-   *
-   * Lines are distributed evenly within a cylinder of this radius.
-   *
-   * @default 20
+   * Maximum spread radius from center.
+   * @default 25
    */
-  readonly spreadRadius = input<number>(20);
+  readonly spreadRadius = input<number>(25);
 
   /**
-   * Depth range in which lines are distributed.
-   *
-   * Lines spawn randomly within this Z-range.
-   *
-   * @default 50
+   * Depth range for lines.
+   * @default 40
    */
-  readonly depthRange = input<number>(50);
+  readonly depthRange = input<number>(40);
 
   /**
-   * Fade duration when intensity changes (milliseconds).
-   *
-   * Controls how quickly lines fade in/out when intensity changes.
-   *
+   * Fade duration when intensity changes (ms).
    * @default 300
    */
   readonly transitionDuration = input<number>(300);
+
+  /**
+   * Speed of radial outward movement.
+   * @default 40
+   */
+  readonly speed = input<number>(40);
+
+  /**
+   * How much the focal point shifts based on direction (-1 to 1).
+   * Higher values = more dramatic shift.
+   * @default 8
+   */
+  readonly focalShift = input<number>(8);
 
   // ─────────────────────────────────────────────────────────────────────────
   // INJECTIONS
   // ─────────────────────────────────────────────────────────────────────────
 
-  /** Parent 3D object provider (Scene or Group) */
   private readonly parentFn = inject(NG_3D_PARENT, { optional: true });
-
-  /** Render loop service for per-frame updates */
   private readonly renderLoop = inject(RenderLoopService);
-
-  /** Destroy reference for cleanup registration */
   private readonly destroyRef = inject(DestroyRef);
 
   // ─────────────────────────────────────────────────────────────────────────
   // PRIVATE PROPERTIES
   // ─────────────────────────────────────────────────────────────────────────
 
-  /** InstancedMesh containing all warp lines */
   private mesh: THREE.InstancedMesh | null = null;
-
-  /** Plane geometry used for each line instance */
   private geometry: THREE.PlaneGeometry | null = null;
-
-  /** TSL-based material with opacity node for soft edges */
   private material: THREE.MeshBasicNodeMaterial | null = null;
-
-  /** Current interpolated intensity (for smooth transitions) */
   private currentIntensity = 0;
-
-  /** Target intensity from input (what we're transitioning toward) */
   private targetIntensity = 0;
-
-  /** Cleanup function for render loop callback */
   private updateCleanup: (() => void) | null = null;
-
-  /** Base transformation matrices for each line (before stretch) */
-  private baseMatrices: THREE.Matrix4[] = [];
-
-  /** Z-depth of each line (for potential depth-based effects) */
-  private lineDepths: number[] = [];
-
-  /** Flag to track if render loop is set up */
   private renderLoopSetup = false;
 
-  /**
-   * Check if user prefers reduced motion.
-   *
-   * When enabled, warp effects are disabled entirely for accessibility.
-   * The intensity is forced to 0 visually, preventing any motion.
-   */
+  /** Line data for animation */
+  private lines: WarpLine[] = [];
+
+  /** Current focal point X offset */
+  private focalX = 0;
+
   private readonly prefersReducedMotion =
     typeof window !== 'undefined' &&
     window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
@@ -212,10 +188,7 @@ export class WarpLinesComponent {
   // ─────────────────────────────────────────────────────────────────────────
 
   constructor() {
-    // Effect: Watch intensity input and create/update mesh as needed
     effect(() => {
-      // Skip warp effects entirely if user prefers reduced motion
-      // This respects accessibility preferences by preventing motion effects
       if (this.prefersReducedMotion) {
         this.targetIntensity = 0;
         return;
@@ -223,18 +196,15 @@ export class WarpLinesComponent {
 
       this.targetIntensity = this.intensity();
 
-      // Create lines mesh when intensity first goes above 0
       if (this.targetIntensity > 0 && !this.mesh) {
         this.createLines();
       }
     });
 
-    // Setup render loop after next render (browser-only)
     afterNextRender(() => {
       this.setupRenderLoop();
     });
 
-    // Register cleanup on component destroy
     this.destroyRef.onDestroy(() => {
       this.updateCleanup?.();
       this.disposeResources();
@@ -242,18 +212,9 @@ export class WarpLinesComponent {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // PRIVATE METHODS - MATERIAL CREATION
+  // PRIVATE METHODS
   // ─────────────────────────────────────────────────────────────────────────
 
-  /**
-   * Creates the TSL-based material for warp lines.
-   *
-   * Uses MeshBasicNodeMaterial with a custom opacity node that creates
-   * soft-edged lines with circular falloff at the edges and lengthwise
-   * fade for a more natural appearance.
-   *
-   * @returns Configured MeshBasicNodeMaterial
-   */
   private createMaterial(): THREE.MeshBasicNodeMaterial {
     const material = new THREE.MeshBasicNodeMaterial();
     material.transparent = true;
@@ -262,93 +223,55 @@ export class WarpLinesComponent {
     material.side = THREE.DoubleSide;
     material.color = new THREE.Color(this.color());
 
-    // TSL opacity node: creates soft-edged lines
-    // Center UV coordinates (0,0 at center instead of corner)
-    const centeredUV = sub(uv(), vec2(0.5, 0.5));
-
-    // Circular distance from center
-    const dist = length(centeredUV);
-
-    // Edge fade: opaque at center, transparent at edges (circular falloff)
-    const edgeFade = sub(float(1.0), smoothstep(float(0.0), float(0.5), dist));
-
-    // Lengthwise fade: stronger at center of line, fades toward ends
-    // This creates tapered line ends for a more natural look
+    // Soft edges with fade at both ends
     const lengthFade = sub(
       float(1.0),
       smoothstep(float(0.3), float(0.5), abs(sub(uv().y, float(0.5))))
     );
-
-    // Combine edge and length fades
-    const finalOpacity = mul(edgeFade, lengthFade);
-    material.opacityNode = finalOpacity;
+    const widthFade = sub(
+      float(1.0),
+      smoothstep(float(0.3), float(0.5), abs(sub(uv().x, float(0.5))))
+    );
+    material.opacityNode = mul(lengthFade, widthFade);
 
     return material;
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // PRIVATE METHODS - LINE CREATION
-  // ─────────────────────────────────────────────────────────────────────────
-
-  /**
-   * Creates the warp lines mesh with InstancedMesh.
-   *
-   * Lines are distributed in a cylindrical volume around the camera path.
-   * Each line is a thin plane oriented to face the camera direction.
-   * Uses sqrt() for radius distribution to ensure even coverage.
-   */
   private createLines(): void {
     const count = this.lineCount();
-    const radius = this.spreadRadius();
-    const depthRangeValue = this.depthRange();
 
-    // Create elongated quad geometry for each line
-    // Width is thin (0.03), height is lineLength
-    this.geometry = new THREE.PlaneGeometry(0.03, this.lineLength());
-
-    // Create TSL material with soft edges
+    // Thin, elongated quad for each line
+    this.geometry = new THREE.PlaneGeometry(0.04, this.lineLength());
     this.material = this.createMaterial();
-
-    // Create instanced mesh for single draw call
     this.mesh = new THREE.InstancedMesh(this.geometry, this.material, count);
-    this.mesh.frustumCulled = false; // Lines span entire view
+    this.mesh.frustumCulled = false;
 
-    // Distribute lines in a cylinder around the camera path
+    this.lines = [];
     const dummy = new THREE.Object3D();
-    this.baseMatrices = [];
-    this.lineDepths = [];
 
     for (let i = 0; i < count; i++) {
-      // Random angle around the cylinder (0 to 2*PI)
+      // Distribute lines in rings at various distances
+      // More lines at outer edges for better coverage
+      const ring = Math.pow(Math.random(), 0.7); // Bias toward outer
       const angle = Math.random() * Math.PI * 2;
+      const z = -Math.random() * this.depthRange();
 
-      // Random radius with sqrt for even distribution across area
-      // Without sqrt, lines would cluster at the center
-      const r = Math.sqrt(Math.random()) * radius;
+      this.lines.push({
+        angle,
+        distance: ring,
+        z,
+        angleOffset: (Math.random() - 0.5) * 0.3,
+        speedMult: 0.7 + Math.random() * 0.6,
+      });
 
-      // Random Z position within depth range (centered at 0)
-      const z = (Math.random() - 0.5) * depthRangeValue;
-
-      // Set position in cylindrical coordinates
-      dummy.position.set(Math.cos(angle) * r, Math.sin(angle) * r, z);
-
-      // Orient line to point toward camera (along negative Z-axis)
-      // lookAt a point further back along Z creates forward-facing lines
-      dummy.lookAt(dummy.position.x, dummy.position.y, z - 10);
-
-      // Update and store the transformation matrix
+      // Initial position (will be updated in render loop)
+      dummy.position.set(0, 0, z);
       dummy.updateMatrix();
       this.mesh.setMatrixAt(i, dummy.matrix);
-
-      // Store base matrix for animation (before stretch is applied)
-      this.baseMatrices.push(dummy.matrix.clone());
-      this.lineDepths.push(z);
     }
 
-    // Mark instance matrix as needing update
     this.mesh.instanceMatrix.needsUpdate = true;
 
-    // Add to parent scene/group
     if (this.parentFn) {
       const parent = this.parentFn();
       if (parent) {
@@ -357,94 +280,91 @@ export class WarpLinesComponent {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // PRIVATE METHODS - ANIMATION
-  // ─────────────────────────────────────────────────────────────────────────
-
-  /**
-   * Sets up the render loop callback for animation.
-   *
-   * Called once after next render. Handles:
-   * - Smooth intensity transitions
-   * - Line stretching based on intensity
-   * - Resource disposal when fully faded out
-   */
   private setupRenderLoop(): void {
     if (this.renderLoopSetup) return;
     this.renderLoopSetup = true;
 
-    // Reusable objects for matrix decomposition (avoid allocation per frame)
-    const matrix = new THREE.Matrix4();
-    const scale = new THREE.Vector3();
-    const position = new THREE.Vector3();
-    const quaternion = new THREE.Quaternion();
+    const dummy = new THREE.Object3D();
+    const lookTarget = new THREE.Vector3();
 
     this.updateCleanup = this.renderLoop.registerUpdateCallback((delta) => {
-      // Skip if mesh not created yet
       if (!this.mesh || !this.material) return;
 
-      // Calculate transition speed based on delta and configured duration
-      // transitionDuration is in ms, delta is in seconds
+      // Smooth intensity transition
       const transitionSpeed = delta / (this.transitionDuration() / 1000);
-
-      // Smoothly interpolate current intensity toward target
       this.currentIntensity +=
         (this.targetIntensity - this.currentIntensity) *
         Math.min(transitionSpeed, 1);
 
-      // Update material opacity based on current intensity
       this.material.opacity = this.currentIntensity;
 
-      // Stretch lines based on intensity (only if visible)
       if (this.currentIntensity > 0.01) {
-        // Calculate stretch factor: 1 at intensity=0, stretchMultiplier at intensity=1
+        const dir = this.direction();
+        const speedValue = this.speed() * this.currentIntensity;
+        const radius = this.spreadRadius();
+        const depthRangeValue = this.depthRange();
         const stretchFactor =
           1 + (this.stretchMultiplier() - 1) * this.currentIntensity;
 
-        const lineCountValue = this.lineCount();
-        for (let i = 0; i < lineCountValue; i++) {
-          // Get the original base matrix
-          matrix.copy(this.baseMatrices[i]);
+        // Smoothly interpolate focal point shift based on direction
+        const targetFocalX = -dir * this.focalShift();
+        this.focalX += (targetFocalX - this.focalX) * delta * 5;
 
-          // Decompose into position, rotation, scale
-          matrix.decompose(position, quaternion, scale);
+        for (let i = 0; i < this.lines.length; i++) {
+          const line = this.lines[i];
 
-          // Apply stretch to Y axis (line length direction)
-          scale.y = stretchFactor;
+          // Move line outward radially and toward camera
+          line.distance += (speedValue * delta * line.speedMult) / radius;
+          line.z += speedValue * delta * 0.5;
 
-          // Recompose the matrix with new scale
-          matrix.compose(position, quaternion, scale);
+          // Wrap around when line goes too far
+          if (line.distance > 1.2 || line.z > 5) {
+            line.distance = 0.05 + Math.random() * 0.1;
+            line.z = -depthRangeValue * (0.8 + Math.random() * 0.2);
+            line.angle = Math.random() * Math.PI * 2;
+          }
 
-          // Update the instance
-          this.mesh.setMatrixAt(i, matrix);
+          // Calculate position: radial from focal point
+          const effectiveAngle =
+            line.angle + line.angleOffset * this.currentIntensity;
+          const dist = line.distance * radius;
+
+          const x = this.focalX + Math.cos(effectiveAngle) * dist;
+          const y = Math.sin(effectiveAngle) * dist;
+          const z = line.z;
+
+          dummy.position.set(x, y, z);
+
+          // Orient line to point FROM focal point (radial direction)
+          // Line should point outward from the center
+          lookTarget.set(
+            this.focalX + Math.cos(effectiveAngle) * (dist + 10),
+            Math.sin(effectiveAngle) * (dist + 10),
+            z
+          );
+          dummy.lookAt(lookTarget);
+
+          // Rotate 90 degrees so the long axis points radially
+          dummy.rotateZ(Math.PI / 2);
+
+          // Scale: stretch based on intensity and distance from center
+          const distanceScale = 0.5 + line.distance * 1.5;
+          dummy.scale.set(1, stretchFactor * distanceScale, 1);
+
+          dummy.updateMatrix();
+          this.mesh.setMatrixAt(i, dummy.matrix);
         }
 
-        // Mark instance matrix as needing update
         this.mesh.instanceMatrix.needsUpdate = true;
       }
 
-      // Dispose resources when fully faded out
       if (this.currentIntensity < 0.01 && this.targetIntensity === 0) {
         this.disposeResources();
       }
     });
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // PRIVATE METHODS - CLEANUP
-  // ─────────────────────────────────────────────────────────────────────────
-
-  /**
-   * Disposes all Three.js resources.
-   *
-   * Called when:
-   * - Component is destroyed
-   * - Intensity fades to 0 (lazy cleanup)
-   *
-   * Safely handles resources that may already be disposed.
-   */
   private disposeResources(): void {
-    // Remove mesh from parent
     if (this.mesh && this.parentFn) {
       const parent = this.parentFn();
       if (parent) {
@@ -452,7 +372,6 @@ export class WarpLinesComponent {
       }
     }
 
-    // Dispose geometry (wrap in try-catch for WebGPU safety)
     if (this.geometry) {
       try {
         this.geometry.dispose();
@@ -462,7 +381,6 @@ export class WarpLinesComponent {
       this.geometry = null;
     }
 
-    // Dispose material (wrap in try-catch for WebGPU safety)
     if (this.material) {
       try {
         this.material.dispose();
@@ -472,11 +390,7 @@ export class WarpLinesComponent {
       this.material = null;
     }
 
-    // Clear mesh reference
     this.mesh = null;
-
-    // Clear stored matrices
-    this.baseMatrices = [];
-    this.lineDepths = [];
+    this.lines = [];
   }
 }
