@@ -336,13 +336,14 @@ import { SCENE_COLORS } from '../../../shared/colors';
           />
 
           <!-- Destination Sphere - visible when not at waypoint 1 -->
+          <!-- Positioned on Z-axis at z=-40, camera flies toward it -->
           @if (activeWaypoint() !== 1) {
           <a3d-sphere
-            [args]="[1.5, 32, 32]"
-            [position]="waypoints[1].lookAt"
+            [args]="[3, 32, 32]"
+            [position]="destinationSpherePosition"
             [color]="'#4a90d9'"
-            [emissive]="'#1a3050'"
-            [emissiveIntensity]="0.5"
+            [emissive]="'#2a5080'"
+            [emissiveIntensity]="0.8"
           />
           }
 
@@ -591,7 +592,10 @@ export class GlassSphereHeroSectionComponent {
   // WAYPOINT CONFIGURATION
   // =========================================================================
 
-  /** Camera waypoints for flight navigation */
+  /** Camera waypoints for flight navigation
+   * Both waypoints aligned on Z-axis for predictable forward flight experience.
+   * Camera flies from z=16 to z=-25 (forward into the scene).
+   */
   protected readonly waypoints: CameraWaypoint[] = [
     {
       id: 'hero-main',
@@ -602,11 +606,17 @@ export class GlassSphereHeroSectionComponent {
     },
     {
       id: 'gsap-destination',
-      position: [-15, 3, 8],
-      lookAt: [-20, 2, -5],
+      // Position camera further into the scene (lower Z) looking at destination sphere
+      position: [0, 2, -25],
+      lookAt: [0, 2, -40],
       duration: 2.5,
       ease: 'power2.inOut',
     },
+  ];
+
+  /** Destination sphere position - visible from waypoint 0, camera flies toward it */
+  protected readonly destinationSpherePosition: [number, number, number] = [
+    0, 2, -40,
   ];
 
   /** Content configuration for each waypoint */
@@ -804,7 +814,9 @@ export class GlassSphereHeroSectionComponent {
       flight.setOrbitControls(controls);
     } else {
       // viewChild might not be resolved yet - will be set when flight is enabled
-      console.log('[HeroSection] CameraFlight directive not yet available, will set controls when flight enabled');
+      console.log(
+        '[HeroSection] CameraFlight directive not yet available, will set controls when flight enabled'
+      );
     }
   }
 
