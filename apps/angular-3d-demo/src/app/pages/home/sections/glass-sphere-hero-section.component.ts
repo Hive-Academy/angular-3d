@@ -129,9 +129,9 @@ import { SCENE_COLORS } from '../../../shared/colors';
             (navigationStateChange)="onNavigationStateChange($event)"
             [enableDamping]="true"
             [dampingFactor]="0.05"
-            [minDistance]="10"
-            [maxDistance]="30"
-            [enableZoom]="false"
+            [minDistance]="-100"
+            [maxDistance]="100"
+            [enableZoom]="true"
           />
 
           <!-- Warp Lines Effect (controlled by isFlying signal) -->
@@ -593,30 +593,34 @@ export class GlassSphereHeroSectionComponent {
   // =========================================================================
 
   /** Camera waypoints for flight navigation
-   * Both waypoints aligned on Z-axis for predictable forward flight experience.
-   * Camera flies from z=16 to z=-25 (forward into the scene).
+   * Camera flies FORWARD toward the sun (decreasing Z) and looks at
+   * destination sphere beyond the sun. This keeps camera always looking
+   * in -Z direction, preventing any 180-degree flip.
+   *
+   * Flight path: z=16 → z=2 (flying toward sun at z=0)
+   * LookAt path: z=-9 → z=-25 (always looking forward, past the sun)
    */
   protected readonly waypoints: CameraWaypoint[] = [
     {
       id: 'hero-main',
       position: [0, 0, 16],
-      lookAt: [0, 0, 0],
+      lookAt: [0, -9, 0], // Look at sun/fire position
       duration: 2,
       ease: 'power2.inOut',
     },
     {
       id: 'gsap-destination',
-      // Position camera further into the scene (lower Z) looking at destination sphere
-      position: [0, 2, -25],
-      lookAt: [0, 2, -40],
+      // Fly forward to z=2 (close to sun), looking at destination beyond
+      position: [0, 3, 2],
+      lookAt: [0, 3, -25], // Destination sphere position
       duration: 2.5,
       ease: 'power2.inOut',
     },
   ];
 
-  /** Destination sphere position - visible from waypoint 0, camera flies toward it */
+  /** Destination sphere position - beyond the sun, visible when camera flies close */
   protected readonly destinationSpherePosition: [number, number, number] = [
-    0, 2, -40,
+    0, 3, -25,
   ];
 
   /** Content configuration for each waypoint */
