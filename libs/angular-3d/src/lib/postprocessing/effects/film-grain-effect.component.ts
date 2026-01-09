@@ -183,10 +183,15 @@ export class FilmGrainEffectComponent implements OnDestroy {
    * Uses MaterialX fractal noise with animated z-coordinate to create
    * a shimmering grain pattern. The noise is applied as an additive
    * offset centered around zero.
+   *
+   * Key adjustments for realistic film grain:
+   * - High UV scale (500-1000) for fine grain particles
+   * - Low intensity (0.01-0.05) for subtle overlay
+   * - Multiple octaves for organic variation
    */
   private createFilmGrainNode(): Node {
-    // Clamp intensity to valid range (0.0 - 0.5)
-    const intensityValue = Math.min(Math.max(this.intensity(), 0.0), 0.5);
+    // Clamp intensity to valid range (0.0 - 1.0) - internal 0.15 scaling makes this subtle
+    const intensityValue = Math.min(Math.max(this.intensity(), 0.0), 1.0);
     const timeNode = this.timeUniform;
 
     // Create TSL function for film grain
@@ -195,25 +200,28 @@ export class FilmGrainEffectComponent implements OnDestroy {
       const uvCoord = uv();
 
       // Create animated noise position
-      // Scale UV to create fine grain (higher multiplier = finer grain)
-      // Animate z-coordinate with time for temporal variation
+      // High UV scale (500) creates fine grain particles like real film
+      // Lower values create blocky, unrealistic noise
       const noisePos = vec3(
-        mul(uvCoord.x, float(100)),
-        mul(uvCoord.y, float(100)),
-        mul(timeNode, float(10))
+        mul(uvCoord.x, float(500)),
+        mul(uvCoord.y, float(500)),
+        mul(timeNode, float(5)) // Slower time variation
       );
 
       // Sample MaterialX fractal noise
-      // Parameters: position, octaves, lacunarity, diminish
+      // - 4 octaves for more organic, varied grain
+      // - lacunarity 2.0 for standard frequency progression
+      // - diminish 0.6 for slightly less aggressive falloff
       const noise = mx_fractal_noise_float(
         noisePos,
-        float(3),
+        float(4),
         float(2.0),
-        float(0.5)
+        float(0.6)
       );
 
-      // Remap noise to centered around 0 with intensity scaling
-      const grain = mul(noise, float(intensityValue));
+      // Scale down significantly - additive noise needs to be subtle
+      // Factor of 0.15 reduces the harsh noise to a gentle overlay
+      const grain = mul(noise, float(intensityValue * 0.15));
 
       // Return as vec3 color offset (grayscale grain applied equally to RGB)
       return vec3(grain, grain, grain);

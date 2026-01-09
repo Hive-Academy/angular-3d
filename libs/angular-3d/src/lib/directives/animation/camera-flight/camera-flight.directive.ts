@@ -497,8 +497,16 @@ export class CameraFlightDirective {
     // Create timeline (starts paused for hold-to-fly)
     console.log('[CameraFlight] Creating flight timeline...');
     try {
-      const timeline = await this.createFlightTimeline(from, to, 'forward');
-      console.log('[CameraFlight] createFlightTimeline returned:', !!timeline);
+      const timelinePromise = this.createFlightTimeline(from, to, 'forward');
+      console.log('[CameraFlight] createFlightTimeline called, awaiting promise...');
+
+      timelinePromise.then(
+        (result) => console.log('[CameraFlight] Promise resolved with:', !!result),
+        (err) => console.error('[CameraFlight] Promise rejected with:', err)
+      );
+
+      const timeline = await timelinePromise;
+      console.log('[CameraFlight] await completed, timeline:', !!timeline);
 
       if (timeline) {
         this.timeline = timeline;
@@ -730,6 +738,7 @@ export class CameraFlightDirective {
       }
 
       console.log('[CameraFlight] Timeline created successfully, duration:', timeline.duration());
+      console.log('[CameraFlight] About to return timeline from createFlightTimeline...');
       return timeline;
     } catch (error) {
       console.error('[CameraFlight] Error creating timeline:', error);

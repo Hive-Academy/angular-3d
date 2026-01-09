@@ -204,12 +204,12 @@ import { SCENE_COLORS } from '../../../shared/colors';
                   rotate3d
                   [rotateConfig]="{ axis: 'y', speed: 10 }"
                 />
-                <a3d-film-grain-effect [intensity]="0.08" [speed]="1" />
+                <a3d-film-grain-effect [intensity]="0.5" [speed]="1" />
               </a3d-scene-3d>
             </div>
             <div class="mt-3x text-center">
               <p class="text-sm font-medium text-white">Modern Digital</p>
-              <code class="text-xs text-pink-400">intensity: 0.08</code>
+              <code class="text-xs text-pink-400">intensity: 0.5</code>
             </div>
           </div>
 
@@ -230,7 +230,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
                   rotate3d
                   [rotateConfig]="{ axis: 'y', speed: 10 }"
                 />
-                <a3d-film-grain-effect [intensity]="0.25" [speed]="1.5" />
+                <a3d-film-grain-effect [intensity]="1.0" [speed]="1.5" />
                 <a3d-color-grading-effect
                   [saturation]="0.7"
                   [vignette]="0.35"
@@ -239,7 +239,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
             </div>
             <div class="mt-3x text-center">
               <p class="text-sm font-medium text-white">Vintage Film</p>
-              <code class="text-xs text-green-400">intensity: 0.25</code>
+              <code class="text-xs text-green-400">intensity: 1.0</code>
             </div>
           </div>
         </div>
