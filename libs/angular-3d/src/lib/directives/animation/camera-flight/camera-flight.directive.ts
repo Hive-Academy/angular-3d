@@ -236,6 +236,7 @@ export class CameraFlightDirective {
 
   /** Flag tracking if event listeners have been set up */
   private listenersSetup = false;
+  private waypointsInitialized = false;
 
   // Event handler references for cleanup
   private contextMenuHandler: ((e: MouseEvent) => void) | null = null;
@@ -267,17 +268,21 @@ export class CameraFlightDirective {
       // Skip if already destroyed, no camera, or invalid waypoints
       if (this.isDestroyed() || !camera || wps.length < 2) return;
 
-      // Initialize at start index if not already positioned
-      const startIdx = this.startIndex();
-      if (startIdx >= 0 && startIdx < wps.length) {
-        const startWp = wps[startIdx];
-        this.currentWaypointIndex.set(startIdx);
-        this.targetWaypointIndex.set(startIdx);
+      // Initialize at start index ONLY ONCE (prevent resetting after flights)
+      if (!this.waypointsInitialized) {
+        const startIdx = this.startIndex();
+        if (startIdx >= 0 && startIdx < wps.length) {
+          const startWp = wps[startIdx];
+          this.currentWaypointIndex.set(startIdx);
+          this.targetWaypointIndex.set(startIdx);
 
-        // Initialize lookAt proxy
-        this.lookAtProxy.x = startWp.lookAt[0];
-        this.lookAtProxy.y = startWp.lookAt[1];
-        this.lookAtProxy.z = startWp.lookAt[2];
+          // Initialize lookAt proxy
+          this.lookAtProxy.x = startWp.lookAt[0];
+          this.lookAtProxy.y = startWp.lookAt[1];
+          this.lookAtProxy.z = startWp.lookAt[2];
+
+          this.waypointsInitialized = true;
+        }
       }
 
       // Setup event listeners once (only mark as setup if successful)
