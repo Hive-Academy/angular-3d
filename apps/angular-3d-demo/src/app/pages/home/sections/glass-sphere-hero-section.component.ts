@@ -492,6 +492,26 @@ import { SCENE_COLORS } from '../../../shared/colors';
         </div>
         }
       </div>
+
+      <!-- Flight Hint - shows after entrance, before first flight -->
+      @if (showFlightHint()) {
+      <div
+        class="fixed bottom-8 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
+        viewportAnimation
+        [viewportConfig]="viewportHintConfig"
+      >
+        <span
+          class="inline-flex items-center gap-2 px-4 py-2 bg-black/40 backdrop-blur-md rounded-full text-sm text-white/70 border border-white/10 shadow-lg"
+        >
+          Hold
+          <kbd
+            class="px-2 py-0.5 mx-1 bg-white/10 rounded text-white/90 font-mono text-xs"
+            >Right Click</kbd
+          >
+          to explore
+        </span>
+      </div>
+      }
     </section>
   `,
   styles: [
@@ -730,6 +750,15 @@ export class GlassSphereHeroSectionComponent {
     0.6,
     0.6
   );
+
+  /** Viewport config for flight hint - appears after entrance with delay */
+  protected readonly viewportHintConfig = {
+    animation: 'fadeIn' as const,
+    duration: 0.6,
+    delay: 1.5, // Delay after entrance completes
+    threshold: 0.1,
+    staggerGroup: 'hero',
+  };
 
   /** Shared scroll animation config - waits for preload to complete */
   protected readonly scrollContentConfig = {

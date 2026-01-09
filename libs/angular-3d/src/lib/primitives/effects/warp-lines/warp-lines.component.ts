@@ -197,6 +197,16 @@ export class WarpLinesComponent {
   /** Flag to track if render loop is set up */
   private renderLoopSetup = false;
 
+  /**
+   * Check if user prefers reduced motion.
+   *
+   * When enabled, warp effects are disabled entirely for accessibility.
+   * The intensity is forced to 0 visually, preventing any motion.
+   */
+  private readonly prefersReducedMotion =
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+
   // ─────────────────────────────────────────────────────────────────────────
   // CONSTRUCTOR
   // ─────────────────────────────────────────────────────────────────────────
@@ -204,6 +214,13 @@ export class WarpLinesComponent {
   constructor() {
     // Effect: Watch intensity input and create/update mesh as needed
     effect(() => {
+      // Skip warp effects entirely if user prefers reduced motion
+      // This respects accessibility preferences by preventing motion effects
+      if (this.prefersReducedMotion) {
+        this.targetIntensity = 0;
+        return;
+      }
+
       this.targetIntensity = this.intensity();
 
       // Create lines mesh when intensity first goes above 0
