@@ -12,7 +12,7 @@
  * - Bloom effect for luminous sun glow
  * - Loading progress overlay with cinematic entrance animation
  * - Staggered scene reveals for dramatic effect
- * - Camera flight navigation between waypoints (hold right-click to fly)
+ * - Camera flight navigation between waypoints (hold left-click to fly)
  * - Warp lines effect during flight transitions
  * - Dynamic content switching based on active waypoint
  */
@@ -506,7 +506,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
           Hold
           <kbd
             class="px-2 py-0.5 mx-1 bg-white/10 rounded text-white/90 font-mono text-xs"
-            >Right Click</kbd
+            >Left Click</kbd
           >
           to explore
         </span>

@@ -111,6 +111,13 @@ export class ThrusterFlameComponent implements Attachable3dChild {
   /** Nozzle radius - spread at spawn point (default: 0.3) */
   public readonly nozzleRadius = input<number>(0.3);
 
+  /**
+   * Enable scene fog support for this material.
+   * When true, the material will be affected by scene.fog.
+   * Default: false (thruster effects typically don't use fog)
+   */
+  public readonly fog = input<boolean>(false);
+
   // --- Injections ---
   private readonly destroyRef = inject(DestroyRef);
   private readonly renderLoop = inject(RenderLoopService);
@@ -236,6 +243,7 @@ export class ThrusterFlameComponent implements Attachable3dChild {
     material.depthWrite = false;
     material.blending = THREE.AdditiveBlending;
     material.side = THREE.DoubleSide;
+    material.fog = this.fog(); // Controlled by parent input
     material.opacityNode = finalOpacity;
     material.color = new THREE.Color(this.color());
 

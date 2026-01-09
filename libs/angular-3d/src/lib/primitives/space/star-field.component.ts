@@ -141,6 +141,13 @@ export class StarFieldComponent implements OnDestroy {
    */
   public readonly rotationAxis = input<'x' | 'y' | 'z'>('y');
 
+  /**
+   * Enable scene fog support for this material.
+   * When true, the material will be affected by scene.fog.
+   * Default: false (space effects typically don't use fog)
+   */
+  public readonly fog = input<boolean>(false);
+
   private readonly parentFn = inject(NG_3D_PARENT, { optional: true });
   private readonly renderLoop = inject(RenderLoopService);
   private readonly destroyRef = inject(DestroyRef);
@@ -435,6 +442,7 @@ export class StarFieldComponent implements OnDestroy {
     this.starMaterial.depthWrite = false;
     this.starMaterial.blending = THREE.AdditiveBlending;
     this.starMaterial.side = THREE.DoubleSide;
+    this.starMaterial.fog = this.fog(); // Controlled by parent input
     this.starMaterial.opacityNode = finalOpacity;
 
     // Set base color

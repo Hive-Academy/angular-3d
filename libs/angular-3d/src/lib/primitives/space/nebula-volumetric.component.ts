@@ -104,6 +104,13 @@ export class NebulaVolumetricComponent {
   public readonly edgePulseSpeed = input<number>(0.5); // Speed of edge pulsing (0.1 = slow, 2.0 = fast)
   public readonly edgePulseAmount = input<number>(0.3); // Intensity of edge pulse (0.0 = none, 1.0 = dramatic)
 
+  /**
+   * Enable scene fog support for this material.
+   * When true, the material will be affected by scene.fog.
+   * Default: false (nebula effects typically don't use fog)
+   */
+  public readonly fog = input<boolean>(false);
+
   // DI
   private readonly parent = inject(NG_3D_PARENT);
   private readonly destroyRef = inject(DestroyRef);
@@ -506,7 +513,7 @@ export class NebulaVolumetricComponent {
     material.depthWrite = false;
     material.depthTest = true;
     material.side = THREE.DoubleSide;
-    material.fog = true; // Enable scene fog for atmospheric depth
+    material.fog = this.fog(); // Controlled by parent input
 
     // Create mesh
     const mesh = new THREE.Mesh(geometry, material);

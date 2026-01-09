@@ -6,7 +6,7 @@
  * Uses GSAP for smooth camera animation with pause/resume capability.
  *
  * Features:
- * - Hold-to-fly forward navigation (right-click by default)
+ * - Hold-to-fly forward navigation (left-click by default)
  * - Key-press backward navigation (Q key by default)
  * - Pause/resume flight on mouse release/hold
  * - Signal-based reactive state management
@@ -133,9 +133,9 @@ export class CameraFlightDirective {
    * - 0: Left mouse button
    * - 1: Middle mouse button
    * - 2: Right mouse button
-   * @default 2 (right-click)
+   * @default 0 (left-click)
    */
-  public readonly holdButton = input<number>(2);
+  public readonly holdButton = input<number>(0);
 
   /**
    * Key code for backward navigation.
@@ -280,10 +280,9 @@ export class CameraFlightDirective {
         this.lookAtProxy.z = startWp.lookAt[2];
       }
 
-      // Setup event listeners once
+      // Setup event listeners once (only mark as setup if successful)
       if (!this.listenersSetup) {
-        this.setupEventListeners();
-        this.listenersSetup = true;
+        this.listenersSetup = this.setupEventListeners();
       }
 
       // Emit initial navigation state
@@ -732,14 +731,14 @@ export class CameraFlightDirective {
    *
    * Mouse events are scoped to canvas only.
    * Keyboard events are on document for global capture.
+   *
+   * @returns true if listeners were successfully set up, false otherwise
    */
-  private setupEventListeners(): void {
+  private setupEventListeners(): boolean {
     const canvas = this.sceneService?.renderer()?.domElement;
     if (!canvas) {
-      console.warn(
-        '[CameraFlightDirective] Canvas not available for event listeners'
-      );
-      return;
+      // Canvas not ready yet - will retry on next effect run
+      return false;
     }
 
     // Prevent context menu on right-click (scoped to canvas only)
@@ -800,6 +799,8 @@ export class CameraFlightDirective {
       this.startBackwardFlight();
     };
     document.addEventListener('keydown', this.keyDownHandler);
+
+    return true;
   }
 
   /**
