@@ -18,8 +18,7 @@ import {
   input,
   inject,
   effect,
-  DestroyRef,
-  afterNextRender,
+  OnDestroy,
 } from '@angular/core';
 import { Fn, uv, float, vec3, uniform, mul } from 'three/tsl';
 import { mx_fractal_noise_float } from 'three/tsl';
@@ -35,7 +34,7 @@ import { RenderLoopService } from '../../render-loop/render-loop.service';
  * The noise is generated using MaterialX fractal noise for high quality
  * and GPU performance.
  *
- * Must be used inside `a3d-effect-composer`.
+ * Must be used inside a3d-scene-3d.
  *
  * @remarks
  * The effect uses a time uniform that is updated each frame via the
@@ -47,41 +46,41 @@ import { RenderLoopService } from '../../render-loop/render-loop.service';
  *
  * @example
  * ```html
- * <a3d-effect-composer>
+ * <a3d-scene-3d>
  *   <a3d-film-grain-effect [intensity]="0.1" />
- * </a3d-effect-composer>
+ * </a3d-scene-3d>
  * ```
  *
  * @example
  * ```html
  * <!-- Subtle grain for modern digital look -->
- * <a3d-effect-composer>
+ * <a3d-scene-3d>
  *   <a3d-film-grain-effect
  *     [intensity]="0.05"
  *     [speed]="0.5"
  *   />
- * </a3d-effect-composer>
+ * </a3d-scene-3d>
  * ```
  *
  * @example
  * ```html
  * <!-- Heavy grain for vintage film look -->
- * <a3d-effect-composer>
+ * <a3d-scene-3d>
  *   <a3d-color-grading-effect [saturation]="0.8" [vignette]="0.3" />
  *   <a3d-film-grain-effect [intensity]="0.2" [speed]="1.5" />
- * </a3d-effect-composer>
+ * </a3d-scene-3d>
  * ```
  */
 @Component({
   selector: 'a3d-film-grain-effect',
+  standalone: true,
   template: '',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FilmGrainEffectComponent {
+export class FilmGrainEffectComponent implements OnDestroy {
   private readonly composerService = inject(EffectComposerService);
   private readonly sceneService = inject(SceneService);
   private readonly renderLoop = inject(RenderLoopService);
-  private readonly destroyRef = inject(DestroyRef);
 
   /**
    * Intensity of the film grain effect
@@ -115,19 +114,20 @@ export class FilmGrainEffectComponent {
   public readonly speed = input<number>(1.0);
 
   private readonly effectName = 'filmGrain';
-  private initialized = false;
+  private effectAdded = false;
 
   // Time uniform for animation - updated each frame
   private readonly timeUniform = uniform(float(0));
   private renderLoopCleanup: (() => void) | null = null;
 
   public constructor() {
-    afterNextRender(() => {
+    // Add film grain effect when renderer is available
+    effect(() => {
       const renderer = this.sceneService.renderer();
       const scene = this.sceneService.scene();
       const camera = this.sceneService.camera();
 
-      if (renderer && scene && camera) {
+      if (renderer && scene && camera && !this.effectAdded) {
         // Initialize the composer first (if not already done)
         this.composerService.init(renderer, scene, camera);
 
@@ -137,9 +137,10 @@ export class FilmGrainEffectComponent {
         // Add effect to composer
         this.composerService.addEffect(this.effectName, filmGrainEffect);
 
+        this.effectAdded = true;
+
         // Enable the composer to switch render function
         this.composerService.enable();
-        this.initialized = true;
 
         // Register render loop callback to update time uniform
         this.renderLoopCleanup = this.renderLoop.registerUpdateCallback(
@@ -153,42 +154,35 @@ export class FilmGrainEffectComponent {
 
     // Update film grain parameters reactively
     effect(() => {
-      // Trigger reactivity on all inputs
-      this.intensity();
-      this.speed();
-
-      // Only update if initialized
-      if (this.initialized) {
+      if (this.effectAdded) {
         // Rebuild effect with new parameters
         const filmGrainEffect = this.createFilmGrainNode();
         this.composerService.addEffect(this.effectName, filmGrainEffect);
         this.sceneService.invalidate();
       }
     });
+  }
 
-    // Cleanup on destroy using DestroyRef pattern
-    this.destroyRef.onDestroy(() => {
-      // Remove render loop callback
-      if (this.renderLoopCleanup) {
-        this.renderLoopCleanup();
-        this.renderLoopCleanup = null;
-      }
+  public ngOnDestroy(): void {
+    // Remove render loop callback
+    if (this.renderLoopCleanup) {
+      this.renderLoopCleanup();
+      this.renderLoopCleanup = null;
+    }
 
-      // Remove effect from composer
+    // Remove effect from composer
+    if (this.effectAdded) {
       this.composerService.removeEffect(this.effectName);
-    });
+      this.effectAdded = false;
+    }
   }
 
   /**
    * Create TSL film grain effect node
    *
    * Uses MaterialX fractal noise with animated z-coordinate to create
-   * a shimmering grain pattern. The noise is remapped from [-1, 1] to
-   * [0, 1] and scaled by intensity.
-   *
-   * The noise is applied as an additive offset (can be positive or negative)
-   * centered around zero, meaning it adds and subtracts brightness
-   * to create the grainy texture.
+   * a shimmering grain pattern. The noise is applied as an additive
+   * offset centered around zero.
    */
   private createFilmGrainNode(): Node {
     // Clamp intensity to valid range (0.0 - 0.5)
@@ -211,9 +205,6 @@ export class FilmGrainEffectComponent {
 
       // Sample MaterialX fractal noise
       // Parameters: position, octaves, lacunarity, diminish
-      // - octaves: 3 for medium detail (balance quality vs performance)
-      // - lacunarity: 2.0 (frequency multiplier per octave)
-      // - diminish: 0.5 (amplitude reduction per octave)
       const noise = mx_fractal_noise_float(
         noisePos,
         float(3),
@@ -221,11 +212,7 @@ export class FilmGrainEffectComponent {
         float(0.5)
       );
 
-      // Remap noise from [-1, 1] to centered around 0 with intensity scaling
-      // This creates both bright and dark grain particles
-      // The result is added to the scene output, so:
-      // - positive values brighten pixels
-      // - negative values darken pixels
+      // Remap noise to centered around 0 with intensity scaling
       const grain = mul(noise, float(intensityValue));
 
       // Return as vec3 color offset (grayscale grain applied equally to RGB)

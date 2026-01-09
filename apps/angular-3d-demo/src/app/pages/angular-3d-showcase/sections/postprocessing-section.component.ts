@@ -396,9 +396,18 @@ import { SCENE_COLORS } from '../../../shared/colors';
         <div class="text-center mb-8x">
           <h2 class="text-display-md font-bold mb-2x">
             Screen Space Ambient Occlusion
+            <span
+              class="ml-2 px-2 py-1 text-xs font-medium bg-amber-500/20 text-amber-400 rounded-full"
+            >
+              Coming Soon
+            </span>
           </h2>
           <p class="text-text-secondary">
             Adds depth shadows in corners and crevices
+          </p>
+          <p class="text-sm text-text-tertiary mt-2">
+            SSAO requires native TSL depth buffer support (not yet available in
+            WebGPU PostProcessing)
           </p>
         </div>
 

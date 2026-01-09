@@ -628,81 +628,106 @@ export class CameraFlightDirective {
     const duration = to.duration ?? 2;
     const ease = to.ease ?? 'power2.inOut';
 
+    console.log('[CameraFlight] Creating timeline with', {
+      duration,
+      ease,
+      fromPosition: from.position,
+      toPosition: to.position,
+      fromLookAt: from.lookAt,
+      toLookAt: to.lookAt,
+    });
+
     // Initialize lookAt proxy from current lookAt position
     this.lookAtProxy.x = from.lookAt[0];
     this.lookAtProxy.y = from.lookAt[1];
     this.lookAtProxy.z = from.lookAt[2];
 
     // Create timeline (starts paused for hold-to-fly control)
-    const timeline = gsap.timeline({
-      paused: true,
-      onUpdate: () => {
-        // Update camera lookAt during animation
-        camera.lookAt(
-          this.lookAtProxy.x,
-          this.lookAtProxy.y,
-          this.lookAtProxy.z
-        );
+    console.log('[CameraFlight] About to create gsap.timeline...');
 
-        // Calculate and emit progress
-        const progress = timeline.progress();
-        this.flightProgress.set(progress);
-        this.progressChange.emit({
-          progress,
-          fromIndex: this.currentWaypointIndex(),
-          toIndex: this.targetWaypointIndex(),
-        });
+    try {
+      const timeline = gsap.timeline({
+        paused: true,
+        onUpdate: () => {
+          // Update camera lookAt during animation
+          camera.lookAt(
+            this.lookAtProxy.x,
+            this.lookAtProxy.y,
+            this.lookAtProxy.z
+          );
 
-        // Invalidate for demand-based rendering
-        this.sceneService?.invalidate();
-      },
-      onComplete: () => {
-        const targetIndex = this.targetWaypointIndex();
-        this.onWaypointArrival(targetIndex, direction);
-      },
-    });
+          // Calculate and emit progress
+          const progress = timeline.progress();
+          this.flightProgress.set(progress);
+          this.progressChange.emit({
+            progress,
+            fromIndex: this.currentWaypointIndex(),
+            toIndex: this.targetWaypointIndex(),
+          });
 
-    // Animate camera position
-    timeline.to(
-      camera.position,
-      {
-        x: to.position[0],
-        y: to.position[1],
-        z: to.position[2],
-        duration,
-        ease,
-      },
-      0 // Start at timeline position 0
-    );
+          // Invalidate for demand-based rendering
+          this.sceneService?.invalidate();
+        },
+        onComplete: () => {
+          console.log('[CameraFlight] Timeline onComplete fired');
+          const targetIndex = this.targetWaypointIndex();
+          this.onWaypointArrival(targetIndex, direction);
+        },
+      });
 
-    // Animate lookAt target in parallel
-    timeline.to(
-      this.lookAtProxy,
-      {
-        x: to.lookAt[0],
-        y: to.lookAt[1],
-        z: to.lookAt[2],
-        duration,
-        ease,
-      },
-      0 // Start at timeline position 0 (parallel with position)
-    );
+      console.log('[CameraFlight] gsap.timeline() created');
 
-    // Animate FOV if specified in waypoint
-    if (to.fov !== undefined && camera instanceof PerspectiveCamera) {
+      // Animate camera position
       timeline.to(
-        camera,
+        camera.position,
         {
-          fov: to.fov,
+          x: to.position[0],
+          y: to.position[1],
+          z: to.position[2],
           duration,
           ease,
-          onUpdate: () => camera.updateProjectionMatrix(),
         },
-        0 // Start at timeline position 0 (parallel)
+        0 // Start at timeline position 0
       );
-    }
 
-    return timeline;
+      console.log('[CameraFlight] Camera position tween added');
+
+      // Animate lookAt target in parallel
+      timeline.to(
+        this.lookAtProxy,
+        {
+          x: to.lookAt[0],
+          y: to.lookAt[1],
+          z: to.lookAt[2],
+          duration,
+          ease,
+        },
+        0 // Start at timeline position 0 (parallel with position)
+      );
+
+      console.log('[CameraFlight] LookAt tween added');
+
+      // Animate FOV if specified in waypoint
+      if (to.fov !== undefined && camera instanceof PerspectiveCamera) {
+        timeline.to(
+          camera,
+          {
+            fov: to.fov,
+            duration,
+            ease,
+            onUpdate: () => camera.updateProjectionMatrix(),
+          },
+          0 // Start at timeline position 0 (parallel)
+        );
+        console.log('[CameraFlight] FOV tween added');
+      }
+
+      console.log('[CameraFlight] Timeline created successfully, duration:', timeline.duration());
+      return timeline;
+    } catch (error) {
+      console.error('[CameraFlight] Error creating timeline:', error);
+      return null;
+    }
   }
 
   /**

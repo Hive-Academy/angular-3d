@@ -17,8 +17,7 @@ import {
   input,
   inject,
   effect,
-  DestroyRef,
-  afterNextRender,
+  OnDestroy,
 } from '@angular/core';
 import { Fn, uv, float, vec2, vec3, sub, mul } from 'three/tsl';
 import { Node } from 'three/webgpu';
@@ -36,7 +35,7 @@ export type ChromaticAberrationDirection = 'radial' | 'horizontal' | 'vertical';
  * Offsets red and blue channels in opposite directions based on distance
  * from the center of the screen, creating a subtle lens aberration effect.
  *
- * Must be used inside `a3d-effect-composer`.
+ * Must be used inside a3d-scene-3d.
  *
  * @remarks
  * The effect samples UV coordinates at offset positions for each channel:
@@ -49,40 +48,31 @@ export type ChromaticAberrationDirection = 'radial' | 'horizontal' | 'vertical';
  *
  * @example
  * ```html
- * <a3d-effect-composer>
+ * <a3d-scene-3d>
  *   <a3d-chromatic-aberration-effect [intensity]="0.02" />
- * </a3d-effect-composer>
+ * </a3d-scene-3d>
  * ```
  *
  * @example
  * ```html
  * <!-- Horizontal only aberration for anamorphic lens look -->
- * <a3d-effect-composer>
+ * <a3d-scene-3d>
  *   <a3d-chromatic-aberration-effect
  *     [intensity]="0.03"
  *     direction="horizontal"
  *   />
- * </a3d-effect-composer>
- * ```
- *
- * @example
- * ```html
- * <!-- Subtle radial aberration for general cinematic look -->
- * <a3d-effect-composer>
- *   <a3d-bloom-effect [strength]="0.6" />
- *   <a3d-chromatic-aberration-effect [intensity]="0.015" />
- * </a3d-effect-composer>
+ * </a3d-scene-3d>
  * ```
  */
 @Component({
   selector: 'a3d-chromatic-aberration-effect',
+  standalone: true,
   template: '',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ChromaticAberrationEffectComponent {
+export class ChromaticAberrationEffectComponent implements OnDestroy {
   private readonly composerService = inject(EffectComposerService);
   private readonly sceneService = inject(SceneService);
-  private readonly destroyRef = inject(DestroyRef);
 
   /**
    * Intensity of the chromatic aberration effect
@@ -112,15 +102,16 @@ export class ChromaticAberrationEffectComponent {
   public readonly direction = input<ChromaticAberrationDirection>('radial');
 
   private readonly effectName = 'chromaticAberration';
-  private initialized = false;
+  private effectAdded = false;
 
   public constructor() {
-    afterNextRender(() => {
+    // Add effect when renderer is available
+    effect(() => {
       const renderer = this.sceneService.renderer();
       const scene = this.sceneService.scene();
       const camera = this.sceneService.camera();
 
-      if (renderer && scene && camera) {
+      if (renderer && scene && camera && !this.effectAdded) {
         // Initialize the composer first (if not already done)
         this.composerService.init(renderer, scene, camera);
 
@@ -133,20 +124,16 @@ export class ChromaticAberrationEffectComponent {
           chromaticAberrationEffect
         );
 
+        this.effectAdded = true;
+
         // Enable the composer to switch render function
         this.composerService.enable();
-        this.initialized = true;
       }
     });
 
     // Update chromatic aberration parameters reactively
     effect(() => {
-      // Trigger reactivity on all inputs
-      this.intensity();
-      this.direction();
-
-      // Only update if initialized
-      if (this.initialized) {
+      if (this.effectAdded) {
         // Rebuild effect with new parameters
         const chromaticAberrationEffect = this.createChromaticAberrationNode();
         this.composerService.addEffect(
@@ -156,11 +143,13 @@ export class ChromaticAberrationEffectComponent {
         this.sceneService.invalidate();
       }
     });
+  }
 
-    // Cleanup on destroy using DestroyRef pattern
-    this.destroyRef.onDestroy(() => {
+  public ngOnDestroy(): void {
+    if (this.effectAdded) {
       this.composerService.removeEffect(this.effectName);
-    });
+      this.effectAdded = false;
+    }
   }
 
   /**
@@ -169,13 +158,7 @@ export class ChromaticAberrationEffectComponent {
    * Calculates UV offset based on distance from center and direction mode,
    * then creates a color difference that represents the aberration.
    *
-   * Since we're working with the post-processing chain and not direct texture
-   * sampling, this returns a color offset that gets added to the scene output.
-   * The offset is calculated to simulate the RGB channel separation effect.
-   *
-   * Note: This is an approximation since true chromatic aberration requires
-   * sampling the scene texture at offset UVs. The approximation uses UV-based
-   * color shifting to create a similar visual effect.
+   * The effect is additive - it adds color offsets to simulate RGB separation.
    */
   private createChromaticAberrationNode(): Node {
     // Clamp intensity to valid range (0.0 - 0.1)
@@ -212,16 +195,11 @@ export class ChromaticAberrationEffectComponent {
 
       // Create color offset that simulates RGB channel separation
       // Red shifts outward (positive offset), Blue shifts inward (negative offset)
-      // This creates a subtle color fringing effect at the edges
-      //
-      // The offset values represent how much each channel differs from the original
-      // When added to the scene color, this creates the aberration effect
       const redOffset = mul(scaledOffset.x, float(2.0)); // Red shifts more on X
       const blueOffset = mul(scaledOffset.y.negate(), float(2.0)); // Blue shifts opposite on Y
 
       // Return the color offset (difference from original)
       // This gets added to the scene output in the effect chain
-      // Small positive red, zero green, small negative blue creates the fringing
       return vec3(redOffset, float(0), blueOffset);
     })();
 
