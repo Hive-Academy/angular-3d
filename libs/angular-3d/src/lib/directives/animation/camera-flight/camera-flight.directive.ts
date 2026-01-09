@@ -472,7 +472,9 @@ export class CameraFlightDirective {
 
     // Validate we can fly forward
     if (nextIdx >= wps.length || wps.length < 2) {
-      console.warn('[CameraFlight] Cannot fly forward - invalid waypoint index');
+      console.warn(
+        '[CameraFlight] Cannot fly forward - invalid waypoint index'
+      );
       return;
     }
 
@@ -489,7 +491,9 @@ export class CameraFlightDirective {
 
     // Handle reduced motion
     if (this.prefersReducedMotion()) {
-      console.log('[CameraFlight] Reduced motion enabled - jumping to waypoint');
+      console.log(
+        '[CameraFlight] Reduced motion enabled - jumping to waypoint'
+      );
       this.jumpToWaypoint(nextIdx);
       return;
     }
@@ -498,10 +502,13 @@ export class CameraFlightDirective {
     console.log('[CameraFlight] Creating flight timeline...');
     try {
       const timelinePromise = this.createFlightTimeline(from, to, 'forward');
-      console.log('[CameraFlight] createFlightTimeline called, awaiting promise...');
+      console.log(
+        '[CameraFlight] createFlightTimeline called, awaiting promise...'
+      );
 
       timelinePromise.then(
-        (result) => console.log('[CameraFlight] Promise resolved with:', !!result),
+        (result) =>
+          console.log('[CameraFlight] Promise resolved with:', !!result),
         (err) => console.error('[CameraFlight] Promise rejected with:', err)
       );
 
@@ -514,10 +521,15 @@ export class CameraFlightDirective {
         this.timeline.play();
         console.log('[CameraFlight] Timeline created and playing!');
       } else {
-        console.error('[CameraFlight] Failed to create timeline - returned null');
+        console.error(
+          '[CameraFlight] Failed to create timeline - returned null'
+        );
       }
     } catch (error) {
-      console.error('[CameraFlight] Error in startForwardFlight after createFlightTimeline:', error);
+      console.error(
+        '[CameraFlight] Error in startForwardFlight after createFlightTimeline:',
+        error
+      );
     }
   }
 
@@ -613,11 +625,17 @@ export class CameraFlightDirective {
 
     const camera = this.sceneService?.camera();
     if (!camera) {
-      console.error('[CameraFlight] Camera not available - sceneService:', !!this.sceneService);
+      console.error(
+        '[CameraFlight] Camera not available - sceneService:',
+        !!this.sceneService
+      );
       return null;
     }
 
-    console.log('[CameraFlight] Camera available, position:', camera.position.toArray());
+    console.log(
+      '[CameraFlight] Camera available, position:',
+      camera.position.toArray()
+    );
 
     // Dynamic GSAP import for tree-shaking optimization
     let gsap: typeof import('gsap').gsap;
@@ -737,8 +755,18 @@ export class CameraFlightDirective {
         console.log('[CameraFlight] FOV tween added');
       }
 
-      console.log('[CameraFlight] Timeline created successfully, duration:', timeline.duration());
-      console.log('[CameraFlight] About to return timeline from createFlightTimeline...');
+      console.log(
+        '[CameraFlight] Timeline created successfully, duration:',
+        timeline.duration()
+      );
+
+      // WORKAROUND: Play the timeline directly here since the promise
+      // resolution back to startForwardFlight seems to be hanging
+      console.log('[CameraFlight] Playing timeline directly...');
+      this.timeline = timeline;
+      timeline.play();
+      console.log('[CameraFlight] Timeline.play() called!');
+
       return timeline;
     } catch (error) {
       console.error('[CameraFlight] Error creating timeline:', error);
