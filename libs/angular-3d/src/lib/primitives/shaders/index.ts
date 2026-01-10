@@ -94,17 +94,20 @@ export {
   tslStars,
   tslCausticsTexture,
   tslPhotosphere,
+  tslGasGiant,
 
   // Natural materials
   tslMarble,
   tslWood,
   tslRust,
+  tslConcrete,
 
   // Patterns
   tslPolkaDots,
   tslGrid,
   tslVoronoiCells,
   tslBricks,
+  tslFabric,
 
   // Shape modifiers
   tslSupersphere,
@@ -115,4 +118,32 @@ export {
   tslReticularVeins,
   tslWaterMarble,
   tslRoughClay,
+
+  // Particle and volumetric effects
+  tslBlueYardParticles,
+  tslBlueYardParticlesEmissive,
+  tslVolumetricParticleCloud,
+  tslFireClouds,
 } from './tsl-textures';
+
+// Volumetric fog
+export {
+  tslVolumetricFog,
+  type VolumetricFogConfig,
+} from './tsl-textures/volumetric-fog';
+
+// Fire textures
+export {
+  createFireTextureUniforms,
+  createFireTextureNode,
+  createOptimizedFireNode,
+  type FireTextureUniforms,
+} from './tsl-fire-texture';
+
+// Volumetric fire (raymarched)
+export {
+  createVolumetricFireUniforms,
+  createVolumetricFireNode,
+  type VolumetricFireUniforms,
+  type VolumetricFireConfig,
+} from './tsl-volumetric-fire';

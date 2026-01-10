@@ -411,6 +411,288 @@ Waypoint-based flight animation for spaceship-like movement.
 
 ---
 
+### CameraFlightDirective
+
+Hold-to-fly camera navigation between predefined waypoints. Coordinates with OrbitControls to disable during flight and sync target after arrival. Uses GSAP for smooth camera animation with pause/resume capability.
+
+**Selector**: `[a3dCameraFlight]`
+
+**Inputs**:
+
+| Input                 | Type               | Default    | Description                                       |
+| --------------------- | ------------------ | ---------- | ------------------------------------------------- |
+| `waypoints`           | `CameraWaypoint[]` | (required) | Array of waypoints defining the flight path       |
+| `enabled`             | `boolean`          | `true`     | Enable/disable flight controls                    |
+| `holdButton`          | `number`           | `0`        | Mouse button for forward flight (0=left, 2=right) |
+| `backwardKey`         | `string`           | `'KeyQ'`   | Key code for backward navigation                  |
+| `startIndex`          | `number`           | `0`        | Starting waypoint index                           |
+| `controlsEnableDelay` | `number`           | `300`      | Delay (ms) before re-enabling OrbitControls       |
+
+**Outputs**:
+
+| Output                  | Type                      | Description                                 |
+| ----------------------- | ------------------------- | ------------------------------------------- |
+| `flightStart`           | `void`                    | Emitted when flight begins                  |
+| `flightEnd`             | `void`                    | Emitted when flight ends (waypoint reached) |
+| `waypointReached`       | `WaypointReachedEvent`    | Emitted when camera arrives at a waypoint   |
+| `progressChange`        | `FlightProgressEvent`     | Emitted during flight with progress (0-1)   |
+| `navigationStateChange` | `WaypointNavigationState` | Emitted when navigation state changes       |
+
+**CameraWaypoint Interface**:
+
+```typescript
+interface CameraWaypoint {
+  id: string; // Unique identifier
+  position: [number, number, number]; // Camera position [x, y, z]
+  lookAt: [number, number, number]; // Camera look-at target [x, y, z]
+  duration?: number; // Flight duration in seconds (default: 2)
+  ease?: string; // GSAP easing function (default: 'power2.inOut')
+  fov?: number; // Optional FOV override for zoom effects
+}
+```
+
+**Example - Basic camera flight**:
+
+```typescript
+@Component({
+  template: `
+    <a3d-scene-3d>
+      <a3d-orbit-controls a3dCameraFlight [waypoints]="waypoints" (controlsReady)="onControlsReady($event)" (waypointReached)="onWaypointReached($event)" (flightStart)="isFlying.set(true)" (flightEnd)="isFlying.set(false)" />
+    </a3d-scene-3d>
+  `,
+})
+export class HeroComponent {
+  @ViewChild(CameraFlightDirective) flightDirective!: CameraFlightDirective;
+
+  waypoints: CameraWaypoint[] = [
+    { id: 'start', position: [0, 0, 16], lookAt: [0, 0, 0] },
+    { id: 'destination', position: [-15, 3, 8], lookAt: [-20, 2, -5], duration: 2.5 },
+  ];
+
+  isFlying = signal(false);
+
+  onControlsReady(controls: OrbitControls): void {
+    this.flightDirective.setOrbitControls(controls);
+  }
+
+  onWaypointReached(event: WaypointReachedEvent): void {
+    console.log(`Arrived at: ${event.waypoint.id}`);
+  }
+}
+```
+
+**Features**:
+
+- Hold-to-fly forward navigation (configurable mouse button)
+- Key-press backward navigation (Q key by default)
+- Pause/resume flight on mouse release/hold
+- Quaternion-based camera rotation (prevents gimbal lock flipping)
+- OrbitControls coordination (disable during flight, sync target after)
+- Progress events for driving visual effects (warp lines, speed effects)
+- Reduced motion support (instant jumps instead of animated flight)
+
+---
+
+### ObjectFlightDirective
+
+Waypoint-based object animation for 3D objects. Mirrors the CameraFlightDirective API for consistency, but animates Object3D instances instead of the camera.
+
+**Selector**: `[a3dObjectFlight]`
+
+**Inputs**:
+
+| Input             | Type               | Default          | Description                                 |
+| ----------------- | ------------------ | ---------------- | ------------------------------------------- |
+| `waypoints`       | `ObjectWaypoint[]` | (required)       | Array of waypoints defining the flight path |
+| `enabled`         | `boolean`          | `true`           | Enable/disable flight controls              |
+| `startIndex`      | `number`           | `0`              | Starting waypoint index                     |
+| `defaultDuration` | `number`           | `1.5`            | Default duration for waypoints              |
+| `defaultEase`     | `string`           | `'power2.inOut'` | Default easing function                     |
+| `autoPlay`        | `boolean`          | `false`          | Auto-play through all waypoints on init     |
+| `loop`            | `boolean`          | `false`          | Loop back to start after last waypoint      |
+
+**Outputs**:
+
+| Output                  | Type                         | Description                               |
+| ----------------------- | ---------------------------- | ----------------------------------------- |
+| `flightStart`           | `void`                       | Emitted when flight begins                |
+| `flightEnd`             | `void`                       | Emitted when flight ends                  |
+| `waypointReached`       | `ObjectWaypointReachedEvent` | Emitted when object arrives at a waypoint |
+| `progressChange`        | `ObjectFlightProgressEvent`  | Emitted during flight with progress (0-1) |
+| `navigationStateChange` | `ObjectFlightState`          | Emitted when navigation state changes     |
+
+**ObjectWaypoint Interface**:
+
+```typescript
+interface ObjectWaypoint {
+  id: string; // Unique identifier
+  position: [number, number, number]; // Object position [x, y, z]
+  rotation?: [number, number, number]; // Optional rotation [x, y, z] in radians
+  scale?: [number, number, number] | number; // Optional scale
+  duration?: number; // Flight duration in seconds
+  ease?: string; // GSAP easing function
+}
+```
+
+**Example - Animated object with waypoints**:
+
+```typescript
+@Component({
+  template: `
+    <a3d-scene-3d>
+      <a3d-sphere #sphere a3dObjectFlight [waypoints]="objectWaypoints" [defaultDuration]="1.5" (waypointReached)="onObjectWaypointReached($event)" (progressChange)="onProgressChange($event)" />
+    </a3d-scene-3d>
+  `,
+})
+export class AnimatedObjectComponent {
+  @ViewChild('sphere', { read: ObjectFlightDirective })
+  objectFlight!: ObjectFlightDirective;
+
+  objectWaypoints: ObjectWaypoint[] = [
+    { id: 'start', position: [0, 0, 0] },
+    { id: 'center', position: [5, 2, 0], duration: 2, scale: 1.5 },
+    { id: 'end', position: [10, 0, 0], duration: 1.5, ease: 'power3.out' },
+  ];
+
+  flyToNext(): void {
+    this.objectFlight.flyNext();
+  }
+
+  flyToPrevious(): void {
+    this.objectFlight.flyPrevious();
+  }
+}
+```
+
+**Public Methods**:
+
+| Method                 | Description                                 |
+| ---------------------- | ------------------------------------------- |
+| `flyNext()`            | Fly to next waypoint                        |
+| `flyPrevious()`        | Fly to previous waypoint                    |
+| `flyToWaypoint(idx)`   | Fly to a specific waypoint index            |
+| `jumpToWaypoint(idx)`  | Instantly jump to a waypoint (no animation) |
+| `pauseFlight()`        | Pause the current flight animation          |
+| `resumeFlight()`       | Resume a paused flight animation            |
+| `getNavigationState()` | Get current navigation state snapshot       |
+
+**Features**:
+
+- Sequential waypoint navigation with forward/backward support
+- Position, rotation, and scale animation per waypoint
+- Configurable duration and easing per waypoint
+- Progress events for driving visual effects
+- Auto-play and loop modes
+- Reduced motion support
+
+---
+
+### CameraShakeDirective
+
+Configurable camera shake effects for impacts, transitions, and dynamic scenes. Provides organic, multi-layered shake with configurable intensity, frequency, and decay.
+
+**Selector**: `[a3dCameraShake]`
+
+**Inputs**:
+
+| Input            | Type      | Default | Description                                    |
+| ---------------- | --------- | ------- | ---------------------------------------------- |
+| `shakeEnabled`   | `boolean` | `false` | Enable/disable shake via input binding         |
+| `shakeIntensity` | `number`  | `0.05`  | Shake intensity in scene units                 |
+| `shakeFrequency` | `number`  | `10`    | Oscillation frequency (higher = faster)        |
+| `shakeDecay`     | `number`  | `0`     | Decay rate per second (0 = no decay)           |
+| `shakeMaxX`      | `number`  | -       | Max offset in X axis (default: intensity)      |
+| `shakeMaxY`      | `number`  | -       | Max offset in Y axis (default: intensity\*0.8) |
+| `shakeMaxZ`      | `number`  | `0`     | Max offset in Z axis                           |
+
+**Outputs**:
+
+| Output        | Type               | Description                      |
+| ------------- | ------------------ | -------------------------------- |
+| `shakeChange` | `CameraShakeEvent` | Emitted when shake state changes |
+
+**CameraShakeEvent Interface**:
+
+```typescript
+interface CameraShakeEvent {
+  isShaking: boolean; // Whether shake is active
+  currentIntensity: number; // Current intensity (may decay)
+  elapsedTime: number; // Seconds since shake started
+}
+```
+
+**Example - Input-controlled shake**:
+
+```html
+<div a3dCameraShake [shakeEnabled]="isFlying()" [shakeIntensity]="0.08" [shakeFrequency]="12" />
+```
+
+**Example - Programmatic control**:
+
+```typescript
+@Component({
+  template: `
+    <a3d-scene-3d>
+      <div #shaker a3dCameraShake />
+      <!-- Scene content -->
+    </a3d-scene-3d>
+  `,
+})
+export class ImpactSceneComponent {
+  @ViewChild('shaker', { read: CameraShakeDirective })
+  cameraShake!: CameraShakeDirective;
+
+  // One-shot impact shake
+  onImpact(): void {
+    this.cameraShake.triggerShake({
+      duration: 0.3,
+      intensity: 0.12,
+      fadeOut: true,
+    });
+  }
+
+  // Continuous shake
+  startRumble(): void {
+    this.cameraShake.startShake({ intensity: 0.05, frequency: 8 });
+  }
+
+  stopRumble(): void {
+    this.cameraShake.stopShake();
+  }
+}
+```
+
+**Public Methods**:
+
+| Method                  | Description                                   |
+| ----------------------- | --------------------------------------------- |
+| `startShake(config?)`   | Start continuous shake with optional config   |
+| `stopShake()`           | Stop shake and restore camera position        |
+| `triggerShake(options)` | One-shot shake that auto-stops after duration |
+| `getIsShaking()`        | Get current shake state                       |
+
+**ShakeTriggerOptions**:
+
+```typescript
+interface ShakeTriggerOptions {
+  duration: number; // Shake duration in seconds (required)
+  intensity?: number; // Override intensity
+  frequency?: number; // Override frequency
+  fadeOut?: boolean; // Fade to zero over duration (default: true)
+}
+```
+
+**Features**:
+
+- Multi-layered sine wave shake for organic feel
+- One-shot triggers with automatic fadeout
+- Continuous shake with manual control
+- Per-axis intensity control (X, Y, Z)
+- Automatic camera position restoration
+- Integrates with demand-based rendering
+
+---
+
 ## 🎯 Interaction Directives
 
 ### MouseTracking3dDirective

@@ -90,8 +90,25 @@ import {
   output,
 } from '@angular/core';
 import * as THREE from 'three/webgpu';
-import { RGBELoader } from 'three-stdlib';
+import { EXRLoader, RGBELoader } from 'three-stdlib';
 import { SceneService } from '../../canvas/scene.service';
+
+/**
+ * Supported HDR file types and their loaders
+ */
+type HdrFileType = 'hdr' | 'exr';
+
+/**
+ * Detects file type from URL/path extension
+ */
+function detectFileType(url: string): HdrFileType {
+  const lowerUrl = url.toLowerCase();
+  if (lowerUrl.endsWith('.exr')) {
+    return 'exr';
+  }
+  // Default to HDR for .hdr files or URLs without clear extension
+  return 'hdr';
+}
 
 /**
  * Environment presets - URLs to commonly used HDRIs.
@@ -224,7 +241,10 @@ export class EnvironmentComponent {
   private envMap: THREE.Texture | null = null;
 
   /** RGBE loader instance for loading HDR files */
-  private loader: RGBELoader | null = null;
+  private rgbeLoader: RGBELoader | null = null;
+
+  /** EXR loader instance for loading EXR files */
+  private exrLoader: EXRLoader | null = null;
 
   /** Tracks active loading operation for cancellation */
   private loadingAborted = false;
@@ -328,9 +348,10 @@ export class EnvironmentComponent {
   // ============================================================================
 
   /**
-   * Loads an HDRI file and applies it to the scene.
+   * Loads an HDRI/EXR file and applies it to the scene.
+   * Automatically detects file type based on extension and uses appropriate loader.
    *
-   * @param url URL or path to the HDRI file
+   * @param url URL or path to the HDRI/EXR file
    * @param renderer WebGPU renderer for PMREM generation
    * @param scene Scene to apply environment to
    */
@@ -349,75 +370,88 @@ export class EnvironmentComponent {
     this.pmremGenerator = new THREE.PMREMGenerator(renderer);
     this.pmremGenerator.compileEquirectangularShader();
 
-    // Initialize RGBE loader
-    this.loader = new RGBELoader();
+    // Detect file type and use appropriate loader
+    const fileType = detectFileType(url);
 
-    this.loader.load(
-      url,
-      // onLoad callback
-      (texture) => {
-        // Check if this load was aborted (e.g., component destroyed or source changed)
-        if (this.loadingAborted) {
-          texture.dispose();
-          return;
-        }
-
-        // Generate environment map from equirectangular HDRI
-        const pmremResult = this.pmremGenerator!.fromEquirectangular(texture);
-        this.envMap = pmremResult.texture;
-
-        // Apply as scene environment for PBR materials
-        scene.environment = this.envMap;
-
-        // Apply background if enabled
-        if (this.background()) {
-          scene.background = this.envMap;
-          scene.backgroundBlurriness = Math.max(0, Math.min(1, this.blur()));
-        }
-
-        // Apply intensity
-        scene.environmentIntensity = Math.max(0, this.intensity());
-
-        // Dispose source texture (no longer needed after PMREM processing)
+    // Common callbacks for both loaders
+    const onLoad = (texture: THREE.DataTexture) => {
+      // Check if this load was aborted (e.g., component destroyed or source changed)
+      if (this.loadingAborted) {
         texture.dispose();
-
-        // Dispose PMREM generator (no longer needed after processing)
-        if (this.pmremGenerator) {
-          this.pmremGenerator.dispose();
-          this.pmremGenerator = null;
-        }
-
-        // Update state
-        this.isLoading.set(false);
-        this.loaded.emit(this.envMap);
-        this.sceneService.invalidate();
-      },
-      // onProgress callback
-      (progress) => {
-        if (progress.total > 0) {
-          const percent = Math.round((progress.loaded / progress.total) * 100);
-          this.loading.emit(percent);
-        }
-      },
-      // onError callback
-      (err) => {
-        // Check if this load was aborted
-        if (this.loadingAborted) {
-          return;
-        }
-
-        const error =
-          err instanceof Error
-            ? err
-            : new Error(typeof err === 'string' ? err : 'Failed to load HDRI');
-
-        this.isLoading.set(false);
-        this.loadError.set(error.message);
-        this.loadError$.emit(error);
-
-        console.error('[EnvironmentComponent] Failed to load HDRI:', error);
+        return;
       }
-    );
+
+      // Generate environment map from equirectangular HDRI
+      const pmremResult = this.pmremGenerator!.fromEquirectangular(texture);
+      this.envMap = pmremResult.texture;
+
+      // Apply as scene environment for PBR materials
+      scene.environment = this.envMap;
+
+      // Apply background if enabled
+      if (this.background()) {
+        scene.background = this.envMap;
+        scene.backgroundBlurriness = Math.max(0, Math.min(1, this.blur()));
+      }
+
+      // Apply intensity
+      scene.environmentIntensity = Math.max(0, this.intensity());
+
+      // Dispose source texture (no longer needed after PMREM processing)
+      texture.dispose();
+
+      // Dispose PMREM generator (no longer needed after processing)
+      if (this.pmremGenerator) {
+        this.pmremGenerator.dispose();
+        this.pmremGenerator = null;
+      }
+
+      // Update state
+      this.isLoading.set(false);
+      this.loaded.emit(this.envMap);
+      this.sceneService.invalidate();
+    };
+
+    const onProgress = (progress: ProgressEvent) => {
+      if (progress.total > 0) {
+        const percent = Math.round((progress.loaded / progress.total) * 100);
+        this.loading.emit(percent);
+      }
+    };
+
+    const onError = (err: unknown) => {
+      // Check if this load was aborted
+      if (this.loadingAborted) {
+        return;
+      }
+
+      const error =
+        err instanceof Error
+          ? err
+          : new Error(
+              typeof err === 'string'
+                ? err
+                : `Failed to load ${fileType.toUpperCase()} file`
+            );
+
+      this.isLoading.set(false);
+      this.loadError.set(error.message);
+      this.loadError$.emit(error);
+
+      console.error(
+        `[EnvironmentComponent] Failed to load ${fileType.toUpperCase()}:`,
+        error
+      );
+    };
+
+    // Use appropriate loader based on file type
+    if (fileType === 'exr') {
+      this.exrLoader = new EXRLoader();
+      this.exrLoader.load(url, onLoad, onProgress, onError);
+    } else {
+      this.rgbeLoader = new RGBELoader();
+      this.rgbeLoader.load(url, onLoad, onProgress, onError);
+    }
   }
 
   /**
@@ -451,8 +485,9 @@ export class EnvironmentComponent {
       this.pmremGenerator = null;
     }
 
-    // Clear loader reference
-    this.loader = null;
+    // Clear loader references
+    this.rgbeLoader = null;
+    this.exrLoader = null;
   }
 
   /**

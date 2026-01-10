@@ -22,11 +22,9 @@ import {
   DestroyRef,
   inject,
   signal,
-  viewChild,
 } from '@angular/core';
 import {
   AssetPreloaderService,
-  CameraShakeDirective,
   CinematicEntranceConfig,
   LoadingOverlayComponent,
   StaggerGroupService,
@@ -67,7 +65,7 @@ interface WaypointConfig {
 
 @Component({
   selector: 'app-hero-section',
-  imports: [LoadingOverlayComponent, CameraShakeDirective, HeroSceneComponent],
+  imports: [LoadingOverlayComponent, HeroSceneComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- Loading Overlay -->
@@ -85,14 +83,8 @@ interface WaypointConfig {
       class="hero-container relative w-full overflow-hidden"
       style="height: 100vh"
     >
-      <!-- Layer 1: 3D Scene (with camera shake during transitions) -->
-      <div
-        #cameraShakeRef
-        a3dCameraShake
-        [shakeIntensity]="shakeIntensity()"
-        [shakeFrequency]="shakeFrequency()"
-        class="gradient-layer absolute inset-0 z-0 bg-background-dark"
-      >
+      <!-- Layer 1: 3D Scene (camera shake is inside HeroSceneComponent for proper SceneService access) -->
+      <div class="gradient-layer absolute inset-0 z-0 bg-background-dark">
         <app-hero-scene
           [cameraPosition]="cameraPosition"
           [backgroundColor]="spaceBackgroundColor"
@@ -101,6 +93,9 @@ interface WaypointConfig {
           [warpDirection]="navigationDirection()"
           [warpColor]="currentWarpColor()"
           [warpSpeed]="warpSpeed()"
+          [shakeEnabled]="isTransitioning()"
+          [shakeIntensity]="shakeIntensity()"
+          [shakeFrequency]="shakeFrequency()"
           [firePosition]="currentFirePosition()"
           [fireColor]="currentFireColor()"
           [robotPosition]="robotPosition"
@@ -256,11 +251,6 @@ export class HeroSectionComponent {
   private readonly preloader = inject(AssetPreloaderService);
   private readonly staggerService = inject(StaggerGroupService);
 
-  /** Reference to camera shake directive for programmatic control */
-  private readonly cameraShakeDirective = viewChild('cameraShakeRef', {
-    read: CameraShakeDirective,
-  });
-
   /** Store orbit controls reference */
   private orbitControlsRef: import('three-stdlib').OrbitControls | null = null;
 
@@ -311,8 +301,8 @@ export class HeroSectionComponent {
   protected readonly waypoints: WaypointConfig[] = [
     {
       id: 'wp0-nghive',
-      spherePosition: [0, -12, -10], // Bottom center (like original)
-      nebulaPosition: [60, 40, -110], // Top-right background
+      spherePosition: [0, -8, -10], // Bottom center (like original)
+      nebulaPosition: [60, 40, -120], // Top-right background
       textPosition: 'center',
       theme: {
         fireColor: '#A1FF4F',
@@ -333,8 +323,8 @@ export class HeroSectionComponent {
     },
     {
       id: 'wp1-angular3d',
-      spherePosition: [-12, 0, -2], // LEFT side
-      nebulaPosition: [80, 30, -100], // RIGHT side (opposite)
+      spherePosition: [-10, 0, -2], // LEFT side
+      nebulaPosition: [80, 30, -120], // RIGHT side (opposite)
       textPosition: 'right',
       theme: {
         fireColor: '#9B59B6',
@@ -356,7 +346,7 @@ export class HeroSectionComponent {
     {
       id: 'wp2-gsap',
       spherePosition: [12, 0, -2], // RIGHT side
-      nebulaPosition: [-60, 30, -100], // LEFT side (opposite)
+      nebulaPosition: [-60, 30, -120], // LEFT side (opposite)
       textPosition: 'left',
       theme: {
         fireColor: '#00FFFF',
@@ -710,9 +700,7 @@ export class HeroSectionComponent {
     this.navigationDirection.set(targetIndex > currentIdx ? 1 : -1);
 
     this.isTransitioning.set(true);
-
-    // Start camera shake
-    this.startCameraShake();
+    // Camera shake is now controlled via [shakeEnabled]="isTransitioning()" input
 
     // Create animation object for sphere and nebula positions
     const animObj = {
@@ -751,59 +739,10 @@ export class HeroSectionComponent {
       });
     });
 
-    // Stop camera shake
-    this.stopCameraShake();
-
     // Update waypoint after animation
+    // Camera shake stops automatically when isTransitioning becomes false
     this.activeWaypoint.set(targetIndex);
     this.isTransitioning.set(false);
     this.navigationDirection.set(0); // Reset direction
-  }
-
-  // =========================================================================
-  // CAMERA SHAKE EFFECT (using CameraShakeDirective)
-  // =========================================================================
-
-  /**
-   * Start camera shake using the CameraShakeDirective.
-   * The directive handles the actual shake effect on the 3D camera.
-   */
-  private startCameraShake(): void {
-    const directive = this.cameraShakeDirective();
-    if (directive) {
-      directive.startShake({
-        intensity: this.shakeIntensity(),
-        frequency: this.shakeFrequency(),
-        decay: 0, // No decay during transition
-      });
-    }
-  }
-
-  /**
-   * Stop camera shake and restore camera position.
-   */
-  private stopCameraShake(): void {
-    const directive = this.cameraShakeDirective();
-    if (directive) {
-      directive.stopShake();
-    }
-  }
-
-  /**
-   * Alternative: Trigger a one-shot shake effect that auto-stops.
-   * Useful for impact effects or short bursts.
-   *
-   * @example
-   * this.triggerImpactShake(0.5, 0.1); // 0.5s shake at intensity 0.1
-   */
-  protected triggerImpactShake(duration: number, intensity?: number): void {
-    const directive = this.cameraShakeDirective();
-    if (directive) {
-      directive.triggerShake({
-        duration,
-        intensity: intensity ?? this.shakeIntensity(),
-        fadeOut: true,
-      });
-    }
   }
 }

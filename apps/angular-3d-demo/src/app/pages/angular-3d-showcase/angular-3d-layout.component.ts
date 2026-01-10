@@ -701,9 +701,11 @@ export default class Angular3dLayoutComponent {
         { path: 'primitives', label: 'Primitives', icon: '📦' },
         { path: 'particles', label: 'Particles', icon: '✨' },
         { path: 'textures', label: 'Textures', icon: '🎨' },
+        { path: 'textures-advanced', label: 'Advanced Shaders', icon: '🌈' },
         { path: 'backgrounds', label: 'Backgrounds', icon: '🌌' },
         { path: 'text', label: 'Text', icon: '✏️' },
         { path: 'lighting', label: 'Lighting', icon: '💡' },
+        { path: 'environment', label: 'Environment', icon: '🌍' },
       ],
     },
     {

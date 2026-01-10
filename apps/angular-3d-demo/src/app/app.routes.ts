@@ -55,6 +55,14 @@ export const appRoutes: Routes = [
         title: 'Lighting | Angular-3D',
       },
       {
+        path: 'environment',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/sections/environment-section.component'
+          ),
+        title: 'Environment Maps | Angular-3D',
+      },
+      {
         path: 'directives',
         loadComponent: () =>
           import(
@@ -182,6 +190,14 @@ export const appRoutes: Routes = [
             './pages/angular-3d-showcase/sections/tsl-textures-section.component'
           ),
         title: 'TSL Textures | Angular-3D',
+      },
+      {
+        path: 'textures-advanced',
+        loadComponent: () =>
+          import(
+            './pages/angular-3d-showcase/sections/tsl-textures-advanced-section.component'
+          ),
+        title: 'Advanced TSL Shaders | Angular-3D',
       },
       {
         path: 'backgrounds',

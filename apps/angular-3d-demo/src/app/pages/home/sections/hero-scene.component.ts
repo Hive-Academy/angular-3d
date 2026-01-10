@@ -4,6 +4,7 @@
  * A reusable 3D scene component that contains:
  * - OrbitControls with Cinematic Entrance
  * - Warp Lines effect for transitions
+ * - Camera Shake effect for flight rumble
  * - Lighting setup (ambient, directional, HDRI environment)
  * - Star fields for space backdrop
  * - Nebula volumetric background
@@ -24,6 +25,7 @@ import {
 import {
   AmbientLightComponent,
   BloomEffectComponent,
+  CameraShakeDirective,
   CinematicEntranceConfig,
   CinematicEntranceDirective,
   DirectionalLightComponent,
@@ -61,6 +63,7 @@ import * as THREE from 'three/webgpu';
     ThrusterFlameComponent,
     MouseTracking3dDirective,
     NebulaVolumetricComponent,
+    CameraShakeDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -94,6 +97,15 @@ import * as THREE from 'three/webgpu';
         [focalShift]="12"
       />
 
+      <!-- Camera Shake Effect during transitions (MUST be inside Scene3dComponent for SceneService access) -->
+      <div
+        a3dCameraShake
+        [shakeEnabled]="shakeEnabled()"
+        [shakeIntensity]="shakeIntensity()"
+        [shakeFrequency]="shakeFrequency()"
+        [shakeDecay]="0"
+      ></div>
+
       <!-- Lighting -->
       <a3d-ambient-light [intensity]="0.08" />
       <a3d-directional-light
@@ -105,13 +117,6 @@ import * as THREE from 'three/webgpu';
         [position]="[-10, 5, -10]"
         [intensity]="0.3"
         [color]="'#4a90d9'"
-      />
-
-      <!-- HDRI Environment -->
-      <a3d-environment
-        [preset]="'night'"
-        [intensity]="0.15"
-        [background]="false"
       />
 
       <!-- Star Fields -->
@@ -223,6 +228,13 @@ import * as THREE from 'three/webgpu';
         [nozzleRadius]="15"
       />
 
+      <!-- HDRI Environment -->
+      <a3d-environment
+        [preset]="'dawn'"
+        [intensity]="0.15"
+        [background]="false"
+      />
+
       <!-- Bloom Effect -->
       <a3d-effect-composer [enabled]="true">
         <a3d-bloom-effect [threshold]="0.25" [strength]="0.7" [radius]="0.5" />
@@ -280,6 +292,19 @@ export class HeroSceneComponent {
 
   /** Warp effect speed */
   public readonly warpSpeed = input<number>(50);
+
+  // =========================================================================
+  // INPUTS - Camera Shake Effect
+  // =========================================================================
+
+  /** Enable camera shake during transitions (controlled by parent via isFlying) */
+  public readonly shakeEnabled = input<boolean>(false);
+
+  /** Camera shake intensity (subtle by default for flight rumble) */
+  public readonly shakeIntensity = input<number>(0.03);
+
+  /** Camera shake frequency (higher = faster oscillation) */
+  public readonly shakeFrequency = input<number>(15);
 
   // =========================================================================
   // INPUTS - Fire Sphere

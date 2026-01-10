@@ -109,14 +109,26 @@ src/
 │   │           ├── shapes.ts        # Supersphere, melter
 │   │           ├── space.ts         # Planet, stars, photosphere
 │   │           └── organic.ts       # Brain, veins, clay
-│   ├── directives/                  # Animation behaviors (27 total)
-│   │   ├── animation/               # Animation directives (6)
+│   ├── directives/                  # Animation behaviors (30 total)
+│   │   ├── animation/               # Animation directives (9)
 │   │   │   ├── float-3d.directive.ts
 │   │   │   ├── rotate-3d.directive.ts
 │   │   │   ├── space-flight-3d.directive.ts
 │   │   │   ├── cinematic-entrance.directive.ts  # Camera entrance animations
 │   │   │   ├── scene-reveal.directive.ts        # Object reveal animations
-│   │   │   └── stagger-group.service.ts         # Stagger coordination
+│   │   │   ├── stagger-group.service.ts         # Stagger coordination
+│   │   │   ├── camera-flight/                   # Waypoint-based camera navigation
+│   │   │   │   ├── camera-flight.directive.ts   # Hold-to-fly camera control
+│   │   │   │   ├── camera-flight.types.ts       # CameraWaypoint, events
+│   │   │   │   └── index.ts
+│   │   │   ├── object-flight/                   # Waypoint-based object animation
+│   │   │   │   ├── object-flight.directive.ts   # Object waypoint navigation
+│   │   │   │   ├── object-flight.types.ts       # ObjectWaypoint, events
+│   │   │   │   └── index.ts
+│   │   │   └── camera-shake/                    # Camera shake effects
+│   │   │       ├── camera-shake.directive.ts    # Impact/transition shake
+│   │   │       ├── camera-shake.types.ts        # CameraShakeConfig, events
+│   │   │       └── index.ts
 │   │   ├── core/                    # Core directives (3)
 │   │   │   ├── mesh.directive.ts
 │   │   │   ├── group.directive.ts
@@ -340,6 +352,32 @@ async onEntranceComplete() {
 <a3d-box a3dSceneReveal [revealConfig]="{ animation: 'scale-pop', staggerGroup: 'myGroup' }"> </a3d-box>
 ```
 
+### Waypoint Flight Navigation
+
+Use flight directives for interactive camera or object navigation between waypoints:
+
+```typescript
+// Camera flight with OrbitControls coordination
+@ViewChild(CameraFlightDirective) cameraFlight!: CameraFlightDirective;
+
+waypoints: CameraWaypoint[] = [
+  { id: 'home', position: [0, 0, 16], lookAt: [0, 0, 0] },
+  { id: 'feature', position: [-15, 3, 8], lookAt: [-20, 2, -5], duration: 2.5 },
+];
+
+onControlsReady(controls: OrbitControls): void {
+  this.cameraFlight.setOrbitControls(controls);
+}
+```
+
+```html
+<!-- Camera flight on OrbitControls -->
+<a3d-orbit-controls a3dCameraFlight [waypoints]="waypoints" [holdButton]="0" (controlsReady)="onControlsReady($event)" (waypointReached)="onWaypointReached($event)" (flightStart)="isFlying.set(true)" (flightEnd)="isFlying.set(false)" />
+
+<!-- Object flight on any 3D object -->
+<a3d-sphere a3dObjectFlight [waypoints]="objectWaypoints" [autoPlay]="true" [loop]="true" (progressChange)="onProgress($event)" />
+```
+
 ## Public API
 
 The library exports are organized by module. Import from `@hive-academy/angular-3d`:
@@ -366,15 +404,41 @@ export { GltfLoaderService, TextureLoaderService, injectGltfLoader, injectTextur
 // Loading & Entrance Animations
 export { AssetPreloaderService, type AssetDefinition, type AssetType, type PreloadState, CinematicEntranceDirective, type CinematicEntranceConfig, type EntrancePreset, SceneRevealDirective, type SceneRevealConfig, type RevealAnimation, StaggerGroupService, type RevealableDirective } from '@hive-academy/angular-3d';
 
+// Flight Animations (Camera & Object Waypoint Navigation)
+export {
+  // Camera Flight
+  CameraFlightDirective,
+  type CameraWaypoint,
+  type CameraFlightConfig,
+  type WaypointNavigationState,
+  type WaypointReachedEvent,
+  type FlightProgressEvent,
+  // Object Flight
+  ObjectFlightDirective,
+  type ObjectWaypoint,
+  type ObjectFlightConfig,
+  type ObjectFlightState,
+  type ObjectWaypointReachedEvent,
+  type ObjectFlightProgressEvent,
+  // Camera Shake
+  CameraShakeDirective,
+  type CameraShakeConfig,
+  type CameraShakeEvent,
+  type ShakeTriggerOptions,
+} from '@hive-academy/angular-3d';
+
 // Primitives - All 54 components via barrel exports
 export * from '@hive-academy/angular-3d'; // Includes all geometry, lights, text, space, particles, effects, scene, loaders, backgrounds
 
-// Directives - All 24 directives
+// Directives - All 27 directives
 export {
   // Animation
   Float3dDirective,
   Rotate3dDirective,
   SpaceFlight3dDirective,
+  CameraFlightDirective, // Waypoint-based camera navigation
+  ObjectFlightDirective, // Waypoint-based object animation
+  CameraShakeDirective, // Impact/transition shake effects
   // Core
   MeshDirective,
   GroupDirective,
