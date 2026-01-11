@@ -39,6 +39,7 @@ import { NG_3D_PARENT } from '../../types/tokens';
 import {
   createMarbleMaterial,
   type MarbleMaterialConfig,
+  type MarbleUniforms,
 } from '../shaders/tsl-marble';
 
 @Component({
@@ -138,6 +139,7 @@ export class MarbleSphereComponent {
   public mesh: THREE.Mesh | null = null;
   private geometry: THREE.SphereGeometry | null = null;
   private material: THREE.MeshStandardNodeMaterial | null = null;
+  private marbleUniforms: MarbleUniforms | null = null;
   private isAddedToScene = false;
 
   public constructor() {
@@ -168,6 +170,33 @@ export class MarbleSphereComponent {
       if (this.mesh) {
         this.mesh.castShadow = castShadow;
         this.mesh.receiveShadow = receiveShadow;
+      }
+    });
+
+    // Effect: Update colorA when it changes
+    effect(() => {
+      const colorA = this.colorA();
+      if (this.marbleUniforms) {
+        const color = new THREE.Color(colorA);
+        this.marbleUniforms.colorA.value.set(color.r, color.g, color.b);
+      }
+    });
+
+    // Effect: Update colorB when it changes
+    effect(() => {
+      const colorB = this.colorB();
+      if (this.marbleUniforms) {
+        const color = new THREE.Color(colorB);
+        this.marbleUniforms.colorB.value.set(color.r, color.g, color.b);
+      }
+    });
+
+    // Effect: Update edgeColor when it changes
+    effect(() => {
+      const edgeColor = this.edgeColor();
+      if (this.marbleUniforms) {
+        const color = new THREE.Color(edgeColor);
+        this.marbleUniforms.edgeColor.value.set(color.r, color.g, color.b);
       }
     });
 
@@ -203,8 +232,11 @@ export class MarbleSphereComponent {
       edgeIntensity: this.edgeIntensity(),
     };
 
-    // Create marble material nodes
+    // Create marble material nodes with uniforms for reactive updates
     const marble = createMarbleMaterial(config);
+
+    // Store uniforms for reactive color updates
+    this.marbleUniforms = marble.uniforms;
 
     // Create MeshStandardNodeMaterial with TSL nodes
     this.material = new THREE.MeshStandardNodeMaterial({
@@ -240,5 +272,6 @@ export class MarbleSphereComponent {
       this.material = null;
     }
     this.mesh = null;
+    this.marbleUniforms = null;
   }
 }

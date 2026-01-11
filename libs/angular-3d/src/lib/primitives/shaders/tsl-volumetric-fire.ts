@@ -36,7 +36,6 @@ const {
   mix,
   smoothstep,
   select,
-  fract,
 } = TSL;
 
 /**
@@ -75,6 +74,7 @@ const localize = Fn(([worldPos, invMatrix]: [TSLNode, TSLNode]) => {
  *
  * @param p - Local position (in sphere's local space)
  * @param sphereRadius - Actual sphere radius for proper scaling
+ * @param innerRadius - Inner radius for hollow shell (0 = solid)
  * @param noiseScale - Noise scale [x, y, z, timeSpeed]
  * @param lacunarity - FBM frequency multiplier
  * @param gain - FBM amplitude multiplier
@@ -82,7 +82,17 @@ const localize = Fn(([worldPos, invMatrix]: [TSLNode, TSLNode]) => {
  * @param seed - Random seed for variation
  */
 const samplerSphericalFire = Fn(
-  ([p, sphereRadius, noiseScale, lacunarity, gain, magnitude, seed]: [
+  ([
+    p,
+    sphereRadius,
+    innerRadius,
+    noiseScale,
+    lacunarity,
+    gain,
+    magnitude,
+    seed,
+  ]: [
+    TSLNode,
     TSLNode,
     TSLNode,
     TSLNode,
@@ -91,17 +101,21 @@ const samplerSphericalFire = Fn(
     TSLNode,
     TSLNode
   ]) => {
-    // RADIAL DISTANCE from sphere center, normalized to 0-1 range
+    // RADIAL DISTANCE from sphere center
     const distFromCenter = length(p);
+    const hasHollow = innerRadius.greaterThan(float(0.001));
+
+    // For hollow shell: DON'T remap distance - let fire pattern extend naturally from center
+    // We'll just cut off everything inside innerRadius with the hollowMask
+    // This avoids putting the "bright core" at the inner boundary
     const normalizedDist = distFromCenter.div(sphereRadius);
 
     // Animate fire - radial expansion outward over time
-    // FIX: Use fract() to keep time bounded and prevent noise coordinate drift
-    // Without this, after several minutes, timeOffset becomes huge and pushes
-    // noise sampling too far away, causing flames to degrade into dots
+    // NOTE: fract() was removed to prevent visible "reset" jumps in animation.
+    // If flames degrade after extended viewing (10+ min), consider adding
+    // a very long cycle: mod(rawTime, 1000.0) or similar.
     const animP = vec3(p).toVar('animP');
-    const rawTime = seed.add(time).mul(noiseScale.w).div(10.0); // Divide to slow down cycle
-    const timeOffset = fract(rawTime).mul(10.0); // Cycle every ~5 minutes at default speed
+    const timeOffset = seed.add(time).mul(noiseScale.w); // Continuous time, no cycling
 
     // VERY LOW FREQUENCY noise for LARGE, SEPARATED flame shapes
     // Lower multiplier (0.25) = bigger, more distinct flame tendrils
@@ -185,7 +199,22 @@ const samplerSphericalFire = Fn(
     const coronaFade = smoothstep(float(2.5), float(0.4), normalizedDist);
     const alpha = sunSurface.mul(coronaFade);
 
-    return vec4(coloredSun.x, coloredSun.y, coloredSun.z, alpha);
+    // For hollow shell: hard cutoff at innerRadius
+    // Anything inside innerRadius = 0, outside = 1
+    // Ray termination in the marching loop handles the visual transition
+    const insideHollow = distFromCenter.lessThan(innerRadius);
+    const hollowMask = select(
+      hasHollow.and(insideHollow),
+      float(0.0),
+      float(1.0)
+    );
+
+    return vec4(
+      coloredSun.x.mul(hollowMask),
+      coloredSun.y.mul(hollowMask),
+      coloredSun.z.mul(hollowMask),
+      alpha.mul(hollowMask)
+    );
   }
 );
 
@@ -197,6 +226,7 @@ export interface VolumetricFireUniforms {
   invModelMatrix: TSLNode & { value: Matrix4 };
   scale: TSLNode & { value: Vector3 };
   sphereRadius: TSLNode & { value: number };
+  innerRadius: TSLNode & { value: number };
   noiseScale: TSLNode;
   magnitude: TSLNode & { value: number };
   lacunarity: TSLNode;
@@ -210,6 +240,7 @@ export interface VolumetricFireUniforms {
 export interface VolumetricFireConfig {
   color?: Color | number;
   sphereRadius?: number;
+  innerRadius?: number;
   noiseScale?: [number, number, number, number];
   magnitude?: number;
   lacunarity?: number;
@@ -232,6 +263,7 @@ export const createVolumetricFireUniforms = (
     invModelMatrix: uniform(new Matrix4()),
     scale: uniform(new Vector3(1, 1, 1)),
     sphereRadius: uniform(config.sphereRadius ?? 4.5),
+    innerRadius: uniform(config.innerRadius ?? 0),
     noiseScale: vec4(
       float(config.noiseScale?.[0] ?? 0.8),
       float(config.noiseScale?.[1] ?? 0.8),
@@ -272,6 +304,29 @@ export const createVolumetricFireNode = (
 
     const col = vec4(0.0).toVar('col');
 
+    // Track if ray has entered hollow region - once true, stop accumulating
+    // This prevents back-shell fire from filling the hollow center
+    const hasHollow = uniforms.innerRadius.greaterThan(float(0.001));
+    const enteredHollow = float(0.0).toVar('enteredHollow');
+
+    // Calculate ray's closest approach to sphere center (in local space)
+    // This determines if the ray passes THROUGH the hollow or just grazes the shell
+    // Formula: closestDist = |rayOrigin - rayDir * dot(rayOrigin, rayDir)|
+    // We use camera position relative to sphere center (approximated by inverse model matrix)
+    const localCamPos = localize(cameraPosition, uniforms.invModelMatrix);
+    const localRayDir = normalize(
+      localize(rayPos, uniforms.invModelMatrix).sub(localCamPos)
+    );
+    const tClosest = TSL.dot(localCamPos.negate(), localRayDir);
+    const closestPoint = localCamPos.add(localRayDir.mul(tClosest));
+    const closestDist = length(closestPoint);
+
+    // If ray passes through hollow center, make entire pixel transparent
+    // This prevents front-shell fire from creating haze in the hollow view
+    const rayPassesThroughHollow = hasHollow.and(
+      closestDist.lessThan(uniforms.innerRadius)
+    );
+
     Loop(int(iterations), () => {
       rayPos.addAssign(rayDir.mul(rayLen));
 
@@ -282,10 +337,36 @@ export const createVolumetricFireNode = (
       const distFromCenter = length(lp);
       const insideExtended = distFromCenter.lessThan(extendedRadius);
 
-      // Sample sun/fire
+      // Check if this sample is inside the hollow region
+      const isInHollow = distFromCenter.lessThan(uniforms.innerRadius);
+
+      // Once ray enters hollow, set flag (stays set for rest of ray march)
+      // This implements ray termination for hollow center
+      enteredHollow.assign(
+        TSL.max(
+          enteredHollow,
+          select(hasHollow.and(isInHollow), float(1.0), float(0.0))
+        )
+      );
+
+      // Stop accumulating once we've passed through hollow (back shell cutoff)
+      const shouldAccumulate = float(1.0).sub(enteredHollow);
+
+      // Hollow shell fade for soft edge at inner boundary
+      const fadeWidth = uniforms.innerRadius.mul(0.3);
+      const fadeEnd = uniforms.innerRadius.add(fadeWidth).add(float(0.001));
+      const rawShellFade = smoothstep(
+        uniforms.innerRadius,
+        fadeEnd,
+        distFromCenter
+      );
+      const shellFade = select(hasHollow, rawShellFade, float(1.0));
+
+      // Sample sun/fire (pass innerRadius for hollow shell support)
       const fireSample = samplerSphericalFire(
         lp,
         uniforms.sphereRadius,
+        uniforms.innerRadius,
         uniforms.noiseScale,
         uniforms.lacunarity,
         uniforms.gain,
@@ -293,8 +374,23 @@ export const createVolumetricFireNode = (
         uniforms.seed
       );
 
+      // Apply hollow shell fade AND ray termination mask
+      // Also skip ALL accumulation if ray passes through hollow center
+      const skipForHollow = select(
+        rayPassesThroughHollow,
+        float(0.0),
+        float(1.0)
+      );
+      const combinedMask = shellFade.mul(shouldAccumulate).mul(skipForHollow);
+      const fadedSample = vec4(
+        fireSample.x.mul(combinedMask),
+        fireSample.y.mul(combinedMask),
+        fireSample.z.mul(combinedMask),
+        fireSample.w.mul(combinedMask)
+      );
+
       // Accumulate within extended radius
-      col.addAssign(select(insideExtended, fireSample, vec4(0.0)));
+      col.addAssign(select(insideExtended, fadedSample, vec4(0.0)));
     });
 
     // In fire mode (not sun mode), apply color tint over the built-in colors

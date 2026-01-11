@@ -7,6 +7,7 @@ export * from './metaball';
 // Use MetaballSceneComponent + MetaballSphereComponent + MetaballCursorComponent instead
 
 export * from './marble-sphere.component';
+export * from './caustics-sphere.component';
 export * from './background-cubes.component';
 export * from './fire-sphere.component';
 export * from './glass-shell.component';

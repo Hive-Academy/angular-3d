@@ -26,6 +26,7 @@ import {
   AmbientLightComponent,
   BloomEffectComponent,
   CameraShakeDirective,
+  CausticsSphereComponent,
   CinematicEntranceConfig,
   CinematicEntranceDirective,
   DirectionalLightComponent,
@@ -64,6 +65,7 @@ import * as THREE from 'three/webgpu';
     MouseTracking3dDirective,
     NebulaVolumetricComponent,
     CameraShakeDirective,
+    CausticsSphereComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -161,16 +163,29 @@ import * as THREE from 'three/webgpu';
         [edgePulseAmount]="0.2"
       />
 
-      <!-- Fire Sphere -->
+      <!-- Fire Sphere with Hollow Center -->
       <a3d-fire-sphere
         [radius]="6"
+        [innerRadius]="3.6"
         [quality]="'quality'"
         [sunMode]="false"
-        [iterations]="40"
+        [iterations]="10"
         [position]="firePosition()"
-        [fireMagnitude]="0.8"
-        [fireNoiseScale]="0.8"
+        [fireMagnitude]="0.45"
+        [fireNoiseScale]="2.8"
         [fireColor]="fireColor()"
+      />
+
+      <!-- Caustics Sphere Inside the Fire -->
+      <a3d-caustics-sphere
+        [radius]="3.4"
+        [position]="firePosition()"
+        [color]="innerSphereColor()"
+        [background]="innerSphereBackground()"
+        [causticsScale]="2"
+        [speed]="1"
+        [intensity]="1.5"
+        [roughness]="0.05"
       />
 
       <!-- Flying Robot with Mouse Tracking -->
@@ -235,7 +250,7 @@ import * as THREE from 'three/webgpu';
         [background]="false"
       />
 
-      <!-- Bloom Effect -->
+      <!-- Bloom Effect - TEMPORARILY DISABLED FOR TESTING -->
       <a3d-effect-composer [enabled]="true">
         <a3d-bloom-effect [threshold]="0.25" [strength]="0.7" [radius]="0.5" />
       </a3d-effect-composer>
@@ -315,6 +330,16 @@ export class HeroSceneComponent {
 
   /** Fire sphere color */
   public readonly fireColor = input<string>('#A1FF4F');
+
+  // =========================================================================
+  // INPUTS - Inner Caustics Sphere (inside fire)
+  // =========================================================================
+
+  /** Inner sphere bright caustic color (light areas) */
+  public readonly innerSphereColor = input<string>('#66ffaa');
+
+  /** Inner sphere dark background color (shadow areas) */
+  public readonly innerSphereBackground = input<string>('#001a0d');
 
   // =========================================================================
   // INPUTS - Robot

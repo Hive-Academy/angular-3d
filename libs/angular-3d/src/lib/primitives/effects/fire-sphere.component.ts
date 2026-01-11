@@ -106,6 +106,14 @@ export class FireSphereComponent {
   // Quality Mode Configuration (volumetric)
   // ========================================================================
 
+  /**
+   * Inner radius for hollow fire shell effect - volumetric only (default: 0)
+   * When > 0, creates a hollow fire shell that can surround other objects.
+   * The fire fades smoothly from innerRadius outward.
+   * Example: radius=6, innerRadius=4 creates a fire shell 2 units thick.
+   */
+  public readonly innerRadius = input<number>(0);
+
   /** Fire turbulence magnitude - volumetric only (default: 0.4) */
   public readonly fireMagnitude = input<number>(0.4);
 
@@ -172,6 +180,14 @@ export class FireSphereComponent {
       if (this.sphereMesh) this.sphereMesh.scale.setScalar(s);
     });
 
+    // Effect: Update fire color when it changes (quality mode only)
+    effect(() => {
+      const color = this.fireColor();
+      if (this.volumetricFireUniforms) {
+        this.volumetricFireUniforms.color.value.set(color);
+      }
+    });
+
     this.destroyRef.onDestroy(() => this.dispose());
   }
 
@@ -216,6 +232,7 @@ export class FireSphereComponent {
       this.volumetricFireUniforms = createVolumetricFireUniforms({
         color: new THREE.Color(this.fireColor()),
         sphereRadius: radius,
+        innerRadius: this.innerRadius(),
         noiseScale: [noiseScale, noiseScale, noiseScale, speed],
         magnitude: this.fireMagnitude(),
         lacunarity: this.lacunarity(),

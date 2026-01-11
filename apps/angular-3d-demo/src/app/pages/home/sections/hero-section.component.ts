@@ -53,6 +53,10 @@ interface WaypointConfig {
     nebulaPrimaryColor: number;
     /** Nebula secondary color (hex number) */
     nebulaSecondaryColor: number;
+    /** Inner sphere bright caustic color */
+    innerSphereColor: string;
+    /** Inner sphere dark background color */
+    innerSphereBackground: string;
   };
   /** Content */
   content: {
@@ -98,6 +102,8 @@ interface WaypointConfig {
           [shakeFrequency]="shakeFrequency()"
           [firePosition]="currentFirePosition()"
           [fireColor]="currentFireColor()"
+          [innerSphereColor]="currentInnerSphereColor()"
+          [innerSphereBackground]="currentInnerSphereBackground()"
           [robotPosition]="robotPosition"
           [nebulaPosition]="currentNebulaPosition()"
           [nebulaPrimaryColor]="currentNebulaPrimaryColor()"
@@ -312,6 +318,8 @@ export class HeroSectionComponent {
         warpColor: '#A1FF4F',
         nebulaPrimaryColor: 0xa1ff4f, // Neon green
         nebulaSecondaryColor: 0x6366f1, // Indigo
+        innerSphereColor: '#66ffaa', // Bright neon green-teal
+        innerSphereBackground: '#001a0d', // Dark green
       },
       content: {
         badge: 'ngHive Academy',
@@ -334,6 +342,8 @@ export class HeroSectionComponent {
         warpColor: '#9B59B6',
         nebulaPrimaryColor: 0x9b59b6, // Purple
         nebulaSecondaryColor: 0xec4899, // Pink
+        innerSphereColor: '#dd88ff', // Bright purple-pink
+        innerSphereBackground: '#1a001a', // Dark purple
       },
       content: {
         badge: 'Angular 3D',
@@ -356,6 +366,8 @@ export class HeroSectionComponent {
         warpColor: '#00FFFF',
         nebulaPrimaryColor: 0x00ffff, // Cyan
         nebulaSecondaryColor: 0x3b82f6, // Blue
+        innerSphereColor: '#88ddff', // Bright cyan
+        innerSphereBackground: '#001a22', // Dark cyan/blue
       },
       content: {
         badge: 'Angular GSAP',
@@ -451,6 +463,16 @@ export class HeroSectionComponent {
   /** Nebula secondary color (from current waypoint) */
   protected readonly currentNebulaSecondaryColor = computed(
     () => this.currentWaypoint().theme.nebulaSecondaryColor
+  );
+
+  /** Inner sphere bright color (from current waypoint) */
+  protected readonly currentInnerSphereColor = computed(
+    () => this.currentWaypoint().theme.innerSphereColor
+  );
+
+  /** Inner sphere dark background (from current waypoint) */
+  protected readonly currentInnerSphereBackground = computed(
+    () => this.currentWaypoint().theme.innerSphereBackground
   );
 
   // =========================================================================

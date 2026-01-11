@@ -76,9 +76,11 @@ export {
   tslMarbleRaymarch,
   tslGlossyFresnel,
   createMarbleMaterial,
+  createMarbleUniforms,
 
   // Types and constants
   type MarbleMaterialConfig,
+  type MarbleUniforms,
   MARBLE_DEFAULTS,
 } from './tsl-marble';
 

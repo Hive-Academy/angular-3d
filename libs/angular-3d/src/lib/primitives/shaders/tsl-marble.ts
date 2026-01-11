@@ -36,7 +36,7 @@
  */
 
 import * as TSL from 'three/tsl';
-import { Color, ColorRepresentation } from 'three/webgpu';
+import { Color, ColorRepresentation, Vector3 } from 'three/webgpu';
 import { nativeFBM } from './tsl-utilities';
 
 // TSL nodes use complex types - use generic node type for flexibility
@@ -63,6 +63,7 @@ const {
   positionWorld,
   cameraPosition,
   normalWorld,
+  uniform,
 } = TSL;
 
 // TSL Fn helper with proper typing to avoid arg type mismatch
@@ -118,6 +119,36 @@ export const MARBLE_DEFAULTS = {
   textureBlendMode: 'replace' as const,
   textureBlendAmount: 0.5,
 };
+
+/**
+ * Uniforms interface for reactive marble colors
+ */
+export interface MarbleUniforms {
+  colorA: { value: Vector3 };
+  colorB: { value: Vector3 };
+  edgeColor: { value: Vector3 };
+}
+
+/**
+ * Create uniforms for marble material with reactive color updates
+ */
+export function createMarbleUniforms(
+  config: MarbleMaterialConfig = {}
+): MarbleUniforms {
+  const cfg = { ...MARBLE_DEFAULTS, ...config };
+
+  const colorAVal = new Color(cfg.colorA);
+  const colorBVal = new Color(cfg.colorB);
+  const edgeColorVal = new Color(cfg.edgeColor);
+
+  return {
+    colorA: { value: new Vector3(colorAVal.r, colorAVal.g, colorAVal.b) },
+    colorB: { value: new Vector3(colorBVal.r, colorBVal.g, colorBVal.b) },
+    edgeColor: {
+      value: new Vector3(edgeColorVal.r, edgeColorVal.g, edgeColorVal.b),
+    },
+  };
+}
 
 // ============================================================================
 // Helper Functions
@@ -290,10 +321,10 @@ export const tslGlossyFresnel = TSLFn(
  * Create Marble Material Nodes
  *
  * Convenience factory that creates pre-configured TSL nodes for a marble material.
- * Returns both colorNode and emissiveNode ready for MeshStandardNodeMaterial.
+ * Returns colorNode, emissiveNode, and uniforms for reactive color updates.
  *
  * @param config - Optional configuration overrides
- * @returns Object with colorNode, emissiveNode, and recommended material settings
+ * @returns Object with colorNode, emissiveNode, uniforms, and recommended material settings
  *
  * @example
  * ```typescript
@@ -310,11 +341,15 @@ export const tslGlossyFresnel = TSLFn(
  * });
  * material.colorNode = marble.colorNode;
  * material.emissiveNode = marble.emissiveNode;
+ *
+ * // Update colors reactively
+ * marble.uniforms.colorA.value.set(r, g, b);
  * ```
  */
 export function createMarbleMaterial(config: MarbleMaterialConfig = {}): {
   colorNode: TSLNode;
   emissiveNode: TSLNode;
+  uniforms: MarbleUniforms;
   roughness: number;
   metalness: number;
 } {
@@ -324,15 +359,13 @@ export function createMarbleMaterial(config: MarbleMaterialConfig = {}): {
   // Clamp iterations to valid range (8-32) for performance/quality balance
   const iterations = clampNumber(cfg.iterations, 8, 32);
 
-  // Convert colors to THREE.Color then to vec3
-  const colorAVal = new Color(cfg.colorA);
-  const colorBVal = new Color(cfg.colorB);
-  const edgeColorVal = new Color(cfg.edgeColor);
+  // Create uniforms for reactive color updates
+  const uniforms = createMarbleUniforms(config);
 
-  // Create color nodes
-  const colorANode = vec3(colorAVal.r, colorAVal.g, colorAVal.b);
-  const colorBNode = vec3(colorBVal.r, colorBVal.g, colorBVal.b);
-  const edgeColorNode = vec3(edgeColorVal.r, edgeColorVal.g, edgeColorVal.b);
+  // Create uniform nodes that can be updated at runtime
+  const colorANode = uniform(uniforms.colorA.value);
+  const colorBNode = uniform(uniforms.colorB.value);
+  const edgeColorNode = uniform(uniforms.edgeColor.value);
 
   // Create raymarched interior gradient
   const colorNode = tslMarbleRaymarch(
@@ -355,6 +388,7 @@ export function createMarbleMaterial(config: MarbleMaterialConfig = {}): {
   return {
     colorNode,
     emissiveNode,
+    uniforms,
     roughness: 0.1, // Low roughness for glossy reflections
     metalness: 0.0, // Non-metallic for correct fresnel behavior
   };
