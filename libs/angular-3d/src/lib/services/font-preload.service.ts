@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+// eslint-disable-next-line @nx/enforce-module-boundaries -- troika-three-text is external npm package, not an app
 import { preloadFont } from 'troika-three-text';
 
 /**

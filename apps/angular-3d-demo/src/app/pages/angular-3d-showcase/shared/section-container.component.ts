@@ -53,7 +53,7 @@ export class SectionContainerComponent {
    * Background color variant
    * @default 'light'
    */
-  readonly background = input<'light' | 'dark'>('light');
+  public readonly background = input<'light' | 'dark'>('light');
 
   /**
    * Number of columns in desktop grid layout
@@ -62,7 +62,7 @@ export class SectionContainerComponent {
    * Desktop: 2, 3, or 4 columns based on this input
    * @default 3
    */
-  readonly columns = input<2 | 3 | 4>(3);
+  public readonly columns = input<2 | 3 | 4>(3);
 
   /**
    * Generates responsive Tailwind grid classes based on column configuration
@@ -70,7 +70,7 @@ export class SectionContainerComponent {
    * - All layouts: 2 columns on tablet (768px - 1024px)
    * - Desktop (1024px+): 2, 3, or 4 columns based on input
    */
-  getGridClasses(): string {
+  public getGridClasses(): string {
     const colsMap = {
       2: 'grid md:grid-cols-2 gap-8x',
       3: 'grid md:grid-cols-2 lg:grid-cols-3 gap-8x',

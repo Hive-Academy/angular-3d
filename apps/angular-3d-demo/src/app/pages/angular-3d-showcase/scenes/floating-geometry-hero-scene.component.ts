@@ -175,5 +175,5 @@ import {
   ],
 })
 export class FloatingGeometryHeroSceneComponent {
-  readonly backgroundColor = 0x0a0a1a;
+  public readonly backgroundColor = 0x0a0a1a;
 }

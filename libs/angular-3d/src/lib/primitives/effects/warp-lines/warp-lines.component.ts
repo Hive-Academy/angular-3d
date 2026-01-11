@@ -87,7 +87,7 @@ export class WarpLinesComponent {
    * Controls opacity, line stretch, and movement speed.
    * @default 0
    */
-  readonly intensity = input<number>(0);
+  public readonly intensity = input<number>(0);
 
   /**
    * Movement direction for focal point shift.
@@ -96,62 +96,62 @@ export class WarpLinesComponent {
    * - 1: Moving right (focal point shifts left)
    * @default 0
    */
-  readonly direction = input<number>(0);
+  public readonly direction = input<number>(0);
 
   /**
    * Number of speed lines to render.
    * @default 200
    */
-  readonly lineCount = input<number>(200);
+  public readonly lineCount = input<number>(200);
 
   /**
    * Line color (hex string or CSS color).
    * @default '#ffffff'
    */
-  readonly color = input<string>('#ffffff');
+  public readonly color = input<string>('#ffffff');
 
   /**
    * Base length of lines in world units.
    * @default 1.5
    */
-  readonly lineLength = input<number>(1.5);
+  public readonly lineLength = input<number>(1.5);
 
   /**
    * Maximum stretch multiplier when intensity is 1.
    * @default 6
    */
-  readonly stretchMultiplier = input<number>(6);
+  public readonly stretchMultiplier = input<number>(6);
 
   /**
    * Maximum spread radius from center.
    * @default 25
    */
-  readonly spreadRadius = input<number>(25);
+  public readonly spreadRadius = input<number>(25);
 
   /**
    * Depth range for lines.
    * @default 40
    */
-  readonly depthRange = input<number>(40);
+  public readonly depthRange = input<number>(40);
 
   /**
    * Fade duration when intensity changes (ms).
    * @default 300
    */
-  readonly transitionDuration = input<number>(300);
+  public readonly transitionDuration = input<number>(300);
 
   /**
    * Speed of radial outward movement.
    * @default 40
    */
-  readonly speed = input<number>(40);
+  public readonly speed = input<number>(40);
 
   /**
    * How much the focal point shifts based on direction (-1 to 1).
    * Higher values = more dramatic shift.
    * @default 8
    */
-  readonly focalShift = input<number>(8);
+  public readonly focalShift = input<number>(8);
 
   // ─────────────────────────────────────────────────────────────────────────
   // INJECTIONS
@@ -187,7 +187,7 @@ export class WarpLinesComponent {
   // CONSTRUCTOR
   // ─────────────────────────────────────────────────────────────────────────
 
-  constructor() {
+  public constructor() {
     effect(() => {
       if (this.prefersReducedMotion) {
         this.targetIntensity = 0;

@@ -33,6 +33,7 @@
   "peerDependencies": {
     "@angular/core": "~20.3.0",
     "@angular/common": "~20.3.0",
+    "@angular/router": "~20.3.0",
     "three": "^0.182.0",
     "three-stdlib": "^2.35.0",
     "gsap": "^3.14.2",

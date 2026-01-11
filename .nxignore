@@ -1,0 +1,5 @@
+# Exclude Claude skills template files from nx project graph
+# These contain reference code that imports from @hive-academy/angular-3d
+# but should not be considered as project dependencies
+.claude
+.claude/**

@@ -219,7 +219,6 @@ export class CausticsSphereComponent {
   /**
    * Create caustics TSL node with uniform support
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private createCausticsNode(
     colorNode: ReturnType<typeof uniform>,
     backgroundNode: ReturnType<typeof uniform>,

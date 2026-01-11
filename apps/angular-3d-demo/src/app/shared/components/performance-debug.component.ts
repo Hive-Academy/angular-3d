@@ -183,8 +183,8 @@ export class PerformanceDebugComponent {
   private readonly callbackRegistry = inject(RenderCallbackRegistry);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly isVisible = signal(false);
-  readonly metrics = signal<PerformanceMetrics>({
+  public readonly isVisible = signal(false);
+  public readonly metrics = signal<PerformanceMetrics>({
     fps: 0,
     frameTime: 0,
     jsHeapUsed: 0,
@@ -192,7 +192,7 @@ export class PerformanceDebugComponent {
     activeCallbacks: 0,
     totalCallbacks: 0,
   });
-  readonly callbackDetails = signal<
+  public readonly callbackDetails = signal<
     { id: string; active: boolean; priority: number }[]
   >([]);
 
@@ -201,7 +201,7 @@ export class PerformanceDebugComponent {
   private animationFrameId: number | null = null;
 
   @HostListener('document:keydown', ['$event'])
-  onKeyDown(event: KeyboardEvent) {
+  public onKeyDown(event: KeyboardEvent) {
     if (event.key.toLowerCase() === 'p' && !event.ctrlKey && !event.metaKey) {
       this.isVisible.set(!this.isVisible());
       if (this.isVisible()) {
@@ -212,7 +212,7 @@ export class PerformanceDebugComponent {
     }
   }
 
-  constructor() {
+  public constructor() {
     afterNextRender(() => {
       // Check for ?debug=perf query param
       if (
