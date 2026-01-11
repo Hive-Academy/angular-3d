@@ -113,7 +113,7 @@ import * as THREE from 'three/webgpu';
       <a3d-directional-light
         [position]="[15, 10, 10]"
         [intensity]="1.0"
-        [color]="'#ffffff'"
+        [color]="'#ffffffff'"
       />
       <a3d-directional-light
         [position]="[-10, 5, -10]"
@@ -178,14 +178,15 @@ import * as THREE from 'three/webgpu';
 
       <!-- Caustics Sphere Inside the Fire -->
       <a3d-caustics-sphere
-        [radius]="3.4"
+        [radius]="3.5"
         [position]="firePosition()"
         [color]="innerSphereColor()"
         [background]="innerSphereBackground()"
-        [causticsScale]="2"
+        [causticsScale]="0.7"
         [speed]="1"
         [intensity]="1.5"
-        [roughness]="0.05"
+        [roughness]="0.07"
+        [metalness]="0.7"
       />
 
       <!-- Flying Robot with Mouse Tracking -->
@@ -248,6 +249,7 @@ import * as THREE from 'three/webgpu';
         [preset]="'dawn'"
         [intensity]="0.15"
         [background]="false"
+        [blur]="0.5"
       />
 
       <!-- Bloom Effect - TEMPORARILY DISABLED FOR TESTING -->

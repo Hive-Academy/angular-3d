@@ -199,21 +199,22 @@ const samplerSphericalFire = Fn(
     const coronaFade = smoothstep(float(2.5), float(0.4), normalizedDist);
     const alpha = sunSurface.mul(coronaFade);
 
-    // For hollow shell: hard cutoff at innerRadius
-    // Anything inside innerRadius = 0, outside = 1
-    // Ray termination in the marching loop handles the visual transition
-    const insideHollow = distFromCenter.lessThan(innerRadius);
-    const hollowMask = select(
-      hasHollow.and(insideHollow),
-      float(0.0),
+    // For hollow shell: soft fade at innerRadius boundary
+    // Creates a smooth transition instead of a hard edge
+    const fadeWidth = innerRadius.mul(0.4); // 40% of inner radius for soft fade
+    const fadeStart = innerRadius.sub(fadeWidth.mul(0.3)); // Start fade slightly inside
+    const fadeEnd = innerRadius.add(fadeWidth); // End fade outside inner radius
+    const hollowFade = select(
+      hasHollow,
+      smoothstep(fadeStart, fadeEnd, distFromCenter),
       float(1.0)
     );
 
     return vec4(
-      coloredSun.x.mul(hollowMask),
-      coloredSun.y.mul(hollowMask),
-      coloredSun.z.mul(hollowMask),
-      alpha.mul(hollowMask)
+      coloredSun.x.mul(hollowFade),
+      coloredSun.y.mul(hollowFade),
+      coloredSun.z.mul(hollowFade),
+      alpha.mul(hollowFade)
     );
   }
 );
@@ -353,13 +354,11 @@ export const createVolumetricFireNode = (
       const shouldAccumulate = float(1.0).sub(enteredHollow);
 
       // Hollow shell fade for soft edge at inner boundary
-      const fadeWidth = uniforms.innerRadius.mul(0.3);
-      const fadeEnd = uniforms.innerRadius.add(fadeWidth).add(float(0.001));
-      const rawShellFade = smoothstep(
-        uniforms.innerRadius,
-        fadeEnd,
-        distFromCenter
-      );
+      // Wider fade for smoother transition (50% of inner radius)
+      const fadeWidth = uniforms.innerRadius.mul(0.5);
+      const fadeStart = uniforms.innerRadius.sub(fadeWidth.mul(0.2)); // Start slightly inside
+      const fadeEnd = uniforms.innerRadius.add(fadeWidth);
+      const rawShellFade = smoothstep(fadeStart, fadeEnd, distFromCenter);
       const shellFade = select(hasHollow, rawShellFade, float(1.0));
 
       // Sample sun/fire (pass innerRadius for hollow shell support)
