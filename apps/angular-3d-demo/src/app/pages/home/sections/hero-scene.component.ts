@@ -202,8 +202,12 @@ import { SCENE_COLOR_STRINGS } from '../../../shared/colors';
 
       <!-- Caustics Sphere Inside the Fire -->
       <a3d-caustics-sphere
-        [radius]="6.3"
-        [position]="firePosition()"
+        [radius]="6.4"
+        [position]="[
+          firePosition()[0],
+          firePosition()[1],
+          firePosition()[2] + 1
+        ]"
         [color]="innerSphereColor()"
         [background]="innerSphereBackground()"
         [causticsScale]="0.7"
