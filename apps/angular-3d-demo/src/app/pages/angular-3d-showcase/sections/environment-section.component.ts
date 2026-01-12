@@ -36,11 +36,11 @@ const PRESETS: EnvironmentPreset[] = [
 
 /** Local HDRI files (4K EXR) */
 const LOCAL_HDRIS = [
-  { name: 'Venice Sunset', path: '/hdri/venice_sunset_4k.exr' },
-  { name: 'Kiara Dawn', path: '/hdri/kiara_1_dawn_4k.exr' },
-  { name: 'Lebombo', path: '/hdri/lebombo_4k.exr' },
-  { name: 'Dikhololo Night', path: '/hdri/dikhololo_night_4k.exr' },
-  { name: 'Studio Small', path: '/hdri/studio_small_03_4k.exr' },
+  { name: 'Venice Sunset', path: 'hdri/venice_sunset_4k.exr' },
+  { name: 'Kiara Dawn', path: 'hdri/kiara_1_dawn_4k.exr' },
+  { name: 'Lebombo', path: 'hdri/lebombo_4k.exr' },
+  { name: 'Dikhololo Night', path: 'hdri/dikhololo_night_4k.exr' },
+  { name: 'Studio Small', path: 'hdri/studio_small_03_4k.exr' },
 ];
 
 @Component({

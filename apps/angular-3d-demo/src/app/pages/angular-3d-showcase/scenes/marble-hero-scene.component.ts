@@ -31,6 +31,7 @@ import {
   SceneService,
   SpotLightComponent,
 } from '@hive-academy/angular-3d';
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import { GsapCoreService } from '@hive-academy/angular-gsap';
 import * as THREE from 'three/webgpu';
 
@@ -154,7 +155,7 @@ export class MarbleHeroContentComponent implements AfterViewInit {
     // Load the same background image used in CSS
     const textureLoader = new THREE.TextureLoader();
     textureLoader.load(
-      '/background-marble.png',
+      'background-marble.png',
       (texture) => {
         // Configure texture for environment mapping
         texture.mapping = THREE.EquirectangularReflectionMapping;

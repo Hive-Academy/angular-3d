@@ -30,16 +30,18 @@
   },
   "license": "MIT",
   "author": "Hive Academy",
+  "access": "public",
+  "private": false,
   "peerDependencies": {
+    "troika-three-text": "*",
     "@angular/core": "*",
-    "@angular/common": "*",
-    "@angular/router": "*",
     "three": "*",
     "three-stdlib": "*",
     "gsap": "*",
+    "@angular/common": "*",
+    "@angular/router": "*",
     "rxjs": "*",
-    "maath": "*",
-    "troika-three-text": "*"
+    "maath": "*"
   },
   "sideEffects": false
 }
