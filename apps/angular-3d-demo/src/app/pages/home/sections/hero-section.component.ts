@@ -38,8 +38,7 @@ interface WaypointConfig {
   id: string;
   /** 3D position for sphere/fire */
   spherePosition: [number, number, number];
-  /** 3D position for nebula (opposite side of sphere) */
-  nebulaPosition: [number, number, number];
+
   /** Text alignment on screen */
   textPosition: 'center' | 'left' | 'right';
   /** Theme colors */
@@ -364,7 +363,6 @@ export class HeroSectionComponent {
     {
       id: 'wp0-nghive',
       spherePosition: [0, -12, -10], // Bottom center (like original)
-      nebulaPosition: [60, 40, -120], // Top-right background
       textPosition: 'center',
       theme: {
         fireColor: '#A1FF4F',
@@ -388,7 +386,6 @@ export class HeroSectionComponent {
     {
       id: 'wp1-angular3d',
       spherePosition: [-12, 0, -5], // LEFT side
-      nebulaPosition: [80, 30, -150], // RIGHT side (opposite)
       textPosition: 'right',
       theme: {
         fireColor: '#9B59B6',
@@ -412,7 +409,6 @@ export class HeroSectionComponent {
     {
       id: 'wp2-gsap',
       spherePosition: [12, 0, -5], // RIGHT side
-      nebulaPosition: [-60, 30, -150], // LEFT side (opposite)
       textPosition: 'left',
       theme: {
         fireColor: '#00FFFF',
@@ -619,11 +615,6 @@ export class HeroSectionComponent {
     // Initialize sphere position
     this.animatedSphereX.set(this.waypoints[0].spherePosition[0]);
     this.animatedSphereY.set(this.waypoints[0].spherePosition[1]);
-
-    // Initialize nebula position
-    this.animatedNebulaX.set(this.waypoints[0].nebulaPosition[0]);
-    this.animatedNebulaY.set(this.waypoints[0].nebulaPosition[1]);
-    this.animatedNebulaZ.set(this.waypoints[0].nebulaPosition[2]);
   }
 
   private async loadGsap(): Promise<void> {
@@ -818,10 +809,7 @@ export class HeroSectionComponent {
         // Target sphere position
         sphereX: targetWp.spherePosition[0],
         sphereY: targetWp.spherePosition[1],
-        // Target nebula position (opposite side)
-        nebulaX: targetWp.nebulaPosition[0],
-        nebulaY: targetWp.nebulaPosition[1],
-        nebulaZ: targetWp.nebulaPosition[2],
+
         duration: this.animationDuration(),
         ease: 'power2.inOut',
         onUpdate: () => {

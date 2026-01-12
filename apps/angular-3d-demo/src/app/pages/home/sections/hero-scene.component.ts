@@ -35,7 +35,6 @@ import {
   FireSphereComponent,
   GltfModelComponent,
   MouseTracking3dDirective,
-  NebulaVolumetricComponent,
   OrbitControlsComponent,
   Scene3dComponent,
   SceneRevealDirective,
@@ -44,7 +43,7 @@ import {
   WarpLinesComponent,
 } from '@hive-academy/angular-3d';
 import * as THREE from 'three/webgpu';
-import { SCENE_COLOR_STRINGS } from '../../../shared/colors';
+import { SCENE_COLORS } from '../../../shared/colors';
 
 @Component({
   selector: 'app-hero-scene',
@@ -64,7 +63,6 @@ import { SCENE_COLOR_STRINGS } from '../../../shared/colors';
     GltfModelComponent,
     ThrusterFlameComponent,
     MouseTracking3dDirective,
-    NebulaVolumetricComponent,
     CameraShakeDirective,
     CausticsSphereComponent,
   ],
@@ -114,12 +112,13 @@ import { SCENE_COLOR_STRINGS } from '../../../shared/colors';
       <a3d-directional-light
         [position]="[15, 10, 10]"
         [intensity]="1.0"
-        [color]="'#ffffffff'"
+        [color]="colors.warmWhite"
       />
+
       <a3d-directional-light
         [position]="[-10, 5, -10]"
         [intensity]="0.3"
-        [color]="'#4a90d9'"
+        [color]="colors.neonCyan"
       />
 
       <!-- Star Fields -->
@@ -145,7 +144,7 @@ import { SCENE_COLOR_STRINGS } from '../../../shared/colors';
         [rotationAxis]="'y'"
       />
 
-      <!-- Nebula Background (position/color controlled by waypoints) -->
+      <!-- Nebula Background (position/color controlled by waypoints)
       <a3d-nebula-volumetric
         [position]="nebulaPosition()"
         [width]="120"
@@ -162,7 +161,7 @@ import { SCENE_COLOR_STRINGS } from '../../../shared/colors';
         [enableEdgePulse]="true"
         [edgePulseSpeed]="0.3"
         [edgePulseAmount]="0.2"
-      />
+      /> -->
 
       <!-- Fire Sphere with Hollow Center -->
       <a3d-fire-sphere
@@ -281,7 +280,7 @@ export class HeroSceneComponent {
   // =========================================================================
 
   public readonly Math = Math;
-  public readonly colors = SCENE_COLOR_STRINGS;
+  public readonly colors = SCENE_COLORS;
   /** Camera position in 3D space */
   public readonly cameraPosition = input<[number, number, number]>([0, 0, 18]);
 
