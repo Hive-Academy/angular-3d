@@ -30,8 +30,10 @@
   },
   "license": "MIT",
   "author": "Hive Academy",
-  "access": "public",
   "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "troika-three-text": "*",
     "@angular/core": "*",
