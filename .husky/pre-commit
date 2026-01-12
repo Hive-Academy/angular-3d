@@ -1,3 +1,5 @@
+#!/bin/sh
+
 echo "🔍 Running pre-commit checks..."
 
 # Run lint-staged (format and lint staged files)

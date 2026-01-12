@@ -194,6 +194,9 @@ jobs:
 
       - name: Create git tag
         shell: bash
+        env:
+          # Disable Husky hooks in CI - validation already done by pipeline
+          HUSKY: '0'
         run: |
           VERSION="${{ needs.determine-package.outputs.version }}"
           PACKAGE="${{ needs.determine-package.outputs.package_name }}"
