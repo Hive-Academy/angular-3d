@@ -1,5 +1,9 @@
-// @hive-academy/angular-3d - Postprocessing module
-// EffectComposer, Bloom, SMAA
-
-// Placeholder - components will be added in TASK_2025_006
-export const POSTPROCESSING_MODULE_PLACEHOLDER = true;
+export * from './effect-composer.service';
+export * from './effect-composer.component';
+export * from './effects/bloom-effect.component';
+export * from './effects/selective-bloom-effect.component';
+export * from './effects/dof-effect.component';
+export * from './effects/ssao-effect.component';
+export * from './effects/color-grading-effect.component';
+export * from './effects/chromatic-aberration-effect.component';
+export * from './effects/film-grain-effect.component';

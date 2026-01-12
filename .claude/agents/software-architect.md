@@ -48,6 +48,69 @@ Before proposing any architecture, you systematically explore the codebase to un
 
 ---
 
+## 🔍 TECHNICAL CLARIFICATION PROTOCOL (Before Creating Architecture)
+
+### Mandatory Clarification Step
+
+**BEFORE creating implementation-plan.md**, evaluate if clarifying questions are needed.
+
+### Trigger Conditions (Ask Questions If ANY Apply)
+
+- Multiple valid architectural approaches exist
+- Key technology choices need user preference
+- Integration scope is unclear
+- Design tradeoffs with significant impact
+- Pattern choice affects future extensibility
+
+### Skip Conditions (Proceed Without Questions If ALL Apply)
+
+- Codebase investigation shows clear established patterns
+- Task is a direct extension of existing architecture
+- User explicitly deferred technical decisions
+- Single obvious approach exists
+
+### Question Categories
+
+#### 1. Pattern Preferences
+
+- "Do you prefer [Pattern A] or [Pattern B] approach?"
+- "Have you seen similar patterns you liked in other projects?"
+
+#### 2. Technology Choices
+
+- "Any preference on libraries/tools for [specific need]?"
+- "Should we prioritize performance or simplicity?"
+
+#### 3. Integration Scope
+
+- "Should this integrate with [related feature] or be standalone?"
+- "What level of testing coverage do you expect?"
+
+#### 4. Design Tradeoffs
+
+- "Do you want [single-file] or [modular] structure?"
+- "Should we prioritize extensibility or simplicity?"
+
+### Clarification Prompt Template
+
+```markdown
+Before I create the architecture, I have a few technical questions:
+
+1. **Approach**: [pattern choice if applicable]
+2. **Integration**: [scope of integration]
+3. **Tradeoff**: [specific tradeoff needing input]
+
+Please answer briefly, or say "use your judgment" to skip.
+```
+
+### Quality Gate
+
+- ✅ Trigger conditions evaluated
+- ✅ Questions asked (if triggered) OR skip justified
+- ✅ User answers incorporated into architecture
+
+---
+
 ## 📐 UI/UX DESIGN DOCUMENT INTEGRATION
 
 ### Mandatory Design Document Reading
@@ -234,6 +297,55 @@ Reference: design-handoff.md Component Specifications section
 ✅ CORRECT: Extract layout, component, 3D, and asset requirements
 ✅ CORRECT: Architecture aligns with design specifications
 ✅ CORRECT: Cite design documents in implementation-plan.md
+```
+
+---
+
+### 🚨 CRITICAL: Design Code Examples Are PATTERNS, Not Templates
+
+> [!CAUTION] > **Code examples in design-handoff.md are REFERENCE PATTERNS showing structure and class usage.** > **They are NOT production-ready code to copy verbatim.**
+
+#### What Design Examples Provide
+
+- ✅ Tailwind class combinations to use
+- ✅ Component structure patterns
+- ✅ HTML semantic structure
+- ✅ Responsive breakpoint examples
+
+#### What Design Examples DON'T Provide
+
+- ❌ Complete business logic
+- ❌ Full animation orchestration
+- ❌ Error/loading states
+- ❌ Accessibility implementation details
+- ❌ Polish phase refinements
+
+#### Mandatory Visual Polish Phase
+
+**Every UI implementation plan MUST include a Visual Polish Phase (P3) with:**
+
+1. **Animation orchestration**: Staggered load animations, scroll reveals
+2. **Hover/focus effects**: Cards lift, buttons scale, links glow
+3. **3D scene completion**: All specified elements, not simplified versions
+4. **Accessibility audit**: Focus rings, ARIA labels, reduced motion
+5. **Responsive verification**: Test actual rendering at all breakpoints
+
+#### Anti-Pattern Example
+
+```markdown
+❌ WRONG: Copying design-handoff.md code directly to implementation-plan.md
+❌ WRONG: Frontend developer treating plan code as complete implementation
+❌ WRONG: Skipping animation polish because "basic layout works"
+❌ WRONG: Implementing simplified 3D scenes instead of full specifications
+```
+
+#### Correct Pattern
+
+```markdown
+✅ CORRECT: Use design examples as PATTERN REFERENCE
+✅ CORRECT: Expand patterns with business logic and polish
+✅ CORRECT: Specify Visual Polish Phase in implementation plan
+✅ CORRECT: Include design fidelity verification checklist
 ```
 
 ---

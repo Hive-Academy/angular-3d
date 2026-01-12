@@ -27,7 +27,7 @@ else → NEW_TASK mode
 ### STEP 1: Read Registry & Generate TASK_ID
 
 ```bash
-Read(D:\projects\ptah-extension\task-tracking\registry.md)
+Read(D:\projects\angular-3d-workspace\task-tracking\registry.md)
 
 # Find highest TASK_2025_XXX number, increment by 1
 # Example: If TASK_2025_028 is highest → new ID is TASK_2025_029
@@ -40,7 +40,7 @@ Read(D:\projects\ptah-extension\task-tracking\registry.md)
 mkdir task-tracking/TASK_[ID]
 
 # Write context.md
-Write(D:\projects\ptah-extension\task-tracking\TASK_[ID]\context.md, `
+Write(D:\projects\angular-3d-workspace\task-tracking\TASK_[ID]\context.md, `
 # Task Context - TASK_[ID]
 
 ## User Intent
@@ -64,12 +64,15 @@ Write(D:\projects\ptah-extension\task-tracking\TASK_[ID]\context.md, `
 
 **Detection Logic**:
 
-- Contains "implement", "add", "create", "build" → **FEATURE**
+- Contains "CI/CD", "pipeline", "GitHub Actions", "deploy", "Docker", "Kubernetes", "Terraform", "publish", "npm publish", "monitoring" → **DEVOPS**
+- Contains "implement", "add", "create", "build" (without DevOps keywords) → **FEATURE**
 - Contains "fix", "bug", "error", "issue" → **BUGFIX**
 - Contains "refactor", "improve", "optimize", "clean" → **REFACTORING**
 - Contains "document", "readme", "comment" → **DOCUMENTATION**
 - Contains "research", "investigate", "analyze", "explore" → **RESEARCH**
 - Unclear → Ask user for clarification
+
+**Note**: DEVOPS takes priority over FEATURE when infrastructure keywords are present.
 
 **Complexity Assessment**:
 
@@ -175,6 +178,40 @@ researcher-expert → Creates research-report.md
 [IF research only] → Complete
 ```
 
+### DEVOPS (Infrastructure & Deployment)
+
+```
+Phase 1: project-manager → Creates task-description.md
+         ↓
+         USER VALIDATES ✋ ("APPROVED" or feedback)
+         ↓
+Phase 2: software-architect → Creates implementation-plan.md
+         ↓
+         USER VALIDATES ✋ ("APPROVED" or feedback)
+         ↓
+Phase 3: devops-engineer → Implements infrastructure
+         ↓
+         USER CHOOSES QA ✋ (style/logic/skip)
+         ↓
+Phase 4: [QA agents as chosen]
+         ↓
+Phase 5: User handles git (commits already created)
+         ↓
+Phase 6: modernization-detector → Creates future-enhancements.md
+```
+
+**When to invoke DEVOPS strategy**:
+
+- Task involves CI/CD pipelines, GitHub Actions, GitLab CI
+- Task involves Docker, Kubernetes, container orchestration
+- Task involves Terraform, CloudFormation, infrastructure-as-code
+- Task involves npm/Docker publishing automation
+- Task involves monitoring, observability, alerting
+- Task involves secret management, cloud platform configuration
+- **Key signal**: Work is 100% infrastructure (no application business logic)
+
+**Developer for DEVOPS**: Always use `devops-engineer` (NOT backend-developer)
+
 ---
 
 ## CONTINUATION: Phase Detection
@@ -183,7 +220,7 @@ When resuming with TASK_ID, read documents to determine phase:
 
 ```bash
 Glob(task-tracking/TASK_[ID]/*.md)
-Read(D:\projects\ptah-extension\task-tracking\registry.md)
+Read(D:\projects\angular-3d-workspace\task-tracking\registry.md)
 ```
 
 | Document Exists                   | Phase Complete         | Next Action                           |
@@ -218,7 +255,7 @@ Task({
   description: 'Decompose TASK_[ID] into batches',
   prompt: `You are team-leader in MODE 1: DECOMPOSITION for TASK_[ID].
 
-**Task Folder**: D:\projects\ptah-extension\task-tracking\TASK_[ID]\
+**Task Folder**: D:\projects\angular-3d-workspace\task-tracking\TASK_[ID]\
 **User Request**: "[original request]"
 
 Read implementation-plan.md and create tasks.md with batched tasks.
@@ -407,7 +444,7 @@ gh pr create --title "type(scope): description" --body "..."
 **Commitlint Reminder** (see CLAUDE.md for full rules):
 
 - Type: feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert
-- Scope: webview|vscode|deps|release|ci|docs|hooks|scripts
+- Scope: angular-3d|angular-gsap|demo|deps|release|ci|docs|hooks|scripts
 - Subject: lowercase, no period, imperative mood
 
 Reply "git done" when PR is created.
@@ -424,7 +461,7 @@ Task({
   description: 'Analyze future work for TASK_[ID]',
   prompt: `Analyze TASK_[ID] for future enhancements.
 
-**Task Folder**: D:\projects\ptah-extension\task-tracking\TASK_[ID]\
+**Task Folder**: D:\projects\angular-3d-workspace\task-tracking\TASK_[ID]\
 
 Create future-enhancements.md and update registry.md with completion status.`,
 });

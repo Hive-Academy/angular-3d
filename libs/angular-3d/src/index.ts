@@ -10,6 +10,9 @@ export * from './lib/render-loop';
 // Store - Scene service and context store
 export * from './lib/store';
 
+// Tokens - Injection tokens for directives
+export * from './lib/tokens';
+
 // Controls - OrbitControls wrapper
 export * from './lib/controls';
 
@@ -27,3 +30,12 @@ export * from './lib/directives';
 
 // Services - AnimationService, etc.
 export * from './lib/services';
+
+// Positioning - Viewport positioning utilities
+export * from './lib/positioning';
+
+// Utils - Shared utilities (GSAP loader, etc.)
+export * from './lib/utils';
+
+// Loading - Route-level loading coordination
+export * from './lib/loading';

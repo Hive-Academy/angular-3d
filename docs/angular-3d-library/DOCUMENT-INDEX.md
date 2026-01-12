@@ -12,14 +12,15 @@
 6. **[05-angular-3d-package-requirements.md](./05-angular-3d-package-requirements.md)** - Minimal replacement checklist (explicitly includes copying angular-3d + scene-graphs into a new workspace)
 7. **[06-new-workspace-blueprint.md](./06-new-workspace-blueprint.md)** - Template migration vs ngt-tag compatibility + how to reuse threejs-vanilla docs
 8. **[07-threejs-vanilla-to-angular-mapping.md](./07-threejs-vanilla-to-angular-mapping.md)** - Chapter-by-chapter mapping into package folders
-9. **[08-git-hooks-linting-standards.md](./08-git-hooks-linting-standards.md)** - Husky + lint-staged + commitlint + ESLint standards to mirror this repo
+9. **[09-angular-gsap-directives-and-consumers.md](./09-angular-gsap-directives-and-consumers.md)** - GSAP/ScrollTrigger directives + all current consumers (for new `@hive-academy/angular-gsap`)
+10. **[08-git-hooks-linting-standards.md](./08-git-hooks-linting-standards.md)** - Husky + lint-staged + commitlint + ESLint standards to mirror this repo
 
 ### 🚧 Planned (Component Patterns)
 
-10. **06-primitive-components.md** - Wrapping Three.js meshes (Planet, Box, Sphere)
-11. **07-material-management.md** - Reactive material updates with signals
-12. **08-geometry-handling.md** - BufferGeometry, instancing patterns
-13. **09-loader-components.md** - GLTF, SVG, texture loaders
+11. **06-primitive-components.md** - Wrapping Three.js meshes (Planet, Box, Sphere)
+12. **07-material-management.md** - Reactive material updates with signals
+13. **08-geometry-handling.md** - BufferGeometry, instancing patterns
+14. **09-loader-components.md** - GLTF, SVG, texture loaders
 
 ### 🚧 Planned (Directive Patterns)
 

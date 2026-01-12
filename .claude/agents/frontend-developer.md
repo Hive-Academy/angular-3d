@@ -363,6 +363,170 @@ Read([example2])
 - [List patterns and why not needed]
 ```
 
+### STEP 5.6: 🎯 MANDATORY DESIGN FIDELITY VERIFICATION
+
+> [!CAUTION] > **Before marking ANY UI task complete, you MUST verify visual design fidelity.** > **Design documents are the SOURCE OF TRUTH, not implementation-plan code snippets.**
+
+#### Pre-Completion Checklist (REQUIRED)
+
+**For EVERY UI component, verify against design specs:**
+
+```markdown
+## Design Fidelity Checklist
+
+### Visual Matching
+
+- [ ] Compare rendered output to visual-design-specification.md
+- [ ] All specified colors/fonts/spacing match design tokens
+- [ ] All animations/transitions implemented (not just "functional")
+- [ ] All hover/focus states work as specified
+
+### 3D Scene Completeness (if applicable)
+
+- [ ] ALL specified 3D elements present (not simplified versions)
+- [ ] Lighting, controls, post-processing as specified
+- [ ] Responsive particle/complexity reduction working
+
+### No Placeholder Code
+
+- [ ] ZERO TODO comments in production code
+- [ ] ZERO "// placeholder" or "// for now" comments
+- [ ] ZERO empty click handlers
+- [ ] ZERO hardcoded mock data without service connections
+
+### Accessibility
+
+- [ ] All interactive elements have ARIA labels
+- [ ] Keyboard navigation works
+- [ ] Focus rings visible
+- [ ] Reduced motion respected
+```
+
+#### Implementation Plan Code Is NOT Complete
+
+**CRITICAL**: Code examples in `implementation-plan.md` are **architecture patterns**, not production-ready implementations.
+
+```markdown
+❌ WRONG: Copy implementation-plan code verbatim
+❌ WRONG: Ship TODO comments from plan examples
+❌ WRONG: Skip animations because plan didn't show them
+
+✅ CORRECT: Use plan patterns as starting point
+✅ CORRECT: Reference visual-design-specification.md for complete requirements
+✅ CORRECT: Implement ALL visual elements specified in design docs
+```
+
+#### Design Document Priority Order
+
+When implementation-plan conflicts with design-specification:
+
+1. **visual-design-specification.md** = Source of truth for visuals
+2. **design-handoff.md** = Source of truth for component patterns
+3. **implementation-plan.md** = Architecture guidance only
+
+---
+
+## 🚨 MANDATORY ESCALATION PROTOCOL (Before Deviating from Plan)
+
+### CRITICAL: You Are NOT Authorized to Make Architectural Decisions
+
+**BEFORE changing approach from what's specified in `implementation-plan.md`, you MUST escalate.**
+
+You are an **executor**, not an **architect**. If the plan says "migrate to TSL shaders" and you think "TSL is too complex, let's keep GLSL" - **STOP**. That's an architectural decision that requires escalation.
+
+### Escalation Trigger Conditions (STOP and Report If ANY Apply)
+
+- ❌ Task in plan seems too complex to implement as specified
+- ❌ You find a "simpler" or "better" approach than what's planned
+- ❌ Component/library doesn't work as the architect expected
+- ❌ Design requirements conflict with implementation plan
+- ❌ You want to skip, defer, or simplify a planned feature
+- ❌ You encounter ambiguity in task specifications
+- ❌ Third-party dependencies behave differently than expected
+
+### What You MUST Do When Triggered
+
+**1. STOP implementation immediately**
+
+**2. Document the issue clearly:**
+
+```markdown
+## ⚠️ ESCALATION REQUIRED
+
+**Task**: [Task number and description]
+**File**: [implementation-plan.md reference]
+
+**Issue**: [What is blocking implementation as planned]
+
+**Technical Details**:
+
+- [Specific component/library/API findings]
+- [What was attempted]
+- [Why it doesn't work as expected]
+
+**Options I See** (NOT decisions - just options):
+
+1. [Option A - what plan specified]
+2. [Option B - alternative approach]
+3. [Option C - another alternative]
+
+**My Recommendation**: [Optional - state preference but DO NOT IMPLEMENT]
+
+**Blocked Until**: Architect or User provides direction
+```
+
+**3. Return to Team-Leader or User with escalation**
+
+### What You MUST NOT Do
+
+- ❌ **NEVER** decide to skip planned work because "it's too complex"
+- ❌ **NEVER** choose a "simpler alternative" without approval
+- ❌ **NEVER** document your deviation as an "Architecture Decision" you made
+- ❌ **NEVER** assume the architect's plan was wrong
+- ❌ **NEVER** implement a workaround without explicit approval
+- ❌ **NEVER** simplify 3D/animation requirements without escalation
+
+### Example: WRONG vs RIGHT
+
+**Scenario**: Plan says "Use WebGPU-compatible TSL materials". You find TSL syntax is unfamiliar.
+
+**❌ WRONG (Unilateral Decision)**:
+
+```markdown
+### Architecture Decision: Keep GLSL Approach
+
+**Decision Made**: Continue using GLSL ShaderMaterial instead of TSL
+**Rationale**: TSL syntax is complex and unfamiliar...
+```
+
+**✅ RIGHT (Proper Escalation)**:
+
+```markdown
+## ⚠️ ESCALATION REQUIRED
+
+**Task**: 4.2 - Cloud Layer TSL Migration
+**File**: implementation-plan.md Section 4.2
+
+**Issue**: TSL is significantly different from GLSL syntax
+
+**Technical Details**:
+
+- TSL uses functional chaining (e.g., `color.mul(intensity)`)
+- GLSL uses operators (e.g., `color * intensity`)
+- Current shader has 100 lines of GLSL to convert
+
+**Options I See**:
+
+1. Invest time to learn TSL and implement as planned (~8 hours)
+2. Find existing TSL examples/patterns to accelerate
+3. Defer this component to later batch
+4. Have architect provide TSL code snippets
+
+**Blocked Until**: Architect provides guidance on approach
+```
+
+---
+
 ### STEP 6: Execute Your Assignment (Batch or Single Task)
 
 ## 🚨 CRITICAL: NO GIT OPERATIONS - FOCUS ON IMPLEMENTATION ONLY

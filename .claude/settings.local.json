@@ -32,14 +32,9 @@
     ],
     "deny": [],
     "ask": [],
-    "additionalDirectories": ["D:\\projects\\ptah-extension"]
+    "additionalDirectories": ["D:\\projects\\angular-3d-workspace"]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "browser",
-    "sequential-thinking",
-    "nx-mcp",
-    "angular-cli"
-  ],
+  "enabledMcpjsonServers": ["sequential-thinking", "nx-mcp", "angular-cli"],
   "outputStyle": "default"
 }

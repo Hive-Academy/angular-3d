@@ -1,81 +1,175 @@
-# Angular3dWorkspace
+# Angular 3D & GSAP Libraries
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/hive-academy/angular-3d-workspace/blob/main/LICENSE)
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
+> Modern Angular libraries for building stunning 3D graphics and scroll animations
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+This repository contains two powerful Angular libraries for creating immersive web experiences:
 
-## Finish your CI setup
+- **@hive-academy/angular-3d** - Declarative Three.js components for 3D graphics
+- **@hive-academy/angular-gsap** - GSAP-powered scroll animations
 
-[Click here to finish setting up your workspace!](https://cloud.nx.app/connect/J6TDnj0iSI)
+---
 
-## Run tasks
+## 📚 Libraries
 
-To run the dev server for your app, use:
+| Library                                           | Version                                                                                                                         | Description                                                                   |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| [@hive-academy/angular-3d](./libs/angular-3d)     | [![npm](https://img.shields.io/npm/v/@hive-academy/angular-3d.svg)](https://www.npmjs.com/package/@hive-academy/angular-3d)     | Declarative Three.js components - 54 components, 24 directives, 14 services   |
+| [@hive-academy/angular-gsap](./libs/angular-gsap) | [![npm](https://img.shields.io/npm/v/@hive-academy/angular-gsap.svg)](https://www.npmjs.com/package/@hive-academy/angular-gsap) | GSAP scroll animations - 7 components, 19 directives, 2 services, 2 providers |
 
-```sh
+---
+
+## 🚀 Quick Install
+
+### 3D Graphics
+
+```bash
+npm install @hive-academy/angular-3d three three-stdlib gsap maath troika-three-text
+```
+
+```typescript
+import { Component } from '@angular/core';
+import { Scene3dComponent, BoxComponent } from '@hive-academy/angular-3d';
+
+@Component({
+  selector: 'app-basic-scene',
+  standalone: true,
+  imports: [Scene3dComponent, BoxComponent],
+  template: `
+    <a3d-scene-3d [cameraPosition]="[0, 0, 5]">
+      <a3d-box [color]="'#ff6b6b'" />
+    </a3d-scene-3d>
+  `,
+})
+export class BasicSceneComponent {}
+```
+
+### Scroll Animations
+
+```bash
+npm install @hive-academy/angular-gsap gsap lenis
+```
+
+```typescript
+import { Component } from '@angular/core';
+import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
+
+@Component({
+  selector: 'app-hero',
+  standalone: true,
+  imports: [ScrollAnimationDirective],
+  template: `<h1 scrollAnimation>Animated on scroll</h1>`,
+})
+export class HeroComponent {}
+```
+
+---
+
+## 🎬 Live Demo
+
+> 🚀 Coming soon - Interactive demo showcasing both libraries
+
+---
+
+## 📖 Documentation
+
+- [angular-3d Documentation](./libs/angular-3d/README.md) - Full API reference for 3D components
+- [angular-gsap Documentation](./libs/angular-gsap/README.md) - Complete scroll animation guide
+- [Contributing Guide](./CONTRIBUTING.md) - How to contribute
+- [Code of Conduct](./CODE_OF_CONDUCT.md) - Community guidelines
+
+---
+
+## 💻 Development
+
+### Prerequisites
+
+- Node.js 20+
+- npm 10+
+- Angular 20.3+
+
+### Setup
+
+```bash
+# Clone repository
+git clone https://github.com/hive-academy/angular-3d-workspace.git
+cd angular-3d-workspace
+
+# Install dependencies
+npm install
+
+# Start demo application
 npx nx serve angular-3d-demo
 ```
 
-To create a production bundle:
+### Common Commands
 
-```sh
-npx nx build angular-3d-demo
+```bash
+# Development
+npx nx serve angular-3d-demo          # Start dev server
+npx nx test angular-3d                 # Run unit tests
+npx nx build angular-3d                # Build library
+
+# Quality checks
+npx nx lint angular-3d                 # Lint library
+npx nx typecheck angular-3d            # Type checking
+npx nx run-many -t lint test build    # Run all checks
+
+# View dependency graph
+npx nx graph
 ```
 
-To see all available targets to run for a project, run:
+---
 
-```sh
-npx nx show project angular-3d-demo
+## 📦 Publishing
+
+This workspace uses Nx release tooling for automated versioning and publishing.
+
+### Automated Publishing (Recommended)
+
+```bash
+# Create version and tag
+npm run release:version -- --projects=@hive-academy/angular-3d
+git push && git push --tags
+
+# CI/CD automatically publishes to npm
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+### Manual Publishing
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+```bash
+# Set NPM token
+export NPM_TOKEN=<your_npm_token>
 
-## Add new projects
+# Preview changes
+npm run release:version:dry -- --projects=@hive-academy/angular-3d
 
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-Use the plugin's generator to create new projects.
-
-To generate a new application, use:
-
-```sh
-npx nx g @nx/angular:app demo
+# Create version and publish
+npm run release:version -- --projects=@hive-academy/angular-3d
+npm run release:publish -- --projects=@hive-academy/angular-3d
+git push && git push --tags
 ```
 
-To generate a new library, use:
+For detailed publishing instructions, see [CONTRIBUTING.md](./CONTRIBUTING.md#publishing-packages).
 
-```sh
-npx nx g @nx/angular:lib mylib
-```
+---
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+## 📄 License
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+MIT © Hive Academy
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+---
 
-## Install Nx Console
+## 🤝 Contributing
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+Contributions are welcome! Please read our [Contributing Guide](./CONTRIBUTING.md) and [Code of Conduct](./CODE_OF_CONDUCT.md).
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+---
 
-## Useful links
+## 🔗 Links
 
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- [Report Issues](https://github.com/hive-academy/angular-3d-workspace/issues)
+- [Angular Documentation](https://angular.dev)
+- [Three.js Documentation](https://threejs.org/docs/)
+- [GSAP Documentation](https://greensock.com/docs/)

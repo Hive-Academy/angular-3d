@@ -1,0 +1,35 @@
+// Animation directives - float, rotate, space-flight, cinematic entrance, scene reveal
+export * from './float-3d.directive';
+export * from './rotate-3d.directive';
+export * from './space-flight-3d.directive';
+export {
+  CinematicEntranceDirective,
+  type CinematicEntranceConfig,
+  type EntrancePreset,
+} from './cinematic-entrance.directive';
+export {
+  SceneRevealDirective,
+  type SceneRevealConfig,
+  type RevealAnimation,
+} from './scene-reveal.directive';
+
+// Animation coordination services
+export {
+  StaggerGroupService,
+  type RevealableDirective,
+} from './stagger-group.service';
+
+// Animation constants
+export {
+  REVEAL_ANIMATION_DEFAULTS,
+  ENTRANCE_ANIMATION_DEFAULTS,
+} from './animation-constants';
+
+// Camera flight navigation - waypoint-based camera animation with hold-to-fly controls
+export * from './camera-flight';
+
+// Object flight navigation - waypoint-based object animation
+export * from './object-flight';
+
+// Camera shake effects - configurable camera shake for impact and transitions
+export * from './camera-shake';

@@ -1,0 +1,150 @@
+# RELEASE PR VALIDATION WORKFLOW
+# This workflow validates PRs targeting release branches before they can be merged.
+# It runs the full validation pipeline and adds a comment with release information.
+#
+# Required for branch protection status checks on:
+# - release/angular-3d
+# - release/angular-gsap
+
+name: Release PR Validation
+
+on:
+  pull_request:
+    branches:
+      - 'release/angular-3d'
+      - 'release/angular-gsap'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  validate-release-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Detect target package
+        id: detect
+        shell: bash
+        run: |
+          TARGET_BRANCH="${{ github.base_ref }}"
+          case "$TARGET_BRANCH" in
+            "release/angular-3d")
+              echo "package_name=@hive-academy/angular-3d" >> $GITHUB_OUTPUT
+              echo "package_path=libs/angular-3d" >> $GITHUB_OUTPUT
+              ;;
+            "release/angular-gsap")
+              echo "package_name=@hive-academy/angular-gsap" >> $GITHUB_OUTPUT
+              echo "package_path=libs/angular-gsap" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+      - name: Get version info
+        id: version
+        shell: bash
+        run: |
+          CURRENT=$(node -p "require('./${{ steps.detect.outputs.package_path }}/package.json').version")
+          echo "current_version=$CURRENT" >> $GITHUB_OUTPUT
+
+          # Check npm for published versions
+          NPM_LATEST=$(npm view "${{ steps.detect.outputs.package_name }}" version 2>/dev/null || echo "0.0.0")
+          echo "npm_version=$NPM_LATEST" >> $GITHUB_OUTPUT
+
+      - name: Validate version bump
+        shell: bash
+        run: |
+          CURRENT="${{ steps.version.outputs.current_version }}"
+          NPM="${{ steps.version.outputs.npm_version }}"
+
+          echo "Current package.json version: $CURRENT"
+          echo "Latest npm version: $NPM"
+
+          # Use semver comparison (basic)
+          if [ "$CURRENT" = "$NPM" ]; then
+            echo "::error::Version $CURRENT already published to npm. Please bump the version."
+            exit 1
+          fi
+
+          echo "Version $CURRENT is valid for publishing"
+
+      - name: Run full validation
+        shell: bash
+        run: |
+          echo "::group::Linting"
+          npx nx run-many -t lint
+          echo "::endgroup::"
+
+          echo "::group::Testing"
+          npx nx run-many -t test
+          echo "::endgroup::"
+
+          echo "::group::Type Checking"
+          npx nx run-many -t typecheck
+          echo "::endgroup::"
+
+          echo "::group::Building"
+          npx nx run-many -t build
+          echo "::endgroup::"
+
+      - name: Validate build output
+        shell: bash
+        run: |
+          DIST_PATH="dist/${{ steps.detect.outputs.package_path }}"
+
+          if [[ ! -d "$DIST_PATH" ]]; then
+            echo "::error::Build output not found"
+            exit 1
+          fi
+
+          echo "Build artifacts validated"
+
+      - name: Add PR comment with release info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = '${{ steps.version.outputs.current_version }}';
+            const package_name = '${{ steps.detect.outputs.package_name }}';
+            const npm_version = '${{ steps.version.outputs.npm_version }}';
+
+            const body = `## Release Validation Passed
+
+            | Property | Value |
+            |----------|-------|
+            | **Package** | \`${package_name}\` |
+            | **Version to Publish** | \`${version}\` |
+            | **Current npm Version** | \`${npm_version}\` |
+
+            ### Pre-Publish Checklist
+            - [x] Lint validation passed
+            - [x] Tests passed
+            - [x] Type checking passed
+            - [x] Build successful
+            - [x] Version bump validated
+
+            ### What happens on merge?
+            1. Package will be published to npm with provenance
+            2. Git tag \`${package_name}@${version}\` will be created
+            3. GitHub Release will be created
+
+            **Merge this PR to publish to npm.**`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

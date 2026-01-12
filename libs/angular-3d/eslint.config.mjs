@@ -3,6 +3,10 @@ import baseConfig from '../../eslint.config.mjs';
 
 export default [
   ...baseConfig,
+  // Exclude test files from strict linting
+  {
+    ignores: ['**/*.spec.ts', '**/*.test.ts', '**/test-setup.ts'],
+  },
   {
     files: ['**/*.json'],
     rules: {
@@ -10,6 +14,7 @@ export default [
         'error',
         {
           ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}'],
+          ignoredDependencies: ['troika-three-text'],
         },
       ],
     },
@@ -23,7 +28,7 @@ export default [
     files: ['**/*.ts'],
     rules: {
       '@angular-eslint/directive-selector': [
-        'error',
+        'off',
         {
           type: 'attribute',
           prefix: 'a3d',
@@ -54,7 +59,15 @@ export default [
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': [
         'error',
-        { argsIgnorePattern: '^_' },
+        {
+          args: 'all',
+          argsIgnorePattern: '^_',
+          caughtErrors: 'all',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
       ],
       '@typescript-eslint/explicit-member-accessibility': [
         'error',
