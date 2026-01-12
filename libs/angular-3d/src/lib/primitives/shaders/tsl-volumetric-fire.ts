@@ -200,10 +200,11 @@ const samplerSphericalFire = Fn(
     const alpha = sunSurface.mul(coronaFade);
 
     // For hollow shell: soft fade at innerRadius boundary
-    // Creates a smooth transition instead of a hard edge
-    const fadeWidth = innerRadius.mul(0.4); // 40% of inner radius for soft fade
-    const fadeStart = innerRadius.sub(fadeWidth.mul(0.3)); // Start fade slightly inside
-    const fadeEnd = innerRadius.add(fadeWidth); // End fade outside inner radius
+    // Uses shell thickness for much smoother transition
+    const shellThickness = sphereRadius.sub(innerRadius);
+    const fadeWidth = TSL.max(shellThickness, innerRadius.mul(0.5)); // Use larger of the two
+    const fadeStart = innerRadius;
+    const fadeEnd = innerRadius.add(fadeWidth.mul(0.6));
     const hollowFade = select(
       hasHollow,
       smoothstep(fadeStart, fadeEnd, distFromCenter),
@@ -233,6 +234,8 @@ export interface VolumetricFireUniforms {
   lacunarity: TSLNode;
   gain: TSLNode & { value: number };
   seed: TSLNode & { value: number };
+  /** Density falloff exponent: 1.0 = linear, >1.0 = denser center */
+  densityFalloff: TSLNode & { value: number };
 }
 
 /**
@@ -246,6 +249,8 @@ export interface VolumetricFireConfig {
   magnitude?: number;
   lacunarity?: number;
   gain?: number;
+  /** Density falloff: 1.0 = linear, >1.0 = denser center. Default: 1.0 */
+  densityFalloff?: number;
 }
 
 /**
@@ -275,6 +280,7 @@ export const createVolumetricFireUniforms = (
     lacunarity: uniform(config.lacunarity ?? 2.0),
     gain: uniform(config.gain ?? 0.5),
     seed: uniform(Math.random() * 19.19),
+    densityFalloff: uniform(config.densityFalloff ?? 1.0),
   };
 };
 
@@ -338,11 +344,9 @@ export const createVolumetricFireNode = (
       const distFromCenter = length(lp);
       const insideExtended = distFromCenter.lessThan(extendedRadius);
 
-      // Check if this sample is inside the hollow region
-      const isInHollow = distFromCenter.lessThan(uniforms.innerRadius);
-
       // Once ray enters hollow, set flag (stays set for rest of ray march)
       // This implements ray termination for hollow center
+      const isInHollow = distFromCenter.lessThan(uniforms.innerRadius);
       enteredHollow.assign(
         TSL.max(
           enteredHollow,
@@ -354,9 +358,13 @@ export const createVolumetricFireNode = (
       const shouldAccumulate = float(1.0).sub(enteredHollow);
 
       // Hollow shell fade for soft edge at inner boundary
-      // Wider fade for smoother transition (50% of inner radius)
-      const fadeWidth = uniforms.innerRadius.mul(0.5);
-      const fadeStart = uniforms.innerRadius.sub(fadeWidth.mul(0.2)); // Start slightly inside
+      // Use shell thickness for smoother transition
+      const shellThickness = uniforms.sphereRadius.sub(uniforms.innerRadius);
+      const fadeWidth = TSL.max(
+        shellThickness.mul(0.6),
+        uniforms.innerRadius.mul(0.3)
+      );
+      const fadeStart = uniforms.innerRadius;
       const fadeEnd = uniforms.innerRadius.add(fadeWidth);
       const rawShellFade = smoothstep(fadeStart, fadeEnd, distFromCenter);
       const shellFade = select(hasHollow, rawShellFade, float(1.0));
@@ -392,17 +400,22 @@ export const createVolumetricFireNode = (
       col.addAssign(select(insideExtended, fadedSample, vec4(0.0)));
     });
 
-    // In fire mode (not sun mode), apply color tint over the built-in colors
-    // This allows customizing the fire color while sun mode uses realistic colors
+    // In fire mode (not sun mode), apply color replacement
+    // This uses the exact user color while preserving the luminance/intensity from the sun gradient
     const colorVec = vec3(uniforms.color);
     const fireModeTint = sunMode ? float(0.0) : float(1.0);
 
-    // Blend: sunMode=1 keeps original, fireMode=1 tints with uniform color
-    // For sun mode, we skip tinting entirely
-    // For fire mode, we multiply by the color
-    const tintedR = mix(col.x, col.x.mul(colorVec.x), fireModeTint);
-    const tintedG = mix(col.y, col.y.mul(colorVec.y), fireModeTint);
-    const tintedB = mix(col.z, col.z.mul(colorVec.z), fireModeTint);
+    // Calculate luminance of original sun-colored fire
+    const luminance = col.x
+      .mul(0.299)
+      .add(col.y.mul(0.587))
+      .add(col.z.mul(0.114));
+
+    // For fire mode: use user's color multiplied by the luminance (preserves intensity variations)
+    // For sun mode: keep original colors
+    const tintedR = mix(col.x, colorVec.x.mul(luminance), fireModeTint);
+    const tintedG = mix(col.y, colorVec.y.mul(luminance), fireModeTint);
+    const tintedB = mix(col.z, colorVec.z.mul(luminance), fireModeTint);
 
     col.x.assign(tintedR);
     col.y.assign(tintedG);

@@ -387,8 +387,8 @@ export class HeroSectionComponent {
     },
     {
       id: 'wp1-angular3d',
-      spherePosition: [-10, 0, -2], // LEFT side
-      nebulaPosition: [80, 30, -120], // RIGHT side (opposite)
+      spherePosition: [-12, 0, -5], // LEFT side
+      nebulaPosition: [80, 30, -150], // RIGHT side (opposite)
       textPosition: 'right',
       theme: {
         fireColor: '#9B59B6',
@@ -411,8 +411,8 @@ export class HeroSectionComponent {
     },
     {
       id: 'wp2-gsap',
-      spherePosition: [12, 0, -2], // RIGHT side
-      nebulaPosition: [-60, 30, -120], // LEFT side (opposite)
+      spherePosition: [12, 0, -5], // RIGHT side
+      nebulaPosition: [-60, 30, -150], // LEFT side (opposite)
       textPosition: 'left',
       theme: {
         fireColor: '#00FFFF',

@@ -126,6 +126,12 @@ export class FireSphereComponent {
   /** Lacunarity - volumetric only, lower = larger/more separated flames (default: 1.8) */
   public readonly lacunarity = input<number>(1.8);
 
+  /**
+   * Density falloff - volumetric only (default: 1.0)
+   * 1.0 = uniform density, >1.0 = denser at inner edge
+   */
+  public readonly densityFalloff = input<number>(1.0);
+
   // ========================================================================
   // Scene Integration
   // ========================================================================
@@ -237,6 +243,7 @@ export class FireSphereComponent {
         magnitude: this.fireMagnitude(),
         lacunarity: this.lacunarity(),
         gain: 0.5,
+        densityFalloff: this.densityFalloff(),
       });
 
       const volumetricNode = createVolumetricFireNode(
