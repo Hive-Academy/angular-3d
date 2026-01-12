@@ -92,13 +92,6 @@ export class CausticsSphereComponent {
   /** Material metalness (default: 0) */
   public readonly metalness = input<number>(0);
 
-  /**
-   * Render order for controlling draw order with other transparent objects.
-   * Lower values render first (behind), higher values render last (in front).
-   * Default: 0
-   */
-  public readonly renderOrder = input<number>(0);
-
   // ============================================================================
   // Internal State
   // ============================================================================
@@ -156,14 +149,6 @@ export class CausticsSphereComponent {
       if (this.causticsUniforms) {
         const bg = new THREE.Color(bgInput);
         this.causticsUniforms.background.value.set(bg.r, bg.g, bg.b);
-      }
-    });
-
-    // Effect: Update render order when it changes
-    effect(() => {
-      const order = this.renderOrder();
-      if (this.mesh) {
-        this.mesh.renderOrder = order;
       }
     });
 
@@ -229,9 +214,6 @@ export class CausticsSphereComponent {
 
     // Set scale
     this.mesh.scale.setScalar(this.sphereScale());
-
-    // Set render order
-    this.mesh.renderOrder = this.renderOrder();
   }
 
   /**

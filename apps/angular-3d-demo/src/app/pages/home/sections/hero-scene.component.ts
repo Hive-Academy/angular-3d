@@ -128,7 +128,7 @@ import { SCENE_COLOR_STRINGS } from '../../../shared/colors';
 
       <a3d-svg-icon
         [svgPath]="'/images/logos/angular.svg'"
-        [position]="[-14, 10, -10]"
+        [position]="[-14, 25, -70]"
         [scale]="0.04"
         [color]="colors.indigo"
         [emissiveIntensity]="0.3"
@@ -188,8 +188,6 @@ import { SCENE_COLOR_STRINGS } from '../../../shared/colors';
 
       <!-- Fire Sphere with Hollow Center -->
       <a3d-fire-sphere
-        [renderOrder]="-1"
-        [depthWrite]="true"
         [radius]="10"
         [innerRadius]="6"
         [quality]="'quality'"
@@ -204,7 +202,6 @@ import { SCENE_COLOR_STRINGS } from '../../../shared/colors';
 
       <!-- Caustics Sphere Inside the Fire -->
       <a3d-caustics-sphere
-        [renderOrder]="1"
         [radius]="6.3"
         [position]="firePosition()"
         [color]="innerSphereColor()"

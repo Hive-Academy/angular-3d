@@ -143,20 +143,6 @@ export class FireSphereComponent {
    */
   public readonly fog = input<boolean>(false);
 
-  /**
-   * Render order for controlling draw order with other transparent objects.
-   * Lower values render first (behind), higher values render last (in front).
-   * Default: 0
-   */
-  public readonly renderOrder = input<number>(0);
-
-  /**
-   * Enable depth write for proper layering with opaque objects inside the fire.
-   * Set to true when you have solid objects (like caustics sphere) that should appear in front.
-   * Default: false (standard additive blending)
-   */
-  public readonly depthWrite = input<boolean>(false);
-
   // ========================================================================
   // Internal State
   // ========================================================================
@@ -205,26 +191,6 @@ export class FireSphereComponent {
       const color = this.fireColor();
       if (this.volumetricFireUniforms) {
         this.volumetricFireUniforms.color.value.set(color);
-      }
-    });
-
-    // Effect: Update render order when it changes
-    effect(() => {
-      const order = this.renderOrder();
-      if (this.sphereMesh) {
-        this.sphereMesh.renderOrder = order;
-      }
-    });
-
-    // Effect: Update depth write and blending when it changes
-    effect(() => {
-      const depthWriteEnabled = this.depthWrite();
-      if (this.sphereMaterial) {
-        this.sphereMaterial.depthWrite = depthWriteEnabled;
-        this.sphereMaterial.blending = depthWriteEnabled
-          ? THREE.NormalBlending
-          : THREE.AdditiveBlending;
-        this.sphereMaterial.needsUpdate = true;
       }
     });
 
@@ -290,16 +256,13 @@ export class FireSphereComponent {
 
     // Common material settings
     this.sphereMaterial.transparent = true;
-    this.sphereMaterial.depthWrite = this.depthWrite();
-    this.sphereMaterial.blending = this.depthWrite()
-      ? THREE.NormalBlending
-      : THREE.AdditiveBlending;
+    this.sphereMaterial.depthWrite = false;
+    this.sphereMaterial.blending = THREE.AdditiveBlending;
     this.sphereMaterial.side =
       qualityMode === 'quality' ? THREE.DoubleSide : THREE.FrontSide;
     this.sphereMaterial.fog = this.fog(); // Controlled by parent input
 
     this.sphereMesh = new THREE.Mesh(this.sphereGeometry, this.sphereMaterial);
-    this.sphereMesh.renderOrder = this.renderOrder();
   }
 
   private setupFireUpdates(): void {
