@@ -165,8 +165,8 @@ import * as THREE from 'three/webgpu';
 
       <!-- Fire Sphere with Hollow Center -->
       <a3d-fire-sphere
-        [radius]="6"
-        [innerRadius]="3.6"
+        [radius]="10"
+        [innerRadius]="8"
         [quality]="'quality'"
         [sunMode]="false"
         [iterations]="10"
@@ -178,7 +178,7 @@ import * as THREE from 'three/webgpu';
 
       <!-- Caustics Sphere Inside the Fire -->
       <a3d-caustics-sphere
-        [radius]="3.5"
+        [radius]="7.9"
         [position]="firePosition()"
         [color]="innerSphereColor()"
         [background]="innerSphereBackground()"

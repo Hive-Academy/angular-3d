@@ -26,11 +26,11 @@ import {
 import {
   AssetPreloaderService,
   CinematicEntranceConfig,
-  LoadingOverlayComponent,
   StaggerGroupService,
 } from '@hive-academy/angular-3d';
 import * as THREE from 'three/webgpu';
 import { SCENE_COLORS } from '../../../shared/colors';
+import { HeroLoadingComponent } from './hero-loading.component';
 import { HeroSceneComponent } from './hero-scene.component';
 
 /** Waypoint configuration */
@@ -69,16 +69,14 @@ interface WaypointConfig {
 
 @Component({
   selector: 'app-hero-section',
-  imports: [LoadingOverlayComponent, HeroSceneComponent],
+  imports: [HeroLoadingComponent, HeroSceneComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <!-- Loading Overlay -->
-    <a3d-loading-overlay
-      [progress]="preloadState.progress"
-      [isReady]="preloadState.isReady"
-      [fullscreen]="true"
-      [showProgress]="true"
-      [showPhase]="false"
+    <!-- Stunning SVG Animated Loading Overlay -->
+    <app-hero-loading
+      [progress]="preloadState.progress()"
+      [isReady]="preloadState.isReady()"
+      (loadingComplete)="onLoadingComplete()"
     />
 
     <!-- Hero Container -->
@@ -115,14 +113,16 @@ interface WaypointConfig {
       </div>
 
       <!-- Layer 2: Content (pointer-events-none for click-through) -->
+      @if (isContentVisible()) {
       <div
         class="content-layer absolute inset-0 z-10 flex items-center pointer-events-none"
         [class]="getContentContainerClass()"
       >
         <!-- Text Content Container -->
         <div
-          class="text-content transition-all duration-700 ease-out px-4 sm:px-6 md:px-8"
+          class="text-content px-4 sm:px-6 md:px-8"
           [class]="getTextContainerClass()"
+          [class.content-enter]="isContentVisible()"
         >
           @if (!isTransitioning()) {
           <!-- Badge -->
@@ -185,6 +185,7 @@ interface WaypointConfig {
           }
         </div>
       </div>
+      }
 
       <!-- Flight Controls Hint -->
       @if (showHint() && !isTransitioning()) {
@@ -249,6 +250,61 @@ interface WaypointConfig {
       .z-5 {
         z-index: 5;
       }
+
+      /* ============================================
+         CONTENT ENTRANCE ANIMATION
+         ============================================ */
+
+      .content-enter {
+        animation: content-reveal 1s ease-out forwards;
+      }
+
+      .content-enter .mb-6 {
+        animation: slide-down 0.6s ease-out 0.1s both;
+      }
+
+      .content-enter h1 {
+        animation: slide-down 0.7s ease-out 0.2s both;
+      }
+
+      .content-enter p {
+        animation: slide-down 0.7s ease-out 0.35s both;
+      }
+
+      .content-enter .flex.flex-wrap {
+        animation: slide-down 0.7s ease-out 0.5s both;
+      }
+
+      @keyframes content-reveal {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes slide-down {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Reduced motion support */
+      @media (prefers-reduced-motion: reduce) {
+        .content-enter,
+        .content-enter .mb-6,
+        .content-enter h1,
+        .content-enter p,
+        .content-enter .flex.flex-wrap {
+          animation: none !important;
+        }
+      }
     `,
   ],
 })
@@ -307,7 +363,7 @@ export class HeroSectionComponent {
   protected readonly waypoints: WaypointConfig[] = [
     {
       id: 'wp0-nghive',
-      spherePosition: [0, -8, -10], // Bottom center (like original)
+      spherePosition: [0, -12, -10], // Bottom center (like original)
       nebulaPosition: [60, 40, -120], // Top-right background
       textPosition: 'center',
       theme: {
@@ -387,6 +443,17 @@ export class HeroSectionComponent {
   protected readonly isTransitioning = signal(false);
   protected readonly isReady = signal(false);
   protected readonly hasInteracted = signal(false);
+
+  /** Track when loading overlay should be completely removed from DOM */
+  protected readonly isLoadingComplete = signal(false);
+
+  /** Track when cinematic entrance animation has completed */
+  protected readonly isEntranceComplete = signal(false);
+
+  /** Content is visible after loading is complete AND entrance animation finishes */
+  protected readonly isContentVisible = computed(
+    () => this.isEntranceComplete() && !this.isTransitioning()
+  );
 
   /** Navigation direction: -1 = going left, 0 = none, 1 = going right */
   protected readonly navigationDirection = signal<number>(0);
@@ -588,9 +655,20 @@ export class HeroSectionComponent {
   }
 
   /**
+   * Handle loading overlay complete - called when fade out animation finishes
+   */
+  protected onLoadingComplete(): void {
+    this.isLoadingComplete.set(true);
+  }
+
+  /**
    * Handle entrance animation complete - trigger staggered reveal of scene elements
+   * and show hero content with entrance animation
    */
   protected async onEntranceComplete(): Promise<void> {
+    // Mark entrance as complete to trigger content visibility
+    this.isEntranceComplete.set(true);
+
     // Trigger staggered reveal of scene elements
     await this.staggerService.revealGroup('hero', 200);
   }
