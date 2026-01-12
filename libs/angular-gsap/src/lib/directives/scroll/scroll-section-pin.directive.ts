@@ -83,9 +83,10 @@ export class ScrollSectionPinDirective {
 
   /**
    * Scrub setting for smooth animation linking to scroll
-   * Default: true for smooth scrubbing
+   * Default: 1 for smooth scrubbing (works better with Lenis smooth scroll)
+   * Use 0.5 for faster, true for instant (may cause flicker with Lenis)
    */
-  readonly scrub = input<boolean | number>(true);
+  readonly scrub = input<boolean | number>(1);
 
   /**
    * Enable debug markers

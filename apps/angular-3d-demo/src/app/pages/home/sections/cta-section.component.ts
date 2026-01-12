@@ -1,8 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import {
-  ScrollAnimationDirective,
-  ViewportAnimationDirective,
-} from '@hive-academy/angular-gsap';
+import { ScrollAnimationDirective } from '@hive-academy/angular-gsap';
 
 /**
  * CTA Section with Premium Design
@@ -15,7 +12,7 @@ import {
  */
 @Component({
   selector: 'app-cta-section',
-  imports: [ScrollAnimationDirective, ViewportAnimationDirective],
+  imports: [ScrollAnimationDirective],
   template: `
     <section
       class="relative w-full overflow-hidden min-h-screen flex items-center justify-center py-24"
@@ -153,29 +150,23 @@ import {
         ></div>
       </div>
 
-      <!-- Content Container -->
+      <!-- Content Container with Staggered Scroll Animation -->
       <div
         class="relative z-10 max-w-4xl mx-auto text-center px-6"
         scrollAnimation
         [scrollConfig]="{
           animation: 'custom',
+          stagger: 0.12,
+          staggerTarget: '.stagger-item',
+          scrub: 0.6,
           start: 'top 90%',
           end: 'top 40%',
-          scrub: 0.8,
-          from: { opacity: 0, y: 60 },
+          from: { opacity: 0, y: 50 },
           to: { opacity: 1, y: 0 }
         }"
       >
         <!-- Badge -->
-        <div
-          class="mb-8"
-          viewportAnimation
-          [viewportConfig]="{
-            animation: 'scaleIn',
-            duration: 0.6,
-            threshold: 0.3
-          }"
-        >
+        <div class="mb-8 stagger-item">
           <span
             class="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold border backdrop-blur-sm"
             style="background: linear-gradient(135deg, rgba(161, 255, 79, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%); border-color: rgba(161, 255, 79, 0.3); color: rgb(161, 255, 79)"
@@ -196,14 +187,7 @@ import {
 
         <!-- Main Headline -->
         <h2
-          class="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight"
-          viewportAnimation
-          [viewportConfig]="{
-            animation: 'slideUp',
-            duration: 0.8,
-            delay: 0.1,
-            threshold: 0.2
-          }"
+          class="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight stagger-item"
         >
           <span class="block">Start Building</span>
           <span
@@ -216,30 +200,14 @@ import {
 
         <!-- Subtitle -->
         <p
-          class="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10 leading-relaxed"
-          viewportAnimation
-          [viewportConfig]="{
-            animation: 'fadeIn',
-            duration: 0.8,
-            delay: 0.2,
-            threshold: 0.2
-          }"
+          class="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10 leading-relaxed stagger-item"
         >
           Install both libraries and start creating stunning Angular
           applications with immersive 3D experiences and smooth animations.
         </p>
 
         <!-- CTA Buttons -->
-        <div
-          class="flex flex-wrap gap-4 justify-center mb-12"
-          viewportAnimation
-          [viewportConfig]="{
-            animation: 'slideUp',
-            duration: 0.6,
-            delay: 0.3,
-            threshold: 0.2
-          }"
-        >
+        <div class="flex flex-wrap gap-4 justify-center mb-12 stagger-item">
           <button
             class="group relative px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 hover:scale-105"
             style="background: linear-gradient(135deg, rgb(161, 255, 79) 0%, rgb(16, 185, 129) 100%); color: rgb(15, 23, 42)"
@@ -258,17 +226,7 @@ import {
         </div>
 
         <!-- Install Command -->
-        <div
-          class="inline-block max-w-full"
-          viewportAnimation
-          [viewportConfig]="{
-            animation: 'slideUp',
-            duration: 0.6,
-            delay: 0.4,
-            ease: 'back.out(1.4)',
-            threshold: 0.2
-          }"
-        >
+        <div class="inline-block max-w-full stagger-item">
           <div
             class="relative group px-6 py-4 rounded-xl border backdrop-blur-sm overflow-hidden"
             style="background: rgba(15, 23, 42, 0.8); border-color: rgba(161, 255, 79, 0.25)"
@@ -317,16 +275,7 @@ import {
         </div>
 
         <!-- Library Pills -->
-        <div
-          class="flex flex-wrap justify-center gap-3 mt-10"
-          viewportAnimation
-          [viewportConfig]="{
-            animation: 'fadeIn',
-            duration: 0.6,
-            delay: 0.5,
-            threshold: 0.2
-          }"
-        >
+        <div class="flex flex-wrap justify-center gap-3 mt-10 stagger-item">
           <span
             class="px-4 py-2 rounded-full text-sm font-semibold border backdrop-blur-sm"
             style="background: rgba(161, 255, 79, 0.1); border-color: rgba(161, 255, 79, 0.2); color: rgba(161, 255, 79, 0.9)"

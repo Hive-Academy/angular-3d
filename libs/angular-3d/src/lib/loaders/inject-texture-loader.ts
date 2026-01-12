@@ -23,7 +23,7 @@
  */
 
 import { inject, DestroyRef, signal, effect, untracked } from '@angular/core';
-import type * as THREE from 'three';
+import type * as THREE from 'three/webgpu';
 import { TextureLoaderService } from './texture-loader.service';
 
 /**

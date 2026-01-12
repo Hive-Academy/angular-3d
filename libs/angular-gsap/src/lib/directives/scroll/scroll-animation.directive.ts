@@ -40,6 +40,23 @@
  * >
  *   Parallax element
  * </div>
+ *
+ * <!-- Staggered children -->
+ * <div
+ *   scrollAnimation
+ *   [scrollConfig]="{
+ *     animation: 'slideUp',
+ *     stagger: 0.15,
+ *     staggerTarget: '> *',
+ *     scrub: 0.8,
+ *     start: 'top 80%',
+ *     end: 'top 30%'
+ *   }"
+ * >
+ *   <div>Child 1</div>
+ *   <div>Child 2</div>
+ *   <div>Child 3</div>
+ * </div>
  * ```
  */
 
@@ -86,7 +103,19 @@ export interface ScrollAnimationConfig {
   duration?: number; // Animation duration in seconds
   delay?: number; // Animation delay in seconds
   ease?: string; // GSAP easing function
-  stagger?: number; // Stagger delay for child elements
+
+  /**
+   * Stagger delay for animating children.
+   * Only used when animating multiple elements.
+   */
+  stagger?: number;
+
+  /**
+   * CSS selector for stagger targets.
+   * If not specified, stagger applies to direct children.
+   * @example 'li', '.card', '[data-animate]', '> *'
+   */
+  staggerTarget?: string;
 
   // Parallax settings
   speed?: number; // Parallax speed (0.5 = half speed, 2 = double speed)
@@ -107,6 +136,13 @@ export interface ScrollAnimationConfig {
   // Performance
   once?: boolean; // Run animation only once
   toggleActions?: string; // 'play pause resume reset' etc.
+
+  /**
+   * Optional signal or function that must return true before animation initializes.
+   * Useful for coordinating with loading states or other async conditions.
+   * @example waitFor: () => preloadState.isReady()
+   */
+  waitFor?: () => boolean;
 }
 
 @Directive({
@@ -121,6 +157,7 @@ export class ScrollAnimationDirective implements OnDestroy {
   private scrollTrigger?: ScrollTrigger;
   private animation?: gsap.core.Tween | gsap.core.Timeline;
   private isInitialized = false;
+  private waitForInterval?: ReturnType<typeof setInterval>;
 
   // Configuration input
   readonly scrollConfig = input<ScrollAnimationConfig>({
@@ -137,11 +174,42 @@ export class ScrollAnimationDirective implements OnDestroy {
         () => {
           const config = this.scrollConfig();
           if (config) {
-            this.initializeAnimation(config);
+            this.tryInitializeAnimation(config);
           }
         },
         { injector: this.injector }
       );
+    }
+  }
+
+  /**
+   * Try to initialize animation, respecting waitFor condition.
+   * If waitFor is defined and returns false, start polling.
+   */
+  private tryInitializeAnimation(config: ScrollAnimationConfig): void {
+    // If no waitFor or waitFor returns true, initialize immediately
+    if (!config.waitFor || config.waitFor()) {
+      this.initializeAnimation(config);
+      return;
+    }
+
+    // Start polling for waitFor condition (check every 100ms)
+    this.clearWaitForPolling();
+    this.waitForInterval = setInterval(() => {
+      if (config.waitFor?.()) {
+        this.clearWaitForPolling();
+        this.initializeAnimation(config);
+      }
+    }, 100);
+  }
+
+  /**
+   * Clear waitFor polling interval.
+   */
+  private clearWaitForPolling(): void {
+    if (this.waitForInterval) {
+      clearInterval(this.waitForInterval);
+      this.waitForInterval = undefined;
     }
   }
 
@@ -177,7 +245,31 @@ export class ScrollAnimationDirective implements OnDestroy {
     const timeline = gsap.timeline({
       paused: true,
     });
-    timeline.fromTo(element, animationProps.from, animationProps.to);
+
+    // Handle staggered children if stagger is configured
+    if (config.stagger && config.stagger > 0) {
+      const targets = config.staggerTarget
+        ? element.querySelectorAll(config.staggerTarget)
+        : element.children;
+
+      if (targets.length > 0) {
+        // Set initial state on all children
+        gsap.set(targets, animationProps.from);
+
+        // Animate children with stagger
+        timeline.to(targets, {
+          ...animationProps.to,
+          stagger: config.stagger,
+        });
+      } else {
+        // Fallback to parent element if no children found
+        timeline.fromTo(element, animationProps.from, animationProps.to);
+      }
+    } else {
+      // Single element animation
+      timeline.fromTo(element, animationProps.from, animationProps.to);
+    }
+
     this.animation = timeline;
 
     // Create ScrollTrigger with the timeline
@@ -324,6 +416,7 @@ export class ScrollAnimationDirective implements OnDestroy {
   }
 
   private cleanup(): void {
+    this.clearWaitForPolling();
     if (this.scrollTrigger) {
       this.scrollTrigger.kill();
       this.scrollTrigger = undefined;

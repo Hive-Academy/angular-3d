@@ -43,15 +43,15 @@ export class ShowcaseInfoComponent {
   /**
    * Display name of the component being showcased
    */
-  readonly componentName = input.required<string>();
+  public readonly componentName = input.required<string>();
 
   /**
    * Optional description of the component's purpose or features
    */
-  readonly description = input<string>('');
+  public readonly description = input<string>('');
 
   /**
    * Code example showing basic usage (HTML format)
    */
-  readonly codeExample = input.required<string>();
+  public readonly codeExample = input.required<string>();
 }

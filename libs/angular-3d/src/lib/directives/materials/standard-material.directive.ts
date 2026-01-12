@@ -23,7 +23,7 @@
  */
 
 import { Directive, inject, effect, input, DestroyRef } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { MATERIAL_SIGNAL } from '../../tokens/material.token';
 import { SceneGraphStore } from '../../store/scene-graph.store';
 import { OBJECT_ID } from '../../tokens/object-id.token';
@@ -93,7 +93,7 @@ export class StandardMaterialDirective {
   public readonly emissiveIntensity = input<number>(1);
 
   /** Internal reference to created material */
-  private material: THREE.MeshStandardMaterial | null = null;
+  private material: THREE.MeshStandardNodeMaterial | null = null;
 
   public constructor() {
     // Effect 1: Create material once and set signal
@@ -106,14 +106,14 @@ export class StandardMaterialDirective {
       const emissiveIntensity = this.emissiveIntensity();
 
       if (!this.material) {
-        this.material = new THREE.MeshStandardMaterial({
-          color,
-          wireframe,
-          metalness,
-          roughness,
-          emissive,
-          emissiveIntensity,
-        });
+        // Create material with NodeMaterial pattern (direct property assignment)
+        this.material = new THREE.MeshStandardNodeMaterial();
+        this.material.color = new THREE.Color(color);
+        this.material.wireframe = wireframe;
+        this.material.metalness = metalness;
+        this.material.roughness = roughness;
+        this.material.emissive = new THREE.Color(emissive);
+        this.material.emissiveIntensity = emissiveIntensity;
         this.materialSignal.set(this.material);
       }
     });
@@ -134,7 +134,9 @@ export class StandardMaterialDirective {
           });
         }
 
-        // Update metalness and roughness directly (not in store interface yet)
+        // Update all material properties with NodeMaterial pattern
+        this.material.color = new THREE.Color(color);
+        this.material.wireframe = wireframe;
         this.material.metalness = this.metalness();
         this.material.roughness = this.roughness();
 

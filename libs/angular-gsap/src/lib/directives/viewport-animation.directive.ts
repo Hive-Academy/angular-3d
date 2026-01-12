@@ -175,6 +175,14 @@ export interface ViewportAnimationConfig {
    * @default 15
    */
   rotation?: number;
+
+  /**
+   * Optional signal or function that must return true before animation plays.
+   * Useful for coordinating with loading states or other async conditions.
+   * The animation will wait until this condition is met AND the element is in viewport.
+   * @example waitFor: () => preloadState.isReady()
+   */
+  waitFor?: () => boolean;
 }
 
 @Directive({
@@ -190,6 +198,8 @@ export class ViewportAnimationDirective implements OnDestroy {
   private observer?: IntersectionObserver;
   private animation?: gsap.core.Tween | gsap.core.Timeline;
   private hasAnimated = false;
+  private isInViewport = false; // Track if element is currently in viewport
+  private waitForInterval?: ReturnType<typeof setInterval>; // Polling for waitFor condition
 
   /**
    * Configuration input for the viewport animation.
@@ -273,17 +283,58 @@ export class ViewportAnimationDirective implements OnDestroy {
 
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
+        this.isInViewport = true;
         this.viewportEnter.emit();
 
         // Only animate if not already animated (for once: true)
         if (!this.hasAnimated || !config.once) {
-          this.playAnimation();
+          this.tryPlayAnimation();
         }
-      } else if (!config.once && this.hasAnimated) {
-        this.viewportLeave.emit();
-        this.reverseAnimation();
+      } else {
+        this.isInViewport = false;
+        // Clear waitFor polling when leaving viewport
+        this.clearWaitForPolling();
+
+        if (!config.once && this.hasAnimated) {
+          this.viewportLeave.emit();
+          this.reverseAnimation();
+        }
       }
     });
+  }
+
+  /**
+   * Try to play animation, respecting waitFor condition.
+   * If waitFor is defined and returns false, starts polling until it returns true.
+   */
+  private tryPlayAnimation(): void {
+    const config = this.viewportConfig();
+
+    // If no waitFor or waitFor returns true, play immediately
+    if (!config.waitFor || config.waitFor()) {
+      this.playAnimation();
+      return;
+    }
+
+    // Start polling for waitFor condition (check every 100ms)
+    this.clearWaitForPolling();
+    this.waitForInterval = setInterval(() => {
+      // Check if still in viewport and waitFor is now true
+      if (this.isInViewport && config.waitFor?.()) {
+        this.clearWaitForPolling();
+        this.playAnimation();
+      }
+    }, 100);
+  }
+
+  /**
+   * Clear waitFor polling interval.
+   */
+  private clearWaitForPolling(): void {
+    if (this.waitForInterval) {
+      clearInterval(this.waitForInterval);
+      this.waitForInterval = undefined;
+    }
   }
 
   /**
@@ -479,6 +530,7 @@ export class ViewportAnimationDirective implements OnDestroy {
    * Cleanup resources.
    */
   private cleanup(): void {
+    this.clearWaitForPolling();
     if (this.observer) {
       this.observer.disconnect();
       this.observer = undefined;

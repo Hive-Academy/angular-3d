@@ -1,5 +1,8 @@
 # @hive-academy/angular-gsap
 
+[![npm version](https://img.shields.io/npm/v/@hive-academy/angular-gsap.svg)](https://www.npmjs.com/package/@hive-academy/angular-gsap)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/hive-academy/angular-3d-workspace/blob/main/LICENSE)
+
 > 🎬 **GSAP-powered scroll animations for Angular applications**
 
 A modern Angular library providing declarative, scroll-triggered animations using GSAP and ScrollTrigger. Create stunning scroll experiences with minimal code.
@@ -28,10 +31,12 @@ npm install @hive-academy/angular-gsap gsap lenis
 
 **Peer Dependencies**:
 
-- `@angular/core`: ^20.3.0
-- `@angular/common`: ^20.3.0
-- `gsap`: ^3.12.0
-- `lenis`: ^1.3.16
+| Package           | Version | Purpose                      |
+| ----------------- | ------- | ---------------------------- |
+| `@angular/core`   | ~20.3.0 | Angular framework            |
+| `@angular/common` | ~20.3.0 | Angular common utilities     |
+| `gsap`            | ^3.14.2 | GreenSock Animation Platform |
+| `lenis`           | ^1.3.16 | Smooth scroll library        |
 
 ---
 
@@ -242,7 +247,24 @@ interface ViewportAnimationConfig {
   distance?: number; // Slide distance in px, default: 50
   scale?: number; // Scale factor, default: 0.9
   rotation?: number; // Rotation degrees, default: 15
+  waitFor?: () => boolean; // Delay animation until condition is met
 }
+```
+
+**waitFor Example - Coordinate with loading state**:
+
+```html
+<!-- Wait for 3D scene to finish loading before animating -->
+<h1
+  viewportAnimation
+  [viewportConfig]="{
+    animation: 'slideUp',
+    duration: 0.8,
+    waitFor: preloadState.isReady
+  }"
+>
+  Animates only after scene loads
+</h1>
 ```
 
 **When to use which directive**:
@@ -312,6 +334,114 @@ Convenience wrapper component for hijacked scroll with content projection.
 
 ---
 
+### ScrollTimelineComponent
+
+Scroll-driven timeline with step indicators.
+
+**Selector**: `<agsp-scroll-timeline>`
+
+**Inputs**:
+
+- `steps: StepData[]` - Array of step data
+- `scrub?: boolean | number` - Link animation to scroll progress
+- `markers?: boolean` - Show debug markers
+
+---
+
+### StepIndicatorComponent
+
+Step indicator with progress visualization.
+
+**Selector**: `<agsp-step-indicator>`
+
+**Inputs**:
+
+- `steps: StepData[]` - Array of step data
+- `currentStep: number` - Currently active step index
+- `progress: number` - Animation progress (0-1)
+
+---
+
+### Feature Showcase Components
+
+#### FeatureShowcaseTimelineComponent
+
+Scroll-driven feature showcase with alternating layouts.
+
+**Selector**: `<agsp-feature-showcase-timeline>`
+
+**Inputs**:
+
+- `scrollHeightPerStep?: number` - Scroll height per feature (default: 150vh)
+- `animationDuration?: number` - Animation duration in seconds
+- `markers?: boolean` - Show debug markers
+
+**Example**:
+
+```html
+<agsp-feature-showcase-timeline>
+  <agsp-feature-step>
+    <span featureBadge>1</span>
+    <h3 featureTitle>Feature Title</h3>
+    <p featureDescription>Feature description here.</p>
+    <div featureNotes>
+      <span>Note 1</span>
+      <span>Note 2</span>
+    </div>
+    <img featureVisual src="feature.png" alt="Feature" />
+    <div featureDecoration>
+      <!-- Optional decorative element -->
+    </div>
+  </agsp-feature-step>
+</agsp-feature-showcase-timeline>
+```
+
+#### FeatureStepComponent
+
+Individual feature step container.
+
+**Selector**: `<agsp-feature-step>`
+
+---
+
+### Split Panel Components
+
+#### SplitPanelSectionComponent
+
+Parallax split-panel layout with sticky positioning.
+
+**Selector**: `<agsp-split-panel-section>`
+
+**Inputs**:
+
+- `imagePosition?: 'left' | 'right'` - Image side position
+- `parallaxStrength?: number` - Parallax movement strength
+
+**Example**:
+
+```html
+<agsp-split-panel-section [imagePosition]="'left'">
+  <img splitPanelImage src="feature.png" alt="Feature" />
+  <div splitPanelBadge>1</div>
+  <h3 splitPanelTitle>Feature Title</h3>
+  <p splitPanelDescription>Feature description.</p>
+  <div splitPanelFeatures>
+    <span>Feature 1</span>
+    <span>Feature 2</span>
+  </div>
+</agsp-split-panel-section>
+```
+
+---
+
+### ParallaxSplitScrollComponent
+
+Container for parallax split-scroll sections.
+
+**Selector**: `<agsp-parallax-split-scroll>`
+
+---
+
 ## ⚙️ Configuration
 
 ### ScrollAnimationConfig
@@ -348,7 +478,26 @@ interface ScrollAnimationConfig {
 
   // Performance
   once?: boolean; // Run only once
+
+  // Coordination
+  waitFor?: () => boolean; // Delay animation until condition is met
 }
+```
+
+**waitFor Example - Coordinate with loading state**:
+
+```html
+<!-- Wait for 3D scene to finish loading before scroll animation activates -->
+<div
+  scrollAnimation
+  [scrollConfig]="{
+    animation: 'parallax',
+    speed: 0.5,
+    waitFor: preloadState.isReady
+  }"
+>
+  Parallax starts only after scene loads
+</div>
 ```
 
 ### SSR Compatibility
@@ -423,6 +572,185 @@ export class StoryComponent {
 
 ---
 
+## 🎬 Live Demo
+
+> Coming soon - Live demo application showcasing all animation types
+
+---
+
+## Directives Reference
+
+### Scroll Directives
+
+| Directive                   | Selector               | Description                      |
+| --------------------------- | ---------------------- | -------------------------------- |
+| ScrollAnimationDirective    | `[scrollAnimation]`    | Scroll-triggered GSAP animations |
+| HijackedScrollDirective     | `[hijackedScroll]`     | Scroll hijacking container       |
+| HijackedScrollItemDirective | `[hijackedScrollItem]` | Items within hijacked scroll     |
+| ScrollSectionPinDirective   | `[scrollSectionPin]`   | Pin sections during scroll       |
+
+### Other Directives
+
+| Directive                  | Selector              | Description                     |
+| -------------------------- | --------------------- | ------------------------------- |
+| ViewportAnimationDirective | `[viewportAnimation]` | IntersectionObserver animations |
+| SectionStickyDirective     | `[sectionSticky]`     | Sticky section behavior         |
+| ParallaxSplitItemDirective | `[parallaxSplitItem]` | Parallax item in split layout   |
+| LenisSmoothScrollDirective | `[lenisSmoothScroll]` | Enable Lenis smooth scrolling   |
+
+### Feature Showcase Directives (Content Slots)
+
+| Directive                   | Selector               | Description                   |
+| --------------------------- | ---------------------- | ----------------------------- |
+| FeatureBadgeDirective       | `[featureBadge]`       | Feature step badge slot       |
+| FeatureTitleDirective       | `[featureTitle]`       | Feature step title slot       |
+| FeatureDescriptionDirective | `[featureDescription]` | Feature step description slot |
+| FeatureNotesDirective       | `[featureNotes]`       | Feature step notes slot       |
+| FeatureVisualDirective      | `[featureVisual]`      | Feature step visual slot      |
+| FeatureDecorationDirective  | `[featureDecoration]`  | Feature step decoration slot  |
+
+### Split Panel Directives (Content Slots)
+
+| Directive                      | Selector                  | Description                  |
+| ------------------------------ | ------------------------- | ---------------------------- |
+| SplitPanelImageDirective       | `[splitPanelImage]`       | Split panel image slot       |
+| SplitPanelBadgeDirective       | `[splitPanelBadge]`       | Split panel badge slot       |
+| SplitPanelTitleDirective       | `[splitPanelTitle]`       | Split panel title slot       |
+| SplitPanelDescriptionDirective | `[splitPanelDescription]` | Split panel description slot |
+| SplitPanelFeaturesDirective    | `[splitPanelFeatures]`    | Split panel features slot    |
+
+---
+
+## Services
+
+### GsapCoreService
+
+Core GSAP service for initialization and configuration.
+
+**Methods**:
+
+- `get gsap` - Access configured GSAP instance
+- `registerPlugin(...plugins)` - Register additional GSAP plugins
+
+**Example**:
+
+```typescript
+@Component({ ... })
+export class MyComponent {
+  private gsapCore = inject(GsapCoreService);
+
+  animate() {
+    this.gsapCore.gsap.to('.element', { x: 100, duration: 1 });
+  }
+}
+```
+
+---
+
+### LenisSmoothScrollService
+
+Lenis smooth scroll integration with GSAP.
+
+**Methods**:
+
+- `initialize(options?)` - Initialize Lenis with options
+- `destroy()` - Clean up Lenis instance
+- `scrollTo(target, options?)` - Scroll to target
+- `stop()` / `start()` - Pause/resume smooth scrolling
+
+**Properties**:
+
+- `scroll$` - Observable of scroll events
+- `progress$` - Observable of scroll progress (0-1)
+
+**Example**:
+
+```typescript
+@Component({ ... })
+export class MyComponent {
+  private lenis = inject(LenisSmoothScrollService);
+
+  scrollToSection() {
+    this.lenis.scrollTo('#section-2', { duration: 1.5 });
+  }
+}
+```
+
+---
+
+## Configuration Providers
+
+### provideGsap()
+
+Configures GSAP globally using Angular's modern provider pattern.
+
+**Usage**:
+
+```typescript
+// app.config.ts
+import { ApplicationConfig } from '@angular/core';
+import { provideGsap } from '@hive-academy/angular-gsap';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideGsap({
+      defaults: {
+        ease: 'power2.out',
+        duration: 1,
+      },
+    }),
+  ],
+};
+```
+
+**Options**:
+
+```typescript
+interface GsapConfig {
+  defaults?: gsap.TweenVars; // Default tween properties
+  plugins?: GSAPPlugin[]; // Additional plugins to register
+}
+```
+
+---
+
+### provideLenis()
+
+Configures Lenis smooth scrolling globally.
+
+**Usage**:
+
+```typescript
+// app.config.ts
+import { provideGsap, provideLenis } from '@hive-academy/angular-gsap';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideGsap(), // GSAP must be provided first
+    provideLenis({
+      lerp: 0.1, // Smoothness (0.05-0.1 recommended)
+      wheelMultiplier: 1, // Mouse wheel speed
+      touchMultiplier: 2, // Touch swipe speed
+      smoothWheel: true, // Smooth mouse wheel
+    }),
+  ],
+};
+```
+
+**Options**:
+
+```typescript
+interface LenisServiceOptions {
+  lerp?: number; // Smoothness factor
+  wheelMultiplier?: number; // Mouse wheel sensitivity
+  touchMultiplier?: number; // Touch sensitivity
+  smoothWheel?: boolean; // Enable smooth wheel
+  useGsapTicker?: boolean; // Sync with GSAP ticker
+}
+```
+
+---
+
 ## 📖 Resources
 
 - [GSAP Documentation](https://greensock.com/docs/)
@@ -433,7 +761,9 @@ export class StoryComponent {
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please follow the conventional commit format for all commits.
+Contributions are welcome! Please read our [Contributing Guide](../../CONTRIBUTING.md) and follow the conventional commit format for all commits.
+
+See [CODE_OF_CONDUCT.md](../../CODE_OF_CONDUCT.md) for community guidelines.
 
 ---
 

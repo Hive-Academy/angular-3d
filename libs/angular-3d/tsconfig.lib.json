@@ -12,6 +12,7 @@
     "src/test-setup.ts",
     "jest.config.ts",
     "src/**/*.test.ts",
+    "src/**/*-mock.ts",
     "jest.config.cts"
   ],
   "include": ["src/**/*.ts"]

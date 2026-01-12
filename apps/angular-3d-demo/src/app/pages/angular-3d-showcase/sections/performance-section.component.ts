@@ -10,7 +10,7 @@ import {
   OrbitControlsComponent,
 } from '@hive-academy/angular-3d';
 import { SCENE_COLORS } from '../../../shared/colors';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 
 /**
  * Performance Section - InstancedMesh and Demand Rendering Demo
@@ -100,96 +100,93 @@ import * as THREE from 'three';
               class="aspect-video rounded-2xl overflow-hidden bg-background-dark shadow-xl relative"
             >
               @if (selectedPreset() === '1k') {
-                <a3d-scene-3d [cameraPosition]="[0, 0, 50]" [cameraFov]="60">
-                  <a3d-ambient-light [intensity]="0.5" />
-                  <a3d-directional-light
-                    [position]="[10, 10, 10]"
-                    [intensity]="0.8"
-                  />
+              <a3d-scene-3d [cameraPosition]="[0, 0, 50]" [cameraFov]="60">
+                <a3d-ambient-light [intensity]="0.5" />
+                <a3d-directional-light
+                  [position]="[10, 10, 10]"
+                  [intensity]="0.8"
+                />
 
-                  <a3d-instanced-mesh
-                    [count]="presetCounts['1k']"
-                    [frustumCulled]="false"
-                    (meshReady)="initInstancedGrid($event)"
-                  >
-                    <ng-container a3dBoxGeometry [args]="[0.5, 0.5, 0.5]" />
-                    <ng-container a3dStandardMaterial [color]="colors.cyan" />
-                  </a3d-instanced-mesh>
+                <a3d-instanced-mesh
+                  [count]="presetCounts['1k']"
+                  [frustumCulled]="false"
+                  (meshReady)="initInstancedGrid($event)"
+                >
+                  <ng-container a3dBoxGeometry [args]="[0.5, 0.5, 0.5]" />
+                  <ng-container a3dStandardMaterial [color]="colors.cyan" />
+                </a3d-instanced-mesh>
 
-                  <a3d-orbit-controls
-                    [enableDamping]="true"
-                    [dampingFactor]="0.05"
-                  />
-                </a3d-scene-3d>
-              }
-              @if (selectedPreset() === '10k') {
-                <a3d-scene-3d [cameraPosition]="[0, 0, 50]" [cameraFov]="60">
-                  <a3d-ambient-light [intensity]="0.5" />
-                  <a3d-directional-light
-                    [position]="[10, 10, 10]"
-                    [intensity]="0.8"
-                  />
+                <a3d-orbit-controls
+                  [enableDamping]="true"
+                  [dampingFactor]="0.05"
+                />
+              </a3d-scene-3d>
+              } @if (selectedPreset() === '10k') {
+              <a3d-scene-3d [cameraPosition]="[0, 0, 50]" [cameraFov]="60">
+                <a3d-ambient-light [intensity]="0.5" />
+                <a3d-directional-light
+                  [position]="[10, 10, 10]"
+                  [intensity]="0.8"
+                />
 
-                  <a3d-instanced-mesh
-                    [count]="presetCounts['10k']"
-                    [frustumCulled]="false"
-                    (meshReady)="initInstancedGrid($event)"
-                  >
-                    <ng-container a3dBoxGeometry [args]="[0.5, 0.5, 0.5]" />
-                    <ng-container a3dStandardMaterial [color]="colors.cyan" />
-                  </a3d-instanced-mesh>
+                <a3d-instanced-mesh
+                  [count]="presetCounts['10k']"
+                  [frustumCulled]="false"
+                  (meshReady)="initInstancedGrid($event)"
+                >
+                  <ng-container a3dBoxGeometry [args]="[0.5, 0.5, 0.5]" />
+                  <ng-container a3dStandardMaterial [color]="colors.cyan" />
+                </a3d-instanced-mesh>
 
-                  <a3d-orbit-controls
-                    [enableDamping]="true"
-                    [dampingFactor]="0.05"
-                  />
-                </a3d-scene-3d>
-              }
-              @if (selectedPreset() === '50k') {
-                <a3d-scene-3d [cameraPosition]="[0, 0, 50]" [cameraFov]="60">
-                  <a3d-ambient-light [intensity]="0.5" />
-                  <a3d-directional-light
-                    [position]="[10, 10, 10]"
-                    [intensity]="0.8"
-                  />
+                <a3d-orbit-controls
+                  [enableDamping]="true"
+                  [dampingFactor]="0.05"
+                />
+              </a3d-scene-3d>
+              } @if (selectedPreset() === '50k') {
+              <a3d-scene-3d [cameraPosition]="[0, 0, 50]" [cameraFov]="60">
+                <a3d-ambient-light [intensity]="0.5" />
+                <a3d-directional-light
+                  [position]="[10, 10, 10]"
+                  [intensity]="0.8"
+                />
 
-                  <a3d-instanced-mesh
-                    [count]="presetCounts['50k']"
-                    [frustumCulled]="false"
-                    (meshReady)="initInstancedGrid($event)"
-                  >
-                    <ng-container a3dBoxGeometry [args]="[0.5, 0.5, 0.5]" />
-                    <ng-container a3dStandardMaterial [color]="colors.cyan" />
-                  </a3d-instanced-mesh>
+                <a3d-instanced-mesh
+                  [count]="presetCounts['50k']"
+                  [frustumCulled]="false"
+                  (meshReady)="initInstancedGrid($event)"
+                >
+                  <ng-container a3dBoxGeometry [args]="[0.5, 0.5, 0.5]" />
+                  <ng-container a3dStandardMaterial [color]="colors.cyan" />
+                </a3d-instanced-mesh>
 
-                  <a3d-orbit-controls
-                    [enableDamping]="true"
-                    [dampingFactor]="0.05"
-                  />
-                </a3d-scene-3d>
-              }
-              @if (selectedPreset() === '100k') {
-                <a3d-scene-3d [cameraPosition]="[0, 0, 50]" [cameraFov]="60">
-                  <a3d-ambient-light [intensity]="0.5" />
-                  <a3d-directional-light
-                    [position]="[10, 10, 10]"
-                    [intensity]="0.8"
-                  />
+                <a3d-orbit-controls
+                  [enableDamping]="true"
+                  [dampingFactor]="0.05"
+                />
+              </a3d-scene-3d>
+              } @if (selectedPreset() === '100k') {
+              <a3d-scene-3d [cameraPosition]="[0, 0, 50]" [cameraFov]="60">
+                <a3d-ambient-light [intensity]="0.5" />
+                <a3d-directional-light
+                  [position]="[10, 10, 10]"
+                  [intensity]="0.8"
+                />
 
-                  <a3d-instanced-mesh
-                    [count]="presetCounts['100k']"
-                    [frustumCulled]="false"
-                    (meshReady)="initInstancedGrid($event)"
-                  >
-                    <ng-container a3dBoxGeometry [args]="[0.5, 0.5, 0.5]" />
-                    <ng-container a3dStandardMaterial [color]="colors.cyan" />
-                  </a3d-instanced-mesh>
+                <a3d-instanced-mesh
+                  [count]="presetCounts['100k']"
+                  [frustumCulled]="false"
+                  (meshReady)="initInstancedGrid($event)"
+                >
+                  <ng-container a3dBoxGeometry [args]="[0.5, 0.5, 0.5]" />
+                  <ng-container a3dStandardMaterial [color]="colors.cyan" />
+                </a3d-instanced-mesh>
 
-                  <a3d-orbit-controls
-                    [enableDamping]="true"
-                    [dampingFactor]="0.05"
-                  />
-                </a3d-scene-3d>
+                <a3d-orbit-controls
+                  [enableDamping]="true"
+                  [dampingFactor]="0.05"
+                />
+              </a3d-scene-3d>
               }
 
               <!-- Badge: Draw Call -->
@@ -225,31 +222,48 @@ import * as THREE from 'three';
           <div class="flex gap-3 justify-center">
             <button
               (click)="selectedPreset.set('1k')"
-              [class]="selectedPreset() === '1k' ? 'px-6 py-3 rounded-lg font-medium transition-colors bg-cyan-500 text-white' : 'px-6 py-3 rounded-lg font-medium transition-colors bg-white/10 text-white hover:bg-white/20'"
+              [class]="
+                selectedPreset() === '1k'
+                  ? 'px-6 py-3 rounded-lg font-medium transition-colors bg-cyan-500 text-white'
+                  : 'px-6 py-3 rounded-lg font-medium transition-colors bg-white/10 text-white hover:bg-white/20'
+              "
             >
               1,000
             </button>
             <button
               (click)="selectedPreset.set('10k')"
-              [class]="selectedPreset() === '10k' ? 'px-6 py-3 rounded-lg font-medium transition-colors bg-cyan-500 text-white' : 'px-6 py-3 rounded-lg font-medium transition-colors bg-white/10 text-white hover:bg-white/20'"
+              [class]="
+                selectedPreset() === '10k'
+                  ? 'px-6 py-3 rounded-lg font-medium transition-colors bg-cyan-500 text-white'
+                  : 'px-6 py-3 rounded-lg font-medium transition-colors bg-white/10 text-white hover:bg-white/20'
+              "
             >
               10,000
             </button>
             <button
               (click)="selectedPreset.set('50k')"
-              [class]="selectedPreset() === '50k' ? 'px-6 py-3 rounded-lg font-medium transition-colors bg-cyan-500 text-white' : 'px-6 py-3 rounded-lg font-medium transition-colors bg-white/10 text-white hover:bg-white/20'"
+              [class]="
+                selectedPreset() === '50k'
+                  ? 'px-6 py-3 rounded-lg font-medium transition-colors bg-cyan-500 text-white'
+                  : 'px-6 py-3 rounded-lg font-medium transition-colors bg-white/10 text-white hover:bg-white/20'
+              "
             >
               50,000
             </button>
             <button
               (click)="selectedPreset.set('100k')"
-              [class]="selectedPreset() === '100k' ? 'px-6 py-3 rounded-lg font-medium transition-colors bg-cyan-500 text-white' : 'px-6 py-3 rounded-lg font-medium transition-colors bg-white/10 text-white hover:bg-white/20'"
+              [class]="
+                selectedPreset() === '100k'
+                  ? 'px-6 py-3 rounded-lg font-medium transition-colors bg-cyan-500 text-white'
+                  : 'px-6 py-3 rounded-lg font-medium transition-colors bg-white/10 text-white hover:bg-white/20'
+              "
             >
               100,000
             </button>
           </div>
           <p class="text-xs text-text-tertiary mt-3 text-center">
-            Instance count is set at initialization. Changing presets recreates the mesh.
+            Instance count is set at initialization. Changing presets recreates
+            the mesh.
           </p>
         </div>
       </section>

@@ -4,6 +4,9 @@
  * Creates and manages OrbitControls for camera interaction.
  * Uses SceneService for camera/domElement access.
  *
+ * WebGPU Compatibility: OrbitControls from three-stdlib works with
+ * WebGPURenderer. The controls update via the render loop's tick() method.
+ *
  * @example
  * ```html
  * <a3d-orbit-controls
@@ -29,7 +32,7 @@ import {
   DestroyRef,
 } from '@angular/core';
 import { OrbitControls } from 'three-stdlib';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { SceneService } from '../canvas/scene.service';
 import { RenderLoopService } from '../render-loop/render-loop.service';
 

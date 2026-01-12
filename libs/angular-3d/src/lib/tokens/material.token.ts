@@ -1,5 +1,5 @@
 import { InjectionToken, WritableSignal } from '@angular/core';
-import type { Material } from 'three';
+import type { Material } from 'three/webgpu';
 
 /**
  * Writable signal for material sharing between directives.

@@ -1,9 +1,19 @@
 /**
  * SSAO Effect Component - Screen Space Ambient Occlusion
  *
- * Adds realistic ambient shadows in crevices and corners,
- * enhancing depth perception and visual realism.
- * Requires WebGL 2.0 for best results.
+ * IMPORTANT: SSAO is NOT available in WebGPU native PostProcessing.
+ * This component exists for API compatibility but logs a warning and does nothing.
+ *
+ * Native TSL (Three.js Shading Language) does not yet provide an SSAO node.
+ * SSAO requires depth buffer access and complex sampling which is not yet
+ * exposed in the native PostProcessing API.
+ *
+ * Future implementations may use:
+ * 1. GTAOPass from three/addons (requires integration work)
+ * 2. Custom TSL SSAO implementation (when depth buffer access is added)
+ * 3. Post-processing compatibility mode (hybrid approach)
+ *
+ * For now, this component gracefully disables SSAO in WebGPU mode.
  */
 
 import {
@@ -11,29 +21,36 @@ import {
   ChangeDetectionStrategy,
   input,
   inject,
-  effect,
-  DestroyRef,
+  afterNextRender,
 } from '@angular/core';
-import * as THREE from 'three';
-import { SSAOPass } from 'three-stdlib';
-import { EffectComposerService } from '../effect-composer.service';
 import { SceneService } from '../../canvas/scene.service';
 
 /**
- * SsaoEffectComponent - Screen Space Ambient Occlusion
+ * SsaoEffectComponent - Screen Space Ambient Occlusion (DISABLED)
  *
- * Adds realistic ambient shadows in crevices and corners.
- * Requires WebGL 2.0 for best results.
+ * This component is a NO-OP placeholder for API compatibility.
+ * SSAO is not available in native WebGPU PostProcessing.
  *
- * Must be used inside `a3d-effect-composer`.
+ * When used, it will:
+ * 1. Log a warning explaining SSAO is unavailable
+ * 2. Suggest alternatives (GTAO, custom implementation)
+ * 3. Do nothing (no effect added to post-processing pipeline)
+ *
+ * Must be used inside `a3d-effect-composer` (for API consistency).
  *
  * @remarks
- * The SSAOPass from three-stdlib uses `kernelRadius` as the primary radius control.
- * The `kernelRadius` input directly controls the sampling radius (in pixels) for
- * occlusion calculation. Higher values create wider ambient shadows.
+ * Native TSL does not yet provide an SSAO node. The three-stdlib SSAOPass
+ * relied on GLSL shaders which are incompatible with the new TSL-based
+ * PostProcessing API.
+ *
+ * SSAO will be re-enabled when:
+ * - Native TSL adds depth buffer sampling
+ * - GTAOPass is integrated into PostProcessing
+ * - A custom TSL SSAO implementation is created
  *
  * @example
  * ```html
+ * <!-- This will log a warning and do nothing -->
  * <a3d-effect-composer>
  *   <a3d-ssao-effect
  *     [kernelRadius]="8"
@@ -45,7 +62,7 @@ import { SceneService } from '../../canvas/scene.service';
  *
  * @example
  * ```html
- * <!-- Strong ambient occlusion for architectural visualization -->
+ * <!-- API preserved for backward compatibility -->
  * <a3d-effect-composer>
  *   <a3d-ssao-effect
  *     [kernelRadius]="16"
@@ -62,81 +79,41 @@ import { SceneService } from '../../canvas/scene.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SsaoEffectComponent {
-  private readonly composerService = inject(EffectComposerService);
   private readonly sceneService = inject(SceneService);
-  private readonly destroyRef = inject(DestroyRef);
 
   /**
    * Kernel radius - the sampling radius in pixels for occlusion calculation.
-   * This is the primary control for SSAO spread.
-   * Higher values = wider ambient shadows but more GPU cost.
+   * NOTE: This parameter is preserved for API compatibility but has no effect.
    * Default: 8
    */
   public readonly kernelRadius = input<number>(8);
 
   /**
    * Minimum distance threshold - prevents self-occlusion artifacts.
-   * Objects closer than this distance won't occlude themselves.
+   * NOTE: This parameter is preserved for API compatibility but has no effect.
    * Default: 0.001
    */
   public readonly minDistance = input<number>(0.001);
 
   /**
    * Maximum distance threshold - limits occlusion range.
-   * Objects beyond this distance won't contribute to occlusion.
+   * NOTE: This parameter is preserved for API compatibility but has no effect.
    * Default: 0.1
    */
   public readonly maxDistance = input<number>(0.1);
 
-  private pass: SSAOPass | null = null;
-
   public constructor() {
-    // Create pass when renderer, scene, and camera are available
-    effect(() => {
-      const renderer = this.sceneService.renderer();
-      const scene = this.sceneService.scene();
-      const camera = this.sceneService.camera();
+    afterNextRender(() => {
+      // Log warning about SSAO unavailability
+      console.warn(
+        '[SSAO] SSAO effect not available in WebGPU mode - native TSL has no SSAO node. ' +
+          'Skipping SSAO effect. ' +
+          'Alternatives: Use GTAO (three/addons) or wait for native TSL SSAO implementation. ' +
+          'Component preserved for API compatibility.'
+      );
 
-      if (renderer && scene && camera && !this.pass) {
-        const size = new THREE.Vector2();
-        renderer.getSize(size);
-
-        this.pass = new SSAOPass(scene, camera, size.x, size.y);
-        this.pass.kernelRadius = this.kernelRadius();
-        this.pass.minDistance = this.minDistance();
-        this.pass.maxDistance = this.maxDistance();
-
-        this.composerService.addPass(this.pass);
-      }
-    });
-
-    // Update SSAO parameters reactively
-    effect(() => {
-      if (this.pass) {
-        this.pass.kernelRadius = this.kernelRadius();
-        this.pass.minDistance = this.minDistance();
-        this.pass.maxDistance = this.maxDistance();
-        this.sceneService.invalidate();
-      }
-    });
-
-    // React to renderer size changes for proper resolution
-    effect(() => {
-      const renderer = this.sceneService.renderer();
-      const pass = this.pass;
-      if (!renderer || !pass) return;
-
-      const size = new THREE.Vector2();
-      renderer.getSize(size);
-      pass.setSize(size.x, size.y);
-    });
-
-    // Cleanup on destroy using DestroyRef pattern
-    this.destroyRef.onDestroy(() => {
-      if (this.pass) {
-        this.composerService.removePass(this.pass);
-        this.pass = null;
-      }
+      // Component exists but does nothing
+      // This is intentional - graceful degradation
     });
   }
 }

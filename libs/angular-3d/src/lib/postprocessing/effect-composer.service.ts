@@ -1,34 +1,113 @@
 /**
  * Effect Composer Service - Post-processing pipeline manager
  *
- * Manages the Three.js EffectComposer and render passes.
+ * Manages the native Three.js PostProcessing pipeline using TSL nodes.
  * Allows switching between standard render and post-processing render.
+ *
+ * Uses native THREE.PostProcessing with WebGPU renderer and TSL effect nodes.
+ * TSL nodes automatically transpile to WGSL (WebGPU) or GLSL (WebGL fallback),
+ * ensuring cross-backend compatibility.
+ *
+ * Migration from three-stdlib EffectComposer complete (TASK_2025_031 Batch 5).
  */
 
 import { Injectable, OnDestroy, inject, signal } from '@angular/core';
-import * as THREE from 'three';
-import { EffectComposer, RenderPass, Pass } from 'three-stdlib';
+import * as THREE from 'three/webgpu';
+import {
+  pass,
+  saturation,
+  float,
+  vec2,
+  mix,
+  smoothstep,
+  length,
+  uv,
+  Fn,
+  clamp,
+  pow,
+  mul,
+  add,
+  sub,
+} from 'three/tsl';
+import { Node } from 'three/webgpu';
+import BloomNode, { bloom } from 'three/addons/tsl/display/BloomNode.js';
+import DepthOfFieldNode, {
+  dof,
+} from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { RenderLoopService } from '../render-loop/render-loop.service';
 
+// Import local type declarations (see lib/types/three-tsl-addons.d.ts)
+// These provide TypeScript support for TSL addons which don't have official types
+
 /**
- * Service to manage post-processing effects.
+ * Configuration for bloom effect
+ */
+export interface BloomConfig {
+  threshold: number;
+  strength: number;
+  radius: number;
+}
+
+/**
+ * Configuration for selective bloom effect
+ * Uses Three.js Layers to bloom only specific objects
+ */
+export interface SelectiveBloomConfig {
+  layer: number;
+  threshold: number;
+  strength: number;
+  radius: number;
+}
+
+/**
+ * Configuration for depth of field effect
+ */
+export interface DOFConfig {
+  focus: number;
+  aperture: number;
+  maxBlur: number;
+}
+
+/**
+ * Configuration for color grading effect
+ */
+export interface ColorGradingConfig {
+  saturation: number;
+  contrast: number;
+  brightness: number;
+  gamma: number;
+  exposure: number;
+  vignette: number;
+}
+
+/**
+ * Service to manage post-processing effects using native THREE.PostProcessing.
  *
- * Wraps `three-stdlib` EffectComposer.
- * Replaces the default `RenderLoopService` render function with `composer.render()`.
+ * Wraps native `THREE.PostProcessing` with TSL effect nodes.
+ * Replaces the default `RenderLoopService` render function with `postProcessing.render()`.
  *
  * CRITICAL: Component-scoped service (NOT singleton).
  * Provided by Scene3dComponent for per-scene post-processing isolation.
+ *
+ * TSL nodes (pass, bloom, dof) automatically handle:
+ * - WebGPU: Transpile to WGSL shaders
+ * - WebGL: Transpile to GLSL shaders
+ * - Y-flip correction: Native PostProcessing handles coordinate systems
  */
+// eslint-disable-next-line @angular-eslint/use-injectable-provided-in
 @Injectable()
 export class EffectComposerService implements OnDestroy {
   private readonly renderLoop = inject(RenderLoopService);
 
-  private composer: EffectComposer | null = null;
-  private renderPass: RenderPass | null = null;
-  private readonly passes = new Set<Pass>();
+  private postProcessing: THREE.PostProcessing | null = null;
+  private scenePassNode: ReturnType<typeof pass> | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private scenePassColor: any = null; // Cached scene color texture node
+  private effectNodes: Map<string, Node | BloomNode | DepthOfFieldNode> =
+    new Map();
 
   // Stored references for default rendering
-  private renderer: THREE.WebGLRenderer | null = null;
+  private renderer: THREE.WebGPURenderer | null = null;
   private scene: THREE.Scene | null = null;
   private camera: THREE.PerspectiveCamera | null = null;
 
@@ -39,11 +118,19 @@ export class EffectComposerService implements OnDestroy {
   // Pending enable flag for enable() called before init()
   private pendingEnable = false;
 
+  // Selective bloom layer camera and config
+  private bloomLayerCamera: THREE.Camera | null = null;
+  private selectiveBloomConfig: SelectiveBloomConfig | null = null;
+
   /**
-   * Initialize the effect composer with scene resources
+   * Initialize the PostProcessing pipeline with scene resources
+   *
+   * Native PostProcessing works with WebGPURenderer and TSL nodes.
+   * TSL nodes automatically transpile to WGSL (WebGPU) or GLSL (WebGL fallback).
+   * No Y-flip correction needed - native PostProcessing handles coordinate systems.
    */
   public init(
-    renderer: THREE.WebGLRenderer,
+    renderer: THREE.WebGPURenderer,
     scene: THREE.Scene,
     camera: THREE.PerspectiveCamera
   ): void {
@@ -51,18 +138,19 @@ export class EffectComposerService implements OnDestroy {
     this.scene = scene;
     this.camera = camera;
 
-    this.composer = new EffectComposer(renderer);
+    // Create native PostProcessing instance
+    this.postProcessing = new THREE.PostProcessing(renderer);
 
-    // Create default render pass
-    this.renderPass = new RenderPass(scene, camera);
-    this.composer.addPass(this.renderPass);
+    // Create scene pass (replaces RenderPass from three-stdlib)
+    this.scenePassNode = pass(scene, camera);
 
-    // Add any previously added passes (if any were added before init)
-    this.passes.forEach((pass) => {
-      this.composer?.addPass(pass);
-    });
+    // Cache the scene color texture node - used for additive effects
+    this.scenePassColor = this.scenePassNode.getTextureNode('output');
 
-    // If enabled, ensure render loop is using composer
+    // Initial output is just the scene pass color
+    this.postProcessing.outputNode = this.scenePassColor;
+
+    // If enabled, ensure render loop is using PostProcessing
     if (this._isEnabled()) {
       this.updateRenderLoop();
     }
@@ -75,41 +163,392 @@ export class EffectComposerService implements OnDestroy {
   }
 
   /**
-   * Update the size of the composer
+   * Update the size of the PostProcessing pipeline
    */
   public setSize(width: number, height: number): void {
-    this.composer?.setSize(width, height);
+    // PostProcessing automatically handles size from renderer
+    // No explicit setSize needed (unlike three-stdlib EffectComposer)
+    void width;
+    void height;
   }
 
   /**
-   * Add a post-processing pass
+   * Add bloom effect using TSL bloom node
+   *
+   * Bloom is an ADDITIVE effect - it adds glow on top of the scene.
+   * The final output is: sceneColor + bloomEffect
+   *
+   * Bloom parameters:
+   * - threshold: Luminance threshold - only bright areas above this contribute to bloom
+   * - strength: Intensity of the glow effect
+   * - radius: Spread of the bloom effect (0-1)
+   *
+   * @param config Bloom configuration (threshold, strength, radius)
    */
-  public addPass(pass: Pass): void {
-    this.passes.add(pass);
-    this.composer?.addPass(pass);
+  public addBloom(config: BloomConfig): void {
+    if (!this.postProcessing || !this.scenePassColor) {
+      console.warn('[EffectComposer] Cannot add bloom before init() is called');
+      return;
+    }
+
+    // Create bloom effect from cached scene color texture
+    // bloom(inputNode, strength, radius, threshold)
+    const bloomNode = bloom(
+      this.scenePassColor,
+      config.strength,
+      config.radius,
+      config.threshold
+    );
+
+    // Store effect node
+    this.effectNodes.set('bloom', bloomNode);
+
+    // Rebuild output chain to include new effect
+    this.rebuildOutputChain();
   }
 
   /**
-   * Remove a post-processing pass
+   * Update bloom effect parameters
+   *
+   * @param config Updated bloom configuration
    */
-  public removePass(pass: Pass): void {
-    this.passes.delete(pass);
-    this.composer?.removePass(pass);
+  public updateBloom(config: BloomConfig): void {
+    const existingBloom = this.effectNodes.get('bloom') as BloomNode;
+    if (!existingBloom) return;
+
+    // BloomNode has uniform properties we can update directly
+    if (existingBloom.strength) {
+      existingBloom.strength.value = config.strength;
+    }
+    if (existingBloom.radius) {
+      existingBloom.radius.value = config.radius;
+    }
+    if (existingBloom.threshold) {
+      existingBloom.threshold.value = config.threshold;
+    }
+  }
+
+  /**
+   * Remove bloom effect
+   */
+  public removeBloom(): void {
+    const bloomNode = this.effectNodes.get('bloom') as BloomNode;
+    if (bloomNode?.dispose) {
+      bloomNode.dispose();
+    }
+    this.effectNodes.delete('bloom');
+    this.rebuildOutputChain();
+  }
+
+  /**
+   * Add selective bloom effect using layer-based rendering
+   *
+   * Only objects on the specified Three.js layer will be bloomed.
+   * Other objects in the scene will NOT be affected by bloom.
+   *
+   * This creates a true "neon" effect where only specific objects glow.
+   *
+   * @param config Selective bloom configuration (layer, threshold, strength, radius)
+   */
+  public addSelectiveBloom(config: SelectiveBloomConfig): void {
+    if (
+      !this.postProcessing ||
+      !this.scenePassColor ||
+      !this.camera ||
+      !this.scene
+    ) {
+      console.warn(
+        '[EffectComposer] Cannot add selective bloom before init() is called'
+      );
+      return;
+    }
+
+    // Store config for updates
+    this.selectiveBloomConfig = config;
+
+    // Create a camera that only sees the bloom layer
+    this.bloomLayerCamera = this.camera.clone();
+    this.bloomLayerCamera.layers.disableAll();
+    this.bloomLayerCamera.layers.enable(config.layer);
+
+    // Create a separate scene pass for bloom layer only
+    const bloomLayerPass = pass(this.scene, this.bloomLayerCamera);
+    const bloomLayerColor = bloomLayerPass.getTextureNode('output');
+
+    // Apply bloom to the layer-only render
+    const selectiveBloomNode = bloom(
+      bloomLayerColor,
+      config.strength,
+      config.radius,
+      config.threshold
+    );
+
+    // Store effect node
+    this.effectNodes.set('selectiveBloom', selectiveBloomNode);
+
+    // Rebuild output chain to include new effect
+    this.rebuildOutputChain();
+  }
+
+  /**
+   * Update selective bloom effect parameters
+   *
+   * @param config Updated selective bloom configuration
+   */
+  public updateSelectiveBloom(config: SelectiveBloomConfig): void {
+    const existingBloom = this.effectNodes.get('selectiveBloom') as BloomNode;
+    if (!existingBloom) return;
+
+    // Update bloom parameters
+    if (existingBloom.strength) {
+      existingBloom.strength.value = config.strength;
+    }
+    if (existingBloom.radius) {
+      existingBloom.radius.value = config.radius;
+    }
+    if (existingBloom.threshold) {
+      existingBloom.threshold.value = config.threshold;
+    }
+
+    // If layer changed, need to recreate
+    if (
+      this.selectiveBloomConfig &&
+      config.layer !== this.selectiveBloomConfig.layer
+    ) {
+      this.removeSelectiveBloom();
+      this.addSelectiveBloom(config);
+    }
+
+    this.selectiveBloomConfig = config;
+  }
+
+  /**
+   * Remove selective bloom effect
+   */
+  public removeSelectiveBloom(): void {
+    const bloomNode = this.effectNodes.get('selectiveBloom') as BloomNode;
+    if (bloomNode?.dispose) {
+      bloomNode.dispose();
+    }
+    this.effectNodes.delete('selectiveBloom');
+    this.bloomLayerCamera = null;
+    this.selectiveBloomConfig = null;
+    this.rebuildOutputChain();
+  }
+
+  /**
+   * Add depth of field effect using TSL dof node
+   *
+   * DOF requires access to depth buffer from scene pass.
+   * Parameters:
+   * - focus: Focus distance in world units
+   * - aperture: Controls DOF range (larger = more blur, shallower DOF)
+   * - maxBlur: Maximum blur intensity
+   *
+   * @param config DOF configuration (focus, aperture, maxBlur)
+   */
+  public addDepthOfField(config: DOFConfig): void {
+    if (!this.postProcessing || !this.scenePassNode || !this.scenePassColor) {
+      console.warn('[EffectComposer] Cannot add DOF before init() is called');
+      return;
+    }
+
+    // Get depth buffer from scene pass for DOF calculations
+    // dof(textureNode, viewZNode, focusDistance, focalLength, bokehScale)
+    //
+    // TSL DOF parameters:
+    // - focusDistance: Distance in world units where objects are in sharp focus
+    // - focalLength: How far from focal plane before completely out-of-focus (smaller = more blur)
+    // - bokehScale: Intensity/size of the blur effect (larger = more blur)
+    const viewZ = this.scenePassNode.getViewZNode();
+
+    // Map our API to TSL DOF:
+    // - focus: Direct mapping to focusDistance
+    // - aperture: Larger aperture = shallower DOF = smaller focalLength
+    //   Camera aperture of 0.1 should give visible blur
+    // - maxBlur: Maps to bokehScale (multiply for more visibility)
+    const focusDistance = config.focus;
+    // Smaller focalLength = objects blur more quickly as they move from focus
+    // Aperture of 0.1 → focalLength of ~2 world units
+    const focalLength = 0.5 / Math.max(config.aperture, 0.001);
+    // bokehScale controls the visual size of the blur circles
+    const bokehScale = config.maxBlur * 100; // Much larger multiplier for visible effect
+
+    const dofNode = dof(
+      this.scenePassColor as Node,
+      viewZ,
+      focusDistance,
+      focalLength,
+      bokehScale
+    );
+
+    // Store effect node
+    this.effectNodes.set('dof', dofNode);
+
+    // Rebuild output chain
+    this.rebuildOutputChain();
+  }
+
+  /**
+   * Update DOF effect parameters
+   *
+   * @param config Updated DOF configuration
+   */
+  public updateDepthOfField(config: DOFConfig): void {
+    const existingDof = this.effectNodes.get('dof') as DepthOfFieldNode;
+    if (!existingDof) return;
+
+    // For DOF, we need to recreate since parameters are set at construction
+    // Remove and re-add with new config
+    this.removeDepthOfField();
+    this.addDepthOfField(config);
+  }
+
+  /**
+   * Remove depth of field effect
+   */
+  public removeDepthOfField(): void {
+    const dofNode = this.effectNodes.get('dof') as DepthOfFieldNode;
+    if (dofNode?.dispose) {
+      dofNode.dispose();
+    }
+    this.effectNodes.delete('dof');
+    this.rebuildOutputChain();
+  }
+
+  // Store color grading config for updates
+  private colorGradingConfig: ColorGradingConfig | null = null;
+
+  /**
+   * Add color grading effect
+   *
+   * Color grading applies color transformations to the rendered scene:
+   * - Saturation: Color intensity (0 = grayscale, 1 = normal, >1 = vibrant)
+   * - Contrast: Light/dark difference
+   * - Brightness: Overall lightness
+   * - Gamma: Non-linear brightness curve
+   * - Exposure: Overall scene brightness
+   * - Vignette: Darken corners
+   */
+  public addColorGrading(config: ColorGradingConfig): void {
+    if (!this.postProcessing || !this.scenePassColor) {
+      console.warn('[EffectComposer] Cannot add color grading before init()');
+      return;
+    }
+
+    this.colorGradingConfig = config;
+
+    // Create TSL color grading function that transforms scene color
+    const colorGradingNode = this.createColorGradingNode(config);
+
+    // Store effect node
+    this.effectNodes.set('colorGrading', colorGradingNode);
+
+    // Rebuild output chain
+    this.rebuildOutputChain();
+  }
+
+  /**
+   * Create TSL node for color grading transformations
+   */
+  private createColorGradingNode(config: ColorGradingConfig): Node {
+    const sceneColor = this.scenePassColor;
+
+    // Create TSL function that transforms scene colors
+    const colorGradingFn = Fn(() => {
+      // Start with scene color
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let color: any = sceneColor;
+
+      // 1. Exposure - multiply scene brightness
+      color = mul(color, float(config.exposure));
+
+      // 2. Saturation - use TSL saturation function
+      color = saturation(color, float(config.saturation));
+
+      // 3. Contrast - expand around midpoint (0.5)
+      const midpoint = float(0.5);
+      color = add(mul(sub(color, midpoint), float(config.contrast)), midpoint);
+
+      // 4. Brightness - simple multiplier
+      color = mul(color, float(config.brightness));
+
+      // 5. Gamma correction
+      const invGamma = float(1.0 / config.gamma);
+      color = pow(clamp(color, 0.0, 1.0), invGamma);
+
+      // 6. Vignette - darken corners
+      if (config.vignette > 0) {
+        const uvCoord = uv();
+        const center = sub(uvCoord, vec2(0.5, 0.5));
+        const dist = length(center);
+        const vigStrength = float(1.0 + config.vignette * 2);
+        const vig = smoothstep(float(0.8), float(0.2), mul(dist, vigStrength));
+        color = mix(color, mul(color, vig), float(config.vignette));
+      }
+
+      return color;
+    })();
+
+    return colorGradingFn as unknown as Node;
+  }
+
+  /**
+   * Update color grading parameters
+   */
+  public updateColorGrading(config: ColorGradingConfig): void {
+    if (!this.colorGradingConfig) return;
+
+    // Recreate node with new config
+    this.colorGradingConfig = config;
+    const colorGradingNode = this.createColorGradingNode(config);
+    this.effectNodes.set('colorGrading', colorGradingNode);
+    this.rebuildOutputChain();
+  }
+
+  /**
+   * Remove color grading effect
+   */
+  public removeColorGrading(): void {
+    this.effectNodes.delete('colorGrading');
+    this.colorGradingConfig = null;
+    this.rebuildOutputChain();
+  }
+
+  /**
+   * Add a custom TSL effect node
+   *
+   * @param name Unique identifier for the effect
+   * @param effectNode TSL effect node
+   */
+  public addEffect(name: string, effectNode: Node): void {
+    this.effectNodes.set(name, effectNode);
+    this.rebuildOutputChain();
+  }
+
+  /**
+   * Remove a custom effect by name
+   *
+   * @param name Effect identifier
+   */
+  public removeEffect(name: string): void {
+    this.effectNodes.delete(name);
+    this.rebuildOutputChain();
   }
 
   /**
    * Enable post-processing
-   * If composer is not yet initialized, enable request is queued
+   * If PostProcessing is not yet initialized, enable request is queued
    */
   public enable(): void {
     if (this._isEnabled()) return;
     this._isEnabled.set(true);
 
-    if (this.composer) {
-      // Composer initialized - enable immediately
+    if (this.postProcessing) {
+      // PostProcessing initialized - enable immediately
       this.updateRenderLoop();
     } else {
-      // Composer not yet initialized - queue enable for after init()
+      // PostProcessing not yet initialized - queue enable for after init()
       this.pendingEnable = true;
       console.warn(
         '[EffectComposer] Enable requested before init, will activate after init'
@@ -131,20 +570,117 @@ export class EffectComposerService implements OnDestroy {
    */
   public ngOnDestroy(): void {
     this.disable();
-    this.passes.clear();
-    // Disposal of passes is usually user responsibility or handle here if strictly owned
-    // For now, we assume components dispose their own passes.
-    this.composer = null;
-    this.renderPass = null;
+
+    // Dispose all effect nodes
+    for (const [, effectNode] of this.effectNodes) {
+      if ('dispose' in effectNode && typeof effectNode.dispose === 'function') {
+        effectNode.dispose();
+      }
+    }
+
+    this.effectNodes.clear();
+    this.postProcessing = null;
+    this.scenePassNode = null;
     this.renderer = null;
     this.scene = null;
     this.camera = null;
   }
 
+  /**
+   * Get the current output node (last effect in chain or scene pass)
+   */
+  private getCurrentOutput(): Node | BloomNode | DepthOfFieldNode {
+    if (this.effectNodes.size === 0) {
+      return this.scenePassNode as unknown as Node;
+    }
+
+    // Return last effect node in insertion order
+    const effectArray = Array.from(this.effectNodes.values());
+    return effectArray[effectArray.length - 1];
+  }
+
+  /**
+   * Rebuild the output chain by compositing all effect nodes
+   *
+   * For additive effects like bloom: output = sceneColor + bloomEffect
+   * For replacement effects like DOF: output = dofEffect
+   * For custom effects: output = mix/blend with current output
+   *
+   * Chain order:
+   * 1. Scene color (base)
+   * 2. Bloom effects (additive)
+   * 3. Custom effects (color manipulation - additive blend)
+   * 4. DOF (replacement - applied last as it processes the whole image)
+   */
+  private rebuildOutputChain(): void {
+    if (!this.postProcessing || !this.scenePassColor) return;
+
+    // Start with cached scene color as base
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let output: any = this.scenePassColor;
+
+    // Reserved effect names that are handled specially
+    const reservedEffects = new Set([
+      'bloom',
+      'selectiveBloom',
+      'dof',
+      'colorGrading',
+    ]);
+
+    // Color grading REPLACES scene color (it reads and transforms the scene)
+    const colorGradingNode = this.effectNodes.get('colorGrading') as Node;
+    if (colorGradingNode) {
+      // Color grading applies transformations to scene color
+      output = colorGradingNode;
+    }
+
+    // Add bloom effect (additive compositing)
+    const bloomNode = this.effectNodes.get('bloom') as BloomNode;
+    if (bloomNode) {
+      // Bloom is ADDED to scene color, not replaced
+      output = output.add(bloomNode);
+    }
+
+    // Add selective bloom (additive - only blooms objects on the specified layer)
+    const selectiveBloomNode = this.effectNodes.get(
+      'selectiveBloom'
+    ) as BloomNode;
+    if (selectiveBloomNode) {
+      // Selective bloom is added on top
+      output = output.add(selectiveBloomNode);
+    }
+
+    // Process other custom effects (chromatic aberration, film grain, etc.)
+    // Custom effects are applied AFTER bloom but BEFORE DOF
+    for (const [name, effectNode] of this.effectNodes) {
+      if (reservedEffects.has(name)) {
+        continue; // Skip reserved effects - already handled above
+      }
+
+      // For most custom effects, we use additive blend
+      output = output.add(effectNode);
+    }
+
+    // DOF replaces the output (it processes the entire image)
+    const dofNode = this.effectNodes.get('dof') as DepthOfFieldNode;
+    if (dofNode) {
+      // DOF should take the current output (scene + bloom) as input
+      // But since DOF is created with scenePassColor, we need to recreate logic
+      // For now, if DOF exists, it becomes the output
+      output = dofNode;
+    }
+
+    // Set final output
+    this.postProcessing.outputNode = output;
+  }
+
+  /**
+   * Update render loop to use PostProcessing or default rendering
+   */
   private updateRenderLoop(): void {
-    if (this._isEnabled() && this.composer) {
+    if (this._isEnabled() && this.postProcessing) {
       this.renderLoop.setRenderFunction(() => {
-        this.composer?.render();
+        this.postProcessing?.render();
       });
     } else if (this.renderer && this.scene && this.camera) {
       // Restore default render

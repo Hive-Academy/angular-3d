@@ -5,19 +5,22 @@ import {
   signal,
 } from '@angular/core';
 import {
-  Scene3dComponent,
   CloudLayerComponent,
+  EffectComposerComponent,
   GlowTroikaTextComponent,
+  Scene3dComponent,
+  SelectiveBloomEffectComponent,
   StarFieldComponent,
 } from '@hive-academy/angular-3d';
 
 /**
- * Cloud Hero Scene - Flying Through Clouds with Glowing 3D Text
+ * Cloud Hero Scene - Flying Through Clouds with Premium 3D Glowing Text
  *
  * Features:
- * - Self-glowing 3D text (NO bloom post-processing needed!)
+ * - TRUE 3D extruded text with depth and bevels
+ * - Proper emission + bloom for REAL glow effect
  * - Stars visible only in night mode
- * - Day/Night toggle with different text colors
+ * - Day/Night toggle with different colors
  */
 @Component({
   selector: 'app-cloud-hero-scene',
@@ -26,6 +29,8 @@ import {
     CloudLayerComponent,
     GlowTroikaTextComponent,
     StarFieldComponent,
+    EffectComposerComponent,
+    SelectiveBloomEffectComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -40,8 +45,12 @@ import {
         [cameraNear]="1"
         [cameraFar]="10000"
         [enableAntialiasing]="true"
-        [alpha]="true"
+        [alpha]="false"
+        [backgroundColor]="backgroundColor()"
       >
+        <!-- Ambient light for text visibility -->
+        <!-- Note: scene-3d has built-in lights -->
+
         <!-- Stars - Only visible in night mode -->
         @if (isNightMode()) {
         <a3d-star-field
@@ -53,33 +62,40 @@ import {
         />
         }
 
-        <!-- GLOWING 3D Text - Using Troika's NATIVE glow (outlineBlur)! -->
+        <!-- PREMIUM 3D Extruded Text with SELECTIVE BLOOM -->
+        <!-- bloomLayer=1 makes only this text glow, clouds will NOT bloom -->
         <a3d-glow-troika-text
-          [text]="'FLYTHROUGH'"
-          [fontSize]="120"
-          [position]="[0, 150, 4000]"
-          [glowColor]="textGlowColor()"
-          [textColor]="'#ffffff'"
-          [glowBlur]="'50%'"
-          [glowWidth]="'20%'"
-          [glowOpacity]="1"
-          [glowIntensity]="1.5"
-          [pulseSpeed]="0.3"
+          [text]="'COSMIC PORTAL'"
+          [fontSize]="2"
+          [position]="[0, 100, 4000]"
           [anchorX]="'center'"
           [anchorY]="'middle'"
-          [letterSpacing]="0.15"
+          [glowColor]="'#ec4899'"
+          [textColor]="'#ffffff'"
+          [glowIntensity]="3"
+          [glowBlur]="'40%'"
         />
 
-        <!-- Cloud Layer - pure white clouds, no bloom interference -->
+        <!-- Cloud Layer - moves past the static text -->
+        <!-- Clouds are NOT on bloom layer, so they won't glow -->
         <a3d-cloud-layer
           [textureUrl]="'/clouds/cloud10.png'"
-          [cloudCount]="8000"
+          [cloudCount]="10000"
           [fogColor]="fogColor()"
           [speed]="0.03"
           [mouseParallax]="true"
         />
 
-        <!-- NO BLOOM! GlowTroikaText now has built-in glow -->
+        <!-- Selective Bloom - ONLY blooms objects on layer 1 (the text) -->
+        <!-- Clouds are not on layer 1, so they won't have bloom halo -->
+        <a3d-effect-composer>
+          <a3d-selective-bloom-effect
+            [layer]="1"
+            [threshold]="0"
+            [strength]="1.5"
+            [radius]="0.4"
+          />
+        </a3d-effect-composer>
       </a3d-scene-3d>
 
       <!-- Day/Night Toggle -->
@@ -129,9 +145,9 @@ import {
 export class CloudHeroSceneComponent {
   public readonly isNightMode = signal(false);
 
-  // Background colors
+  // Background colors (hex number format for scene-3d)
   public readonly backgroundColor = computed(() =>
-    this.isNightMode() ? '#050510' : '#326696'
+    this.isNightMode() ? 0x050510 : 0x326696
   );
 
   // Fog matches background for seamless blend
@@ -139,14 +155,12 @@ export class CloudHeroSceneComponent {
     this.isNightMode() ? '#050510' : '#4584b4'
   );
 
-  // Text glow color: warm golden for day, cool cyan for night
-  public readonly textGlowColor = computed(() =>
-    this.isNightMode() ? '#00ffff' : '#ffd700'
-  );
+  // Text base color: white
+  public readonly textColor = computed(() => '#ffffff');
 
-  // Main text color: white for both modes (visible against glow)
-  public readonly textColor = computed(() =>
-    this.isNightMode() ? '#ffffff' : '#ffffff'
+  // Emissive (glow) color: warm golden for day, cool cyan for night
+  public readonly emissiveColor = computed(() =>
+    this.isNightMode() ? '#00ffff' : '#ffd700'
   );
 
   public toggleMode(): void {

@@ -2,18 +2,29 @@
 
 ## Active Tasks
 
-| Task ID       | Title                               | Status                   | Created    |
-| ------------- | ----------------------------------- | ------------------------ | ---------- |
-| TASK_2025_010 | Demo App Integration                | 🔄 Requirements Complete | 2025-12-16 |
-| TASK_2025_011 | Testing & Validation                | 📋 PENDING               | 2025-12-16 |
-| TASK_2025_012 | Demo App - GSAP Showcase Migration  | 🔄 Requirements Complete | 2025-12-18 |
-| TASK_2025_014 | Comprehensive Library Documentation | 📋 PENDING               | 2025-12-18 |
-| TASK_2025_020 | Library Quality Audit (Temp vs Lib) | 🔄 IN PROGRESS           | 2025-12-22 |
-| TASK_2025_021 | Hero Section 3D Text Redesign       | ⏸️ PAUSED (pivot)        | 2025-12-22 |
-| TASK_2025_022 | GSAP Service Centralization         | 🔄 Execution (Batch 1)   | 2025-12-22 |
-| TASK_2025_023 | Troika-Three-Text Implementation    | ✅ COMPLETE              | 2025-12-22 |
-| TASK_2025_024 | Particle Text → Troika Refactor     | ✅ COMPLETE              | 2025-12-23 |
-| TASK_2025_025 | Angular-3D Showcase Page Redesign   | 🔄 IN PROGRESS           | 2025-12-23 |
+| Task ID       | Title                                       | Status                   | Created    |
+| ------------- | ------------------------------------------- | ------------------------ | ---------- |
+| TASK_2025_010 | Demo App Integration                        | 🔄 Requirements Complete | 2025-12-16 |
+| TASK_2025_011 | Testing & Validation                        | 📋 PENDING               | 2025-12-16 |
+| TASK_2025_012 | Demo App - GSAP Showcase Migration          | 🔄 Requirements Complete | 2025-12-18 |
+| TASK_2025_014 | Comprehensive Library Documentation         | 📋 PENDING               | 2025-12-18 |
+| TASK_2025_020 | Library Quality Audit (Temp vs Lib)         | 🔄 IN PROGRESS           | 2025-12-22 |
+| TASK_2025_021 | Hero Section 3D Text Redesign               | ⏸️ PAUSED (pivot)        | 2025-12-22 |
+| TASK_2025_022 | GSAP Service Centralization                 | 🔄 Execution (Batch 1)   | 2025-12-22 |
+| TASK_2025_025 | Angular-3D Showcase Page Redesign           | 🔄 IN PROGRESS           | 2025-12-23 |
+| TASK_2025_030 | WebGPU Test Suite Fixes                     | 📋 PENDING               | 2025-12-27 |
+| TASK_2025_031 | Complete WebGPU TSL Migration               | 🔄 Requirements Complete | 2025-12-28 |
+| TASK_2025_032 | Native TSL Procedural Textures              | 🔄 Batch 1 IN PROGRESS   | 2025-12-29 |
+| TASK_2025_033 | Blueyard.com Replication Analysis           | 🔄 Requirements Complete | 2026-01-01 |
+| TASK_2025_038 | Angular-3D Library Structure Reorganization | ✅ COMPLETE              | 2026-01-03 |
+| TASK_2025_039 | Advanced Shader Background System           | 🔄 Requirements Phase    | 2026-01-03 |
+| TASK_2026_001 | Glass Sphere Flocking Animation             | 🔄 Requirements Complete | 2026-01-04 |
+| TASK_2026_002 | Hexagonal Background Component Enhancement  | 🔄 Execution             | 2026-01-04 |
+| TASK_2026_004 | Claude Skills Showcase Section              | 🔄 Requirements Complete | 2026-01-06 |
+| TASK_2026_006 | Scene Loading & Entrance Animation System   | ✅ COMPLETE              | 2026-01-07 |
+| TASK_2026_008 | Route-Level Scene Loading Coordinator       | 🔄 Requirements Phase    | 2026-01-07 |
+| TASK_2026_009 | 3D Scene & Footer Visual Consistency        | ✅ COMPLETE              | 2026-01-08 |
+| TASK_2026_010 | Interactive Camera Flight Navigation        | 🔄 Architecture Complete | 2026-01-08 |
 
 ## Task Dependencies
 
@@ -55,3 +66,7 @@
 | TASK_2025_024 | Particle Text → Troika Refactor            | COMPLETE | 2025-12-23 |
 | TASK_2025_026 | Award-Winning Three.js Enhancements        | COMPLETE | 2025-12-24 |
 | TASK_2025_027 | NPM Publishing Infrastructure              | COMPLETE | 2025-12-25 |
+| TASK_2025_028 | WebGPU Migration                           | COMPLETE | 2025-12-26 |
+| TASK_2025_029 | Prebuilt Hero Section Showcases            | COMPLETE | 2025-12-26 |
+| TASK_2026_005 | Documentation Enhancement                  | COMPLETE | 2026-01-06 |
+| TASK_2026_007 | GitHub Pages Deployment Setup              | COMPLETE | 2026-01-07 |

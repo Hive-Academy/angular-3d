@@ -9,12 +9,13 @@ import { Injectable } from '@angular/core';
  * Features:
  * - Canvas-based text rendering and pixel sampling
  * - Configurable sampling density (every pixel vs every Nth pixel)
+ * - Configurable height multiplier for line-height control
  * - Normalized coordinate output for 3D positioning
  * - Memory-efficient (no canvas pooling - components use different params)
  *
  * @example
  * ```typescript
- * const positions = textSamplingService.sampleTextPositions('HELLO', 100, 2);
+ * const positions = textSamplingService.sampleTextPositions('HELLO', 100, 2, 2.5);
  * // Returns [[x1, y1], [x2, y2], ...] in normalized coordinates
  * ```
  */
@@ -26,12 +27,14 @@ export class TextSamplingService {
    * @param text - Text string to sample
    * @param fontSize - Canvas font size in pixels
    * @param sampleStep - Pixel sampling step (1 = every pixel, 2 = every 2nd pixel)
+   * @param heightMultiplier - Multiplier for canvas height (default 2.5 for ample vertical space)
    * @returns Array of [x, y] positions in normalized coordinates
    */
   public sampleTextPositions(
     text: string,
     fontSize: number,
-    sampleStep = 2
+    sampleStep = 2,
+    heightMultiplier = 2.5
   ): [number, number][] {
     // Create temporary canvas for text rendering
     const canvas = document.createElement('canvas');
@@ -43,7 +46,7 @@ export class TextSamplingService {
     ctx.font = `bold ${fontSize}px Arial`;
     const metrics = ctx.measureText(text);
     const textWidth = metrics.width;
-    const textHeight = fontSize * 1.2;
+    const textHeight = fontSize * heightMultiplier;
 
     canvas.width = textWidth + padding * 2;
     canvas.height = textHeight + padding * 2;

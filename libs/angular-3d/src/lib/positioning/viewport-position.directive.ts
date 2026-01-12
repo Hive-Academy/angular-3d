@@ -42,14 +42,7 @@
  * ```
  */
 
-import {
-  computed,
-  DestroyRef,
-  Directive,
-  effect,
-  inject,
-  input,
-} from '@angular/core';
+import { DestroyRef, Directive, effect, inject, input } from '@angular/core';
 import { SceneGraphStore } from '../store/scene-graph.store';
 import { OBJECT_ID } from '../tokens/object-id.token';
 import { ViewportPositioningService } from './viewport-positioning.service';
@@ -126,7 +119,7 @@ export class ViewportPositionDirective {
   // Initialization
   // ============================================================================
 
-  constructor() {
+  public constructor() {
     // Effect: sync viewport position to SceneGraphStore
     // Reacts to changes in: viewportPosition, viewportOffset, viewportZ, camera, and window resize
     effect(() => {

@@ -19,7 +19,7 @@
  */
 
 import { Injectable, signal } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 
 /**
  * State for a texture loading operation

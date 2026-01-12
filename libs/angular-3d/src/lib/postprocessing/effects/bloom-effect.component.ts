@@ -1,7 +1,10 @@
 /**
- * Bloom Effect Component - Declarative Bloom pass
+ * Bloom Effect Component - Declarative Bloom effect using TSL
  *
- * Adds post-processing bloom effect using UnrealBloomPass.
+ * Adds post-processing bloom effect using native TSL bloom node.
+ * TSL nodes automatically transpile to WGSL (WebGPU) or GLSL (WebGL fallback).
+ *
+ * Migration from three-stdlib UnrealBloomPass complete (TASK_2025_031 Batch 5).
  */
 
 import {
@@ -12,15 +15,16 @@ import {
   effect,
   OnDestroy,
 } from '@angular/core';
-import * as THREE from 'three';
-import { UnrealBloomPass } from 'three-stdlib';
 import { EffectComposerService } from '../effect-composer.service';
 import { SceneService } from '../../canvas/scene.service';
 
 /**
- * Declarative Bloom effect.
+ * Declarative Bloom effect using native TSL bloom node.
  *
  * Must be used inside `a3d-effect-composer`.
+ *
+ * Uses native THREE.PostProcessing with TSL bloom() node.
+ * Replaces three-stdlib UnrealBloomPass.
  *
  * @example
  * ```html
@@ -28,6 +32,16 @@ import { SceneService } from '../../canvas/scene.service';
  *   [threshold]="0"
  *   [strength]="1.5"
  *   [radius]="0.4"
+ * />
+ * ```
+ *
+ * @example
+ * ```html
+ * <!-- Strong bloom for glowing UI elements -->
+ * <a3d-bloom-effect
+ *   [threshold]="0.8"
+ *   [strength]="2.5"
+ *   [radius]="0.6"
  * />
  * ```
  */
@@ -40,16 +54,6 @@ import { SceneService } from '../../canvas/scene.service';
 export class BloomEffectComponent implements OnDestroy {
   private readonly composerService = inject(EffectComposerService);
   private readonly sceneService = inject(SceneService);
-
-  // Stats:
-  // Using UnrealBloomPass from three-stdlib.
-  // Reference: temp/angular-3d/components/effects/bloom-effect.component.ts
-  // Temp used: NgtpBloom (angular-three-postprocessing).
-  // We are using three-stdlib directly to avoid dependencies as per architecture.
-  //
-  // NOTE: UnrealBloomPass does NOT support kernelSize parameter (API verified).
-  // The temp folder used NgtpBloom wrapper which had extra features.
-  // Only threshold, strength, and radius are supported by UnrealBloomPass core API.
 
   /**
    * Bloom threshold - only objects with luminance > threshold will bloom
@@ -69,62 +73,50 @@ export class BloomEffectComponent implements OnDestroy {
    */
   public readonly radius = input<number>(0.4);
 
-  private pass: UnrealBloomPass | null = null;
+  private effectAdded = false;
 
   public constructor() {
+    // Add bloom effect when renderer is available
     effect(() => {
-      // Create pass when resolution is available
       const renderer = this.sceneService.renderer();
       const scene = this.sceneService.scene();
       const camera = this.sceneService.camera();
 
-      if (renderer && scene && camera && !this.pass) {
+      if (renderer && scene && camera && !this.effectAdded) {
         // Initialize the composer first (if not already done)
         this.composerService.init(renderer, scene, camera);
 
-        const size = new THREE.Vector2();
-        renderer.getSize(size);
+        // Add bloom effect using TSL bloom node
+        this.composerService.addBloom({
+          threshold: this.threshold(),
+          strength: this.strength(),
+          radius: this.radius(),
+        });
 
-        this.pass = new UnrealBloomPass(
-          size,
-          this.strength(),
-          this.radius(),
-          this.threshold()
-        );
-
-        this.composerService.addPass(this.pass);
+        this.effectAdded = true;
 
         // Enable the composer to switch render function
         this.composerService.enable();
       }
     });
 
-    // Update pass properties
+    // Update bloom parameters reactively
     effect(() => {
-      if (this.pass) {
-        this.pass.strength = this.strength();
-        this.pass.threshold = this.threshold();
-        this.pass.radius = this.radius();
+      if (this.effectAdded) {
+        this.composerService.updateBloom({
+          threshold: this.threshold(),
+          strength: this.strength(),
+          radius: this.radius(),
+        });
+        this.sceneService.invalidate();
       }
-    });
-
-    // React to renderer size changes (CRITICAL for multi-scene support)
-    effect(() => {
-      const renderer = this.sceneService.renderer();
-      const pass = this.pass;
-      if (!renderer || !pass) return;
-
-      const size = new THREE.Vector2();
-      renderer.getSize(size);
-      pass.resolution.set(size.x, size.y);
     });
   }
 
   public ngOnDestroy(): void {
-    if (this.pass) {
-      this.composerService.removePass(this.pass);
-      this.pass.dispose();
-      this.pass = null;
+    if (this.effectAdded) {
+      this.composerService.removeBloom();
+      this.effectAdded = false;
     }
   }
 }

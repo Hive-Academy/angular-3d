@@ -1,16 +1,15 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
-  Scene3dComponent,
-  BoxComponent,
-  TorusComponent,
   AmbientLightComponent,
-  DirectionalLightComponent,
   BloomEffectComponent,
-  DepthOfFieldEffectComponent,
-  SsaoEffectComponent,
+  BoxComponent,
   ColorGradingEffectComponent,
-  Glow3dDirective,
+  DepthOfFieldEffectComponent,
+  DirectionalLightComponent,
   Rotate3dDirective,
+  Scene3dComponent,
+  SsaoEffectComponent,
+  TorusComponent,
 } from '@hive-academy/angular-3d';
 import { SCENE_COLORS } from '../../../shared/colors';
 
@@ -31,7 +30,6 @@ import { SCENE_COLORS } from '../../../shared/colors';
     DepthOfFieldEffectComponent,
     SsaoEffectComponent,
     ColorGradingEffectComponent,
-    Glow3dDirective,
     Rotate3dDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -288,30 +286,32 @@ import { SCENE_COLORS } from '../../../shared/colors';
               <div
                 class="aspect-video rounded-2xl overflow-hidden bg-background-dark shadow-xl"
               >
-                <a3d-scene-3d [cameraPosition]="[0, 0, 6]">
+                <a3d-scene-3d [cameraPosition]="[0, 0, 10]">
                   <a3d-ambient-light [intensity]="0.3" />
                   <a3d-directional-light
                     [position]="[3, 3, 3]"
                     [intensity]="0.5"
                   />
 
-                  <!-- 3 boxes at different depths -->
+                  <!-- 3 boxes at VERY different depths for visible DOF -->
                   <a3d-box
-                    [position]="[-2, 0, 2]"
+                    [position]="[-2.5, 0, 4]"
                     [color]="colors.pink"
+                    [args]="[1.5, 1.5, 1.5]"
                     rotate3d
                     [rotateConfig]="{ axis: 'y', speed: 15 }"
                   />
                   <a3d-box
                     [position]="[0, 0, 0]"
                     [color]="colors.cyan"
-                    [args]="[1.2, 1.2, 1.2]"
+                    [args]="[1.8, 1.8, 1.8]"
                     rotate3d
                     [rotateConfig]="{ axis: 'y', speed: 15 }"
                   />
                   <a3d-box
-                    [position]="[2, 0, -2]"
+                    [position]="[2.5, 0, -5]"
                     [color]="colors.neonGreen"
+                    [args]="[1.5, 1.5, 1.5]"
                     rotate3d
                     [rotateConfig]="{ axis: 'y', speed: 15 }"
                   />
@@ -321,7 +321,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
             </div>
             <div class="mt-3x p-4x bg-white/5 rounded-lg">
               <p class="text-sm text-text-secondary">
-                All objects equally sharp
+                All objects equally sharp at all depths
               </p>
               <code class="text-xs text-text-tertiary">No DOF effect</code>
             </div>
@@ -338,49 +338,51 @@ import { SCENE_COLORS } from '../../../shared/colors';
               <div
                 class="aspect-video rounded-2xl overflow-hidden bg-background-dark shadow-xl"
               >
-                <a3d-scene-3d [cameraPosition]="[0, 0, 6]">
+                <a3d-scene-3d [cameraPosition]="[0, 0, 10]">
                   <a3d-ambient-light [intensity]="0.3" />
                   <a3d-directional-light
                     [position]="[3, 3, 3]"
                     [intensity]="0.5"
                   />
 
-                  <!-- Same 3 boxes -->
+                  <!-- Same 3 boxes at different depths -->
                   <a3d-box
-                    [position]="[-2, 0, 2]"
+                    [position]="[-2.5, 0, 4]"
                     [color]="colors.pink"
+                    [args]="[1.5, 1.5, 1.5]"
                     rotate3d
                     [rotateConfig]="{ axis: 'y', speed: 15 }"
                   />
                   <a3d-box
                     [position]="[0, 0, 0]"
                     [color]="colors.cyan"
-                    [args]="[1.2, 1.2, 1.2]"
+                    [args]="[1.8, 1.8, 1.8]"
                     rotate3d
                     [rotateConfig]="{ axis: 'y', speed: 15 }"
                   />
                   <a3d-box
-                    [position]="[2, 0, -2]"
+                    [position]="[2.5, 0, -5]"
                     [color]="colors.neonGreen"
+                    [args]="[1.5, 1.5, 1.5]"
                     rotate3d
                     [rotateConfig]="{ axis: 'y', speed: 15 }"
                   />
 
-                  <!-- DOF ENABLED - focus on center box -->
+                  <!-- DOF ENABLED - focus on center box (10 units from camera) -->
                   <a3d-dof-effect
-                    [focus]="6"
-                    [aperture]="0.025"
-                    [maxblur]="0.01"
+                    [focus]="10"
+                    [aperture]="0.15"
+                    [maxblur]="0.05"
                   />
                 </a3d-scene-3d>
               </div>
             </div>
             <div class="mt-3x p-4x bg-white/5 rounded-lg">
               <p class="text-sm text-text-secondary">
-                Center box sharp, foreground/background blurred
+                Center box sharp, near/far objects blurred
               </p>
               <code class="text-xs text-cyan-400"
-                >&lt;a3d-dof-effect [focus]="6" /&gt;</code
+                >&lt;a3d-dof-effect [focus]="10" [aperture]="0.15" /&gt;</code
               >
             </div>
           </div>
@@ -392,9 +394,18 @@ import { SCENE_COLORS } from '../../../shared/colors';
         <div class="text-center mb-8x">
           <h2 class="text-display-md font-bold mb-2x">
             Screen Space Ambient Occlusion
+            <span
+              class="ml-2 px-2 py-1 text-xs font-medium bg-amber-500/20 text-amber-400 rounded-full"
+            >
+              Coming Soon
+            </span>
           </h2>
           <p class="text-text-secondary">
             Adds depth shadows in corners and crevices
+          </p>
+          <p class="text-sm text-text-tertiary mt-2">
+            SSAO requires native TSL depth buffer support (not yet available in
+            WebGPU PostProcessing)
           </p>
         </div>
 
@@ -564,9 +575,9 @@ import { SCENE_COLORS } from '../../../shared/colors';
                 />
 
                 <a3d-color-grading-effect
-                  [saturation]="1.2"
-                  [contrast]="1.15"
-                  [vignette]="0.3"
+                  [saturation]="1.5"
+                  [contrast]="1.4"
+                  [vignette]="0.6"
                 />
               </a3d-scene-3d>
             </div>
@@ -594,143 +605,16 @@ import { SCENE_COLORS } from '../../../shared/colors';
                 />
 
                 <a3d-color-grading-effect
-                  [saturation]="0.6"
-                  [contrast]="1.1"
-                  [brightness]="1.1"
-                  [vignette]="0.4"
+                  [saturation]="0.3"
+                  [contrast]="1.2"
+                  [brightness]="0.9"
+                  [vignette]="0.5"
                 />
               </a3d-scene-3d>
             </div>
             <div class="mt-3x text-center">
               <p class="text-sm font-medium text-white">Vintage</p>
               <code class="text-xs text-violet-400">Desaturated</code>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- NEW SECTION 4: Combined Effects -->
-      <section class="max-w-container mx-auto px-4x">
-        <div class="text-center mb-8x">
-          <h2 class="text-display-md font-bold mb-2x">Combined Effects</h2>
-          <p class="text-text-secondary">
-            DOF + SSAO + Bloom + Color Grading together
-          </p>
-        </div>
-
-        <div class="grid md:grid-cols-2 gap-8x">
-          <!-- No effects -->
-          <div>
-            <div class="relative">
-              <div
-                class="absolute top-4 left-4 px-3 py-1 bg-red-500/80 rounded-full text-xs font-medium text-white z-10"
-              >
-                No Effects
-              </div>
-              <div
-                class="aspect-video rounded-2xl overflow-hidden bg-background-dark shadow-xl"
-              >
-                <a3d-scene-3d [cameraPosition]="[0, 2, 8]">
-                  <a3d-ambient-light [intensity]="0.4" />
-                  <a3d-directional-light
-                    [position]="[5, 5, 5]"
-                    [intensity]="0.6"
-                  />
-
-                  <a3d-torus
-                    [position]="[0, 0, 0]"
-                    [color]="colors.cyan"
-                    a3dGlow3d
-                    [glowIntensity]="2"
-                    rotate3d
-                    [rotateConfig]="{ axis: 'y', speed: 15 }"
-                  />
-                  <a3d-box
-                    [position]="[-2, 0, -1]"
-                    [color]="colors.pink"
-                    rotate3d
-                    [rotateConfig]="{ axis: 'x', speed: 20 }"
-                  />
-                  <a3d-box
-                    [position]="[2, 0, 1]"
-                    [color]="colors.neonGreen"
-                    rotate3d
-                    [rotateConfig]="{ axis: 'z', speed: 18 }"
-                  />
-                </a3d-scene-3d>
-              </div>
-            </div>
-            <div class="mt-3x p-4x bg-white/5 rounded-lg">
-              <p class="text-sm text-text-secondary">
-                Raw scene - no post-processing
-              </p>
-            </div>
-          </div>
-
-          <!-- All effects combined -->
-          <div>
-            <div class="relative">
-              <div
-                class="absolute top-4 left-4 px-3 py-1 bg-green-500/80 rounded-full text-xs font-medium text-white z-10"
-              >
-                All Effects
-              </div>
-              <div
-                class="aspect-video rounded-2xl overflow-hidden bg-background-dark shadow-xl"
-              >
-                <a3d-scene-3d [cameraPosition]="[0, 2, 8]">
-                  <a3d-ambient-light [intensity]="0.4" />
-                  <a3d-directional-light
-                    [position]="[5, 5, 5]"
-                    [intensity]="0.6"
-                  />
-
-                  <a3d-torus
-                    [position]="[0, 0, 0]"
-                    [color]="colors.cyan"
-                    a3dGlow3d
-                    [glowIntensity]="2"
-                    rotate3d
-                    [rotateConfig]="{ axis: 'y', speed: 15 }"
-                  />
-                  <a3d-box
-                    [position]="[-2, 0, -1]"
-                    [color]="colors.pink"
-                    rotate3d
-                    [rotateConfig]="{ axis: 'x', speed: 20 }"
-                  />
-                  <a3d-box
-                    [position]="[2, 0, 1]"
-                    [color]="colors.neonGreen"
-                    rotate3d
-                    [rotateConfig]="{ axis: 'z', speed: 18 }"
-                  />
-
-                  <!-- ALL EFFECTS -->
-                  <a3d-dof-effect
-                    [focus]="8"
-                    [aperture]="0.02"
-                    [maxblur]="0.01"
-                  />
-                  <a3d-ssao-effect [kernelRadius]="8" />
-                  <a3d-bloom-effect
-                    [threshold]="0.5"
-                    [strength]="1.2"
-                    [radius]="0.5"
-                  />
-                  <a3d-color-grading-effect
-                    [saturation]="1.1"
-                    [contrast]="1.08"
-                    [vignette]="0.25"
-                  />
-                </a3d-scene-3d>
-              </div>
-            </div>
-            <div class="mt-3x p-4x bg-white/5 rounded-lg">
-              <p class="text-sm text-text-secondary">
-                Award-quality: DOF + SSAO + Bloom + Color Grading
-              </p>
-              <code class="text-xs text-green-400">4 effects combined</code>
             </div>
           </div>
         </div>

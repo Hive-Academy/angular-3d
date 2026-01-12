@@ -1,5 +1,5 @@
 import { InjectionToken } from '@angular/core';
-import type { Object3D } from 'three';
+import type { Object3D } from 'three/webgpu';
 
 /**
  * Injection token for the parent 3D object.

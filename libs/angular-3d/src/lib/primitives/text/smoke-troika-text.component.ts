@@ -7,19 +7,23 @@ import {
   signal,
   DestroyRef,
 } from '@angular/core';
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import { Text } from 'troika-three-text';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
+import { MeshBasicNodeMaterial } from 'three/webgpu';
+import { float, vec3, uniform, smoothstep, uv, mul, add, pow } from 'three/tsl';
 import { NG_3D_PARENT } from '../../types/tokens';
 import { OBJECT_ID } from '../../tokens/object-id.token';
 import { RenderLoopService } from '../../render-loop/render-loop.service';
 import { SceneService } from '../../canvas/scene.service';
 import { SceneGraphStore } from '../../store/scene-graph.store';
+import { nativeFBM, domainWarp } from '../shaders/tsl-utilities';
 
 /**
- * Smoke-effect 3D text component using shader-based atmospheric rendering.
+ * Smoke-effect 3D text component using TSL-based atmospheric rendering.
  *
- * Creates crisp SDF text with shader-based smoke/fog effects. Uses custom
- * fragment shader with Perlin noise for organic smoke patterns.
+ * Creates crisp SDF text with TSL-based smoke/fog effects. Uses MaterialX noise
+ * for organic smoke patterns that work on both WebGPU and WebGL backends.
  *
  * @example
  * Static smoke text:
@@ -49,11 +53,12 @@ import { SceneGraphStore } from '../../store/scene-graph.store';
  * ```
  *
  * @remarks
- * - Uses shader-based smoke (NOT particles) for GPU efficiency
+ * - Uses TSL-based smoke (NOT GLSL shaders) for GPU efficiency
  * - Single draw call per text instance
- * - Supports animated smoke flow using Perlin noise
+ * - Supports animated smoke flow using MaterialX noise
  * - Text quality preserved via Troika SDF rendering
  * - Material override approach maintains text crispness
+ * - WebGPU/WebGL compatible via TSL auto-transpilation
  */
 @Component({
   selector: 'a3d-smoke-troika-text',
@@ -308,7 +313,7 @@ export class SmokeTroikaTextComponent {
 
   /**
    * Enable animated smoke flow.
-   * If true, smoke will animate using Perlin noise over time.
+   * If true, smoke will animate using MaterialX noise over time.
    * @default true
    */
   public readonly enableFlow = input<boolean>(true);
@@ -345,12 +350,13 @@ export class SmokeTroikaTextComponent {
   // ========================================
 
   private textObject?: Text;
-  private smokeMaterial?: THREE.ShaderMaterial;
+  private smokeMaterial?: MeshBasicNodeMaterial;
+  private uTime?: ReturnType<typeof uniform>;
   private cleanupRenderLoop?: () => void;
   private cleanupBillboard?: () => void;
 
   public constructor() {
-    // Effect: Initialize and update text with smoke shader
+    // Effect: Initialize and update text with TSL smoke material
     effect((onCleanup) => {
       const textContent = this.text();
       const parent = this.parent();
@@ -365,7 +371,7 @@ export class SmokeTroikaTextComponent {
         this.textObject = new Text();
         this.updateAllTextProperties();
 
-        // Create custom smoke shader material
+        // Create custom TSL smoke material
         this.smokeMaterial = this.createSmokeMaterial();
         this.textObject.material = this.smokeMaterial;
 
@@ -394,28 +400,13 @@ export class SmokeTroikaTextComponent {
       });
     });
 
-    // Effect: Update shader uniforms when smoke properties change
-    effect(() => {
-      if (!this.smokeMaterial) return;
-
-      // Update uniforms reactively
-      this.smokeMaterial.uniforms['uSmokeColor'].value = new THREE.Color(
-        this.smokeColor()
-      );
-      this.smokeMaterial.uniforms['uSmokeIntensity'].value =
-        this.smokeIntensity();
-      this.smokeMaterial.uniforms['uFlowSpeed'].value = this.flowSpeed();
-      this.smokeMaterial.uniforms['uDensity'].value = this.density();
-      this.smokeMaterial.uniforms['uEdgeSoftness'].value = this.edgeSoftness();
-    });
-
     // Effect: Animate smoke flow
     // MEMORY LEAK FIX: Register callback ONCE (not inside effect)
     // Callback executes conditionally based on enableFlow() signal
     this.cleanupRenderLoop = this.renderLoop.registerUpdateCallback((delta) => {
       // Execute conditionally based on signal
-      if (this.enableFlow() && this.smokeMaterial) {
-        this.smokeMaterial.uniforms['uTime'].value += delta * this.flowSpeed();
+      if (this.enableFlow() && this.uTime) {
+        (this.uTime.value as number) += delta * this.flowSpeed();
       }
     });
 
@@ -456,217 +447,143 @@ export class SmokeTroikaTextComponent {
   }
 
   /**
-   * Create custom smoke shader material
+   * Create custom TSL smoke material
+   * Uses MaterialX noise instead of GLSL shaders
    * @private
    */
-  private createSmokeMaterial(): THREE.ShaderMaterial {
-    const uniforms = {
-      uTime: { value: 0.0 },
-      uSmokeColor: { value: new THREE.Color(this.smokeColor()) },
-      uSmokeIntensity: { value: this.smokeIntensity() },
-      uFlowSpeed: { value: this.flowSpeed() },
-      uDensity: { value: this.density() },
-      uEdgeSoftness: { value: this.edgeSoftness() },
-    };
+  private createSmokeMaterial(): MeshBasicNodeMaterial {
+    // Create TSL uniform nodes
+    this.uTime = uniform(float(0));
+    const uSmokeColor = uniform(
+      vec3(...new THREE.Color(this.smokeColor()).toArray())
+    );
+    const uSmokeIntensity = uniform(float(this.smokeIntensity()));
+    const uDensity = uniform(float(this.density()));
+    const uEdgeSoftness = uniform(float(this.edgeSoftness()));
 
-    return new THREE.ShaderMaterial({
-      vertexShader: this.vertexShader,
-      fragmentShader: this.fragmentShader,
-      uniforms,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-    });
+    const material = new MeshBasicNodeMaterial();
+
+    // UV-space position for noise sampling
+    const pos = vec3(mul(uv(), float(10.0)), float(0));
+
+    // Animated flow offset
+    const time = mul(this.uTime, float(0.05));
+    const flowOffset = vec3(
+      mul(time, float(0.15)),
+      mul(time, float(0.08)),
+      mul(time, float(0.05))
+    );
+
+    // Apply domain warping for organic smoke
+    const warpedPos = domainWarp(add(pos, flowOffset), float(0.6));
+
+    // Generate multi-scale smoke density using MaterialX FBM
+    const smoke1 = nativeFBM(warpedPos, float(5), float(2.0), float(0.5));
+    const smoke2 = nativeFBM(
+      add(mul(warpedPos, float(1.5)), vec3(5.2, 3.7, 8.1)),
+      float(4),
+      float(2.0),
+      float(0.5)
+    );
+    const smoke3 = nativeFBM(
+      add(mul(warpedPos, float(0.6)), vec3(2.3, 7.1, 4.6)),
+      float(3),
+      float(2.0),
+      float(0.5)
+    );
+
+    // Combine smoke layers
+    const smokeDensity = add(
+      add(mul(smoke1, float(0.45)), mul(smoke2, float(0.35))),
+      mul(smoke3, float(0.2))
+    );
+
+    // Normalize to [0, 1]
+    const normalizedDensity = mul(add(smokeDensity, float(1.0)), float(0.5));
+
+    // Apply density multiplier
+    const densityWithMult = mul(normalizedDensity, uDensity);
+
+    // Ultra-soft edge falloff (no visible geometry boundaries)
+    const centeredUv = add(uv(), vec3(-0.5, -0.5, 0));
+    const distFromCenter = centeredUv.length();
+
+    // Multi-stage radial falloff for extremely soft edges
+    const radialFalloff1 = float(1).sub(
+      smoothstep(float(0.0), float(0.6), distFromCenter)
+    );
+    const radialFalloff2 = float(1).sub(
+      smoothstep(float(0.0), float(0.5), distFromCenter)
+    );
+    const radialFalloff3 = float(1).sub(
+      smoothstep(float(0.0), float(0.4), distFromCenter)
+    );
+
+    // Combine multiple falloff stages
+    const edgeFalloff = add(
+      add(mul(radialFalloff1, float(0.3)), mul(radialFalloff2, float(0.4))),
+      mul(radialFalloff3, float(0.3))
+    );
+
+    // Configurable edge softness
+    const softEdgeFalloff = pow(edgeFalloff, uEdgeSoftness);
+
+    // Noise-based irregularity for organic edges
+    const edgeNoise1 = nativeFBM(
+      mul(warpedPos, float(1.2)),
+      float(3),
+      float(2.0),
+      float(0.5)
+    );
+    const edgeNoise2 = nativeFBM(
+      add(mul(warpedPos, float(0.6)), vec3(5.0, 5.0, 5.0)),
+      float(3),
+      float(2.0),
+      float(0.5)
+    );
+    const edgeNoise = add(
+      mul(add(mul(edgeNoise1, float(0.5)), float(0.5)), float(0.6)),
+      mul(add(mul(edgeNoise2, float(0.5)), float(0.5)), float(0.4))
+    );
+
+    const finalEdgeFalloff = mul(
+      softEdgeFalloff,
+      add(float(0.2), mul(edgeNoise, float(0.8)))
+    );
+
+    // Calculate base alpha
+    const alpha = mul(mul(densityWithMult, finalEdgeFalloff), uSmokeIntensity);
+
+    // Very soft alpha curves for gas-like appearance
+    const alphaRaised = pow(alpha.max(float(0.0)), float(1.8));
+    const alphaSmoothStep1 = smoothstep(float(0.0), float(1.0), alphaRaised);
+    const alphaSmoothStep2 = smoothstep(
+      float(0.0),
+      float(1.0),
+      alphaSmoothStep1
+    );
+
+    // Smoke color with intensity variation
+    const brightness = add(float(0.4), mul(densityWithMult, float(1.2)));
+    const finalColorBase = mul(uSmokeColor, brightness);
+
+    // Add glow in bright areas
+    const brightAreas = smoothstep(float(0.55), float(0.75), densityWithMult);
+    const glow = mul(pow(brightAreas, float(3.0)), float(2.0));
+    const finalColor = add(finalColorBase, mul(glow, uSmokeColor));
+
+    // Assign color and opacity nodes to material
+    material.colorNode = finalColor;
+    material.opacityNode = alphaSmoothStep2;
+
+    // Material properties
+    material.transparent = true;
+    material.blending = THREE.AdditiveBlending;
+    material.depthWrite = false;
+    material.side = THREE.DoubleSide;
+
+    return material;
   }
-
-  /**
-   * Vertex Shader - Pass through with UV coordinates
-   * @private
-   */
-  private readonly vertexShader = `
-    varying vec2 vUv;
-
-    void main() {
-      vUv = uv;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `;
-
-  /**
-   * Fragment Shader - Smoke effect with Perlin noise
-   * Based on NebulaVolumetricComponent shader pattern
-   * @private
-   */
-  private readonly fragmentShader = `
-    uniform float uTime;
-    uniform vec3 uSmokeColor;
-    uniform float uSmokeIntensity;
-    uniform float uFlowSpeed;
-    uniform float uDensity;
-    uniform float uEdgeSoftness;
-
-    varying vec2 vUv;
-
-    // 3D Simplex noise function (from NebulaVolumetricComponent)
-    vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-    vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-    vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
-    vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
-
-    float snoise(vec3 v) {
-      const vec2 C = vec2(1.0/6.0, 1.0/3.0);
-      const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
-
-      vec3 i  = floor(v + dot(v, C.yyy));
-      vec3 x0 = v - i + dot(i, C.xxx);
-
-      vec3 g = step(x0.yzx, x0.xyz);
-      vec3 l = 1.0 - g;
-      vec3 i1 = min(g.xyz, l.zxy);
-      vec3 i2 = max(g.xyz, l.zxy);
-
-      vec3 x1 = x0 - i1 + C.xxx;
-      vec3 x2 = x0 - i2 + C.yyy;
-      vec3 x3 = x0 - D.yyy;
-
-      i = mod289(i);
-      vec4 p = permute(permute(permute(
-                i.z + vec4(0.0, i1.z, i2.z, 1.0))
-              + i.y + vec4(0.0, i1.y, i2.y, 1.0))
-              + i.x + vec4(0.0, i1.x, i2.x, 1.0));
-
-      float n_ = 0.142857142857;
-      vec3 ns = n_ * D.wyz - D.xzx;
-
-      vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
-
-      vec4 x_ = floor(j * ns.z);
-      vec4 y_ = floor(j - 7.0 * x_);
-
-      vec4 x = x_ *ns.x + ns.yyyy;
-      vec4 y = y_ *ns.x + ns.yyyy;
-      vec4 h = 1.0 - abs(x) - abs(y);
-
-      vec4 b0 = vec4(x.xy, y.xy);
-      vec4 b1 = vec4(x.zw, y.zw);
-
-      vec4 s0 = floor(b0)*2.0 + 1.0;
-      vec4 s1 = floor(b1)*2.0 + 1.0;
-      vec4 sh = -step(h, vec4(0.0));
-
-      vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
-      vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
-
-      vec3 p0 = vec3(a0.xy, h.x);
-      vec3 p1 = vec3(a0.zw, h.y);
-      vec3 p2 = vec3(a1.xy, h.z);
-      vec3 p3 = vec3(a1.zw, h.w);
-
-      vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
-      p0 *= norm.x;
-      p1 *= norm.y;
-      p2 *= norm.z;
-      p3 *= norm.w;
-
-      vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
-      m = m * m;
-      return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
-    }
-
-    // FBM (Fractal Brownian Motion) for detailed smoke patterns
-    float fbm(vec3 p) {
-      float value = 0.0;
-      float amplitude = 0.5;
-      float frequency = 1.0;
-
-      for (int i = 0; i < 5; i++) {
-        value += amplitude * snoise(p * frequency);
-        frequency *= 2.0;
-        amplitude *= 0.5;
-      }
-
-      return value;
-    }
-
-    // Domain warping for organic smoke tendrils
-    vec3 domainWarp(vec3 p) {
-      float warpAmount = 0.6;
-      return p + vec3(
-        fbm(p + vec3(1.7, 9.2, 4.1)) * warpAmount,
-        fbm(p + vec3(8.3, 2.8, 5.5)) * warpAmount,
-        fbm(p + vec3(3.5, 6.1, 2.9)) * warpAmount
-      );
-    }
-
-    void main() {
-      // UV-space position for noise sampling
-      vec3 pos = vec3(vUv * 10.0, 0.0);
-
-      // Animated flow offset
-      float time = uTime * uFlowSpeed * 0.05;
-      vec3 flowOffset = vec3(time * 0.15, time * 0.08, time * 0.05);
-
-      // Apply domain warping for organic smoke
-      vec3 warpedPos = domainWarp(pos + flowOffset);
-
-      // Generate multi-scale smoke density using FBM
-      float smoke1 = fbm(warpedPos);
-      float smoke2 = fbm(warpedPos * 1.5 + vec3(5.2, 3.7, 8.1));
-      float smoke3 = fbm(warpedPos * 0.6 + vec3(2.3, 7.1, 4.6));
-
-      // Combine smoke layers
-      float smokeDensity = smoke1 * 0.45 + smoke2 * 0.35 + smoke3 * 0.2;
-      smokeDensity = (smokeDensity + 1.0) * 0.5; // Normalize to [0, 1]
-
-      // Apply density multiplier
-      smokeDensity *= uDensity;
-
-      // Ultra-soft edge falloff (no visible geometry boundaries)
-      vec2 centeredUv = vUv - 0.5;
-      float distFromCenter = length(centeredUv);
-
-      // Multi-stage radial falloff for extremely soft edges
-      float radialFalloff1 = 1.0 - smoothstep(0.0, 0.6, distFromCenter);
-      float radialFalloff2 = 1.0 - smoothstep(0.0, 0.5, distFromCenter);
-      float radialFalloff3 = 1.0 - smoothstep(0.0, 0.4, distFromCenter);
-
-      // Combine multiple falloff stages
-      float edgeFalloff = radialFalloff1 * 0.3 + radialFalloff2 * 0.4 + radialFalloff3 * 0.3;
-
-      // Configurable edge softness
-      edgeFalloff = pow(edgeFalloff, uEdgeSoftness);
-
-      // Noise-based irregularity for organic edges
-      float edgeNoise1 = fbm(warpedPos * 1.2) * 0.5 + 0.5;
-      float edgeNoise2 = fbm(warpedPos * 0.6 + vec3(5.0, 5.0, 5.0)) * 0.5 + 0.5;
-      float edgeNoise = edgeNoise1 * 0.6 + edgeNoise2 * 0.4;
-
-      edgeFalloff *= 0.2 + edgeNoise * 0.8;
-
-      // Calculate base alpha
-      float alpha = smokeDensity * edgeFalloff * uSmokeIntensity;
-
-      // Very soft alpha curves for gas-like appearance
-      alpha = pow(max(alpha, 0.0), 1.8);
-      alpha = smoothstep(0.0, 1.0, alpha);
-      alpha = smoothstep(0.0, 1.0, alpha); // Double smoothstep for extra softness
-
-      // Discard nearly transparent pixels for performance
-      if (alpha < 0.002) discard;
-
-      // Smoke color with intensity variation
-      float brightness = 0.4 + smokeDensity * 1.2;
-      vec3 finalColor = uSmokeColor * brightness;
-
-      // Add glow in bright areas
-      float brightAreas = smoothstep(0.55, 0.75, smokeDensity);
-      float glow = pow(brightAreas, 3.0) * 2.0;
-      finalColor += glow * uSmokeColor;
-
-      gl_FragColor = vec4(finalColor, alpha);
-    }
-  `;
 
   /**
    * Update all text properties from signal inputs.

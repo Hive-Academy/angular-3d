@@ -1,42 +1,48 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { Hero3dTeaserComponent } from './scenes/hero-3d-teaser.component';
-import { LibraryOverviewSectionComponent } from './sections/library-overview-section.component';
+import { HeroSectionComponent } from './sections/hero-section.component';
+import { LibraryOverviewSectionV2Component } from './sections/library-overview-section-v2.component';
 import { CtaSectionComponent } from './sections/cta-section.component';
+import { ClaudeSkillsShowcaseSectionComponent } from './sections/claude-skills-showcase-section.component';
+import { PerformanceDebugComponent } from '../../shared/components/performance-debug.component';
 
 /**
  * Home Page Component
  *
- * Landing page with:
- * - Hero section with 3D background, GLTF robot, and parallax scroll animations
- * - Combined Library Overview (Hijacked Scroll)
- * - CTA section with 3D background
+ * Landing page with four sections:
+ * - Hero (eagerly loaded - above the fold)
+ * - CTA section (deferred - lightweight CSS animations)
+ * - Claude Skills Showcase (deferred - heavy 3D scene)
+ * - Library Overview v2 (deferred - static content)
+ *
  */
 @Component({
   selector: 'app-home',
   imports: [
-    Hero3dTeaserComponent,
-    LibraryOverviewSectionComponent,
+    HeroSectionComponent,
+    ClaudeSkillsShowcaseSectionComponent,
+    LibraryOverviewSectionV2Component,
     CtaSectionComponent,
+    PerformanceDebugComponent,
   ],
   template: `
-    <!-- Hero Section with 3D Background -->
-    <section
-      class="pt-30 min-h-screen relative overflow-hidden bg-background-dark"
-    >
-      <!-- 3D Scene Background -->
-      <div class="absolute inset-0 z-0">
-        <app-hero-3d-teaser />
-      </div>
-    </section>
+    <!-- Performance Debug Overlay (Press P to toggle, or add ?debug=perf to URL) -->
+    <app-performance-debug />
 
+    <!-- Hero Section - Eagerly loaded (above the fold) -->
+    <app-hero-section />
+
+    <!-- CTA Section - Deferred with 150px prefetch margin -->
     <section class="min-h-screen">
-      <!-- CTA Section -->
       <app-cta-section />
     </section>
 
     <section class="min-h-screen">
-      <!-- Combined Library Overview Section (Hijacked Scroll) -->
-      <app-library-overview-section />
+      <app-claude-skills-showcase-section />
+    </section>
+
+    <!-- Library Overview - Deferred (static content) -->
+    <section class="min-h-screen">
+      <app-library-overview-section-v2 />
     </section>
   `,
   styles: [

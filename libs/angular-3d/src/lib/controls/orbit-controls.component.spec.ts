@@ -5,7 +5,7 @@ import {
 } from './orbit-controls.component';
 import { SceneService } from '../canvas/scene.service';
 import { RenderLoopService } from '../render-loop/render-loop.service';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 
 // Mock OrbitControls from three-stdlib
 jest.mock('three-stdlib', () => {

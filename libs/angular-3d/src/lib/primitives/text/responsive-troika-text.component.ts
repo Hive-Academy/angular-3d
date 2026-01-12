@@ -7,8 +7,9 @@ import {
   signal,
   DestroyRef,
 } from '@angular/core';
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import { Text } from 'troika-three-text';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { NG_3D_PARENT } from '../../types/tokens';
 import { OBJECT_ID } from '../../tokens/object-id.token';
 import { RenderLoopService } from '../../render-loop/render-loop.service';

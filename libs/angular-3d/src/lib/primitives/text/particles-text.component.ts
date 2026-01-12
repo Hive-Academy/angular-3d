@@ -7,7 +7,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { SceneService } from '../../canvas/scene.service';
 import { RenderLoopService } from '../../render-loop/render-loop.service';
 import { TextSamplingService } from '../../services/text-sampling.service';
@@ -100,7 +100,8 @@ export class ParticleTextComponent {
   public readonly skipInitialGrowth = input<boolean>(true);
   public readonly blendMode = input<'additive' | 'normal'>('additive');
   public readonly texturePath = input<string | undefined>(undefined); // Path to external smoke texture
-
+  public readonly lineHeightMultiplier = input<number>(2.5); // Canvas height multiplier for text rendering
+  public readonly sampleStep = input<number>(2);
   // DI
   private readonly parent = inject(NG_3D_PARENT, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
@@ -112,7 +113,7 @@ export class ParticleTextComponent {
   private textCanvas!: HTMLCanvasElement;
   private textCtx!: CanvasRenderingContext2D;
   private particleGeometry?: THREE.PlaneGeometry;
-  private particleMaterial?: THREE.MeshBasicMaterial;
+  private particleMaterial?: THREE.MeshBasicNodeMaterial;
   private instancedMesh?: THREE.InstancedMesh;
   private smokeTexture?: THREE.Texture; // Can be CanvasTexture or loaded Texture
   private readonly textureLoaded = signal(false);
@@ -225,7 +226,7 @@ export class ParticleTextComponent {
       if (this.instancedMesh && parent) {
         parent.remove(this.instancedMesh);
         this.instancedMesh.geometry.dispose();
-        (this.instancedMesh.material as THREE.MeshBasicMaterial).dispose();
+        (this.instancedMesh.material as THREE.MeshBasicNodeMaterial).dispose();
       }
       if (this.particleGeometry) {
         this.particleGeometry.dispose();
@@ -249,7 +250,7 @@ export class ParticleTextComponent {
       if (this.instancedMesh && parent) {
         parent.remove(this.instancedMesh);
         this.instancedMesh.geometry.dispose();
-        (this.instancedMesh.material as THREE.MeshBasicMaterial).dispose();
+        (this.instancedMesh.material as THREE.MeshBasicNodeMaterial).dispose();
         this.instancedMesh = undefined;
       }
       this.particles = [];
@@ -271,7 +272,8 @@ export class ParticleTextComponent {
     this.textCtx.font = `bold ${fontSize}px ${fontName}`;
     const metrics = this.textCtx.measureText(text);
     const textWidth = Math.ceil(metrics.width);
-    const textHeight = Math.ceil(fontSize * 1.2);
+    const multiplier = this.lineHeightMultiplier();
+    const textHeight = Math.ceil(fontSize * multiplier);
 
     this.stringBox.wTexture = textWidth;
     this.stringBox.hTexture = textHeight;
@@ -282,8 +284,13 @@ export class ParticleTextComponent {
     this.textCanvas.width = textWidth;
     this.textCanvas.height = textHeight;
 
-    // Use TextSamplingService for pixel sampling (sample every pixel for instanced mesh)
-    const positions = this.textSampling.sampleTextPositions(text, fontSize, 1);
+    // Use TextSamplingService for pixel sampling with same multiplier
+    const positions = this.textSampling.sampleTextPositions(
+      text,
+      fontSize,
+      this.sampleStep(),
+      multiplier
+    );
 
     // Convert normalized positions to pixel coordinates and build recycling structure
     if (positions.length > 0) {
@@ -456,15 +463,15 @@ export class ParticleTextComponent {
           ? THREE.AdditiveBlending
           : THREE.NormalBlending;
 
-      this.particleMaterial = new THREE.MeshBasicMaterial({
-        color: new THREE.Color(this.particleColor()),
-        alphaMap: this.smokeTexture!,
-        depthTest: false,
-        opacity: this.opacity(),
-        transparent: true,
-        blending: blending,
-        depthWrite: false,
-      });
+      // Using MeshBasicNodeMaterial with direct property assignment for WebGPU
+      this.particleMaterial = new THREE.MeshBasicNodeMaterial();
+      this.particleMaterial.color = new THREE.Color(this.particleColor());
+      this.particleMaterial.alphaMap = this.smokeTexture!;
+      this.particleMaterial.depthTest = false;
+      this.particleMaterial.opacity = this.opacity();
+      this.particleMaterial.transparent = true;
+      this.particleMaterial.blending = blending;
+      this.particleMaterial.depthWrite = false;
     }
 
     // Create instanced mesh

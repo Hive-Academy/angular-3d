@@ -1,5 +1,5 @@
 import { Directive, inject, input, effect, DestroyRef } from '@angular/core';
-import { TorusGeometry } from 'three';
+import { TorusGeometry } from 'three/webgpu';
 import { GEOMETRY_SIGNAL } from '../../tokens/geometry.token';
 
 /**

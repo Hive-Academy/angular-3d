@@ -17,7 +17,9 @@
     "typeRoots": ["./node_modules/@types", "./types"],
     "paths": {
       "@hive-academy/angular-3d": ["libs/angular-3d/src/index.ts"],
-      "@hive-academy/angular-gsap": ["libs/angular-gsap/src/index.ts"]
+      "@hive-academy/angular-gsap": ["libs/angular-gsap/src/index.ts"],
+      "three/webgpu": ["node_modules/@types/three/src/Three.WebGPU.d.ts"],
+      "troika-three-text": ["types/troika-three-text/index.d.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

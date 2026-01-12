@@ -43,23 +43,23 @@ export class CodeSnippetComponent {
   /**
    * Code string to display
    */
-  readonly code = input.required<string>();
+  public readonly code = input.required<string>();
 
   /**
    * Programming language for syntax highlighting
    * @default 'html'
    */
-  readonly language = input<'html' | 'typescript'>('html');
+  public readonly language = input<'html' | 'typescript'>('html');
 
   /**
    * Internal state tracking whether code was recently copied
    */
-  readonly copied = signal(false);
+  public readonly copied = signal(false);
 
   /**
    * Copies code to clipboard and shows visual feedback for 2 seconds
    */
-  copyToClipboard(): void {
+  public copyToClipboard(): void {
     navigator.clipboard
       .writeText(this.code())
       .then(() => {

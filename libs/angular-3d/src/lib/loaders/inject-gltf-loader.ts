@@ -28,7 +28,7 @@
 
 import { inject, DestroyRef, signal, effect, untracked } from '@angular/core';
 import type { GLTF } from 'three-stdlib';
-import type { Group } from 'three';
+import type { Group } from 'three/webgpu';
 import {
   GltfLoaderService,
   type GltfLoaderOptions,

@@ -1,0 +1,580 @@
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  AmbientLightComponent,
+  BloomEffectComponent,
+  BubbleTextComponent,
+  EffectComposerComponent,
+  EnvironmentComponent,
+  Float3dDirective,
+  FloatingSphereComponent,
+  NebulaVolumetricComponent,
+  PointLightComponent,
+  Scene3dComponent,
+  SpotLightComponent,
+} from '@hive-academy/angular-3d';
+import { SCENE_COLORS } from '../../../shared/colors';
+
+/**
+ * Claude Skills Showcase Section
+ *
+ * Showcases our custom Claude Agent Skills:
+ * - angular-3d-scene-crafter: 3D scene design via conversational AI
+ * - angular-gsap-animation-crafter: Scroll animation design via conversational AI
+ *
+ * Design replicated from bubble-dream-hero-scene with updated content.
+ *
+ * @example
+ * ```html
+ * <app-claude-skills-showcase-section />
+ * ```
+ */
+@Component({
+  selector: 'app-claude-skills-showcase-section',
+  imports: [
+    Scene3dComponent,
+    AmbientLightComponent,
+    PointLightComponent,
+    SpotLightComponent,
+    NebulaVolumetricComponent,
+    BubbleTextComponent,
+    FloatingSphereComponent,
+    Float3dDirective,
+    EffectComposerComponent,
+    BloomEffectComponent,
+    EnvironmentComponent,
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="showcase-container">
+      <!-- Layer 1: 3D Scene (background) -->
+      <div class="scene-layer">
+        <a3d-scene-3d
+          [cameraPosition]="[0, 0, 15]"
+          [cameraFov]="50"
+          [enableAntialiasing]="true"
+          [alpha]="false"
+          [backgroundColor]="backgroundColor"
+        >
+          <!-- Very dim ambient for deep shadows -->
+          <a3d-ambient-light [intensity]="0.15" />
+
+          <!-- Main spotlight on AI CRAFTED text -->
+          <a3d-spot-light
+            [position]="[0, 16, -6]"
+            [target]="[0, 8, -12]"
+            [intensity]="120"
+            [color]="'#ffffff'"
+            [angle]="0.5"
+            [penumbra]="0.6"
+            [distance]="40"
+            [decay]="1.2"
+          />
+
+          <!-- Accent rim light from left - indigo glow -->
+          <a3d-point-light
+            [position]="[-10, 10, -10]"
+            [intensity]="25"
+            [color]="'#6366F1'"
+            [distance]="30"
+            [decay]="2"
+          />
+
+          <!-- Warm fill from right - neon purple accent -->
+          <a3d-point-light
+            [position]="[10, 6, -8]"
+            [intensity]="15"
+            [color]="'#D946EF'"
+            [distance]="25"
+            [decay]="2"
+          />
+
+          <!-- HDRI Environment for IBL reflections -->
+          <a3d-environment
+            [preset]="'night'"
+            [intensity]="0.3"
+            [background]="false"
+          />
+
+          <!-- ============ CORNER BUBBLE SPHERES ============ -->
+
+          <!-- Top-Left Corner Bubble -->
+          <!-- PERF: Removed transmission, using metalness+clearcoat for shine instead -->
+          <a3d-floating-sphere
+            float3d
+            [floatConfig]="{ height: 0.6, speed: 4000 }"
+            [position]="[-10, 6, -15]"
+            [args]="[2, 16, 16]"
+            [color]="'#e879f9'"
+            [metalness]="0.3"
+            [roughness]="0.1"
+            [transmission]="0"
+            [thickness]="0"
+            [ior]="1.0"
+            [clearcoat]="1.0"
+            [clearcoatRoughness]="0.1"
+          />
+          <a3d-spot-light
+            [position]="[-10, 6, -8]"
+            [target]="[-15, 10, -15]"
+            [intensity]="40"
+            [color]="'#e879f9'"
+            [angle]="0.4"
+            [penumbra]="0.8"
+            [distance]="25"
+            [decay]="1.5"
+          />
+
+          <!-- Top-Right Corner Bubble -->
+          <!-- PERF: Removed transmission, using metalness+clearcoat for shine instead -->
+          <a3d-floating-sphere
+            float3d
+            [floatConfig]="{ height: 0.8, speed: 5000 }"
+            [position]="[10, 6, -14]"
+            [args]="[2.5, 16, 16]"
+            [color]="'#a855f7'"
+            [metalness]="0.3"
+            [roughness]="0.1"
+            [transmission]="0"
+            [thickness]="0"
+            [ior]="1.0"
+            [clearcoat]="1.0"
+            [clearcoatRoughness]="0.1"
+          />
+          <a3d-spot-light
+            [position]="[10, 6, -7]"
+            [target]="[15, 10, -14]"
+            [intensity]="40"
+            [color]="'#a855f7'"
+            [angle]="0.4"
+            [penumbra]="0.8"
+            [distance]="25"
+            [decay]="1.5"
+          />
+
+          <!-- Bottom-Left Corner Bubble -->
+          <!-- PERF: Removed transmission, using metalness+clearcoat for shine instead -->
+          <a3d-floating-sphere
+            float3d
+            [floatConfig]="{ height: 0.5, speed: 3500 }"
+            [position]="[-12, -8, -13]"
+            [args]="[1.8, 16, 16]"
+            [color]="'#A1FF4F'"
+            [metalness]="0.3"
+            [roughness]="0.1"
+            [transmission]="0"
+            [thickness]="0"
+            [ior]="1.0"
+            [clearcoat]="1.0"
+            [clearcoatRoughness]="0.1"
+          />
+          <a3d-spot-light
+            [position]="[-9, -4, -6]"
+            [target]="[-12, -8, -13]"
+            [intensity]="35"
+            [color]="'#A1FF4F'"
+            [angle]="0.4"
+            [penumbra]="0.8"
+            [distance]="20"
+            [decay]="1.5"
+          />
+
+          <!-- Bottom-Right Corner Bubble -->
+          <!-- PERF: Removed transmission, using metalness+clearcoat for shine instead -->
+          <a3d-floating-sphere
+            float3d
+            [floatConfig]="{ height: 0.7, speed: 4500 }"
+            [position]="[15, -10, -16]"
+            [args]="[2.2, 16, 16]"
+            [color]="'#4FFFDF'"
+            [metalness]="0.3"
+            [roughness]="0.1"
+            [transmission]="0"
+            [thickness]="0"
+            [ior]="1.0"
+            [clearcoat]="1.0"
+            [clearcoatRoughness]="0.1"
+          />
+          <a3d-spot-light
+            [position]="[12, -6, -9]"
+            [target]="[15, -10, -16]"
+            [intensity]="35"
+            [color]="'#4FFFDF'"
+            [angle]="0.4"
+            [penumbra]="0.8"
+            [distance]="40"
+            [decay]="1.5"
+          />
+
+          <!-- Dreamy nebula background -->
+          <a3d-nebula-volumetric
+            [position]="[0, 0, -20]"
+            [width]="50"
+            [height]="35"
+            [primaryColor]="nebulaColors.primary"
+            [secondaryColor]="nebulaColors.secondary"
+            [opacity]="0.5"
+          />
+
+          <!-- Main bubble text -->
+          <!-- PERF: Reduced transmission and bubbles for better performance -->
+          <a3d-bubble-text
+            [text]="'AI'"
+            [fontSize]="70"
+            [fontScaleFactor]="0.065"
+            [bubbleColor]="bubbleColor"
+            [opacity]="0.85"
+            [maxBubbleScale]="0.22"
+            [minBubbleScale]="0.12"
+            [bubblesPerPixel]="0.8"
+            [animationMode]="'breathe'"
+            [animationSpeed]="0.3"
+            [animationIntensity]="0.4"
+            [mouseProximityEffect]="false"
+            [mouseRadius]="2.5"
+            [mouseScaleBoost]="1.8"
+            [enableFlying]="false"
+            [flyingRatio]="0.08"
+            [flySpeed]="0.2"
+            [position]="[0, 8, -12]"
+            [transmission]="0.5"
+            [thickness]="0.2"
+            [ior]="1.2"
+            [iridescence]="0.5"
+            [iridescenceIOR]="1.2"
+            [iridescenceThicknessMin]="100"
+            [iridescenceThicknessMax]="300"
+            [clearcoat]="0.8"
+            [clearcoatRoughness]="0.1"
+            [roughness]="0.1"
+            [metalness]="0.1"
+            [envMapIntensity]="1.0"
+          />
+
+          <!-- Soft bloom -->
+          <a3d-effect-composer>
+            <a3d-bloom-effect
+              [threshold]="0.5"
+              [strength]="0.6"
+              [radius]="0.8"
+            />
+          </a3d-effect-composer>
+        </a3d-scene-3d>
+      </div>
+
+      <!-- Layer 2: Skills Overlay (foreground) -->
+      <div class="overlay-layer">
+        <!-- Header -->
+        <header class="header">
+          <div class="brand">
+            <span class="brand-icon">✨</span>
+            <span class="brand-text">Claude Agent Skills</span>
+          </div>
+          <nav class="nav-links">
+            <a
+              href="https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview"
+              target="_blank"
+              class="nav-link"
+              >Learn More</a
+            >
+          </nav>
+        </header>
+
+        <!-- Skills Section -->
+        <main class="skills-section">
+          <div class="skills-intro">
+            <p class="skills-label">AI-Enhanced Development</p>
+            <h2 class="skills-headline">
+              Design stunning experiences<br />with conversational AI
+            </h2>
+          </div>
+
+          <div class="skills-grid">
+            @for (skill of skills(); track skill.name) {
+            <div class="skill-card" [style.--accent-color]="skill.color">
+              <div class="skill-icon">{{ skill.icon }}</div>
+              <h3 class="skill-name">{{ skill.name }}</h3>
+              <p class="skill-description">{{ skill.description }}</p>
+              <div class="skill-features">
+                @for (feature of skill.features; track feature) {
+                <span class="feature-tag">{{ feature }}</span>
+                }
+              </div>
+            </div>
+            }
+          </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+          <p class="footer-text">
+            Powered by
+            <a
+              href="https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview"
+              target="_blank"
+              class="highlight"
+              >Claude Agent Skills</a
+            >
+          </p>
+        </footer>
+      </div>
+    </div>
+  `,
+  styles: [
+    `
+      :host {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .showcase-container {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        min-height: 700px;
+        overflow: hidden;
+      }
+
+      /* Scene Layer */
+      .scene-layer {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+      }
+
+      /* Overlay Layer */
+      .overlay-layer {
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        padding: 2rem 3rem;
+      }
+
+      /* Header */
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        pointer-events: auto;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .brand-icon {
+        font-size: 1.5rem;
+      }
+
+      .brand-text {
+        font-size: 1.1rem;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+      }
+
+      .nav-link {
+        font-size: 0.875rem;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        transition: color 0.2s ease;
+        letter-spacing: 0.02em;
+      }
+
+      .nav-link:hover {
+        color: #a1ff4f;
+      }
+
+      /* Skills Section */
+      .skills-section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2rem 0;
+        gap: 2.5rem;
+      }
+
+      .skills-intro {
+        text-align: center;
+        margin-bottom: 1rem;
+        padding-top: 1rem;
+      }
+
+      .skills-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #a1ff4f;
+        margin-bottom: 0.75rem;
+      }
+
+      .skills-headline {
+        font-family: 'Georgia', 'Times New Roman', serif;
+        font-size: clamp(1.5rem, 3vw, 2.25rem);
+        font-weight: 400;
+        line-height: 1.4;
+        color: #ffffff;
+        margin: 0;
+      }
+
+      /* Skills Grid */
+      .skills-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(280px, 1fr));
+        gap: 1.5rem;
+        max-width: 800px;
+        margin: 0 auto;
+        width: 100%;
+        pointer-events: auto;
+      }
+
+      .skill-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 1.75rem;
+        transition: all 0.3s ease;
+        cursor: default;
+      }
+
+      .skill-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--accent-color, #a1ff4f);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3),
+          0 0 20px
+            color-mix(in srgb, var(--accent-color, #a1ff4f) 20%, transparent);
+      }
+
+      .skill-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .skill-name {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #ffffff;
+        margin: 0 0 0.5rem;
+      }
+
+      .skill-description {
+        font-size: 0.875rem;
+        color: rgba(255, 255, 255, 0.6);
+        line-height: 1.6;
+        margin: 0 0 1rem;
+      }
+
+      .skill-features {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .feature-tag {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 4px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      /* Footer */
+      .footer {
+        text-align: center;
+        padding-top: 1rem;
+        pointer-events: auto;
+      }
+
+      .footer-text {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        margin: 0;
+      }
+
+      .highlight {
+        color: #a1ff4f;
+        font-weight: 500;
+        text-decoration: none;
+      }
+
+      .highlight:hover {
+        text-decoration: underline;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .overlay-layer {
+          padding: 1.5rem;
+        }
+
+        .nav-links {
+          display: none;
+        }
+
+        .skills-grid {
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
+
+        .skill-card {
+          padding: 1.25rem;
+        }
+      }
+    `,
+  ],
+})
+export class ClaudeSkillsShowcaseSectionComponent {
+  public readonly backgroundColor = 0x0a0e11; // Matches background-dark token
+  public readonly bubbleColor = 0xffffff;
+  public readonly nebulaColors = {
+    primary: SCENE_COLORS.neonGreen,
+    secondary: SCENE_COLORS.cyan,
+  };
+
+  /**
+   * Claude Agent Skills data
+   */
+  public readonly skills = signal([
+    {
+      icon: '🎨',
+      name: '3D Scene Crafter',
+      description:
+        'Design stunning 3D scenes through conversational AI guidance. Analyzes reference images and generates production-ready Angular-3D code.',
+      features: [
+        'Image reverse-engineering',
+        'Material recommendations',
+        'Lighting setups',
+        'Code generation',
+      ],
+      color: '#a1ff4f', // neon-green
+    },
+    {
+      icon: '✨',
+      name: 'Animation Crafter',
+      description:
+        'Create smooth scroll-based animations with AI-guided design. Analyzes motion patterns and configures GSAP animations.',
+      features: [
+        'Motion analysis',
+        'Timing optimization',
+        'Scroll triggers',
+        'GSAP configuration',
+      ],
+      color: '#6366f1', // primary-500
+    },
+  ]);
+}

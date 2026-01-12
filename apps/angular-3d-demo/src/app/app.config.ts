@@ -3,15 +3,26 @@ import {
   provideBrowserGlobalErrorListeners,
   provideZoneChangeDetection,
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { provideGsap } from '@hive-academy/angular-gsap';
+import {
+  provideRouter,
+  withViewTransitions,
+  withInMemoryScrolling,
+} from '@angular/router';
+import { provideGsap, provideLenis } from '@hive-academy/angular-gsap';
 import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(appRoutes),
+    provideRouter(
+      appRoutes,
+      withViewTransitions(),
+      withInMemoryScrolling({
+        scrollPositionRestoration: 'top',
+        anchorScrolling: 'enabled',
+      })
+    ),
 
     // GSAP with global configuration
     provideGsap({
@@ -19,12 +30,14 @@ export const appConfig: ApplicationConfig = {
     }),
 
     // Lenis smooth scroll with configuration
-    // provideLenis({
-    //   lerp: 0.1,
-    //   wheelMultiplier: 1,
-    //   touchMultiplier: 2,
-    //   smoothWheel: true,
-    //   useGsapTicker: true,
-    // }),
+    // PERF: useGsapTicker: false prevents dual RAF loop conflict
+    // Lenis uses native RAF, Three.js uses setAnimationLoop - they don't compete
+    provideLenis({
+      lerp: 0.1,
+      wheelMultiplier: 1.2,
+      touchMultiplier: 2,
+      smoothWheel: true,
+      useGsapTicker: false, // Use native RAF to avoid conflict with Three.js
+    }),
   ],
 };

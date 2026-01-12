@@ -20,7 +20,7 @@ import {
   BoxGeometry,
   PerspectiveCamera,
   Scene,
-} from 'three';
+} from 'three/webgpu';
 import { SceneGraphStore } from '../store/scene-graph.store';
 import { OBJECT_ID } from '../tokens/object-id.token';
 import { ViewportPositionDirective } from './viewport-position.directive';
