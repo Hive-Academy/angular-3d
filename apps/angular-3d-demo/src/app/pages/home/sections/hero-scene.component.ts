@@ -33,6 +33,7 @@ import {
   EffectComposerComponent,
   EnvironmentComponent,
   FireSphereComponent,
+  Float3dDirective,
   GltfModelComponent,
   MouseTracking3dDirective,
   NebulaVolumetricComponent,
@@ -40,10 +41,12 @@ import {
   Scene3dComponent,
   SceneRevealDirective,
   StarFieldComponent,
+  SvgIconComponent,
   ThrusterFlameComponent,
   WarpLinesComponent,
 } from '@hive-academy/angular-3d';
 import * as THREE from 'three/webgpu';
+import { SCENE_COLOR_STRINGS } from '../../../shared/colors';
 
 @Component({
   selector: 'app-hero-scene',
@@ -66,6 +69,8 @@ import * as THREE from 'three/webgpu';
     NebulaVolumetricComponent,
     CameraShakeDirective,
     CausticsSphereComponent,
+    SvgIconComponent,
+    Float3dDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -121,6 +126,24 @@ import * as THREE from 'three/webgpu';
         [color]="'#4a90d9'"
       />
 
+      <a3d-svg-icon
+        [svgPath]="'/images/logos/angular.svg'"
+        [position]="[-14, 10, -10]"
+        [scale]="0.04"
+        [color]="colors.indigo"
+        [emissiveIntensity]="0.3"
+        [metalness]="0.2"
+        [roughness]="0.6"
+        float3d
+        [floatConfig]="{
+          height: 0.2,
+          speed: 2000,
+          delay: 0,
+          ease: 'sine.inOut',
+          autoStart: true
+        }"
+      />
+
       <!-- Star Fields -->
       <a3d-star-field
         [starCount]="2000"
@@ -166,6 +189,7 @@ import * as THREE from 'three/webgpu';
       <!-- Fire Sphere with Hollow Center -->
       <a3d-fire-sphere
         [renderOrder]="-1"
+        [depthWrite]="true"
         [radius]="10"
         [innerRadius]="6"
         [quality]="'quality'"
@@ -281,6 +305,8 @@ export class HeroSceneComponent {
   // INPUTS - Scene Configuration
   // =========================================================================
 
+  public readonly Math = Math;
+  public readonly colors = SCENE_COLOR_STRINGS;
   /** Camera position in 3D space */
   public readonly cameraPosition = input<[number, number, number]>([0, 0, 18]);
 
