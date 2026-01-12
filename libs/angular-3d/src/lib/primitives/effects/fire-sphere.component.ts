@@ -143,6 +143,13 @@ export class FireSphereComponent {
    */
   public readonly fog = input<boolean>(false);
 
+  /**
+   * Render order for controlling draw order with other transparent objects.
+   * Lower values render first (behind), higher values render last (in front).
+   * Default: 0
+   */
+  public readonly renderOrder = input<number>(0);
+
   // ========================================================================
   // Internal State
   // ========================================================================
@@ -191,6 +198,14 @@ export class FireSphereComponent {
       const color = this.fireColor();
       if (this.volumetricFireUniforms) {
         this.volumetricFireUniforms.color.value.set(color);
+      }
+    });
+
+    // Effect: Update render order when it changes
+    effect(() => {
+      const order = this.renderOrder();
+      if (this.sphereMesh) {
+        this.sphereMesh.renderOrder = order;
       }
     });
 
@@ -263,6 +278,7 @@ export class FireSphereComponent {
     this.sphereMaterial.fog = this.fog(); // Controlled by parent input
 
     this.sphereMesh = new THREE.Mesh(this.sphereGeometry, this.sphereMaterial);
+    this.sphereMesh.renderOrder = this.renderOrder();
   }
 
   private setupFireUpdates(): void {
