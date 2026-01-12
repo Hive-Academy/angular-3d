@@ -33,7 +33,6 @@ import {
   EffectComposerComponent,
   EnvironmentComponent,
   FireSphereComponent,
-  Float3dDirective,
   GltfModelComponent,
   MouseTracking3dDirective,
   NebulaVolumetricComponent,
@@ -41,7 +40,6 @@ import {
   Scene3dComponent,
   SceneRevealDirective,
   StarFieldComponent,
-  SvgIconComponent,
   ThrusterFlameComponent,
   WarpLinesComponent,
 } from '@hive-academy/angular-3d';
@@ -69,8 +67,6 @@ import { SCENE_COLOR_STRINGS } from '../../../shared/colors';
     NebulaVolumetricComponent,
     CameraShakeDirective,
     CausticsSphereComponent,
-    SvgIconComponent,
-    Float3dDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -124,24 +120,6 @@ import { SCENE_COLOR_STRINGS } from '../../../shared/colors';
         [position]="[-10, 5, -10]"
         [intensity]="0.3"
         [color]="'#4a90d9'"
-      />
-
-      <a3d-svg-icon
-        [svgPath]="'/images/logos/angular.svg'"
-        [position]="[-14, 25, -70]"
-        [scale]="0.04"
-        [color]="colors.indigo"
-        [emissiveIntensity]="0.3"
-        [metalness]="0.2"
-        [roughness]="0.6"
-        float3d
-        [floatConfig]="{
-          height: 0.2,
-          speed: 2000,
-          delay: 0,
-          ease: 'sine.inOut',
-          autoStart: true
-        }"
       />
 
       <!-- Star Fields -->
@@ -202,15 +180,11 @@ import { SCENE_COLOR_STRINGS } from '../../../shared/colors';
 
       <!-- Caustics Sphere Inside the Fire -->
       <a3d-caustics-sphere
-        [radius]="6.4"
-        [position]="[
-          firePosition()[0],
-          firePosition()[1],
-          firePosition()[2] + 1
-        ]"
+        [radius]="6.1"
+        [position]="firePosition()"
         [color]="innerSphereColor()"
         [background]="innerSphereBackground()"
-        [causticsScale]="0.7"
+        [causticsScale]="0.07"
         [speed]="1"
         [intensity]="1.5"
         [roughness]="0.07"
