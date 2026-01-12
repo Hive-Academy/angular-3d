@@ -79,7 +79,7 @@ import {
         <!-- Cloud Layer - moves past the static text -->
         <!-- Clouds are NOT on bloom layer, so they won't glow -->
         <a3d-cloud-layer
-          [textureUrl]="'/clouds/cloud10.png'"
+          [textureUrl]="'clouds/cloud10.png'"
           [cloudCount]="10000"
           [fogColor]="fogColor()"
           [speed]="0.03"

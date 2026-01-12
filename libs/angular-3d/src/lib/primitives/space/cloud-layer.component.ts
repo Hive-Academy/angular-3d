@@ -8,7 +8,7 @@
  * @example
  * ```html
  * <a3d-cloud-layer
- *   [textureUrl]="'/clouds/cloud10.png'"
+ *   [textureUrl]="'clouds/cloud10.png'"
  *   [cloudCount]="8000"
  * />
  * ```
