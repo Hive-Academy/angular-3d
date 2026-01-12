@@ -19,19 +19,21 @@
     "scene",
     "renderer"
   ],
-  "homepage": "https://github.com/hive-academy/angular-3d-workspace#readme",
+  "homepage": "https://github.com/Hive-Academy/angular-3d#readme",
   "bugs": {
-    "url": "https://github.com/hive-academy/angular-3d-workspace/issues"
+    "url": "https://github.com/Hive-Academy/angular-3d/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hive-academy/angular-3d-workspace.git",
+    "url": "git+https://github.com/Hive-Academy/angular-3d.git",
     "directory": "libs/angular-3d"
   },
   "license": "MIT",
   "author": "Hive Academy",
-  "access": "public",
   "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "troika-three-text": "*",
     "@angular/core": "*",

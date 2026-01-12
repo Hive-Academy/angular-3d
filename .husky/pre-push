@@ -1,3 +1,5 @@
+#!/bin/sh
+
 echo "🚀 Running pre-push checks..."
 
 # Get the current branch
