@@ -33,7 +33,15 @@
   "access": "public",
   "private": false,
   "peerDependencies": {
-    "troika-three-text": "*"
+    "troika-three-text": "*",
+    "@angular/core": "*",
+    "three": "*",
+    "three-stdlib": "*",
+    "gsap": "*",
+    "@angular/common": "*",
+    "@angular/router": "*",
+    "rxjs": "*",
+    "maath": "*"
   },
   "sideEffects": false
 }
