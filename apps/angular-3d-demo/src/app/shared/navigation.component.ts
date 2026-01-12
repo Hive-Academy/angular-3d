@@ -35,7 +35,7 @@ import { distinctUntilChanged, fromEvent, map } from 'rxjs';
           [class.logo-compact]="isSticky()"
         >
           <img
-            ngSrc="/logo.png"
+            ngSrc="logo.png"
             alt="logo"
             width="160"
             height="94"

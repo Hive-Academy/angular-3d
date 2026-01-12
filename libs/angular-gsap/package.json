@@ -30,6 +30,8 @@
   },
   "license": "MIT",
   "author": "Hive Academy",
+  "access": "public",
+  "private": false,
   "peerDependencies": {
     "@angular/common": "*",
     "@angular/core": "*",

@@ -196,7 +196,7 @@ import { SCENE_COLORS } from '../../../shared/colors';
                 />
 
                 <a3d-gltf-model
-                  [modelPath]="'/3d/planet_earth/scene.gltf'"
+                  [modelPath]="'3d/planet_earth/scene.gltf'"
                   [scale]="1.2"
                   rotate3d
                   [rotateConfig]="{ axis: 'y', speed: 10 }"
