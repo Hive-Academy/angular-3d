@@ -1166,7 +1166,7 @@ constructor() {
 
 ## 🎬 Live Demo
 
-> 🚀 Coming soon - Live demo application showcasing all components
+https://hive-academy.github.io/angular-3d/
 
 ---
 
