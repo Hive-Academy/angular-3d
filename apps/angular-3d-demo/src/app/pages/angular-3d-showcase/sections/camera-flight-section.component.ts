@@ -5,7 +5,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import {
   Scene3dComponent,
   SphereComponent,
@@ -35,7 +35,6 @@ import { SCENE_COLORS } from '../../../shared/colors';
 @Component({
   selector: 'app-camera-flight-section',
   imports: [
-    CommonModule,
     Scene3dComponent,
     SphereComponent,
     BoxComponent,

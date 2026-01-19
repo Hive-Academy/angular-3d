@@ -734,7 +734,7 @@ describe('ViewportPositioningService', () => {
           y: '50%',
         });
         posSignal(); // Trigger computed
-      }).toThrowError(/Invalid percentage value for x: "abc%"/);
+      }).toThrow(/Invalid percentage value for x: "abc%"/);
     });
 
     it('should throw error for invalid percentage string (y)', () => {
@@ -744,14 +744,14 @@ describe('ViewportPositioningService', () => {
           y: 'xyz%',
         });
         posSignal(); // Trigger computed
-      }).toThrowError(/Invalid percentage value for y: "xyz%"/);
+      }).toThrow(/Invalid percentage value for y: "xyz%"/);
     });
 
     it('should throw error for NaN percentage value', () => {
       expect(() => {
         const posSignal = service.getPercentagePosition({ x: NaN, y: 0.5 });
         posSignal(); // Trigger computed
-      }).toThrowError(/Invalid percentage value for x: NaN/);
+      }).toThrow(/Invalid percentage value for x: NaN/);
     });
 
     // FIX TASK 5.5: Test negative distance validation
@@ -759,7 +759,7 @@ describe('ViewportPositioningService', () => {
       expect(() => {
         const posSignal = service.getNamedPosition('center', { viewportZ: 25 }); // camera at Z=20
         posSignal(); // Trigger computed
-      }).toThrowError(
+      }).toThrow(
         /Invalid viewport configuration: viewport plane \(Z=25\) must be behind camera/
       );
     });
@@ -768,14 +768,14 @@ describe('ViewportPositioningService', () => {
       expect(() => {
         const posSignal = service.getNamedPosition('center', { viewportZ: 20 }); // camera at Z=20
         posSignal(); // Trigger computed
-      }).toThrowError(/Invalid viewport configuration/);
+      }).toThrow(/Invalid viewport configuration/);
     });
 
     it('should include helpful hint in negative distance error', () => {
       expect(() => {
         const posSignal = service.getNamedPosition('center', { viewportZ: 30 });
         posSignal();
-      }).toThrowError(/Hint: Use negative viewportZ values/);
+      }).toThrow(/Hint: Use negative viewportZ values/);
     });
 
     // FIX TASK 5.3: Test that numeric positions default to percentage (not pixel)
