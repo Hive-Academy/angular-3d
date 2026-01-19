@@ -44,41 +44,43 @@ export interface StepData {
       [class.pointer-events-none]="!visible()"
     >
       @for (stepIdx of stepsArray(); track stepIdx; let i = $index) {
-        <button
-          type="button"
-          (click)="onStepClick($event, stepIdx)"
-          class="group flex items-center gap-3 transition-all duration-300 hover:translate-x-1"
-          [attr.aria-label]="'Go to step ' + (stepIdx + 1)"
-          [attr.aria-current]="currentStep() === stepIdx ? 'step' : null"
+      <button
+        type="button"
+        (click)="onStepClick($event, stepIdx)"
+        class="group flex items-center gap-3 transition-all duration-300 hover:translate-x-1"
+        [attr.aria-label]="'Go to step ' + (stepIdx + 1)"
+        [attr.aria-current]="currentStep() === stepIdx ? 'step' : null"
+      >
+        <!-- Number Badge -->
+        <div
+          class="relative flex items-center justify-center w-10 h-10 rounded-xl text-sm font-bold transition-all duration-300"
+          [class.bg-gradient-to-br]="currentStep() === stepIdx"
+          [class.from-indigo-500]="currentStep() === stepIdx"
+          [class.to-violet-600]="currentStep() === stepIdx"
+          [class.text-white]="currentStep() === stepIdx"
+          [class.shadow-lg]="currentStep() === stepIdx"
+          [class.shadow-indigo-500]="currentStep() === stepIdx"
+          [class.scale-110]="currentStep() === stepIdx"
+          [class.bg-slate-800]="currentStep() !== stepIdx"
+          [class.text-slate-400]="currentStep() !== stepIdx"
         >
-          <!-- Number Badge -->
+          {{ (stepIdx + 1).toString().padStart(2, '0') }}
+          @if (currentStep() === stepIdx) {
           <div
-            class="relative flex items-center justify-center w-10 h-10 rounded-xl text-sm font-bold transition-all duration-300"
-            [class.bg-gradient-to-br]="currentStep() === stepIdx"
-            [class.from-indigo-500]="currentStep() === stepIdx"
-            [class.to-violet-600]="currentStep() === stepIdx"
-            [class.text-white]="currentStep() === stepIdx"
-            [class.shadow-lg]="currentStep() === stepIdx"
-            [class.shadow-indigo-500/40]="currentStep() === stepIdx"
-            [class.scale-110]="currentStep() === stepIdx"
-            [class.bg-slate-800/80]="currentStep() !== stepIdx"
-            [class.text-slate-400]="currentStep() !== stepIdx"
-          >
-            {{ (stepIdx + 1).toString().padStart(2, '0') }}
-            @if (currentStep() === stepIdx) {
-              <div class="absolute inset-0 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 opacity-40 blur-md -z-10"></div>
-            }
-          </div>
-          <!-- Active bar indicator -->
-          <div
-            class="h-0.5 rounded-full transition-all duration-300"
-            [class.w-6]="currentStep() === stepIdx"
-            [class.bg-gradient-to-r]="currentStep() === stepIdx"
-            [class.from-indigo-500]="currentStep() === stepIdx"
-            [class.to-violet-500]="currentStep() === stepIdx"
-            [class.w-0]="currentStep() !== stepIdx"
+            class="absolute inset-0 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 opacity-40 blur-md -z-10"
           ></div>
-        </button>
+          }
+        </div>
+        <!-- Active bar indicator -->
+        <div
+          class="h-0.5 rounded-full transition-all duration-300"
+          [class.w-6]="currentStep() === stepIdx"
+          [class.bg-gradient-to-r]="currentStep() === stepIdx"
+          [class.from-indigo-500]="currentStep() === stepIdx"
+          [class.to-violet-500]="currentStep() === stepIdx"
+          [class.w-0]="currentStep() !== stepIdx"
+        ></div>
+      </button>
       }
     </nav>
   `,

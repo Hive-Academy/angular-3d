@@ -23,6 +23,7 @@ I guide you through two workflows:
 ### 1. Request Image/Video
 
 Prompt you to share:
+
 - Video/GIF of scroll interaction
 - Screenshot of animation state
 - Link to reference website
@@ -32,6 +33,7 @@ Prompt you to share:
 When media is provided, analyze these key aspects:
 
 #### Animation Type Detection
+
 - **Entrance animations**: Identify fadeIn, slideUp, scaleIn, etc.
 - **Scroll-linked**: Determine if animations are tied to scroll progress (scrubbed)
 - **Parallax effects**: Detect multi-layer depth with different scroll speeds
@@ -40,6 +42,7 @@ When media is provided, analyze these key aspects:
 - **Staggered sequences**: Notice cascading entrance patterns
 
 #### Timing & Easing Analysis
+
 - **Duration**: Estimate animation speed (fast: 0.3s, medium: 0.6-0.8s, slow: 1.2s+)
 - **Easing function**: Identify easing type
   - Linear (constant speed) → `ease: 'none'`
@@ -49,6 +52,7 @@ When media is provided, analyze these key aspects:
 - **Delay patterns**: Notice sequential delays in lists or grids
 
 #### Trigger Point Analysis
+
 - **Start point**: Where animation begins (viewport position)
   - Early trigger: "top 90%" (element at bottom of viewport)
   - Mid trigger: "top 60%" (element mid-viewport)
@@ -57,6 +61,7 @@ When media is provided, analyze these key aspects:
 - **Scrub detection**: Does animation move 1:1 with scroll?
 
 #### Scroll Behavior
+
 - **Parallax speed**: Estimate layer speeds (0.3 = very slow, 1.0 = normal, 1.5+ = fast)
 - **Pin duration**: How long sections stay fixed
 - **Direction**: Left, right, up, down slide directions
@@ -66,15 +71,15 @@ When media is provided, analyze these key aspects:
 
 Match detected patterns to angular-gsap directives:
 
-| Detected Pattern | Recommended Directive | Configuration |
-|-----------------|----------------------|---------------|
-| Fade on scroll into view | `viewportAnimation` | `animation: 'fadeIn'` |
-| Element slides up on entry | `viewportAnimation` | `animation: 'slideUp'` |
-| Background moves slower | `scrollAnimation` | `animation: 'parallax', speed: 0.5` |
-| Section pins while animating | `scrollAnimation` | `pin: true, scrub: true` |
-| Fullpage step presentation | `hijackedScroll` + `hijackedScrollItem` | With slide directions |
-| List items appear in sequence | `viewportAnimation` | `stagger: 0.1` |
-| Progress bar fills on scroll | `scrollAnimation` | `scrub: true, onUpdate: callback` |
+| Detected Pattern              | Recommended Directive                   | Configuration                       |
+| ----------------------------- | --------------------------------------- | ----------------------------------- |
+| Fade on scroll into view      | `viewportAnimation`                     | `animation: 'fadeIn'`               |
+| Element slides up on entry    | `viewportAnimation`                     | `animation: 'slideUp'`              |
+| Background moves slower       | `scrollAnimation`                       | `animation: 'parallax', speed: 0.5` |
+| Section pins while animating  | `scrollAnimation`                       | `pin: true, scrub: true`            |
+| Fullpage step presentation    | `hijackedScroll` + `hijackedScrollItem` | With slide directions               |
+| List items appear in sequence | `viewportAnimation`                     | `stagger: 0.1`                      |
+| Progress bar fills on scroll  | `scrollAnimation`                       | `scrub: true, onUpdate: callback`   |
 
 ### 4. Identify Closest Demo Pattern
 
@@ -110,27 +115,31 @@ import { ScrollAnimationDirective, ViewportAnimationDirective } from '@hive-acad
     <!-- Based on your reference video -->
 
     <!-- Background parallax layer -->
-    <div scrollAnimation
+    <div
+      scrollAnimation
       [scrollConfig]="{
         animation: 'parallax',
         speed: 0.4,
         scrub: 1.5
-      }">
+      }"
+    >
       Background
     </div>
 
     <!-- Entrance animations -->
-    <h1 viewportAnimation
+    <h1
+      viewportAnimation
       [viewportConfig]="{
         animation: 'slideUp',
         duration: 0.8,
         threshold: 0.2
-      }">
+      }"
+    >
       Title
     </h1>
 
     <!-- More elements based on analysis -->
-  `
+  `,
 })
 export class ReconstructedAnimationComponent {}
 ```
@@ -156,6 +165,7 @@ Document approximations and suggestions:
 Ask clarifying questions:
 
 **For Animation Goal**:
+
 - "What should happen as the user scrolls?"
   - Fade in elements?
   - Slide content from sides?
@@ -164,11 +174,13 @@ Ask clarifying questions:
   - Hijack scroll for presentation?
 
 **For Trigger Behavior**:
+
 - "Should animation be tied to scroll progress or trigger once on entry?"
   - Scrubbed (1:1 with scroll) → Use `scrollAnimation` with `scrub: true`
   - One-time entrance → Use `viewportAnimation`
 
 **For Aesthetic**:
+
 - "What's the desired feel?"
   - Smooth and professional → `ease: 'power2.out'`
   - Bouncy and playful → `ease: 'back.out(1.7)'`
@@ -212,13 +224,13 @@ hijackedScroll + hijackedScrollItem with:
 
 Recommend duration and easing:
 
-| Context | Duration | Ease | Use Case |
-|---------|----------|------|----------|
-| Quick feedback | 0.3s | power2.out | UI interactions |
-| Standard entrance | 0.6-0.8s | power2.out | Content reveals |
-| Emphasized | 1.2-1.5s | power3.inOut | Hero sections |
-| Stats/metrics | 0.6s | back.out(1.7) | Bouncy cards |
-| Parallax | N/A | none | Layered backgrounds |
+| Context           | Duration | Ease          | Use Case            |
+| ----------------- | -------- | ------------- | ------------------- |
+| Quick feedback    | 0.3s     | power2.out    | UI interactions     |
+| Standard entrance | 0.6-0.8s | power2.out    | Content reveals     |
+| Emphasized        | 1.2-1.5s | power3.inOut  | Hero sections       |
+| Stats/metrics     | 0.6s     | back.out(1.7) | Bouncy cards        |
+| Parallax          | N/A      | none          | Layered backgrounds |
 
 See `references/best-practices.md` for comprehensive timing guide.
 
@@ -228,16 +240,16 @@ Help choose ScrollTrigger start/end:
 
 ```typescript
 // Early trigger (element enters from bottom)
-start: 'top 90%'
+start: 'top 90%';
 
 // Mid trigger (element center-ish)
-start: 'top 60%'
+start: 'top 60%';
 
 // Late trigger (element near top)
-start: 'top 30%'
+start: 'top 30%';
 
 // Pin at top of viewport
-start: 'top top'
+start: 'top top';
 ```
 
 ### Step 5: Build Incrementally
@@ -245,6 +257,7 @@ start: 'top top'
 Guide through scene construction:
 
 **Phase 1: Basic Animation**
+
 ```typescript
 <div viewportAnimation
   [viewportConfig]="{
@@ -255,6 +268,7 @@ Guide through scene construction:
 ```
 
 **Phase 2: Customize Timing**
+
 ```typescript
 <div viewportAnimation
   [viewportConfig]="{
@@ -267,6 +281,7 @@ Guide through scene construction:
 ```
 
 **Phase 3: Add Stagger (if needed)**
+
 ```typescript
 <div viewportAnimation
   [viewportConfig]="{
@@ -282,6 +297,7 @@ Guide through scene construction:
 ```
 
 **Phase 4: Combine with Scroll Directive**
+
 ```typescript
 <!-- Background parallax -->
 <div scrollAnimation
@@ -309,12 +325,7 @@ Provide production-ready Angular component:
 
 ```typescript
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import {
-  ScrollAnimationDirective,
-  ViewportAnimationDirective,
-  HijackedScrollDirective,
-  HijackedScrollItemDirective,
-} from '@hive-academy/angular-gsap';
+import { ScrollAnimationDirective, ViewportAnimationDirective, HijackedScrollDirective, HijackedScrollItemDirective } from '@hive-academy/angular-gsap';
 
 @Component({
   selector: 'app-custom-animation',
@@ -327,55 +338,65 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- Parallax background -->
-    <div scrollAnimation
+    <div
+      scrollAnimation
       [scrollConfig]="{
         animation: 'parallax',
         speed: 0.4,
         scrub: 1.5
-      }">
+      }"
+    >
       <!-- Background image -->
     </div>
 
     <!-- Hero section entrance -->
     <section>
-      <h1 viewportAnimation
+      <h1
+        viewportAnimation
         [viewportConfig]="{
           animation: 'slideUp',
           duration: 0.8,
           threshold: 0.2
-        }">
+        }"
+      >
         Hero Title
       </h1>
 
-      <p viewportAnimation
+      <p
+        viewportAnimation
         [viewportConfig]="{
           animation: 'fadeIn',
           duration: 0.8,
           delay: 0.2,
           threshold: 0.2
-        }">
+        }"
+      >
         Subtitle
       </p>
     </section>
 
     <!-- Staggered feature list -->
-    <div viewportAnimation
+    <div
+      viewportAnimation
       [viewportConfig]="{
         animation: 'slideUp',
         stagger: 0.1,
         staggerTarget: '.feature'
-      }">
+      }"
+    >
       <div class="feature">Feature 1</div>
       <div class="feature">Feature 2</div>
       <div class="feature">Feature 3</div>
     </div>
   `,
-  styles: [`
-    :host {
-      display: block;
-      position: relative;
-    }
-  `]
+  styles: [
+    `
+      :host {
+        display: block;
+        position: relative;
+      }
+    `,
+  ],
 })
 export class CustomAnimationComponent {}
 ```
@@ -389,29 +410,37 @@ export class CustomAnimationComponent {}
 **Me**: Perfect! That's a classic parallax effect with a viewport entrance. Let me build this step by step:
 
 **Step 1: Background Parallax**
+
 ```html
-<div scrollAnimation
+<div
+  scrollAnimation
   [scrollConfig]="{
     animation: 'parallax',
     speed: 0.5,
     scrub: 1.5
-  }">
+  }"
+>
   <img src="background.jpg" />
 </div>
 ```
+
 This makes the background move at 50% scroll speed with a 1.5s smooth lag.
 
 **Step 2: Title Slide Up**
+
 ```html
-<h1 viewportAnimation
+<h1
+  viewportAnimation
   [viewportConfig]="{
     animation: 'slideUp',
     duration: 0.8,
     threshold: 0.2
-  }">
+  }"
+>
   Hero Title
 </h1>
 ```
+
 Title appears when 20% visible, slides up over 0.8s.
 
 **User**: "Can I make the title fade out as I scroll down?"
@@ -434,7 +463,8 @@ Title appears when 20% visible, slides up over 0.8s.
     scrub: 1.2,
     from: { opacity: 1, y: 0 },
     to: { opacity: 0, y: -150 }
-  }">
+  }"
+>
   Hero Title
 </h1>
 ```
@@ -443,6 +473,69 @@ This combines entrance (viewport) with scroll-linked fade out.
 
 ---
 
+## Ready-to-Use Animation Templates
+
+The `assets/` folder contains complete, production-ready animation components organized by type. Each template is heavily documented with customization points and can be used as first drafts for user requirements.
+
+### Page Templates (`assets/pages/`)
+
+| User Intent                    | Template                                                                      | Key Features                                                     |
+| ------------------------------ | ----------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| "Fullpage scroll presentation" | [fullpage-showcase.component.ts](assets/pages/fullpage-showcase.component.ts) | HijackedScrollContainer, progress indicator, 5 complete sections |
+
+### Section Templates (`assets/sections/`)
+
+| User Intent                | Template                                                                                   | Key Features                                               |
+| -------------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| "Parallax hero with depth" | [parallax-hero.component.ts](assets/sections/parallax-hero.component.ts)                   | Multi-layer parallax, floating elements, staggered content |
+| "Timeline / history page"  | [split-panel-timeline.component.ts](assets/sections/split-panel-timeline.component.ts)     | Pinned left panel, scrolling timeline, progress sync       |
+| "Feature cards grid"       | [feature-showcase-cards.component.ts](assets/sections/feature-showcase-cards.component.ts) | Staggered entrance, hover effects, grid layout             |
+
+### Using Templates
+
+1. **Match user intent**: When user describes an animation matching a template, offer it as starting point
+2. **Customize documented points**: Each template has comments explaining what to change
+3. **Combine sections**: Build complete pages by combining multiple section templates
+
+**Example workflow:**
+
+```
+User: "I want a landing page with sections that snap into place"
+
+You: "Perfect! I have a Fullpage Showcase template that matches this exactly:
+     [fullpage-showcase.component.ts](assets/pages/fullpage-showcase.component.ts)
+
+     It includes:
+     - HijackedScrollContainer for smooth section snapping
+     - Hero, features, stats, and CTA sections
+     - Progress dots synced to scroll position
+     - ViewportAnimations for content reveals
+
+     Customization points:
+     - Change `duration` for faster/slower transitions
+     - Modify `ease` for different feel
+     - Update section content and colors
+     - Add/remove sections as needed"
+```
+
+**Combining sections:**
+
+```
+User: "I need a hero with parallax and then a timeline section"
+
+You: "Great combination! Here's how to build it:
+
+     1. Start with [parallax-hero.component.ts](assets/sections/parallax-hero.component.ts)
+        - Multi-layer depth effect
+        - Staggered title and CTA
+
+     2. Follow with [split-panel-timeline.component.ts](assets/sections/split-panel-timeline.component.ts)
+        - Pinned description panel
+        - Scrolling timeline items
+
+     I'll combine these into a single component for you..."
+```
+
 ## Reference Files
 
 For detailed information, see:
@@ -450,7 +543,6 @@ For detailed information, see:
 - **`references/components.md`** - Complete catalog of all directives, components, services, and configurations
 - **`references/patterns.md`** - 10 reusable animation patterns from demo sections with full code examples
 - **`references/best-practices.md`** - Timing strategies, easing functions, trigger point guides, performance tips
-- **`assets/animation-template.component.ts`** - Boilerplate Angular component template to start from
 
 ---
 
@@ -467,6 +559,7 @@ For detailed information, see:
 ## Quick Start Template
 
 Use `assets/animation-template.component.ts` as a starting point. It includes:
+
 - Parallax background setup
 - Hero entrance stagger pattern
 - Staggered list items

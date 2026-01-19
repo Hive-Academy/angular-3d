@@ -10,6 +10,7 @@ Create stunning 3D scenes using the @hive-academy/angular-3d library through gui
 ## Overview
 
 This skill helps you design and generate complete Angular components for 3D scenes by:
+
 - Guiding aesthetic and mood selection
 - Recommending components based on scene type
 - Applying proven composition patterns
@@ -19,6 +20,7 @@ This skill helps you design and generate complete Angular components for 3D scen
 ## Workflow
 
 The skill supports two primary workflows:
+
 - **A. Text-Based Design** - Conversational scene crafting from user descriptions
 - **B. Image-Based Reverse Engineering** - Analyze reference images and recreate similar scenes
 
@@ -31,6 +33,7 @@ The skill supports two primary workflows:
 ### 1. Request and Analyze Image
 
 Ask user to provide the reference image:
+
 - "Please share the image you'd like to recreate"
 - "I can analyze screenshots, design mockups, or existing 3D scenes"
 
@@ -39,12 +42,14 @@ Ask user to provide the reference image:
 When image is provided, analyze these key aspects:
 
 #### Color Palette Extraction
+
 - Identify dominant colors (background, primary objects, accents)
 - Note color temperature (warm vs cool)
 - Detect color scheme type (monochrome, complementary, triadic)
 - Extract hex values for key colors
 
 **Example analysis:**
+
 ```
 Colors detected:
 - Background: Very dark (#0a0a0f - deep space)
@@ -55,12 +60,14 @@ Colors detected:
 ```
 
 #### Lighting Analysis
+
 - Count visible light sources
 - Identify light types (ambient, directional, point, spot)
 - Note light positions (top-left, rim, front)
 - Assess lighting mood (dramatic, soft, high-contrast)
 
 **Example analysis:**
+
 ```
 Lighting setup:
 - Very low ambient (dark dramatic mood)
@@ -70,11 +77,13 @@ Lighting setup:
 ```
 
 #### Material & Surface Analysis
+
 - Identify material types (glossy, matte, emissive, glass, metallic)
 - Note special effects (wireframe, glow, transparency, iridescence)
 - Detect surface treatments (smooth, rough, reflective)
 
 **Example analysis:**
+
 ```
 Materials:
 - Sphere 1: Glass/transmission (visible refraction, clearcoat)
@@ -84,12 +93,14 @@ Materials:
 ```
 
 #### Geometry & Composition
+
 - Identify primitive shapes (spheres, boxes, toruses, cylinders)
 - Note spatial arrangement (grid, scatter, corner framing, clustering)
 - Assess depth layering (foreground/midground/background)
 - Count objects and note size hierarchy
 
 **Example analysis:**
+
 ```
 Composition:
 - 3 spheres: Large (focal), Medium (secondary), Small (accent)
@@ -99,11 +110,13 @@ Composition:
 ```
 
 #### Animation & Effects
+
 - Detect motion blur or animation trails
 - Note particles or dynamic elements
 - Identify post-processing (bloom, depth of field, chromatic aberration)
 
 **Example analysis:**
+
 ```
 Effects:
 - Strong bloom (glow around bright elements)
@@ -117,6 +130,7 @@ Effects:
 Based on analysis, recommend specific angular-3d components:
 
 **Primitives:**
+
 ```
 Detected: Spheres → Use: <a3d-sphere> or <a3d-marble-sphere> or <a3d-glass-sphere>
 Detected: Torus → Use: <a3d-torus>
@@ -125,6 +139,7 @@ Detected: Nebula cloud → Use: <a3d-nebula-volumetric>
 ```
 
 **Materials:**
+
 ```
 Detected: Glass with refraction → Config: [transmission]="0.9" [ior]="1.5" [clearcoat]="1.0"
 Detected: Emissive glow → Config: [emissive]="color" [emissiveIntensity]="2" [wireframe]="true"
@@ -132,12 +147,14 @@ Detected: Iridescent rainbow → Config: [iridescence]="1.0" [iridescenceThickne
 ```
 
 **Lighting:**
+
 ```
 Detected: Dramatic rim → Use: Directional light setup (main + rim)
 Detected: Colored accents → Use: Multiple point lights with colors
 ```
 
 **Effects:**
+
 ```
 Detected: Strong bloom → Use: <a3d-bloom-effect [threshold]="0.5" [strength]="1.2" />
 Detected: Selective glow → Use: <a3d-selective-bloom-effect [layer]="1" />
@@ -148,6 +165,7 @@ Detected: Selective glow → Use: <a3d-selective-bloom-effect [layer]="1" />
 Match the analyzed scene to one of the proven patterns from [patterns.md](references/patterns.md):
 
 **Pattern matching logic:**
+
 - Emissive + wireframe + strong bloom → **Cyberpunk Neon**
 - Spheres + transmission + iridescence → **Glass/Bubble**
 - Planets + stars + nebula → **Space/Cosmic**
@@ -156,6 +174,7 @@ Match the analyzed scene to one of the proven patterns from [patterns.md](refere
 - Marble shader + glossy materials → **Organic/Fluid**
 
 **Output:**
+
 ```
 "Based on the image analysis, this matches our **Glass/Bubble** scene pattern:
 - Transmission materials with iridescence
@@ -185,22 +204,11 @@ import {
   selector: 'app-reconstructed-scene',
   // ... component configuration
   template: `
-    <a3d-scene-3d
-      [cameraPosition]="[0, 0, 20]"
-      [backgroundColor]="0x0a0a0f">
-
+    <a3d-scene-3d [cameraPosition]="[0, 0, 20]" [backgroundColor]="0x0a0a0f">
       <!-- Reconstructed based on image analysis -->
 
       <!-- Primary focal sphere (glass with iridescence) -->
-      <a3d-sphere
-        [args]="[3, 64, 64]"
-        [position]="[2, 0, 0]"
-        [color]="'#e879f9'"
-        [transmission]="0.9"
-        [iridescence]="1.0"
-        [iridescenceThicknessMin]="100"
-        [iridescenceThicknessMax]="400"
-      />
+      <a3d-sphere [args]="[3, 64, 64]" [position]="[2, 0, 0]" [color]="'#e879f9'" [transmission]="0.9" [iridescence]="1.0" [iridescenceThicknessMin]="100" [iridescenceThicknessMax]="400" />
 
       <!-- ... more components matching the analyzed scene -->
 
@@ -214,7 +222,7 @@ import {
         <a3d-bloom-effect [threshold]="0.85" [strength]="0.4" />
       </a3d-effect-composer>
     </a3d-scene-3d>
-  `
+  `,
 })
 export class ReconstructedSceneComponent {}
 ```
@@ -224,11 +232,13 @@ export class ReconstructedSceneComponent {}
 After generating code, explain approximations and suggest refinements:
 
 **Approximations made:**
+
 - "Estimated sphere positions based on perspective"
 - "Bloom threshold approximated from glow intensity"
 - "Camera distance inferred from field of view"
 
 **Refinement suggestions:**
+
 - "Adjust sphere positions: `[position]` values for exact placement"
 - "Fine-tune colors: Use exact hex values if available"
 - "Tweak bloom: Lower `threshold` for more glow, adjust `strength`"
@@ -245,6 +255,7 @@ After generating code, explain approximations and suggest refinements:
 Ask about the desired scene aesthetic and purpose:
 
 **Questions to ask:**
+
 - "What mood or aesthetic are you aiming for?" (cyberpunk, cosmic, dreamy, energetic, minimal)
 - "What's the scene's purpose?" (hero section, background, interactive feature, showcase)
 - "Any specific visual elements you want?" (planets, particles, glass, geometry, text)
@@ -255,6 +266,7 @@ Ask about the desired scene aesthetic and purpose:
 Based on user responses, suggest one or more scene types from these proven patterns:
 
 **Scene Type Reference:**
+
 - **Cyberpunk Neon** - Wireframe geometry, emissive materials, strong bloom, cyan/magenta palette
 - **Space/Cosmic** - Planets, star fields, nebulas, dramatic lighting, deep blues
 - **Glass/Bubble** - Transparent spheres, iridescence, transmission, soft lighting
@@ -270,6 +282,7 @@ For each suggestion, reference similar examples from hero scenes and explain why
 Guide users through adding components in this order:
 
 #### A. Scene Container & Camera
+
 ```typescript
 <a3d-scene-3d
   [cameraPosition]="[0, 0, 20]"
@@ -281,6 +294,7 @@ Guide users through adding components in this order:
 ```
 
 **Configuration tips:**
+
 - `cameraPosition`: Adjust Z for desired view distance (10-30 typical)
 - `backgroundColor`: Use ultra-dark (0x0a0a0f - 0x050510) for contrast
 - `enableShadows`: Only enable if using shadow-casting lights
@@ -290,18 +304,23 @@ Guide users through adding components in this order:
 Recommend components from [components.md](references/components.md) based on scene type:
 
 **For geometric scenes:**
+
 - `<a3d-box>`, `<a3d-sphere>`, `<a3d-cylinder>`, `<a3d-torus>`, `<a3d-polyhedron>`
 
 **For space/cosmic:**
+
 - `<a3d-planet>`, `<a3d-star-field>`, `<a3d-nebula-volumetric>`
 
 **For effects:**
+
 - `<a3d-particle-system>`, `<a3d-marble-sphere>`, `<a3d-glass-sphere>`, `<a3d-metaball>`
 
 **For text:**
+
 - `<a3d-troika-text>`, `<a3d-glow-troika-text>`, `<a3d-bubble-text>`, `<a3d-particle-text>`
 
 Apply composition patterns from [patterns.md](references/patterns.md):
+
 - **Grid distribution** - Evenly spaced objects
 - **Asymmetric scatter** - Irregular positioning for organic feel
 - **Corner framing** - Objects at edges frame central content
@@ -315,24 +334,19 @@ Configure materials based on aesthetic. See [best-practices.md](references/best-
 **Quick material patterns:**
 
 **Emissive wireframe (neon):**
+
 ```typescript
-[wireframe]="true"
-[emissive]="'#00ffff'"
-[emissiveIntensity]="2"
-[color]="'#00ffff'"
+[wireframe] = 'true'[emissive] = "'#00ffff'"[emissiveIntensity] = '2'[color] = "'#00ffff'";
 ```
 
 **Glass/transparent:**
+
 ```typescript
-[transmission]="0.9"
-[thickness]="0.5"
-[ior]="1.4"
-[clearcoat]="1.0"
-[clearcoatRoughness]="0.0"
-[roughness]="0.0"
+[transmission] = '0.9'[thickness] = '0.5'[ior] = '1.4'[clearcoat] = '1.0'[clearcoatRoughness] = '0.0'[roughness] = '0.0';
 ```
 
 **PBR with environment:**
+
 ```typescript
 <a3d-environment [preset]="'sunset'" [intensity]="0.5" />
 [color]="'#6366f1'"
@@ -341,12 +355,9 @@ Configure materials based on aesthetic. See [best-practices.md](references/best-
 ```
 
 **Iridescent (soap bubble):**
+
 ```typescript
-[transmission]="0.9"
-[iridescence]="1.0"
-[iridescenceIOR]="1.3"
-[iridescenceThicknessMin]="100"
-[iridescenceThicknessMax]="400"
+[transmission] = '0.9'[iridescence] = '1.0'[iridescenceIOR] = '1.3'[iridescenceThicknessMin] = '100'[iridescenceThicknessMax] = '400';
 ```
 
 #### D. Lighting Setup
@@ -354,6 +365,7 @@ Configure materials based on aesthetic. See [best-practices.md](references/best-
 Recommend lighting based on scene type:
 
 **Cyberpunk/Neon:**
+
 ```typescript
 <a3d-ambient-light [intensity]="0.1" />
 <a3d-point-light [position]="[0, 0, 10]" [color]="'#00ffff'" [intensity]="2" />
@@ -361,6 +373,7 @@ Recommend lighting based on scene type:
 ```
 
 **Space/Dramatic:**
+
 ```typescript
 <a3d-ambient-light [intensity]="0.2" />
 <a3d-directional-light [position]="[15, 8, 10]" [intensity]="1.6" />
@@ -368,6 +381,7 @@ Recommend lighting based on scene type:
 ```
 
 **Glass/Bubble (three-point):**
+
 ```typescript
 <a3d-ambient-light [intensity]="0.3" />
 <a3d-spot-light [position]="[0, 16, -6]" [intensity]="120" [angle]="0.5" />
@@ -380,6 +394,7 @@ Recommend lighting based on scene type:
 Add directives for motion. See [components.md](references/components.md) for directive details.
 
 **Float animation:**
+
 ```typescript
 <a3d-sphere
   float3d
@@ -393,6 +408,7 @@ Add directives for motion. See [components.md](references/components.md) for dir
 ```
 
 **Rotation:**
+
 ```typescript
 <a3d-planet
   rotate3d
@@ -404,6 +420,7 @@ Add directives for motion. See [components.md](references/components.md) for dir
 ```
 
 **Mouse tracking:**
+
 ```typescript
 <a3d-box
   mouseTracking3d
@@ -415,6 +432,7 @@ Add directives for motion. See [components.md](references/components.md) for dir
 ```
 
 **Best practices:**
+
 - Stagger delays (200ms, 400ms, 600ms) for wave-like choreography
 - Vary speeds to prevent synchronization
 - Use slow rotation (0.003-0.015) for ambient motion
@@ -425,6 +443,7 @@ Add directives for motion. See [components.md](references/components.md) for dir
 Configure effects based on mood:
 
 **Strong bloom (neon scenes):**
+
 ```typescript
 <a3d-effect-composer>
   <a3d-bloom-effect
@@ -436,6 +455,7 @@ Configure effects based on mood:
 ```
 
 **Subtle bloom (refined scenes):**
+
 ```typescript
 <a3d-effect-composer>
   <a3d-bloom-effect
@@ -447,6 +467,7 @@ Configure effects based on mood:
 ```
 
 **Selective bloom (precise control):**
+
 ```typescript
 <a3d-effect-composer>
   <a3d-selective-bloom-effect
@@ -463,6 +484,7 @@ Configure effects based on mood:
 After building incrementally, generate the complete Angular component:
 
 **Component structure:**
+
 ```typescript
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import {
@@ -478,10 +500,7 @@ import {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <a3d-scene-3d
-      [cameraPosition]="[0, 0, 20]"
-      [backgroundColor]="0x0a0a0f">
-
+    <a3d-scene-3d [cameraPosition]="[0, 0, 20]" [backgroundColor]="0x0a0a0f">
       <!-- Primitives & Objects -->
 
       <!-- Lighting -->
@@ -501,12 +520,13 @@ import {
       width: 100%;
       height: 100vh;
     }
-  `
+  `,
 })
 export class MySceneComponent {}
 ```
 
 **Best practices for generated code:**
+
 - Use standalone components (no NgModules)
 - Use `ChangeDetectionStrategy.OnPush`
 - Import only components used in template
@@ -519,6 +539,7 @@ export class MySceneComponent {}
 After generating the component, offer customization suggestions:
 
 **Quick tweaks:**
+
 - "Adjust `cameraPosition` Z value to zoom in/out"
 - "Change `backgroundColor` for different moods"
 - "Modify `[intensity]` on lights to brighten/dim"
@@ -526,10 +547,52 @@ After generating the component, offer customization suggestions:
 - "Try different float `height` and `speed` values"
 
 **Advanced enhancements:**
+
 - "Add `<a3d-fog>` for atmospheric depth"
 - "Include `<a3d-orbit-controls>` for user interaction"
 - "Layer multiple star fields with different rotations for parallax"
 - "Combine directives (float3d + rotate3d + mouseTracking3d)"
+
+## Ready-to-Use Scene Templates
+
+The `assets/scenes/` folder contains complete, production-ready scene components that can be used as starting drafts. Each template is heavily documented with customization points.
+
+### Template Selection Guide
+
+| User Intent                     | Template                                                                       | Key Features                                                                |
+| ------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| "Cyberpunk, neon, gaming vibe"  | [crystal-grid-neon.component.ts](assets/scenes/crystal-grid-neon.component.ts) | Wireframe toruses, emissive materials, strong bloom, auto-rotating orbit    |
+| "Interactive geometric shapes"  | [floating-geometry.component.ts](assets/scenes/floating-geometry.component.ts) | Multiple polyhedrons, float + mouse tracking, environment reflections       |
+| "Dreamy, luxury, glass bubbles" | [bubble-dream-hero.component.ts](assets/scenes/bubble-dream-hero.component.ts) | Transmission spheres, nebula background, HTML overlay, three-point lighting |
+| "Space, cosmic, planets"        | [space-cosmic-hero.component.ts](assets/scenes/space-cosmic-hero.component.ts) | Star field layers, nebula, marble planet, particle dust                     |
+| "Organic, fluid, morphing"      | [metaball-organic.component.ts](assets/scenes/metaball-organic.component.ts)   | MetaballSystem with orbiting globs, environment mapping                     |
+| "Dynamic, energetic, storm"     | [particle-storm.component.ts](assets/scenes/particle-storm.component.ts)       | Multi-layer particles, vortex animation, energy core                        |
+
+### Using Templates
+
+1. **Copy as first draft**: When user describes a scene matching one of these aesthetics, offer the template as a starting point
+2. **Customize key values**: Each template has documented customization points in comments
+3. **Combine patterns**: Mix elements from multiple templates for unique scenes
+
+**Example workflow:**
+
+```
+User: "I want something with glass bubbles and a dreamy feel"
+
+You: "Perfect! I have a Bubble Dream template that matches this exactly. It includes:
+     - Glass spheres with transmission and clearcoat
+     - Dreamy nebula background in pink/purple
+     - Spotlight per bubble for dramatic lighting
+     - HTML overlay support for your content
+
+     Here's the template: [bubble-dream-hero.component.ts](assets/scenes/bubble-dream-hero.component.ts)
+
+     Customization points for your needs:
+     - Change `nebulaColors` for different mood
+     - Adjust bubble positions for your layout
+     - Add [iridescence]="1.0" for soap bubble effect
+     - Modify hero-content in the overlay layer"
+```
 
 ## Reference Files
 

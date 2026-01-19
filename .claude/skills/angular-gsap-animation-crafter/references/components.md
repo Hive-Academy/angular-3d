@@ -34,6 +34,7 @@ Complete reference for @hive-academy/angular-gsap directives, components, and se
 **Selector**: `[scrollAnimation]`
 
 **Public API Methods**:
+
 ```typescript
 refresh() // Manually refresh ScrollTrigger calculations
 getProgress() // Get current scroll progress (0-1)
@@ -48,18 +49,18 @@ interface ScrollAnimationConfig {
   animation?: AnimationType;
 
   // ScrollTrigger settings
-  trigger?: string;          // CSS selector or 'self'
-  start?: string;            // e.g., 'top 80%'
+  trigger?: string; // CSS selector or 'self'
+  start?: string; // e.g., 'top 80%'
   end?: string;
-  scrub?: boolean | number;  // Link to scroll progress
-  pin?: boolean;             // Pin during scroll
+  scrub?: boolean | number; // Link to scroll progress
+  pin?: boolean; // Pin during scroll
   pinSpacing?: boolean;
-  markers?: boolean;         // Debug markers
+  markers?: boolean; // Debug markers
 
   // Animation properties
-  duration?: number;         // Seconds
+  duration?: number; // Seconds
   delay?: number;
-  ease?: string;             // GSAP easing
+  ease?: string; // GSAP easing
   stagger?: number;
 
   // Parallax
@@ -83,18 +84,19 @@ interface ScrollAnimationConfig {
 ```
 
 **Animation Types**:
+
 ```typescript
 type AnimationType =
-  | 'fadeIn'      // Opacity: 0 → 1
-  | 'fadeOut'     // Opacity: 1 → 0
-  | 'slideUp'     // y: 100px → 0, opacity: 0 → 1
-  | 'slideDown'   // y: -100px → 0, opacity: 0 → 1
-  | 'slideLeft'   // x: 100px → 0, opacity: 0 → 1
-  | 'slideRight'  // x: -100px → 0, opacity: 0 → 1
-  | 'scaleIn'     // scale: 0.8 → 1, opacity: 0 → 1
-  | 'scaleOut'    // scale: 1.2 → 1, opacity: 0 → 1
-  | 'parallax'    // Parallax with speed
-  | 'custom';     // Custom from/to
+  | 'fadeIn' // Opacity: 0 → 1
+  | 'fadeOut' // Opacity: 1 → 0
+  | 'slideUp' // y: 100px → 0, opacity: 0 → 1
+  | 'slideDown' // y: -100px → 0, opacity: 0 → 1
+  | 'slideLeft' // x: 100px → 0, opacity: 0 → 1
+  | 'slideRight' // x: -100px → 0, opacity: 0 → 1
+  | 'scaleIn' // scale: 0.8 → 1, opacity: 0 → 1
+  | 'scaleOut' // scale: 1.2 → 1, opacity: 0 → 1
+  | 'parallax' // Parallax with speed
+  | 'custom'; // Custom from/to
 ```
 
 **Examples**:
@@ -111,7 +113,8 @@ type AnimationType =
     start: 'top 80%',
     duration: 1.2,
     ease: 'power3.out'
-  }">
+  }"
+>
   Content
 </div>
 
@@ -122,7 +125,8 @@ type AnimationType =
     animation: 'parallax',
     speed: 0.5,
     scrub: true
-  }">
+  }"
+>
   Background
 </div>
 
@@ -136,7 +140,8 @@ type AnimationType =
     start: 'top top',
     end: '+=100%',
     scrub: 1
-  }">
+  }"
+>
   Pinned content
 </section>
 
@@ -147,7 +152,8 @@ type AnimationType =
     animation: 'custom',
     from: { opacity: 0, rotation: -10, scale: 0.9 },
     to: { opacity: 1, rotation: 0, scale: 1 }
-  }">
+  }"
+>
   Custom element
 </div>
 
@@ -157,7 +163,8 @@ type AnimationType =
   [scrollConfig]="{
     animation: 'slideUp',
     stagger: 0.1
-  }">
+  }"
+>
   <p>Item 1</p>
   <p>Item 2</p>
   <p>Item 3</p>
@@ -173,6 +180,7 @@ type AnimationType =
 **Selector**: `[hijackedScroll]`
 
 **Public Methods**:
+
 ```typescript
 refresh()
 getProgress() // Overall progress (0-1)
@@ -180,42 +188,34 @@ jumpToStep(stepIndex: number)
 ```
 
 **Inputs**:
+
 ```typescript
-scrollHeightPerStep: number = 100      // vh per step
-animationDuration: number = 0.3        // seconds
-ease: string = 'power2.out'
-markers: boolean = false
-minHeight: string = '100vh'
-start: string = 'top top'
-end: string | undefined
-scrub: number = 1
-stepHold: number = 0                   // Hold multiplier
-showFirstStepImmediately: boolean = true
+scrollHeightPerStep: number = 100; // vh per step
+animationDuration: number = 0.3; // seconds
+ease: string = 'power2.out';
+markers: boolean = false;
+minHeight: string = '100vh';
+start: string = 'top top';
+end: string | undefined;
+scrub: number = 1;
+stepHold: number = 0; // Hold multiplier
+showFirstStepImmediately: boolean = true;
 ```
 
 **Outputs**:
+
 ```typescript
-currentStepChange // Emits step index (0-based)
-progressChange    // Emits progress (0-1)
+currentStepChange; // Emits step index (0-based)
+progressChange; // Emits progress (0-1)
 ```
 
 **Example**:
 
 ```html
-<div
-  hijackedScroll
-  [scrollHeightPerStep]="100"
-  [animationDuration]="0.3"
-  [stepHold]="0.5"
-  (currentStepChange)="onStepChange($event)">
+<div hijackedScroll [scrollHeightPerStep]="100" [animationDuration]="0.3" [stepHold]="0.5" (currentStepChange)="onStepChange($event)">
+  <div hijackedScrollItem slideDirection="left">Step 1</div>
 
-  <div hijackedScrollItem slideDirection="left">
-    Step 1
-  </div>
-
-  <div hijackedScrollItem slideDirection="right">
-    Step 2
-  </div>
+  <div hijackedScrollItem slideDirection="right">Step 2</div>
 </div>
 ```
 
@@ -228,15 +228,17 @@ progressChange    // Emits progress (0-1)
 **Selector**: `[hijackedScrollItem]`
 
 **Inputs**:
+
 ```typescript
-slideDirection: SlideDirection = 'none' // left|right|up|down|none
-fadeIn: boolean = true
-scale: boolean = true
-customFrom: Record<string, unknown>
-customTo: Record<string, unknown>
+slideDirection: SlideDirection = 'none'; // left|right|up|down|none
+fadeIn: boolean = true;
+scale: boolean = true;
+customFrom: Record<string, unknown>;
+customTo: Record<string, unknown>;
 ```
 
 **Slide Direction Offsets** (60px):
+
 - `'left'` → `{ x: -60, y: 0 }`
 - `'right'` → `{ x: 60, y: 0 }`
 - `'up'` → `{ x: 0, y: -60 }`
@@ -246,10 +248,7 @@ customTo: Record<string, unknown>
 **Example**:
 
 ```html
-<div hijackedScrollItem
-     [slideDirection]="'left'"
-     [fadeIn]="true"
-     [scale]="true">
+<div hijackedScrollItem [slideDirection]="'left'" [fadeIn]="true" [scale]="true">
   <h2>Step Title</h2>
 </div>
 ```
@@ -263,6 +262,7 @@ customTo: Record<string, unknown>
 **Selector**: `[scrollSectionPin]`
 
 **Inputs**:
+
 ```typescript
 pinDuration: string = '300px'          // '300px', '50vh'
 start: string = 'top top'
@@ -274,22 +274,17 @@ markers: boolean = false
 ```
 
 **Outputs**:
+
 ```typescript
-pinProgress // Progress (0-1)
-pinned      // true/false
-pinComplete // Completion event
+pinProgress; // Progress (0-1)
+pinned; // true/false
+pinComplete; // Completion event
 ```
 
 **Example**:
 
 ```html
-<section
-  scrollSectionPin
-  [pinDuration]="'300px'"
-  [start]="'top center'"
-  (pinProgress)="onProgress($event)">
-  Content
-</section>
+<section scrollSectionPin [pinDuration]="'300px'" [start]="'top center'" (pinProgress)="onProgress($event)">Content</section>
 ```
 
 ---
@@ -301,9 +296,10 @@ pinComplete // Completion event
 **Selector**: `[viewportAnimation]`
 
 **Public Methods**:
+
 ```typescript
-replay() // Replay animation
-reset()  // Reset to initial state
+replay(); // Replay animation
+reset(); // Reset to initial state
 ```
 
 **Configuration**: `[viewportConfig]="config"`
@@ -311,44 +307,34 @@ reset()  // Reset to initial state
 ```typescript
 interface ViewportAnimationConfig {
   animation?: ViewportAnimationType;
-  duration?: number;           // Default: 0.6
+  duration?: number; // Default: 0.6
   delay?: number;
-  ease?: string;               // Default: 'power2.out'
-  threshold?: number;          // 0-1, default: 0.1
-  rootMargin?: string;         // Default: '0px'
-  once?: boolean;              // Default: true
+  ease?: string; // Default: 'power2.out'
+  threshold?: number; // 0-1, default: 0.1
+  rootMargin?: string; // Default: '0px'
+  once?: boolean; // Default: true
   stagger?: number;
   staggerTarget?: string;
   from?: gsap.TweenVars;
   to?: gsap.TweenVars;
-  distance?: number;           // For slide animations (default: 50)
-  scale?: number;              // For scale animations (default: 0.9)
-  rotation?: number;           // For rotate animations (default: 15)
+  distance?: number; // For slide animations (default: 50)
+  scale?: number; // For scale animations (default: 0.9)
+  rotation?: number; // For rotate animations (default: 15)
 }
 ```
 
 **Animation Types**:
+
 ```typescript
-type ViewportAnimationType =
-  | 'fadeIn'
-  | 'fadeOut'
-  | 'slideUp'
-  | 'slideDown'
-  | 'slideLeft'
-  | 'slideRight'
-  | 'scaleIn'
-  | 'scaleOut'
-  | 'rotateIn'
-  | 'flipIn'
-  | 'bounceIn'
-  | 'custom';
+type ViewportAnimationType = 'fadeIn' | 'fadeOut' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'scaleIn' | 'scaleOut' | 'rotateIn' | 'flipIn' | 'bounceIn' | 'custom';
 ```
 
 **Outputs**:
+
 ```typescript
-viewportEnter
-viewportLeave
-animationComplete
+viewportEnter;
+viewportLeave;
+animationComplete;
 ```
 
 **Examples**:
@@ -364,7 +350,8 @@ animationComplete
     animation: 'slideUp',
     duration: 0.8,
     threshold: 0.2
-  }">
+  }"
+>
   Content
 </div>
 
@@ -375,7 +362,8 @@ animationComplete
     animation: 'slideUp',
     stagger: 0.1,
     staggerTarget: 'li'
-  }">
+  }"
+>
   <li>Item 1</li>
   <li>Item 2</li>
 </ul>
@@ -390,16 +378,18 @@ animationComplete
 **Selector**: `[sectionSticky]`
 
 **Inputs**:
+
 ```typescript
-stickyThreshold: number = 0.0
-stickyRootMargin: string = '0px'
-stickyDebounce: number = 50
-stickyDebug: boolean = false
+stickyThreshold: number = 0.0;
+stickyRootMargin: string = '0px';
+stickyDebounce: number = 50;
+stickyDebug: boolean = false;
 ```
 
 **Outputs**:
+
 ```typescript
-inViewChange // true/false when section enters/leaves
+inViewChange; // true/false when section enters/leaves
 ```
 
 **CSS Integration**:
@@ -410,7 +400,7 @@ inViewChange // true/false when section enters/leaves
   opacity: 0;
 }
 
-[data-section-in-view="true"] .section-sticky-target {
+[data-section-in-view='true'] .section-sticky-target {
   position: fixed;
   opacity: 1;
   top: 0;
@@ -421,13 +411,8 @@ inViewChange // true/false when section enters/leaves
 **Example**:
 
 ```html
-<section
-  sectionSticky
-  [stickyThreshold]="0.2">
-
-  <nav class="section-sticky-target">
-    Sticky nav
-  </nav>
+<section sectionSticky [stickyThreshold]="0.2">
+  <nav class="section-sticky-target">Sticky nav</nav>
 </section>
 ```
 
@@ -442,19 +427,15 @@ inViewChange // true/false when section enters/leaves
 **Input**: `[lenisConfig]="config"`
 
 **Outputs**:
+
 ```typescript
-lenisScroll // Scroll event data
+lenisScroll; // Scroll event data
 ```
 
 **Example**:
 
 ```html
-<main
-  lenisSmoothScroll
-  [lenisConfig]="{ lerp: 0.08 }"
-  (lenisScroll)="onScroll($event)">
-  Content
-</main>
+<main lenisSmoothScroll [lenisConfig]="{ lerp: 0.08 }" (lenisScroll)="onScroll($event)">Content</main>
 ```
 
 ---
@@ -466,18 +447,17 @@ lenisScroll // Scroll event data
 **Selector**: `[parallaxSplitItem]`
 
 **Inputs**:
+
 ```typescript
-imageSrc: string // Required
-imageAlt: string = ''
-layout: SplitLayout = 'left' // left|right
+imageSrc: string; // Required
+imageAlt: string = '';
+layout: SplitLayout = 'left'; // left|right
 ```
 
 **Example**:
 
 ```html
-<div parallaxSplitItem
-     [imageSrc]="'/assets/step1.jpg'"
-     [layout]="'left'">
+<div parallaxSplitItem [imageSrc]="'/assets/step1.jpg'" [layout]="'left'">
   <h3>Title</h3>
 </div>
 ```
@@ -497,18 +477,164 @@ layout: SplitLayout = 'left' // left|right
 **Example**:
 
 ```html
-<agsp-hijacked-scroll-timeline
-  [scrollHeightPerStep]="100"
-  (currentStepChange)="onStepChange($event)">
+<agsp-hijacked-scroll-timeline [scrollHeightPerStep]="100" (currentStepChange)="onStepChange($event)">
+  <div hijackedScrollItem slideDirection="left">Step 1</div>
 
-  <div hijackedScrollItem slideDirection="left">
-    Step 1
-  </div>
-
-  <div hijackedScrollItem slideDirection="right">
-    Step 2
-  </div>
+  <div hijackedScrollItem slideDirection="right">Step 2</div>
 </agsp-hijacked-scroll-timeline>
+```
+
+---
+
+### ScrollTimelineComponent
+
+**Purpose**: Enhanced scroll timeline with built-in step indicator and animations.
+
+**Selector**: `agsp-scroll-timeline`
+
+**Inputs**:
+
+```typescript
+scrollHeightPerStep: number = 900       // vh per step
+start: string = 'top top'               // ScrollTrigger start
+animationDuration: number = 0.8         // seconds
+ease: string = 'power3.inOut'           // GSAP easing
+scrub: number = 1.5                     // Smooth scroll linking
+stepHold: number = 0.9                  // Hold multiplier between steps
+showStepIndicator: boolean = true       // Show/hide step dots
+stepIndicatorPosition: 'left' | 'right' = 'left'
+```
+
+**Outputs**:
+
+```typescript
+currentStepChange; // Emits step index (0-based)
+progressChange; // Emits progress (0-1)
+```
+
+**Example (from Value Propositions showcase)**:
+
+```html
+<agsp-scroll-timeline [scrollHeightPerStep]="900" [start]="'top top'" [animationDuration]="0.8" [ease]="'power3.inOut'" [scrub]="1.5" [stepHold]="0.9" [showStepIndicator]="true" [stepIndicatorPosition]="'left'" (currentStepChange)="onStepChange($event)">
+  @for (section of sections(); track section.id; let i = $index) {
+  <div hijackedScrollItem [slideDirection]="i % 2 === 0 ? 'left' : 'right'" [fadeIn]="true" [scale]="true">
+    <!-- Fullscreen slide content -->
+    <div class="h-screen w-screen flex">
+      <!-- 50/50 split layout -->
+    </div>
+  </div>
+  }
+</agsp-scroll-timeline>
+```
+
+---
+
+### FeatureShowcaseTimelineComponent
+
+**Purpose**: Feature showcase wrapper with consistent theming and hero section support.
+
+**Selector**: `agsp-feature-showcase-timeline`
+
+**Inputs**:
+
+```typescript
+colorTheme: 'indigo' | 'emerald' | 'purple' | 'cyan' = 'indigo'
+```
+
+**Content Slots**:
+
+- `featureHero` - Hero section at the top
+- Default content - Feature sections
+
+**Example (from Angular GSAP Section showcase)**:
+
+```html
+<agsp-feature-showcase-timeline [colorTheme]="'emerald'">
+  <!-- Hero Section -->
+  <div featureHero class="relative text-center py-16">
+    <div viewportAnimation [viewportConfig]="{ animation: 'scaleIn', duration: 0.6 }">
+      <span
+        class="inline-flex items-center gap-2 px-6 py-2 bg-emerald-500/20
+                   border border-emerald-400/30 rounded-full text-emerald-300 mb-6"
+      >
+        SCROLL ANIMATION LAYER
+      </span>
+    </div>
+
+    <h2 viewportAnimation [viewportConfig]="{ animation: 'slideUp', duration: 0.8, delay: 0.1 }">
+      <span class="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent"> Angular GSAP </span>
+    </h2>
+  </div>
+
+  <!-- Feature steps go here -->
+</agsp-feature-showcase-timeline>
+```
+
+---
+
+### SplitPanelSectionComponent
+
+**Purpose**: 50/50 split layout with image and content, supports parallax.
+
+**Selector**: `agsp-split-panel-section`
+
+**Inputs**:
+
+```typescript
+layout: 'image-left' | 'image-right' = 'image-left'
+parallaxSpeed: number = 0.6             // Image parallax speed
+colorTheme: 'indigo' | 'emerald' | 'purple' | 'cyan' = 'indigo'
+```
+
+**Content Directives**:
+
+- `splitPanelImage` - Image element
+- `splitPanelBadge` - Step badge/number
+- `splitPanelTitle` - Section title
+- `splitPanelDescription` - Description text
+- `splitPanelFeatures` - Feature list container
+
+**Example (from Angular GSAP Section showcase)**:
+
+```html
+<agsp-split-panel-section [layout]="'image-right'" [parallaxSpeed]="0.6" [colorTheme]="'emerald'">
+  <!-- Image with parallax -->
+  <img splitPanelImage [ngSrc]="'/images/step1.png'" alt="Step 1" fill priority class="object-cover scale-110" />
+
+  <!-- Badge with step number -->
+  <div splitPanelBadge class="inline-flex items-center gap-3 mb-8">
+    <span
+      class="flex items-center justify-center w-16 h-16 rounded-full
+                 bg-gradient-to-br from-emerald-500 to-cyan-600
+                 text-white font-bold text-2xl shadow-lg shadow-emerald-500/30"
+    >
+      01
+    </span>
+    <div class="h-px flex-1 bg-gradient-to-r from-emerald-500/50 to-transparent max-w-[150px]"></div>
+  </div>
+
+  <!-- Title -->
+  <h3 splitPanelTitle class="text-5xl font-bold text-white mb-6 leading-tight">ScrollAnimationDirective</h3>
+
+  <!-- Description -->
+  <p splitPanelDescription class="text-xl text-gray-300 leading-relaxed mb-8">Apply scroll-triggered animations to any DOM element with a simple directive.</p>
+
+  <!-- Features List -->
+  <div splitPanelFeatures class="space-y-4">
+    <div class="flex items-start gap-3">
+      <svg class="w-6 h-6 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <p class="text-base text-gray-400">10+ built-in animation types</p>
+    </div>
+    <div class="flex items-start gap-3">
+      <svg class="w-6 h-6 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <p class="text-base text-gray-400">Custom from/to with GSAP TweenVars</p>
+    </div>
+  </div>
+</agsp-split-panel-section>
 ```
 
 ---
@@ -523,11 +649,7 @@ layout: SplitLayout = 'left' // left|right
 
 ```html
 <agsp-parallax-split-scroll>
-  <div parallaxSplitItem
-       [imageSrc]="imagePath1"
-       [layout]="'left'">
-    Content
-  </div>
+  <div parallaxSplitItem [imageSrc]="imagePath1" [layout]="'left'">Content</div>
 </agsp-parallax-split-scroll>
 ```
 
@@ -540,14 +662,16 @@ layout: SplitLayout = 'left' // left|right
 **Purpose**: Centralized GSAP access with SSR safety.
 
 **Properties**:
+
 ```typescript
-gsap: typeof gsap | null
-scrollTrigger: typeof ScrollTrigger | null
-isBrowser: boolean
-isInitialized: Signal<boolean>
+gsap: typeof gsap | null;
+scrollTrigger: typeof ScrollTrigger | null;
+isBrowser: boolean;
+isInitialized: Signal<boolean>;
 ```
 
 **Methods**:
+
 ```typescript
 createContext(func, scope?)
 ```
@@ -574,22 +698,25 @@ export const appConfig: ApplicationConfig = {
 **Purpose**: Centralized Lenis smooth scroll management.
 
 **Signals**:
+
 ```typescript
-isInitialized: Signal<boolean>
-scroll: Signal<number>
-progress: Signal<number>
-velocity: Signal<number>
-direction: Signal<number>
-isScrolling: Signal<boolean | 'native' | 'smooth'>
+isInitialized: Signal<boolean>;
+scroll: Signal<number>;
+progress: Signal<number>;
+velocity: Signal<number>;
+direction: Signal<number>;
+isScrolling: Signal<boolean | 'native' | 'smooth'>;
 ```
 
 **Computed**:
+
 ```typescript
-isAtTop: Signal<boolean>
-isAtBottom: Signal<boolean>
+isAtTop: Signal<boolean>;
+isAtBottom: Signal<boolean>;
 ```
 
 **Methods**:
+
 ```typescript
 initialize(options)
 scrollTo(target, options?)
@@ -600,8 +727,9 @@ destroy()
 ```
 
 **Property**:
+
 ```typescript
-lenis: Lenis | null
+lenis: Lenis | null;
 ```
 
 **Setup**:
@@ -650,7 +778,8 @@ export class AppComponent {
   [scrollConfig]="{
     animation: 'slideUp',
     stagger: 0.1
-  }">
+  }"
+>
   <p>Item 1</p>
   <p>Item 2</p>
   <p>Item 3</p>
@@ -664,22 +793,16 @@ config: ScrollAnimationConfig = {
   scrub: true,
   onUpdate: (progress) => {
     this.progressSignal.set(progress * 100);
-  }
+  },
 };
 ```
 
 ### Parallax Layers
 
 ```html
-<div scrollAnimation
-  [scrollConfig]="{ animation: 'parallax', speed: 0.3 }">
-  Background
-</div>
+<div scrollAnimation [scrollConfig]="{ animation: 'parallax', speed: 0.3 }">Background</div>
 
-<div scrollAnimation
-  [scrollConfig]="{ animation: 'parallax', speed: 0.6 }">
-  Midground
-</div>
+<div scrollAnimation [scrollConfig]="{ animation: 'parallax', speed: 0.6 }">Midground</div>
 ```
 
 ---
@@ -689,21 +812,21 @@ config: ScrollAnimationConfig = {
 ### Trigger Points
 
 ```typescript
-start: 'top 80%'       // Top of element at 80% down viewport
-start: 'center center' // Center aligned
-start: 'bottom top'    // Bottom at viewport top
-start: '+=100px'       // 100px offset
+start: 'top 80%'; // Top of element at 80% down viewport
+start: 'center center'; // Center aligned
+start: 'bottom top'; // Bottom at viewport top
+start: '+=100px'; // 100px offset
 ```
 
 ### Easing Functions
 
 ```typescript
-ease: 'power1.out'     // Smooth
-ease: 'power2.out'     // Common choice
-ease: 'power3.inOut'   // Dramatic
-ease: 'back.out'       // Bounce
-ease: 'elastic.out'    // Spring
-ease: 'none'           // Linear (parallax)
+ease: 'power1.out'; // Smooth
+ease: 'power2.out'; // Common choice
+ease: 'power3.inOut'; // Dramatic
+ease: 'back.out'; // Bounce
+ease: 'elastic.out'; // Spring
+ease: 'none'; // Linear (parallax)
 ```
 
 ### Duration & Delay
@@ -717,10 +840,10 @@ duration: 1.5, delay: 0.2    // Emphasized
 ### Parallax Speed
 
 ```typescript
-speed: 0.3  // Very slow
-speed: 0.5  // Half speed
-speed: 1    // Normal
-speed: 1.5  // Faster
+speed: 0.3; // Very slow
+speed: 0.5; // Half speed
+speed: 1; // Normal
+speed: 1.5; // Faster
 ```
 
 ---
@@ -780,38 +903,16 @@ export class AppComponent {
 
 ```typescript
 // Directives
-import {
-  ScrollAnimationDirective,
-  ScrollAnimationConfig,
-  AnimationType,
-  HijackedScrollDirective,
-  HijackedScrollItemDirective,
-  ScrollSectionPinDirective,
-  ViewportAnimationDirective,
-  ViewportAnimationConfig,
-  ViewportAnimationType,
-  SectionStickyDirective,
-  ParallaxSplitItemDirective,
-  LenisSmoothScrollDirective,
-} from '@hive-academy/angular-gsap';
+import { ScrollAnimationDirective, ScrollAnimationConfig, AnimationType, HijackedScrollDirective, HijackedScrollItemDirective, ScrollSectionPinDirective, ViewportAnimationDirective, ViewportAnimationConfig, ViewportAnimationType, SectionStickyDirective, ParallaxSplitItemDirective, LenisSmoothScrollDirective } from '@hive-academy/angular-gsap';
 
 // Components
-import {
-  HijackedScrollTimelineComponent,
-  ParallaxSplitScrollComponent,
-} from '@hive-academy/angular-gsap';
+import { HijackedScrollTimelineComponent, ParallaxSplitScrollComponent } from '@hive-academy/angular-gsap';
 
 // Services
-import {
-  GsapCoreService,
-  LenisSmoothScrollService,
-} from '@hive-academy/angular-gsap';
+import { GsapCoreService, LenisSmoothScrollService } from '@hive-academy/angular-gsap';
 
 // Providers
-import {
-  provideGsap,
-  provideLenis,
-} from '@hive-academy/angular-gsap';
+import { provideGsap, provideLenis } from '@hive-academy/angular-gsap';
 ```
 
 ---

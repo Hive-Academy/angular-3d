@@ -1,4 +1,4 @@
-import { CommonModule, NgOptimizedImage } from '@angular/common';
+import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
@@ -29,7 +29,6 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
 @Component({
   selector: 'app-library-overview-section-v2',
   imports: [
-    CommonModule,
     NgOptimizedImage,
     RouterLink,
     FeatureShowcaseTimelineComponent,
