@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
   AmbientLightComponent,
@@ -17,7 +16,6 @@ import { SCENE_COLORS } from '../../../shared/colors';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     Scene3dComponent,
     HexagonalBackgroundInstancedComponent,
     BackgroundCubesComponent,

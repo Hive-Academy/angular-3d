@@ -1,6 +1,7 @@
 # RELEASE PR VALIDATION WORKFLOW
 # This workflow validates PRs targeting release branches before they can be merged.
-# It runs the full validation pipeline and adds a comment with release information.
+# It automatically bumps the patch version if needed, runs the full validation
+# pipeline, and adds a comment with release information.
 #
 # Required for branch protection status checks on:
 # - release/angular-3d
@@ -15,27 +16,32 @@ on:
       - 'release/angular-gsap'
 
 permissions:
-  contents: read
+  contents: write # Required to push version bump commits
   pull-requests: write
 
 jobs:
-  validate-release-pr:
+  # Job 1: Auto-bump version if it matches the published npm version
+  auto-version-bump:
     runs-on: ubuntu-latest
+    outputs:
+      package_name: ${{ steps.detect.outputs.package_name }}
+      package_path: ${{ steps.detect.outputs.package_path }}
+      version: ${{ steps.final-version.outputs.version }}
+      npm_version: ${{ steps.version.outputs.npm_version }}
+      was_bumped: ${{ steps.bump.outputs.was_bumped }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.head_ref }}
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
-
-      - name: Install dependencies
-        shell: bash
-        run: npm ci
 
       - name: Detect target package
         id: detect
@@ -64,7 +70,8 @@ jobs:
           NPM_LATEST=$(npm view "${{ steps.detect.outputs.package_name }}" version 2>/dev/null || echo "0.0.0")
           echo "npm_version=$NPM_LATEST" >> $GITHUB_OUTPUT
 
-      - name: Validate version bump
+      - name: Auto-bump patch version if needed
+        id: bump
         shell: bash
         run: |
           CURRENT="${{ steps.version.outputs.current_version }}"
@@ -73,13 +80,74 @@ jobs:
           echo "Current package.json version: $CURRENT"
           echo "Latest npm version: $NPM"
 
-          # Use semver comparison (basic)
           if [ "$CURRENT" = "$NPM" ]; then
-            echo "::error::Version $CURRENT already published to npm. Please bump the version."
+            echo "Version matches npm, auto-bumping patch version..."
+            cd ${{ steps.detect.outputs.package_path }}
+            npm version patch --no-git-tag-version
+            NEW_VERSION=$(node -p "require('./package.json').version")
+            echo "Bumped version to: $NEW_VERSION"
+            echo "was_bumped=true" >> $GITHUB_OUTPUT
+            echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "Version $CURRENT is already different from npm ($NPM), no bump needed"
+            echo "was_bumped=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push version bump
+        if: steps.bump.outputs.was_bumped == 'true'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ${{ steps.detect.outputs.package_path }}/package.json
+          git commit -m "chore(release): bump ${{ steps.detect.outputs.package_name }} to ${{ steps.bump.outputs.new_version }}"
+          git push
+
+      - name: Get final version
+        id: final-version
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./${{ steps.detect.outputs.package_path }}/package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+  # Job 2: Validate the release PR (runs after version bump)
+  validate-release-pr:
+    needs: auto-version-bump
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Validate version is ready for publish
+        shell: bash
+        run: |
+          VERSION="${{ needs.auto-version-bump.outputs.version }}"
+          NPM="${{ needs.auto-version-bump.outputs.npm_version }}"
+          WAS_BUMPED="${{ needs.auto-version-bump.outputs.was_bumped }}"
+
+          echo "Version to publish: $VERSION"
+          echo "Current npm version: $NPM"
+          echo "Was auto-bumped: $WAS_BUMPED"
+
+          if [ "$VERSION" = "$NPM" ]; then
+            echo "::error::Version $VERSION still matches npm. This should not happen after auto-bump."
             exit 1
           fi
 
-          echo "Version $CURRENT is valid for publishing"
+          echo "✓ Version $VERSION is valid for publishing"
 
       - name: Run full validation
         shell: bash
@@ -103,7 +171,7 @@ jobs:
       - name: Validate build output
         shell: bash
         run: |
-          DIST_PATH="dist/${{ steps.detect.outputs.package_path }}"
+          DIST_PATH="dist/${{ needs.auto-version-bump.outputs.package_path }}"
 
           if [[ ! -d "$DIST_PATH" ]]; then
             echo "::error::Build output not found"
@@ -116,31 +184,36 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const version = '${{ steps.version.outputs.current_version }}';
-            const package_name = '${{ steps.detect.outputs.package_name }}';
-            const npm_version = '${{ steps.version.outputs.npm_version }}';
+            const version = '${{ needs.auto-version-bump.outputs.version }}';
+            const package_name = '${{ needs.auto-version-bump.outputs.package_name }}';
+            const npm_version = '${{ needs.auto-version-bump.outputs.npm_version }}';
+            const was_bumped = '${{ needs.auto-version-bump.outputs.was_bumped }}';
 
-            const body = `## Release Validation Passed
+            const bumpNote = was_bumped === 'true'
+              ? `\n> **Note:** Version was automatically bumped from \`${npm_version}\` to \`${version}\`\n`
+              : '';
 
-            | Property | Value |
-            |----------|-------|
-            | **Package** | \`${package_name}\` |
-            | **Version to Publish** | \`${version}\` |
-            | **Current npm Version** | \`${npm_version}\` |
+            const body = `## 🚀 Release Validation Passed
+${bumpNote}
+| Property | Value |
+|----------|-------|
+| **Package** | \`${package_name}\` |
+| **Version to Publish** | \`${version}\` |
+| **Current npm Version** | \`${npm_version}\` |
 
-            ### Pre-Publish Checklist
-            - [x] Lint validation passed
-            - [x] Tests passed
-            - [x] Type checking passed
-            - [x] Build successful
-            - [x] Version bump validated
+### Pre-Publish Checklist
+- [x] Version bump validated (auto-bumped: ${was_bumped})
+- [x] Lint validation passed
+- [x] Tests passed
+- [x] Type checking passed
+- [x] Build successful
 
-            ### What happens on merge?
-            1. Package will be published to npm with provenance
-            2. Git tag \`${package_name}@${version}\` will be created
-            3. GitHub Release will be created
+### What happens on merge?
+1. Package will be published to npm with provenance
+2. Git tag \`${package_name}@${version}\` will be created
+3. GitHub Release will be created
 
-            **Merge this PR to publish to npm.**`;
+**Merge this PR to publish to npm.**`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,

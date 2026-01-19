@@ -1,4 +1,4 @@
-import { CommonModule, NgOptimizedImage } from '@angular/common';
+import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import {
   FeatureShowcaseTimelineComponent,
@@ -31,7 +31,6 @@ import type { TimelineStep } from '../../../shared/types/timeline-step.interface
 @Component({
   selector: 'app-angular-3d-section',
   imports: [
-    CommonModule,
     NgOptimizedImage,
     FeatureShowcaseTimelineComponent,
     FeatureStepComponent,

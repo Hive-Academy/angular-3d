@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import {
   Scene3dComponent,
   InstancedMeshComponent,
@@ -26,7 +26,6 @@ import * as THREE from 'three/webgpu';
   selector: 'app-performance-section',
   standalone: true,
   imports: [
-    CommonModule,
     Scene3dComponent,
     InstancedMeshComponent,
     BoxGeometryDirective,

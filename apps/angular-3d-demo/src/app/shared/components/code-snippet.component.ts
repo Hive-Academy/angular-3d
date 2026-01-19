@@ -16,7 +16,6 @@
  * ```
  */
 
-import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -26,7 +25,7 @@ import {
 
 @Component({
   selector: 'app-code-snippet',
-  imports: [CommonModule],
+  imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="relative group">
