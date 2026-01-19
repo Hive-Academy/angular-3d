@@ -63,7 +63,13 @@ npm install @hive-academy/angular-3d three three-stdlib gsap maath troika-three-
 npm install @hive-academy/angular-gsap gsap lenis
 ```
 
-GitHub: https://github.com/hive-academy/angular-3d-workspace
+Demo : <https://hive-academy.github.io/angular-3d/>
+
+GitHub: <https://github.com/Hive-Academy/angular-3d>
+
+Angular Gsap NPM: <https://www.npmjs.com/package/@hive-academy/angular-gsap>
+
+Angular 3D NPM: <https://www.npmjs.com/package/@hive-academy/angular-3d>
 
 ---
 
@@ -129,7 +135,7 @@ import {
 npm install @hive-academy/angular-3d three three-stdlib gsap maath troika-three-text
 ```
 
-GitHub: https://github.com/hive-academy/angular-3d-workspace
+GitHub: <https://github.com/hive-academy/angular-3d-workspace>
 
 ---
 
@@ -185,7 +191,7 @@ npm install @hive-academy/angular-gsap gsap lenis
 
 Both are SSR compatible. MIT licensed.
 
-GitHub: https://github.com/hive-academy/angular-3d-workspace
+GitHub: <https://github.com/hive-academy/angular-3d-workspace>
 
 ---
 
@@ -203,7 +209,6 @@ Two Angular libraries we just open sourced:
 
 MIT licensed. Here's what they do:
 
-**Tweet 2:**
 angular-3d turns Three.js setup into template syntax:
 
 ```typescript
@@ -214,7 +219,6 @@ angular-3d turns Three.js setup into template syntax:
 
 Primitives, lights, text, particles, postprocessing. Cleanup handled automatically.
 
-**Tweet 3:**
 Includes 8 postprocessing effects:
 
 ```typescript
@@ -226,7 +230,6 @@ Includes 8 postprocessing effects:
 
 Plus GLTF loading, orbit controls, TSL shaders for WebGPU.
 
-**Tweet 4:**
 angular-gsap adds scroll animations via directives:
 
 ```typescript
@@ -235,7 +238,6 @@ angular-gsap adds scroll animations via directives:
 
 12 built-in animations: fade, slide, scale, parallax, bounce, flip.
 
-**Tweet 5:**
 For more control, hijacked scroll sequences:
 
 ```typescript
@@ -247,7 +249,6 @@ For more control, hijacked scroll sequences:
 
 Viewport pinned while scrolling through steps.
 
-**Tweet 6:**
 Install:
 
 ```bash
@@ -258,7 +259,6 @@ npm install @hive-academy/angular-gsap gsap lenis
 
 Docs: github.com/hive-academy/angular-3d-workspace
 
-**Tweet 7:**
 This is our first public release. If you try it, we'd appreciate feedback.
 
 What's the API like to work with? Anything confusing?
@@ -323,7 +323,7 @@ npm install @hive-academy/angular-3d three three-stdlib gsap maath troika-three-
 npm install @hive-academy/angular-gsap gsap lenis
 ```
 
-GitHub: https://github.com/hive-academy/angular-3d-workspace
+GitHub: <https://github.com/hive-academy/angular-3d-workspace>
 
 First release. If you try it, let us know what works and what doesn't. Thanks.
 
@@ -372,7 +372,7 @@ Install:
 npm install @hive-academy/angular-3d three three-stdlib gsap maath troika-three-text
 ```
 
-GitHub: https://github.com/hive-academy/angular-3d-workspace
+GitHub: <https://github.com/hive-academy/angular-3d-workspace>
 
 First release. Feedback on the API design would help. Does the component nesting make sense? Is postprocessing setup clear? Thanks.
 
@@ -408,12 +408,12 @@ Both libraries use modern Angular patterns: standalone components, signal inputs
 
 MIT licensed.
 
-GitHub: https://github.com/hive-academy/angular-3d-workspace
+GitHub: <https://github.com/hive-academy/angular-3d-workspace>
 
 npm:
 
-- https://www.npmjs.com/package/@hive-academy/angular-3d
-- https://www.npmjs.com/package/@hive-academy/angular-gsap
+- <https://www.npmjs.com/package/@hive-academy/angular-3d>
+- <https://www.npmjs.com/package/@hive-academy/angular-gsap>
 
 ---
 

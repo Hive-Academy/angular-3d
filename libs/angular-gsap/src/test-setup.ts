@@ -1,5 +1,6 @@
-import 'jest-preset-angular/setup-jest';
+import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
 
+setupZoneTestEnv();
 // Mock GSAP for animation tests
 // The directives use: import { gsap } from 'gsap'
 // And import { ScrollTrigger } from 'gsap/ScrollTrigger'

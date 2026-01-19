@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
   ScrollAnimationDirective,
@@ -21,7 +20,7 @@ import {
  */
 @Component({
   selector: 'app-problem-solution-section',
-  imports: [CommonModule, ScrollAnimationDirective, ViewportAnimationDirective],
+  imports: [ScrollAnimationDirective, ViewportAnimationDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- Dark immersive background matching angular-3d-section -->
