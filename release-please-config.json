@@ -38,6 +38,6 @@
   ],
   "pull-request-title-pattern": "chore(release): ${component} ${version}",
   "pull-request-header": "## Release PR\n\nThis PR was automatically created by [Release Please](https://github.com/googleapis/release-please).\n\n**Merge this PR to publish to npm.**",
-  "group-pull-request-title-pattern": "chore(release): ${component} ${version}",
-  "separate-pull-requests": true
+  "group-pull-request-title-pattern": "chore(release): release ${version}",
+  "separate-pull-requests": false
 }
