@@ -20,8 +20,27 @@ permissions:
   pull-requests: write
 
 jobs:
+  # Job 0: Skip if triggered by bot commit (prevent infinite loop)
+  check-trigger:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - name: Check if triggered by bot
+        id: check
+        shell: bash
+        run: |
+          if [[ "${{ github.event.head_commit.author.name }}" == "github-actions[bot]" ]]; then
+            echo "Skipping workflow - triggered by bot commit"
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          else
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          fi
+
   # Job 1: Auto-bump version if it matches the published npm version
   auto-version-bump:
+    needs: check-trigger
+    if: needs.check-trigger.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     outputs:
       package_name: ${{ steps.detect.outputs.package_name }}
@@ -113,6 +132,7 @@ jobs:
   # Job 2: Validate the release PR (runs after version bump)
   validate-release-pr:
     needs: auto-version-bump
+    if: needs.auto-version-bump.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -120,6 +140,12 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
+
+      - name: Pull latest changes
+        shell: bash
+        run: |
+          # Ensure we have the latest commit (including any version bump from Job 1)
+          git pull origin ${{ github.head_ref }} --ff-only || true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -131,10 +157,18 @@ jobs:
         shell: bash
         run: npm ci
 
+      - name: Get current version from file
+        id: current-version
+        shell: bash
+        run: |
+          # Read version directly from file to ensure we have the latest
+          VERSION=$(node -p "require('./${{ needs.auto-version-bump.outputs.package_path }}/package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Validate version is ready for publish
         shell: bash
         run: |
-          VERSION="${{ needs.auto-version-bump.outputs.version }}"
+          VERSION="${{ steps.current-version.outputs.version }}"
           NPM="${{ needs.auto-version-bump.outputs.npm_version }}"
           WAS_BUMPED="${{ needs.auto-version-bump.outputs.was_bumped }}"
 
@@ -184,7 +218,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const version = '${{ needs.auto-version-bump.outputs.version }}';
+            const version = '${{ steps.current-version.outputs.version }}';
             const package_name = '${{ needs.auto-version-bump.outputs.package_name }}';
             const npm_version = '${{ needs.auto-version-bump.outputs.npm_version }}';
             const was_bumped = '${{ needs.auto-version-bump.outputs.was_bumped }}';
@@ -194,26 +228,26 @@ jobs:
               : '';
 
             const body = `## 🚀 Release Validation Passed
-${bumpNote}
-| Property | Value |
-|----------|-------|
-| **Package** | \`${package_name}\` |
-| **Version to Publish** | \`${version}\` |
-| **Current npm Version** | \`${npm_version}\` |
+            ${bumpNote}
+            | Property | Value |
+            |----------|-------|
+            | **Package** | \`${package_name}\` |
+            | **Version to Publish** | \`${version}\` |
+            | **Current npm Version** | \`${npm_version}\` |
 
-### Pre-Publish Checklist
-- [x] Version bump validated (auto-bumped: ${was_bumped})
-- [x] Lint validation passed
-- [x] Tests passed
-- [x] Type checking passed
-- [x] Build successful
+            ### Pre-Publish Checklist
+            - [x] Version bump validated (auto-bumped: ${was_bumped})
+            - [x] Lint validation passed
+            - [x] Tests passed
+            - [x] Type checking passed
+            - [x] Build successful
 
-### What happens on merge?
-1. Package will be published to npm with provenance
-2. Git tag \`${package_name}@${version}\` will be created
-3. GitHub Release will be created
+            ### What happens on merge?
+            1. Package will be published to npm with provenance
+            2. Git tag \`${package_name}@${version}\` will be created
+            3. GitHub Release will be created
 
-**Merge this PR to publish to npm.**`;
+            **Merge this PR to publish to npm.**`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
