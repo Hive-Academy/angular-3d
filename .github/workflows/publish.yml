@@ -1,12 +1,18 @@
-# TAG-BASED RELEASE WORKFLOW
-# This workflow is triggered when git tags are pushed.
-# Use this for: Emergency hotfixes, automated releases
+# TAG-BASED RELEASE WORKFLOW (EMERGENCY USE ONLY)
+# This workflow is triggered when git tags are pushed manually.
 #
-# For standard releases with PR review, use the branch-based workflow:
-# - Create PR to release/angular-3d or release/angular-gsap
-# - See docs/publishing/README.md for details
+# ⚠️ IMPORTANT: For standard releases, just merge PRs to main.
+# Release Please will automatically create release PRs and publish.
+#
+# Use this workflow ONLY for:
+# - Emergency hotfixes that bypass the normal flow
+# - Manual re-publishing of failed releases
+#
+# To use:
+#   git tag "@hive-academy/angular-3d@1.2.3"
+#   git push origin "@hive-academy/angular-3d@1.2.3"
 
-name: Publish to NPM
+name: Publish to NPM (Manual Tag)
 
 on:
   push:

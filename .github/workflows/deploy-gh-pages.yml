@@ -1,15 +1,19 @@
 name: Deploy to GitHub Pages
 
-# Task 2.1: Trigger using workflow_run to wait for CI completion
-# Pattern: workflow_run event ensures deployment only runs after CI passes
-# Research: Task 1.3 confirmed needs: [ci] doesn't work across workflow files
+# TEMPORARILY DISABLED
+# Uncomment the 'on' block below to re-enable
+#
+# on:
+#   workflow_run:
+#     workflows: ['CI']
+#     types:
+#       - completed
+#     branches:
+#       - main
+
+# Disabled - manual trigger only for now
 on:
-  workflow_run:
-    workflows: ['CI'] # Must match name in .github/workflows/ci.yml
-    types:
-      - completed
-    branches:
-      - main
+  workflow_dispatch:
 
 # Top-level permissions for safety (deploy job has its own)
 # Pattern from: .github/workflows/ci.yml:9-11
