@@ -1,0 +1,125 @@
+# RELEASE PLEASE WORKFLOW
+# This workflow automates versioning and releases using Google's Release Please.
+#
+# How it works:
+# 1. On every push to main, Release Please analyzes conventional commits
+# 2. It creates/updates a "Release PR" with version bumps and CHANGELOG
+# 3. When you merge the Release PR, it creates tags and GitHub releases
+# 4. The publish workflow then publishes to npm
+#
+# Commit types and their effects:
+# - feat: → minor version bump (1.0.0 → 1.1.0)
+# - fix: → patch version bump (1.0.0 → 1.0.1)
+# - feat!: or BREAKING CHANGE: → major version bump (1.0.0 → 2.0.0)
+# - chore:, docs:, style:, refactor:, test: → no version bump
+#
+# For monorepo packages, use scopes:
+# - feat(angular-3d): new feature → bumps @hive-academy/angular-3d
+# - fix(angular-gsap): bug fix → bumps @hive-academy/angular-gsap
+
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      angular-3d--release_created: ${{ steps.release.outputs['libs/angular-3d--release_created'] }}
+      angular-3d--tag_name: ${{ steps.release.outputs['libs/angular-3d--tag_name'] }}
+      angular-3d--version: ${{ steps.release.outputs['libs/angular-3d--version'] }}
+      angular-gsap--release_created: ${{ steps.release.outputs['libs/angular-gsap--release_created'] }}
+      angular-gsap--tag_name: ${{ steps.release.outputs['libs/angular-gsap--tag_name'] }}
+      angular-gsap--version: ${{ steps.release.outputs['libs/angular-gsap--version'] }}
+    steps:
+      - name: Run Release Please
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  # Publish @hive-academy/angular-3d when released
+  publish-angular-3d:
+    needs: release-please
+    if: needs.release-please.outputs.angular-3d--release_created == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # For npm provenance
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npx nx build angular-3d
+
+      - name: Publish to npm
+        run: |
+          cd dist/libs/angular-3d
+          npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "## 🚀 Published @hive-academy/angular-3d@${{ needs.release-please.outputs.angular-3d--version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag:** ${{ needs.release-please.outputs.angular-3d--tag_name }}" >> $GITHUB_STEP_SUMMARY
+
+  # Publish @hive-academy/angular-gsap when released
+  publish-angular-gsap:
+    needs: release-please
+    if: needs.release-please.outputs.angular-gsap--release_created == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # For npm provenance
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npx nx build angular-gsap
+
+      - name: Publish to npm
+        run: |
+          cd dist/libs/angular-gsap
+          npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "## 🚀 Published @hive-academy/angular-gsap@${{ needs.release-please.outputs.angular-gsap--version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag:** ${{ needs.release-please.outputs.angular-gsap--tag_name }}" >> $GITHUB_STEP_SUMMARY
