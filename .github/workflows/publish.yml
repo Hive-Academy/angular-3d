@@ -1,28 +1,31 @@
-# TAG-BASED RELEASE WORKFLOW (EMERGENCY USE ONLY)
-# This workflow is triggered when git tags are pushed manually.
+# MANUAL PUBLISH WORKFLOW (EMERGENCY / RECOVERY USE ONLY)
+# This workflow is triggered manually from the Actions tab.
 #
 # ⚠️ IMPORTANT: For standard releases, just merge PRs to main.
-# Release Please will automatically create release PRs and publish.
+# Release Please creates the release PR, and on merge it tags and
+# publishes via the publish jobs in release-please.yml. That is the
+# single automatic publish path.
 #
 # Use this workflow ONLY for:
 # - Emergency hotfixes that bypass the normal flow
-# - Manual re-publishing of failed releases
+# - Manual re-publishing of a release that failed to publish
 #
-# To use:
-#   git tag "@hive-academy/angular-3d@1.2.3"
-#   git push origin "@hive-academy/angular-3d@1.2.3"
+# To use: Actions tab -> "Publish to NPM (Manual)" -> Run workflow ->
+# enter the tag, e.g. @hive-academy/angular-3d@1.2.3
 
-name: Publish to NPM (Manual Tag)
+name: Publish to NPM (Manual)
 
 on:
-  push:
-    tags:
-      - '@hive-academy/angular-3d@*'
-      - '@hive-academy/angular-gsap@*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to publish (e.g. @hive-academy/angular-3d@1.2.3)'
+        required: true
+        type: string
 
-# Issue 7 Fix: Concurrency control to prevent race conditions when multiple tags are pushed
+# Concurrency control keyed on the requested tag
 concurrency:
-  group: publish-${{ github.ref }}
+  group: publish-${{ inputs.tag }}
   cancel-in-progress: false
 
 permissions:
@@ -36,6 +39,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.tag }} # Check out the exact tag being published
           fetch-depth: 0 # Full history for changelog
 
       - name: Setup Node.js
@@ -70,7 +74,7 @@ jobs:
         id: extract
         shell: bash
         run: |
-          TAG=${GITHUB_REF#refs/tags/}
+          TAG="${{ inputs.tag }}"
           PACKAGE_NAME=$(echo $TAG | sed 's/@[^@]*$//')
           VERSION=$(echo $TAG | sed 's/.*@//')
           echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
