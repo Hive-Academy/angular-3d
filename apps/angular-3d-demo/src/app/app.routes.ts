@@ -240,6 +240,7 @@ export const appRoutes: Routes = [
         (m) => m.NewpassiveHeroComponent
       ),
     title: 'NEWPASSIVE - Connecting Science to Global Wellness',
+    data: { chrome: false },
   },
   {
     path: 'angular-gsap',
