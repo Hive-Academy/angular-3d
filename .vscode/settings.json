@@ -1,1 +1,4 @@
-{}
+{
+  "ptah.model.selected": "default",
+  "ptah.browser.allowLocalhost": true
+}
