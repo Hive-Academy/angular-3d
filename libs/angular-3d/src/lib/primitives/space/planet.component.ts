@@ -19,11 +19,27 @@ import { injectTextureLoader } from '../../loaders/inject-texture-loader';
 export class PlanetComponent implements OnDestroy {
   // Transform inputs
   public readonly position = input<[number, number, number]>([0, 0, 0]);
+  public readonly rotation = input<[number, number, number]>([0, 0, 0]);
   public readonly radius = input<number>(6.5);
   public readonly segments = input<number>(64);
 
   // Texture input
   public readonly textureUrl = input<string | null>(null);
+
+  /**
+   * Optional emissive (night-lights) map URL. When set, the texture is used as
+   * an `emissiveMap` so bright areas (e.g. city lights) self-illuminate
+   * independent of scene lighting. Point it at the same albedo for a glowing
+   * night-earth. Default: null (no self-illumination map).
+   */
+  public readonly emissiveMapUrl = input<string | null>(null);
+
+  /**
+   * Bump-map strength. When > 0 the albedo texture is used as a bump map at
+   * this scale for surface relief. Default: 0 (off) — a color texture makes a
+   * poor bump map, so this is opt-in.
+   */
+  public readonly bumpScale = input<number>(0);
 
   // Material inputs
   public readonly color = input<string | number>(0xcccccc);
@@ -83,6 +99,9 @@ export class PlanetComponent implements OnDestroy {
   // Actually, 'injectTextureLoader' takes a signal function. So it IS reactive.
   // It returns a signal 'Resource<Texture>'.
   private readonly textureResource = injectTextureLoader(this.textureUrl);
+  private readonly emissiveTextureResource = injectTextureLoader(
+    this.emissiveMapUrl
+  );
 
   private mesh: THREE.Mesh | null = null;
   private geometry: THREE.SphereGeometry | null = null;
@@ -104,10 +123,12 @@ export class PlanetComponent implements OnDestroy {
       const glowIntensity = this.glowIntensity();
       const glowColor = this.glowColor();
       const glowDistance = this.glowDistance();
+      const bumpScale = this.bumpScale();
 
-      // Texture dependency
+      // Texture dependencies
       // Access  data signal directly from the resource object
       const textureData = this.textureResource.data();
+      const emissiveTextureData = this.emissiveTextureResource.data();
 
       this.rebuildPlanet(
         radius,
@@ -121,7 +142,9 @@ export class PlanetComponent implements OnDestroy {
         glowIntensity,
         glowColor,
         glowDistance,
-        textureData
+        textureData,
+        emissiveTextureData,
+        bumpScale
       );
 
       onCleanup(() => {
@@ -133,6 +156,7 @@ export class PlanetComponent implements OnDestroy {
     effect(() => {
       if (this.mesh) {
         this.mesh.position.set(...this.position());
+        this.mesh.rotation.set(...this.rotation());
         // Update light position if it exists
         if (this.light) {
           this.light.position.set(...this.position());
@@ -153,7 +177,9 @@ export class PlanetComponent implements OnDestroy {
     glowIntensity: number,
     glowColor: string | number,
     glowDistance: number,
-    texture: THREE.Texture | null
+    texture: THREE.Texture | null,
+    emissiveTexture: THREE.Texture | null,
+    bumpScale: number
   ): void {
     // Dispose old
     this.disposeResources();
@@ -168,24 +194,41 @@ export class PlanetComponent implements OnDestroy {
     // Geometry
     this.geometry = new THREE.SphereGeometry(radius, segments, segments);
 
-    // Material with NodeMaterial pattern (direct property assignment)
-    // When texture exists: less metallic (0.1), more rough (0.9) for realistic appearance
-    // When no texture: use input values for metalness/roughness
+    // Material with NodeMaterial pattern (direct property assignment).
+    // Material inputs (metalness/roughness) are honored as-is — the material is
+    // deliberately unopinionated so callers control the look.
     this.material = new THREE.MeshStandardNodeMaterial();
     this.material.color = new THREE.Color(color);
     if (texture) {
+      texture.colorSpace = THREE.SRGBColorSpace; // sample albedo in sRGB
+      texture.anisotropy = 16; // stay sharp at grazing angles (the limb)
       this.material.map = texture;
-      this.material.bumpMap = texture; // Use texture as bump map for surface detail
-      this.material.bumpScale = 1; // Only apply bump when texture exists
+      // Bump is opt-in: a color texture is a poor height map, so only apply it
+      // when the caller explicitly sets a bumpScale.
+      if (bumpScale > 0) {
+        this.material.bumpMap = texture;
+        this.material.bumpScale = bumpScale;
+      }
     }
-    this.material.emissive = new THREE.Color(emissive); // Self-illumination color
-    this.material.emissiveIntensity = emissiveIntensity; // Self-illumination strength
-    this.material.metalness = texture ? 0.1 : metalness; // Conditional: textured planets less metallic
-    this.material.roughness = texture ? 0.9 : roughness; // Conditional: textured planets rougher
+    // Emissive: an emissive map (e.g. night-lights) self-illuminates bright
+    // areas; drive it white so the map's own colors show. Otherwise use the
+    // flat emissive color.
+    if (emissiveTexture) {
+      emissiveTexture.colorSpace = THREE.SRGBColorSpace;
+      emissiveTexture.anisotropy = 16;
+      this.material.emissiveMap = emissiveTexture;
+      this.material.emissive = new THREE.Color(0xffffff);
+    } else {
+      this.material.emissive = new THREE.Color(emissive);
+    }
+    this.material.emissiveIntensity = emissiveIntensity;
+    this.material.metalness = metalness;
+    this.material.roughness = roughness;
 
     // Mesh
     this.mesh = new THREE.Mesh(this.geometry, this.material);
     this.mesh.position.set(...this.position());
+    this.mesh.rotation.set(...this.rotation());
     this.mesh.scale.set(scale, scale, scale); // Apply scale multiplier
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;

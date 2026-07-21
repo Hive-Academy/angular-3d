@@ -77,7 +77,7 @@ import { ScrollAnimationDirective } from '../../directives/scroll/scroll-animati
 
           <!-- Projected image content with parallax wrapper -->
           <div
-            class="absolute inset-[-20%]"
+            [class]="imageContainerClasses()"
             scrollAnimation
             [scrollConfig]="{
               animation: 'parallax',
@@ -85,7 +85,10 @@ import { ScrollAnimationDirective } from '../../directives/scroll/scroll-animati
               scrub: true
             }"
           >
-            <ng-content select="[splitPanelImage]" />
+            <!-- Relative wrapper for NgOptimizedImage fill mode support -->
+            <div class="relative w-full h-full">
+              <ng-content select="[splitPanelImage]" />
+            </div>
           </div>
 
           <!-- Accent glow overlay -->
@@ -171,6 +174,14 @@ export class SplitPanelSectionComponent {
    */
   readonly scrub = input<number>(0.8);
 
+  /**
+   * Image inset percentage for parallax overflow effect
+   * Use negative values for zoom effect (-20 = zoomed in)
+   * Use 0 for no overflow (images fit container exactly)
+   * Default: -20 (20% overflow on all sides for parallax headroom)
+   */
+  readonly imageInset = input<number>(-20);
+
   // Computed: animation direction based on layout
   private readonly animationDirection = computed(() =>
     this.layout() === 'image-right' ? -1 : 1
@@ -229,5 +240,14 @@ export class SplitPanelSectionComponent {
       default:
         return 'bg-gradient-to-br from-emerald-500/10 to-cyan-500/10';
     }
+  });
+
+  /**
+   * Computed: Image container classes with dynamic inset
+   */
+  readonly imageContainerClasses = computed(() => {
+    const inset = this.imageInset();
+    // Use Tailwind's arbitrary value syntax for the inset
+    return `absolute inset-[${inset}%]`;
   });
 }

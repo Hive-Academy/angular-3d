@@ -17,7 +17,7 @@
  * ```
  */
 
-import { Directive, inject, effect, input } from '@angular/core';
+import { Directive, inject, effect, input, untracked } from '@angular/core';
 import { SceneGraphStore } from '../../store/scene-graph.store';
 import { OBJECT_ID } from '../../tokens/object-id.token';
 
@@ -63,15 +63,9 @@ export class TransformDirective {
     // Single effect for all transform updates
     // Runs whenever position, rotation, or scale changes
     effect(() => {
+      const objectId = this.objectId;
       // DEBUG: Skip if no OBJECT_ID
-      if (!this.objectId) {
-        return;
-      }
-
-      // Wait for object to be registered before updating
-      const hasObject = this.store.hasObject(this.objectId);
-
-      if (!hasObject) {
+      if (!objectId) {
         return;
       }
 
@@ -79,10 +73,19 @@ export class TransformDirective {
       const rot = this.rotation();
       const scl = this.scale();
 
-      this.store.update(this.objectId, {
-        position: pos,
-        rotation: rot,
-        scale: scl,
+      // The store applies the transform immediately when the object is
+      // registered, and queues it otherwise (flushed on registration).
+      // This avoids a race where objects created in afterNextRender
+      // (e.g. GroupDirective's THREE.Group) register AFTER this effect's
+      // first run and silently never receive their transform.
+      // untracked: the store read of its registry signal must not become
+      // a dependency of this effect (inputs are the only triggers).
+      untracked(() => {
+        this.store.update(objectId, {
+          position: pos,
+          rotation: rot,
+          scale: scl,
+        });
       });
     });
   }

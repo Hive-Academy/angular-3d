@@ -1,5 +1,9 @@
+@if (showChrome()) {
 <app-navigation />
+}
 <main class="min-h-screen">
   <router-outlet />
 </main>
+@if (showChrome()) {
 <app-footer />
+}

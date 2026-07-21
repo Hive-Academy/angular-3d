@@ -35,7 +35,7 @@ import { StandardMaterialDirective } from '../../directives/materials/standard-m
     { provide: OBJECT_ID, useFactory: () => `sphere-${crypto.randomUUID()}` },
   ],
   hostDirectives: [
-    MeshDirective,
+    { directive: MeshDirective, inputs: ['layer'] },
     { directive: SphereGeometryDirective, inputs: ['args'] },
     {
       directive: TransformDirective,
@@ -73,4 +73,10 @@ export class SphereComponent {
   public readonly roughness = input<number>(0.5);
   public readonly emissive = input<number | string>(0x000000);
   public readonly emissiveIntensity = input<number>(1);
+
+  /**
+   * Render layer (0-31) for selective bloom; enables the layer in addition
+   * to default layer 0. Null (default) leaves layers untouched.
+   */
+  public readonly layer = input<number | null>(null);
 }

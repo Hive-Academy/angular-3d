@@ -1,6 +1,6 @@
 # Angular 3D & GSAP Libraries
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/hive-academy/angular-3d-workspace/blob/main/LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Hive-Academy/angular-3d/blob/main/LICENSE)
 
 > Modern Angular libraries for building stunning 3D graphics and scroll animations
 
@@ -93,7 +93,7 @@ export class HeroComponent {}
 
 ```bash
 # Clone repository
-git clone https://github.com/hive-academy/angular-3d-workspace.git
+git clone https://github.com/Hive-Academy/angular-3d.git
 cd angular-3d-workspace
 
 # Install dependencies
@@ -169,7 +169,7 @@ Contributions are welcome! Please read our [Contributing Guide](./CONTRIBUTING.m
 
 ## 🔗 Links
 
-- [Report Issues](https://github.com/hive-academy/angular-3d-workspace/issues)
+- [Report Issues](https://github.com/Hive-Academy/angular-3d/issues)
 - [Angular Documentation](https://angular.dev)
 - [Three.js Documentation](https://threejs.org/docs/)
 - [GSAP Documentation](https://greensock.com/docs/)

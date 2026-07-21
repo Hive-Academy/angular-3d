@@ -27,6 +27,7 @@ import * as THREE from 'three/webgpu';
 import { MATERIAL_SIGNAL } from '../../tokens/material.token';
 import { SceneGraphStore } from '../../store/scene-graph.store';
 import { OBJECT_ID } from '../../tokens/object-id.token';
+import { injectTextureLoader } from '../../loaders/inject-texture-loader';
 
 /**
  * PhysicalMaterialDirective
@@ -130,8 +131,23 @@ export class PhysicalMaterialDirective {
    */
   public readonly wireframe = input<boolean>(false);
 
+  /** Optional albedo texture URL (e.g. a planet map on a glass sphere). */
+  public readonly textureUrl = input<string | null>(null);
+
+  /** Optional emissive (self-illumination) map URL, e.g. city lights. */
+  public readonly emissiveMapUrl = input<string | null>(null);
+
+  /** Emissive color used when no emissive map is set. Default: black (off). */
+  public readonly emissive = input<number | string>(0x000000);
+
+  /** Emissive intensity for the emissive color/map. Default: 1. */
+  public readonly emissiveIntensity = input<number>(1);
+
   /** Internal reference to created material */
   private material: THREE.MeshPhysicalNodeMaterial | null = null;
+
+  private readonly textureResource = injectTextureLoader(this.textureUrl);
+  private readonly emissiveResource = injectTextureLoader(this.emissiveMapUrl);
 
   public constructor() {
     // Single effect: Create material on first run, update on subsequent runs
@@ -146,6 +162,10 @@ export class PhysicalMaterialDirective {
       const transmission = this.transmission();
       const ior = this.ior();
       const thickness = this.thickness();
+      const texture = this.textureResource.data();
+      const emissiveTexture = this.emissiveResource.data();
+      const emissive = this.emissive();
+      const emissiveIntensity = this.emissiveIntensity();
 
       if (!this.material) {
         // First run: create material with NodeMaterial pattern (direct property assignment)
@@ -173,6 +193,24 @@ export class PhysicalMaterialDirective {
         this.material.thickness = thickness;
         this.material.needsUpdate = true;
       }
+
+      // Optional albedo / emissive maps (e.g. a glass earth with city lights).
+      // Max anisotropy keeps the texture sharp at grazing angles (the limb).
+      if (texture) {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = 16;
+        this.material.map = texture;
+      }
+      if (emissiveTexture) {
+        emissiveTexture.colorSpace = THREE.SRGBColorSpace;
+        emissiveTexture.anisotropy = 16;
+        this.material.emissiveMap = emissiveTexture;
+        this.material.emissive = new THREE.Color(0xffffff);
+      } else {
+        this.material.emissive = new THREE.Color(emissive);
+      }
+      this.material.emissiveIntensity = emissiveIntensity;
+      this.material.needsUpdate = true;
 
       // Update via store if OBJECT_ID available (every run)
       if (this.objectId) {

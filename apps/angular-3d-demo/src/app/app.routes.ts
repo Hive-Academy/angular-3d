@@ -234,6 +234,15 @@ export const appRoutes: Routes = [
     ],
   },
   {
+    path: 'newpassive',
+    loadComponent: () =>
+      import('./pages/newpassive-hero/newpassive-hero.component').then(
+        (m) => m.NewpassiveHeroComponent
+      ),
+    title: 'NEWPASSIVE - Connecting Science to Global Wellness',
+    data: { chrome: false },
+  },
+  {
     path: 'angular-gsap',
     loadComponent: () =>
       import('./pages/gsap-showcase/gsap-showcase.component').then(

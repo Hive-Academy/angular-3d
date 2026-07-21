@@ -92,23 +92,7 @@ import {
 import * as THREE from 'three/webgpu';
 import { EXRLoader, RGBELoader } from 'three-stdlib';
 import { SceneService } from '../../canvas/scene.service';
-
-/**
- * Supported HDR file types and their loaders
- */
-type HdrFileType = 'hdr' | 'exr';
-
-/**
- * Detects file type from URL/path extension
- */
-function detectFileType(url: string): HdrFileType {
-  const lowerUrl = url.toLowerCase();
-  if (lowerUrl.endsWith('.exr')) {
-    return 'exr';
-  }
-  // Default to HDR for .hdr files or URLs without clear extension
-  return 'hdr';
-}
+import { detectFileType } from './environment-file-type';
 
 /**
  * Environment presets - URLs to commonly used HDRIs.
@@ -161,9 +145,16 @@ export class EnvironmentComponent {
   // ============================================================================
 
   /**
-   * Path to a custom HDRI/EXR file.
+   * Path to a custom environment file.
    * When provided, this takes precedence over the `preset` input.
    * Supports both local paths ('/assets/env.hdr') and URLs.
+   *
+   * Supported formats:
+   * - `.hdr` (Radiance HDR, via RGBELoader)
+   * - `.exr` (OpenEXR, via EXRLoader)
+   * - `.jpg`/`.jpeg`/`.png`/`.webp` (LDR equirectangular images, via
+   *   THREE.TextureLoader - processed through PMREM for PBR lighting, with
+   *   the raw texture used as a sharp full-resolution background)
    */
   public readonly hdri = input<string | undefined>(undefined);
 
@@ -200,6 +191,14 @@ export class EnvironmentComponent {
    * @default 1
    */
   public readonly intensity = input<number>(1);
+
+  /**
+   * Background brightness multiplier (maps to `scene.backgroundIntensity`).
+   * Only visible when `background` is true. Allows darkening/brightening the
+   * backdrop independently of the environment lighting `intensity`.
+   * @default 1
+   */
+  public readonly backgroundIntensity = input<number>(1);
 
   // ============================================================================
   // Output Events
@@ -240,11 +239,22 @@ export class EnvironmentComponent {
   /** The processed environment map texture */
   private envMap: THREE.Texture | null = null;
 
+  /**
+   * Raw equirectangular texture kept for background display (LDR sources only).
+   * The PMREM output is low-resolution and pre-filtered - using the raw
+   * texture keeps the backdrop sharp at full resolution. Null for HDR/EXR
+   * sources, where the PMREM envMap is used as background (legacy behavior).
+   */
+  private rawBackgroundTexture: THREE.Texture | null = null;
+
   /** RGBE loader instance for loading HDR files */
   private rgbeLoader: RGBELoader | null = null;
 
   /** EXR loader instance for loading EXR files */
   private exrLoader: EXRLoader | null = null;
+
+  /** Texture loader instance for loading LDR (jpg/png/webp) files */
+  private textureLoader: THREE.TextureLoader | null = null;
 
   /** Tracks active loading operation for cancellation */
   private loadingAborted = false;
@@ -315,12 +325,27 @@ export class EnvironmentComponent {
       }
 
       if (showBackground) {
-        scene.background = this.envMap;
+        // LDR sources keep the raw equirect texture for a sharp,
+        // full-resolution backdrop; HDR/EXR fall back to the PMREM envMap
+        scene.background = this.rawBackgroundTexture ?? this.envMap;
         scene.backgroundBlurriness = Math.max(0, Math.min(1, blurAmount));
       } else {
         scene.background = null;
       }
 
+      this.sceneService.invalidate();
+    });
+
+    // Effect: Update background intensity
+    effect(() => {
+      const scene = this.sceneService.scene();
+      const bgIntensity = this.backgroundIntensity();
+
+      if (!scene) {
+        return;
+      }
+
+      scene.backgroundIntensity = Math.max(0, bgIntensity);
       this.sceneService.invalidate();
     });
 
@@ -373,32 +398,53 @@ export class EnvironmentComponent {
     // Detect file type and use appropriate loader
     const fileType = detectFileType(url);
 
-    // Common callbacks for both loaders
-    const onLoad = (texture: THREE.DataTexture) => {
+    // Common callbacks for all loaders
+    const onLoad = (texture: THREE.Texture) => {
       // Check if this load was aborted (e.g., component destroyed or source changed)
       if (this.loadingAborted) {
         texture.dispose();
         return;
       }
 
-      // Generate environment map from equirectangular HDRI
+      if (fileType === 'ldr') {
+        // LDR equirectangular image: configure mapping/color space so it
+        // behaves like an environment map
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        texture.colorSpace = THREE.SRGBColorSpace;
+        // Ensure mipmaps exist so scene.backgroundBlurriness (mip-based
+        // sampling) works on the raw background texture
+        texture.generateMipmaps = true;
+        texture.minFilter = THREE.LinearMipmapLinearFilter;
+        texture.needsUpdate = true;
+      }
+
+      // Generate environment map from the equirectangular texture
+      // (PMREM's fromEquirectangular works for both HDR and LDR sources)
       const pmremResult = this.pmremGenerator!.fromEquirectangular(texture);
       this.envMap = pmremResult.texture;
 
       // Apply as scene environment for PBR materials
       scene.environment = this.envMap;
 
+      if (fileType === 'ldr') {
+        // Keep the raw texture for background use - the PMREM output is
+        // pre-filtered/low-res and would look blurry as a backdrop
+        this.rawBackgroundTexture = texture;
+      } else {
+        // HDR/EXR: source texture no longer needed after PMREM processing
+        this.rawBackgroundTexture = null;
+        texture.dispose();
+      }
+
       // Apply background if enabled
       if (this.background()) {
-        scene.background = this.envMap;
+        scene.background = this.rawBackgroundTexture ?? this.envMap;
         scene.backgroundBlurriness = Math.max(0, Math.min(1, this.blur()));
       }
 
-      // Apply intensity
+      // Apply intensities
       scene.environmentIntensity = Math.max(0, this.intensity());
-
-      // Dispose source texture (no longer needed after PMREM processing)
-      texture.dispose();
+      scene.backgroundIntensity = Math.max(0, this.backgroundIntensity());
 
       // Dispose PMREM generator (no longer needed after processing)
       if (this.pmremGenerator) {
@@ -448,6 +494,9 @@ export class EnvironmentComponent {
     if (fileType === 'exr') {
       this.exrLoader = new EXRLoader();
       this.exrLoader.load(url, onLoad, onProgress, onError);
+    } else if (fileType === 'ldr') {
+      this.textureLoader = new THREE.TextureLoader();
+      this.textureLoader.load(url, onLoad, onProgress, onError);
     } else {
       this.rgbeLoader = new RGBELoader();
       this.rgbeLoader.load(url, onLoad, onProgress, onError);
@@ -480,6 +529,11 @@ export class EnvironmentComponent {
       this.envMap = null;
     }
 
+    if (this.rawBackgroundTexture) {
+      this.rawBackgroundTexture.dispose();
+      this.rawBackgroundTexture = null;
+    }
+
     if (this.pmremGenerator) {
       this.pmremGenerator.dispose();
       this.pmremGenerator = null;
@@ -488,6 +542,7 @@ export class EnvironmentComponent {
     // Clear loader references
     this.rgbeLoader = null;
     this.exrLoader = null;
+    this.textureLoader = null;
   }
 
   /**

@@ -128,6 +128,15 @@ export class SceneGraphStore {
     parentId?: string;
   }> = [];
 
+  // Pending property updates for objects that receive update() calls before
+  // they register (e.g. TransformDirective inputs resolving before the host
+  // GroupDirective/MeshDirective creates its Object3D in afterNextRender).
+  // Flushed (and cleared) when the object registers.
+  private readonly _pendingUpdates = new Map<
+    string,
+    { transform?: TransformProps; material?: MaterialProps }
+  >();
+
   // ============================================================================
   // Public Computed Signals
   // ============================================================================
@@ -230,6 +239,14 @@ export class SceneGraphStore {
         return newRegistry;
       });
 
+      // Flush any updates that were queued before this object registered
+      // (e.g. transforms set on an a3d-group before its THREE.Group existed)
+      const pending = this._pendingUpdates.get(id);
+      if (pending) {
+        this._pendingUpdates.delete(id);
+        this.applyProps(object, pending.transform, pending.material);
+      }
+
       return true;
     } catch (error) {
       console.error(`[SceneGraphStore] Failed to register ${id}:`, error);
@@ -243,10 +260,36 @@ export class SceneGraphStore {
     material?: MaterialProps
   ): void {
     const entry = this._registry().get(id);
-    if (!entry) return;
+    if (!entry) {
+      // Object not registered yet (registration may happen later in
+      // afterNextRender or once geometry/material are ready).
+      // Queue the update so it is applied on registration instead of
+      // being silently dropped.
+      const pending = this._pendingUpdates.get(id) ?? {};
+      this._pendingUpdates.set(id, {
+        transform: transform
+          ? { ...pending.transform, ...transform }
+          : pending.transform,
+        material: material
+          ? { ...pending.material, ...material }
+          : pending.material,
+      });
+      return;
+    }
 
-    const obj = entry.object;
+    this.applyProps(entry.object, transform, material);
+  }
 
+  /**
+   * Applies transform/material props to a Three.js object.
+   * Shared by update() (registered objects) and register() (flushing
+   * updates queued before registration).
+   */
+  private applyProps(
+    obj: Object3D,
+    transform?: TransformProps,
+    material?: MaterialProps
+  ): void {
     // Apply transform updates
     if (transform?.position) {
       obj.position.set(...transform.position);
@@ -280,6 +323,10 @@ export class SceneGraphStore {
   }
 
   public remove(id: string): void {
+    // Drop any queued updates for this id so a later re-registration
+    // does not receive stale props
+    this._pendingUpdates.delete(id);
+
     const entry = this._registry().get(id);
     if (!entry) return;
 
@@ -362,5 +409,6 @@ export class SceneGraphStore {
     // Dispose all objects
     this._registry().forEach((entry) => this.disposeObject(entry.object));
     this._registry.set(new Map());
+    this._pendingUpdates.clear();
   }
 }

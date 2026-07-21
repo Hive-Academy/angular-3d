@@ -167,6 +167,13 @@ export class Scene3dComponent implements OnDestroy {
   public readonly enableAntialiasing = input<boolean>(true);
   public readonly alpha = input<boolean>(true);
   /**
+   * Render-buffer pixel ratio (supersampling). Higher = crisper image at more
+   * GPU cost. Default null = `min(window.devicePixelRatio, 2)`. Set e.g. `2` to
+   * supersample on low-DPR (1×) displays so fine detail stops looking soft.
+   * Clamped to [0.5, 3].
+   */
+  public readonly pixelRatio = input<number | null>(null);
+  /**
    * Power preference for GPU selection
    *
    * WebGPU only supports 'high-performance' and 'low-power'.
@@ -474,7 +481,12 @@ export class Scene3dComponent implements OnDestroy {
       this.renderer.setSize(container.clientWidth, container.clientHeight);
     }
 
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const requestedRatio = this.pixelRatio();
+    const effectiveRatio =
+      requestedRatio != null
+        ? Math.min(Math.max(requestedRatio, 0.5), 3)
+        : Math.min(window.devicePixelRatio, 2);
+    this.renderer.setPixelRatio(effectiveRatio);
 
     if (this.enableShadows()) {
       this.renderer.shadowMap.enabled = true;

@@ -41,5 +41,18 @@ Thumbs.db
 
 .nx/cache
 .nx/workspace-data
-
 .angular
+.vscode
+
+# Agentic tooling (excluded from repo; CI workflows & repo templates under .github stay tracked)
+.claude
+.agent
+.agents
+.codex
+.ptah
+skills-lock.json
+.github/chatmodes/
+.github/prompts/
+.github/agents/
+.github/skills/
+.github/copilot-instructions.md
