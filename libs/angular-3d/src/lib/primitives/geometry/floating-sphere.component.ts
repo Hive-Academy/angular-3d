@@ -41,7 +41,7 @@ import { PhysicalMaterialDirective } from '../../directives/materials/physical-m
     },
   ],
   hostDirectives: [
-    MeshDirective,
+    { directive: MeshDirective, inputs: ['layer'] },
     {
       directive: SphereGeometryDirective,
       inputs: ['args'],
@@ -62,6 +62,10 @@ import { PhysicalMaterialDirective } from '../../directives/materials/physical-m
         'ior',
         'thickness',
         'wireframe',
+        'textureUrl',
+        'emissiveMapUrl',
+        'emissive',
+        'emissiveIntensity',
       ],
     },
   ],
@@ -103,4 +107,19 @@ export class FloatingSphereComponent {
    */
   public readonly thickness = input<number>(0.5);
   public readonly wireframe = input<boolean>(false);
+
+  /** Optional albedo texture URL (e.g. an earth map on a glass sphere). */
+  public readonly textureUrl = input<string | null>(null);
+  /** Optional emissive (self-illumination) map URL, e.g. city lights. */
+  public readonly emissiveMapUrl = input<string | null>(null);
+  /** Emissive color used when no emissive map is set. */
+  public readonly emissive = input<number | string>(0x000000);
+  /** Emissive intensity for the emissive color/map. */
+  public readonly emissiveIntensity = input<number>(1);
+
+  /**
+   * Render layer (0-31) for selective bloom; enables the layer in addition
+   * to default layer 0. Null (default) leaves layers untouched.
+   */
+  public readonly layer = input<number | null>(null);
 }

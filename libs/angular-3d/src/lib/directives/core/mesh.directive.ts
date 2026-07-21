@@ -21,7 +21,14 @@
  * ```
  */
 
-import { Directive, inject, DestroyRef, effect, signal } from '@angular/core';
+import {
+  Directive,
+  inject,
+  DestroyRef,
+  effect,
+  input,
+  signal,
+} from '@angular/core';
 import * as THREE from 'three/webgpu';
 import { SceneGraphStore } from '../../store/scene-graph.store';
 import { OBJECT_ID } from '../../tokens/object-id.token';
@@ -62,8 +69,28 @@ export class MeshDirective {
   private readonly materialSignal = inject(MATERIAL_SIGNAL);
   private readonly destroyRef = inject(DestroyRef);
 
+  /**
+   * Three.js render layer for this mesh (0-31), or null to leave layers untouched.
+   *
+   * Used with `a3d-selective-bloom-effect`: setting `[layer]="1"` puts the mesh
+   * on layer 1 IN ADDITION to the default layer 0 (`layers.enable(n)`), so the
+   * mesh stays visible in the base render AND is picked up by the bloom pass
+   * (whose camera only sees the bloom layer).
+   *
+   * Setting back to null restores the default layer 0 only.
+   *
+   * @default null (layers untouched)
+   */
+  public readonly layer = input<number | null>(null);
+
   /** Reference to created mesh (null until both geometry and material are ready) */
   public mesh: THREE.Mesh | null = null;
+
+  /** Internal reactive handle to the created mesh (drives the layer effect) */
+  private readonly meshSignal = signal<THREE.Mesh | null>(null);
+
+  /** Last layer applied via the `layer` input (for null-restore semantics) */
+  private lastAppliedLayer: number | null = null;
 
   public constructor() {
     // Effect: Create mesh when geometry and material are ready
@@ -92,9 +119,35 @@ export class MeshDirective {
         // Create mesh and register with store
         this.mesh = new THREE.Mesh(geometry, material);
         this.store.register(this.objectId, this.mesh, 'mesh');
+        this.meshSignal.set(this.mesh);
       } catch (error) {
         console.error(`[MeshDirective] Failed to create mesh:`, error);
       }
+    });
+
+    // Effect: Sync `layer` input to mesh.layers (reactive, safe against the
+    // mesh being created after the first run via meshSignal)
+    effect(() => {
+      const mesh = this.meshSignal();
+      const layer = this.layer();
+
+      if (!mesh) return;
+
+      if (layer === null) {
+        // Only reset if we previously modified layers - a default of null
+        // must leave externally-configured layers untouched
+        if (this.lastAppliedLayer !== null) {
+          mesh.layers.set(0);
+          this.lastAppliedLayer = null;
+        }
+        return;
+      }
+
+      // Reset to default layer 0, then ADD the requested layer so the mesh
+      // remains visible in the main render pass AND the selective bloom pass
+      mesh.layers.set(0);
+      mesh.layers.enable(layer);
+      this.lastAppliedLayer = layer;
     });
 
     // Cleanup: Remove mesh from store on destroy

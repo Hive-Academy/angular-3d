@@ -30,7 +30,7 @@ import { StandardMaterialDirective } from '../../directives/materials/standard-m
     { provide: OBJECT_ID, useFactory: () => `cylinder-${crypto.randomUUID()}` },
   ],
   hostDirectives: [
-    MeshDirective,
+    { directive: MeshDirective, inputs: ['layer'] },
     { directive: CylinderGeometryDirective, inputs: ['args'] },
     {
       directive: TransformDirective,
@@ -47,4 +47,10 @@ export class CylinderComponent {
   public readonly args = input<[number, number, number, number]>([1, 1, 1, 32]);
   public readonly color = input<number | string>('green');
   public readonly wireframe = input<boolean>(false);
+
+  /**
+   * Render layer (0-31) for selective bloom; enables the layer in addition
+   * to default layer 0. Null (default) leaves layers untouched.
+   */
+  public readonly layer = input<number | null>(null);
 }
