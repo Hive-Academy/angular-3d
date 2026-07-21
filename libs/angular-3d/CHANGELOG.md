@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/Hive-Academy/angular-3d/compare/angular-3d@1.1.0...angular-3d@1.2.0) (2026-07-21)
+
+
+### Features
+
+* **angular-3d:** add texture, emissive, layer and pixel-ratio primitive inputs ([fa3f77a](https://github.com/Hive-Academy/angular-3d/commit/fa3f77ae972d504b133f4478b9a1e319fcba8a28))
+
 ## [1.1.0](https://github.com/Hive-Academy/angular-3d/compare/angular-3d@1.0.0...angular-3d@1.1.0) (2026-01-20)
 
 

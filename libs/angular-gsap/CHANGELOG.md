@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/Hive-Academy/angular-3d/compare/angular-gsap@1.1.0...angular-gsap@1.2.0) (2026-07-21)
+
+
+### Features
+
+* **angular-gsap:** add configurable image inset to split panel section ([1ff60e3](https://github.com/Hive-Academy/angular-3d/commit/1ff60e3191678f475057b2bef0131d50944692b3))
+
 ## [1.1.0](https://github.com/Hive-Academy/angular-3d/compare/angular-gsap@1.0.0...angular-gsap@1.1.0) (2026-01-20)
 
 
