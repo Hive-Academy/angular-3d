@@ -50,6 +50,7 @@ Thumbs.db
 .agents
 .codex
 .ptah
+skills-lock.json
 .github/chatmodes/
 .github/prompts/
 .github/agents/
